@@ -5,6 +5,21 @@ const { task, extendEnvironment } = require('@nomiclabs/buidler/config');
 const { readArtifactSync } = require('@nomiclabs/buidler/plugins');
 const {addHelpers, transformNamedAccounts, waitForTx} = require('./utils/eth');
 
+//
+const chalk = require('chalk');
+const {
+  JsonRpcServer,
+  JsonRpcServerConfig
+} = require("@nomiclabs/buidler/internal/buidler-evm/jsonrpc/server");
+const { BUIDLEREVM_NETWORK_NAME } = require("@nomiclabs/buidler/internal/constants");
+const { BuidlerError } = require("@nomiclabs/buidler/internal//core/errors");
+const { ERRORS } = require("@nomiclabs/buidler/internal/core/errors-list");
+
+// import { TASK_NODE } from "./task-names";
+const TASK_NODE = 'node';
+
+
+
 let chainId;
 async function getChainId(bre) {
   if (chainId) {
@@ -167,6 +182,7 @@ module.exports = function() {
   internalTask('deploy:loadDeployments', 'load existing deployments')
   .setAction(async (args, bre, runSuper) => {
     const chainId = await getChainId(bre);
+    bre.deployments.chainId = chainId;
     addDeployments(db, bre.config.paths.deployments || 'deployments', chainId);
   });
 
@@ -400,4 +416,55 @@ module.exports = function() {
   //   args.node = 'http://localhost:8545' // TODO somehow
   //   await run('deploy', args);
   // });
+
+  task(TASK_NODE, "Starts a JSON-RPC server on top of Buidler EVM")
+    .setAction(
+      async ({ hostname, port }, { network, buidlerArguments, config, ethereum }) => {
+        if (
+          network.name !== BUIDLEREVM_NETWORK_NAME &&
+          // We normally set the default network as buidlerArguments.network,
+          // so this check isn't enough, and we add the next one. This has the
+          // effect of `--network <defaultNetwork>` being a false negative, but
+          // not a big deal.
+          buidlerArguments.network !== undefined &&
+          buidlerArguments.network !== config.defaultNetwork
+        ) {
+          throw new BuidlerError(
+            ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
+          );
+        }
+
+        try {
+          const serverConfig = {
+            hostname,
+            port,
+            provider: ethereum
+          };
+
+          const server = new JsonRpcServer(serverConfig);
+
+          const { port: actualPort, address } = await server.listen();
+
+          console.log(
+            chalk.green(
+              `Started HTTP and WebSocket JSON-RPC server at http://${address}:${actualPort}/`
+            )
+          );
+
+          await server.waitUntilClosed();
+        } catch (error) {
+          if (BuidlerError.isBuidlerError(error)) {
+            throw error;
+          }
+
+          throw new BuidlerError(
+            ERRORS.BUILTIN_TASKS.JSONRPC_SERVER_ERROR,
+            {
+              error: error.message
+            },
+            error
+          );
+        }
+      }
+    );
 }

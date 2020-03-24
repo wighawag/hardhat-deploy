@@ -1,5 +1,6 @@
 const {Web3Provider} = require('@ethersproject/providers');
 const {Contract, ContractFactory} = require('@ethersproject/contracts');
+const {BigNumber} = require('@ethersproject/bignumber');
 
 function EthersProviderWrapper(web3Provider, network) {
   Web3Provider.call(this, web3Provider, network);
@@ -182,16 +183,174 @@ function addHelpers(env, getArtifact) {
     }
   }
 
+  async function batchTxAndWait(txs, batchOptions) {
+    const promises = [];
+    const currentNonces = {}
+    for (const tx of txs) {
+      const options = tx[0];
+      let from = options.from;
+      let ethersSigner;
+      if(from.length >= 64) {
+        if(from.length == 64) {
+          from = '0x' + from;
+        }
+        ethersSigner = new Wallet(from);
+        from = ethersSigner.address;
+      } else {
+        try {
+          ethersSigner = provider.getSigner(from);
+        } catch{}
+      }
+      // console.log(tx);
+      const nonce = options.nonce || currentNonces[from] || await provider.getTransactionCount(from);
+      tx[0].nonce = nonce;
+      currentNonces[from] = nonce + 1;
+      promises.push(sendTxAndWait(...tx));
+    }
+    if (batchOptions.dev_forceMine) {
+      try {
+        await provider.send('evm_mine', []);
+      } catch(e) {}
+    }
+    await Promise.all(promises);
+  }
+
+  // TODO ?
+  async function sendTxAndWaitOnlyFrom(from, options, contractName, methodName, ...args) {
+    const deployment = env.deployments.get(contractName);
+    const abi = deployment.abi;
+    const ethersContract = new ethers.Contract(deployment.address, abi, provider);
+    if (from.toLowerCase() !== options.from.toLowerCase()) {
+      const {data} = ethersContract.populateTransaction[methodName](...args);
+      const to = ethersContract.address;
+      console.log(options.from + ' has no right to ' + methodName);
+
+      console.log('Please execute the following as ' + from);
+      console.log(JSON.stringify({
+        to,
+        data,
+      }, null, '  '));
+      console.log('if you have an interface use the following');
+      console.log(JSON.stringify({
+        to,
+        method: methodName,
+        args,
+      }, null, '  '));
+      if (options.skipError) {
+        return null;
+      }
+      throw new Error('ABORT, ACTION REQUIRED, see above');
+    }
+    return sendTxAndWait(options, contractName, methodName, ...args);
+  }
+
+  async function sendTxAndWait(options, contractName, methodName, ...args) {
+    // console.log({
+    //     options, contractName, methodName, args
+    // });
+    let from = options.from;
+    let ethersSigner;
+    if(from.length >= 64) {
+      if(from.length == 64) {
+        from = '0x' + from;
+      }
+      ethersSigner = new Wallet(from);
+      from = ethersSigner.address;
+    } else {
+      try {
+        ethersSigner = provider.getSigner(from);
+      } catch{}
+  }
+
+    let tx;
+    if (contractName) {
+      const deployment = env.deployments.get(contractName);
+      const abi = deployment.abi
+      const overrides = {
+        gasLimit: options.gas,
+        gasPrice: options.gasPrice ? BigNumber.from(options.gasPrice) : undefined,  // TODO cinfig
+        value: options.value ? BigNumber.from(options.value) : undefined,
+        nonce: options.nonce,
+        chainId: options.chainId,
+      }
+      if (!ethersSigner) { // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
+        console.error('no signer for ' + from);
+        console.log('Please execute the following as ' + from);
+        const ethersContract = new ethers.Contract(deployment.address, abi, provider); 
+        const ethersArgs = args ? args.concat([overrides]) : [overrides];
+        const data = await ethersContract.populateTransaction[methodName](...ethersArgs);
+        console.log(JSON.stringify({
+          to: deployment.address,
+          data,
+        }, null, '  '));
+        console.log('if you have an interface use the following');
+        console.log(JSON.stringify({
+          to: deployment.address,
+          method: methodName,
+          args,
+        }, null, '  '));
+        throw new Error('ABORT, ACTION REQUIRED, see above')
+      } else {
+        const ethersContract = new ethers.Contract(deployment.address, abi, ethersSigner);
+        if (!overrides.gasLimit) {
+          overrides.gasLimit = options.estimateGasLimit;
+          const ethersArgs = args ? args.concat([overrides]) : [overrides];
+          // console.log(ethersContract.estimate);
+          overrides.gasLimit = (await ethersContract.estimate[methodName](...ethersArgs)).toNumber(); 
+          if (options.estimateGasExtra) {
+            overrides.gasLimit = overrides.gasLimit + options.estimateGasExtra;
+            if (options.estimateGasLimit) {
+                overrides.gasLimit = Math.min(overrides.gasLimit, options.estimateGasLimit);
+            }
+          }
+        }
+        const ethersArgs = args ? args.concat([overrides]) : [overrides];
+        tx = await ethersContract.functions[methodName](...ethersArgs);
+      }
+    } else {
+      if (!ethersSigner) { // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
+        console.error('no signer for ' + from);
+      } else {
+        const transactionData = {
+          to: options.to,
+          gasLimit: options.gas,
+          gasPrice: options.gasPrice ? BigNumber.from(options.gasPrice) : undefined, // TODO cinfig
+          value: options.value ? BigNumber.from(options.value) : undefined,
+          nonce: options.nonce,
+          data: options.data,
+          chainId: options.chainId,
+        }
+        tx = await ethersSigner.sendTransaction(transactionData);
+      }
+    }
+    if (options.dev_forceMine) {
+      try {
+        await provider.send('evm_mine', []);
+      } catch(e) {}
+    }
+    return tx.wait();
+  }
+
+  
   env.deployments = env.deployments || {};
   env.deployments.deploy = deploy;
   env.deployments.deployIfDifferent = deployIfDifferent;
+  env.deployments.sendTxAndWait = sendTxAndWait;
+  env.deployments.batchTxAndWait = batchTxAndWait;
 }
 
 function transformNamedAccounts(namedAccounts, chainId, accounts) {
   const result = {};
   const names = Object.keys(namedAccounts);
   for (const name of names) {
-    result[name] = accounts[namedAccounts[name]]; // TODO
+    const value = namedAccounts[name];
+    // TODO proper (see rocketh)
+    if (typeof value === 'string') {
+      result[name] = value;
+    } else {
+      result[name] = accounts[value];
+    }
+    
   }
   return result;
 }
