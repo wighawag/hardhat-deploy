@@ -1,0 +1,25 @@
+{
+  "name": "buidler-deploy",
+  "version": "0.0.3",
+  "description": "Buidler Plugin For Deployments",
+  "repository": "github:wighawag/buidler-deploy",
+  "author": "wighawag",
+  "license": "MIT",
+  "main": "src/index.js",
+  "keywords": [
+    "ethereum",
+    "smart-contracts",
+    "buidler",
+    "buidler-plugin"
+  ],
+  "devDependencies": {
+    "@nomiclabs/buidler": "^1.0.1"
+  },
+  "peerDependencies": {
+    "@nomiclabs/buidler": "^1.0.1"
+  },
+  "dependencies": {
+    "@ethersproject/contracts": "^5.0.0-beta.145",
+    "@ethersproject/providers": "^5.0.0-beta.156"
+  }
+}
