@@ -339,20 +339,78 @@ function addHelpers(env, getArtifact) {
   env.deployments.batchTxAndWait = batchTxAndWait;
 }
 
-function transformNamedAccounts(namedAccounts, chainId, accounts) {
-  const result = {};
-  const names = Object.keys(namedAccounts);
-  for (const name of names) {
-    const value = namedAccounts[name];
-    // TODO proper (see rocketh)
-    if (typeof value === 'string') {
-      result[name] = value;
-    } else {
-      result[name] = accounts[value];
-    }
-    
+function chainConfig(object, chainId) {
+  // TODO ?
+  // const isDeploymentChainId = config.deploymentChainIds && config.deploymentChainIds.indexOf('' + chainId) != -1;
+  if (typeof object["" + chainId] != 'undefined') {
+      return object["" + chainId];
+  } else if (typeof object[chainId] != 'undefined') {
+      return object[chainId];
+  // } else if (isDeploymentChainId && typeof object['deployments'] != 'undefined') {
+  //     return object['deployments'];
+  } else {
+      return object['default'];
   }
-  return result;
+}
+
+function transformNamedAccounts(configNamedAccounts, chainId, accounts) {
+  const namedAccounts = {}
+  // TODO transform into checksum  address
+  if (configNamedAccounts) {
+    const accountNames = Object.keys(configNamedAccounts);
+    function parseSpec(spec) {
+      let address;
+      switch (typeof spec) {
+        case "string":
+          if (spec.slice(0, 5) == "from:") {
+            const from = parseInt(spec.substr(5));
+            address = [];
+            if (accounts) {
+              for (let j = from; j < accounts.length; j++) {
+                address.push(accounts[j]);
+              }
+            }
+          } else if (spec.slice(0, 2).toLowerCase() == "0x") {
+            address = spec;
+          } else {
+            address = parseSpec(configNamedAccounts[spec])
+          }
+          break;
+        case "number":
+          if (accounts) {
+            address = accounts[spec];
+          }
+          break;
+        case "undefined":
+            break;
+        case "object":
+          if (spec) {
+            if (spec.type == 'object') {
+              address = spec;
+            } else if (Array.isArray(spec)) {
+              address = [];
+              for (let j = 0; j < spec.length; j++) {
+                address.push(parseSpec(spec[j]));
+              }
+            } else {
+              const newSpec = chainConfig(spec, chainId);
+              if(typeof newSpec != 'undefined') {
+                address = parseSpec(newSpec);
+              }
+            }
+          }
+          break;
+      }
+      return address;
+    }
+
+    for (let i = 0; i < accountNames.length; i++) {
+      const accountName = accountNames[i];
+      const spec = configNamedAccounts[accountName];
+      namedAccounts[accountName] = parseSpec(spec);
+    }
+  }
+  return namedAccounts;
 }
 
 function pause(duration) {
