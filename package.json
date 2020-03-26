@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Buidler Plugin For Deployments",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -22,5 +22,8 @@
     "@ethersproject/bignumber": "^5.0.0-beta.136",
     "@ethersproject/contracts": "^5.0.0-beta.145",
     "@ethersproject/providers": "^5.0.0-beta.156"
+  },
+  "resolutions": {
+    "@ethersproject/logger": "5.0.0-beta.136"
   }
 }

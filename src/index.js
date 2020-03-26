@@ -60,7 +60,7 @@ function loadDeployments(deploymentsPath, chainId) {
   try {
       filesStats = traverse(deployPath);
   } catch (e) {
-      console.log('no folder at ' + deployPath);
+      // console.log('no folder at ' + deployPath);
       return {};
   }
   let fileNames = filesStats.map(a => a.relativePath);
@@ -183,7 +183,7 @@ module.exports = function() {
   .setAction(async (args, bre, runSuper) => {
     const chainId = await getChainId(bre);
     bre.deployments.chainId = chainId;
-    addDeployments(db, bre.config.paths.deployments || 'deployments', chainId);
+    addDeployments(db, bre.config.paths.deployments || bre.config.paths.root + '/deployments', chainId);
   });
 
   internalTask('deploy:runDeploy', 'execute the deployment scripts')
@@ -196,7 +196,7 @@ module.exports = function() {
     try {
         filesStats = traverse(deployPath);
     } catch (e) {
-        console.log('no folder at ' + deployPath);
+        // console.log('no folder at ' + deployPath);
         return;
     }
     let fileNames = filesStats.map(a => a.relativePath);
@@ -306,7 +306,7 @@ module.exports = function() {
     }
     db.noSaving = false;
     if (args.export) {
-      const all = loadAllDeployments(bre.config.paths.deployments || 'deployments');
+      const all = loadAllDeployments(bre.config.paths.deployments || bre.config.paths.root + '/deployments');
       all[chainId] = db.deployments;
       fs.writeFileSync(args.export, JSON.stringify(all, null, '  ')); // TODO remove bytecode ?
     }
