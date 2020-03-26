@@ -1,10 +1,88 @@
-# BUIDLER-DEPLOY : A [Buidler](https://buidler.dev) Plugin For Deployments
+[![buidler](https://buidler.dev/buidler-plugin-badge.svg?1)](https://buidler.dev)
+# buidler-deploy
+
+_A Plugin For Deployments_
+
+[Buidler](http://getbuidler.com) Deployment Plugin. 
+
+## What
 
 This [buidler](https://buidler.dev) plugin add a mechanism to deploy contract to various network, keeping track of them and replicate the same environment for testing.
 
 On top of that it adds a mechanism to add names to addresses so test and deployment script can be reconfigured by simply changing the address a name points to, allowing different configuration per network.
 
+## Installation
+
+
+```bash
+npm install buidler-deploy
+```
+
+And add the following statement to your `buidler.config.js`:
+
+```js
+usePlugin('buidler-deploy');
+```
+
 ## Tasks
+
+This plugin adds the _deploy_ task to Buidler
+
+This tasks will be executing scripts in the `deploy` folder and save contract deployment for configured chains
+
+
+## Environment extensions
+
+This plugin extends the Buidler Runtime Environment by adding 2 fields
+- namedAccounts that is an object where keys are names and value are addresses. It is parsed from the namedAccounts configuration (see Configuration)
+- deployments which contains functions to access past deployment or save new one, as well as helpers functions
+
+
+
+## Configuration
+
+### namedAccounts
+
+This plugin extends the `BuidlerConfig`'s object with an optional 
+`namedAccounts` field.
+
+`namedAccounts` allow you to associate names to addresses and have them configured per chain.
+This allow you to have meaningful name in your tests while the addresses matches to multi sig in real network for example
+
+```js
+{
+    namedAccounts: {
+        deployer: {
+            default: 0, // here this will by default take the first account as deployer
+            4: '0xffffeffffff', // but for rinkeby it will be a specific address
+        },
+        feeCollector:{
+            default: 1, // here this will by default take the second account as feeCollector (so in the test this will be a different account that the deployer)
+            1: '0xffffeaaa', // on the mainnet the feeCollector could be a multi sig
+            4: '0xaaaeffffff', // on rinkeby it could be another account
+        }
+    }
+}
+```
+
+
+### paths
+
+It also add fields to  `BuidlerConfig`'s `ProjectPaths` object
+
+Here is an example showing the default values :
+
+```js
+{
+    paths: {
+        deploy: 'deploy',
+        deployments: 'deployments'
+    }
+}
+```
+
+
+## Usage
 
 ### deploy
 
@@ -107,43 +185,6 @@ console.log({namedAccounts});
 The compile command is also updated so that you could potentially have the compiler do different thing depending on the deployed contract. Like for example you might want to inject the address of a deployed contract in the bytecode for efficiency reason.
 This is not yet enable in any way though. 
 
-
-## Configuration
-
-### namedAccounts
-
-namedAccounts allow you to associate names to addresses and have them configured per chain.
-This allow you to have meaningful name in your tests while the addresses matches to multi sig in real network for example
-
-```js
-{
-    namedAccounts: {
-        deployer: {
-            default: 0, // here this will by default take the first account as deployer
-            4: '0xffffeffffff', // but for rinkeby it will be a specific address
-        },
-        feeCollector:{
-            default: 1, // here this will by default take the second account as feeCollector (so in the test this will be a different account that the deployer)
-            1: '0xffffeaaa', // on the mainnet the feeCollector could be a multi sig
-            4: '0xaaaeffffff', // on rinkeby it could be another account
-        }
-    }
-}
-```
-
-
-### paths
-
-Here is the default value for the path. You can change them as suits you :
-
-```js
-{
-    paths: {
-        deploy: 'deploy',
-        deployments: 'deployments'
-    }
-}
-```
 
 ## deploy scripts tags and dependencies
 
