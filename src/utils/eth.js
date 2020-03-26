@@ -219,7 +219,7 @@ function addHelpers(env, getArtifact) {
   async function sendTxAndWaitOnlyFrom(from, options, contractName, methodName, ...args) {
     const deployment = env.deployments.get(contractName);
     const abi = deployment.abi;
-    const ethersContract = new ethers.Contract(deployment.address, abi, provider);
+    const ethersContract = new Contract(deployment.address, abi, provider);
     if (from.toLowerCase() !== options.from.toLowerCase()) {
       const {data} = ethersContract.populateTransaction[methodName](...args);
       const to = ethersContract.address;
@@ -276,7 +276,7 @@ function addHelpers(env, getArtifact) {
       if (!ethersSigner) { // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
         console.error('no signer for ' + from);
         console.log('Please execute the following as ' + from);
-        const ethersContract = new ethers.Contract(deployment.address, abi, provider); 
+        const ethersContract = new Contract(deployment.address, abi, provider); 
         const ethersArgs = args ? args.concat([overrides]) : [overrides];
         const data = await ethersContract.populateTransaction[methodName](...ethersArgs);
         console.log(JSON.stringify({
@@ -291,7 +291,7 @@ function addHelpers(env, getArtifact) {
         }, null, '  '));
         throw new Error('ABORT, ACTION REQUIRED, see above')
       } else {
-        const ethersContract = new ethers.Contract(deployment.address, abi, ethersSigner);
+        const ethersContract = new Contract(deployment.address, abi, ethersSigner);
         if (!overrides.gasLimit) {
           overrides.gasLimit = options.estimateGasLimit;
           const ethersArgs = args ? args.concat([overrides]) : [overrides];
