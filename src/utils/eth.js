@@ -296,7 +296,7 @@ function addHelpers(env, getArtifact) {
           overrides.gasLimit = options.estimateGasLimit;
           const ethersArgs = args ? args.concat([overrides]) : [overrides];
           // console.log(ethersContract.estimate);
-          overrides.gasLimit = (await ethersContract.estimate[methodName](...ethersArgs)).toNumber(); 
+          overrides.gasLimit = (await ethersContract.estimateGas[methodName](...ethersArgs)).toNumber(); 
           if (options.estimateGasExtra) {
             overrides.gasLimit = overrides.gasLimit + options.estimateGasExtra;
             if (options.estimateGasLimit) {
