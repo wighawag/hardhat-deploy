@@ -2,8 +2,13 @@ const {Web3Provider} = require('@ethersproject/providers');
 const {Contract, ContractFactory} = require('@ethersproject/contracts');
 const {BigNumber} = require('@ethersproject/bignumber');
 const {Logger} = require('@ethersproject/logger');
-// console.log('disable ethers log');
-Logger.setLogLevel('off');
+// TODO investigate : (for now skip)
+try {
+  // console.log('disable ethers log');
+  Logger.setLogLevel('off');
+} catch (e) {
+  console.error(e);
+}
 
 function EthersProviderWrapper(web3Provider, network) {
   Web3Provider.call(this, web3Provider, network);
