@@ -314,7 +314,6 @@ module.exports = function() {
 
   task("deploy", "Deploy contracts")
   .addOptionalParam('export', 'export deployment info into one file')
-  .addOptionalParam('node', 'specify node to connect to')
   .setAction(async (args, bre, runSuper) => {
     // await run('_resolveNamedAccounts');
     // await run('deploy:loadDeployments');
@@ -380,19 +379,20 @@ module.exports = function() {
 
   task("listen")
   .addOptionalParam('export', 'export deployment info into one file')
+  .addOptionalParam('hostname')
+  .addOptionalParam('port')
   .setAction(async (args, bre) => {
     await run('deploy', args);
-    const tmp = console.log.bind(console);
-    console.log = (...args) => {
-      if (args.length == 0 || args[0].startsWith('Account') || args[0].startsWith('=====') ){
-        
-      } else {
-        tmp(...args)
-      }
-    };
-    await run('node', {...args, hostname: 'localhost', port: 8545});
+    // const tmp = console.log.bind(console);
+    // console.log = (...args) => {
+    //   if (args.length == 0 || (typeof args[0] === 'string' && (args[0].startsWith('Account') || args[0].startsWith('====='))) ){
+    //   } else {
+    //     tmp(...args)
+    //   }
+    // };
+    await run('node', {...args, hostname: args.hostname || 'localhost', port: args.ports || 8545});
     // this create a new BRE unfortinately, so no deployment are available there
-    console.log = tmp;
+    // console.log = tmp;
   });
 
   // task("listen")
@@ -420,19 +420,19 @@ module.exports = function() {
   task(TASK_NODE, "Starts a JSON-RPC server on top of Buidler EVM")
     .setAction(
       async ({ hostname, port }, { network, buidlerArguments, config, ethereum }) => {
-        if (
-          network.name !== BUIDLEREVM_NETWORK_NAME &&
-          // We normally set the default network as buidlerArguments.network,
-          // so this check isn't enough, and we add the next one. This has the
-          // effect of `--network <defaultNetwork>` being a false negative, but
-          // not a big deal.
-          buidlerArguments.network !== undefined &&
-          buidlerArguments.network !== config.defaultNetwork
-        ) {
-          throw new BuidlerError(
-            ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
-          );
-        }
+        // if (
+        //   network.name !== BUIDLEREVM_NETWORK_NAME &&
+        //   // We normally set the default network as buidlerArguments.network,
+        //   // so this check isn't enough, and we add the next one. This has the
+        //   // effect of `--network <defaultNetwork>` being a false negative, but
+        //   // not a big deal.
+        //   buidlerArguments.network !== undefined &&
+        //   buidlerArguments.network !== config.defaultNetwork
+        // ) {
+        //   throw new BuidlerError(
+        //     ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
+        //   );
+        // }
 
         try {
           const serverConfig = {
