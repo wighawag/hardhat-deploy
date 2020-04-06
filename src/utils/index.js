@@ -1,5 +1,84 @@
 const fs = require('fs');
 const path = require('path');
+const {transformNamedAccounts} = require('./eth');
+
+let chainId;
+async function getChainId(bre) {
+  if (chainId) {
+    return chainId;
+  }
+  try {
+    chainId = await bre.ethereum.send('eth_chainId');
+  } catch (e) {
+    console.log('failed to get chainId, falling back on net_version...');
+    chainId = await bre.ethereum.send('net_version');
+  }
+
+  if (chainId.startsWith('0x')) {
+    chainId = '' + parseInt(chainId.slice(2), 16); // TODO better
+  }
+
+  return chainId;
+}
+
+function loadAllDeployments(deploymentsPath) {
+  const all = {};
+  const deployPath = deploymentsPath || 'deployments';
+  fs.readdirSync(deployPath).forEach((name) => {
+    const fPath = path.resolve(deployPath, name);
+    const stats = fs.statSync(fPath);
+    if (stats.isDirectory()) {
+      const contracts = loadDeployments(deploymentsPath, name);
+      all[name] = contracts;
+    }
+  });
+  return all;
+}
+
+function loadDeployments(deploymentsPath, chainId) {
+  const contracts = {};
+  const deployPath = path.join(deploymentsPath || 'deployments', chainId);
+  let filesStats;
+  try {
+      filesStats = traverse(deployPath);
+  } catch (e) {
+      // console.log('no folder at ' + deployPath);
+      return {};
+  }
+  let fileNames = filesStats.map(a => a.relativePath);
+  fileNames = fileNames.sort((a, b) => {
+      if (a < b) { return -1; }
+      if (a > b) { return 1; }
+      return 0;
+  });
+  
+  for (const fileName of fileNames) {
+    if (fileName.substr(fileName.length-5) == '.json') {
+      const deploymentFileName = path.join(deployPath, fileName);
+      const deployment = JSON.parse(fs.readFileSync(deploymentFileName).toString());
+      const name = fileName.slice(0, fileName.length-5);
+      // console.log('fetching ' + deploymentFileName + '  for ' + name);
+      contracts[name] = deployment;
+    }
+  }
+  return contracts;
+}
+
+function addDeployments(db, deploymentsPath, chainId) {
+  const contracts = loadDeployments(deploymentsPath, chainId);
+  for (const key of Object.keys(contracts)) {
+    db.deployments[key] = contracts[key];
+  }
+}
+
+function addNamedAccounts(bre, accounts, chainId) {
+  if (bre.config.namedAccounts) {
+    bre.namedAccounts = transformNamedAccounts(bre.config.namedAccounts, chainId, accounts);
+  } else {
+    bre.namedAccounts = {};
+  }
+}
+
 
 const traverse = function(dir, result = [], topDir, filter) {
     fs.readdirSync(dir).forEach((name) => {
@@ -19,4 +98,8 @@ const traverse = function(dir, result = [], topDir, filter) {
 
 module.exports = {
     traverse,
+    getChainId,
+    addDeployments,
+    addNamedAccounts,
+    loadAllDeployments,
 }

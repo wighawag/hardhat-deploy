@@ -5,15 +5,36 @@
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
   "license": "MIT",
-  "main": "src/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "keywords": [
     "ethereum",
     "smart-contracts",
     "buidler",
     "buidler-plugin"
   ],
+  "files": [
+    "dist/src/",
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.0.1"
+    "@nomiclabs/buidler": "^1.0.1",
+    "@types/chai": "^4.1.7",
+    "@types/fs-extra": "^5.0.4",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^8.10.38",
+    "chai": "^4.2.0",
+    "dotenv": "^6.2.0",
+    "mocha": "^5.2.0",
+    "prettier": "^1.17.0",
+    "source-map-support": "^0.5.12",
+    "ts-node": "^8.1.0",
+    "tslint": "^5.16.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.0.1",
+    "typescript": "^3.4.5"
   },
   "peerDependencies": {
     "@nomiclabs/buidler": "^1.0.1"
@@ -21,9 +42,17 @@
   "dependencies": {
     "@ethersproject/bignumber": "^5.0.0-beta.136",
     "@ethersproject/contracts": "^5.0.0-beta.145",
-    "@ethersproject/providers": "^5.0.0-beta.156"
+    "@ethersproject/providers": "^5.0.0-beta.156",
+    "chalk": "^4.0.0"
   },
   "resolutions": {
     "@ethersproject/logger": "5.0.0-beta.136"
+  },
+  "scripts": {
+    "lint:fix": "prettier --write 'src/**/*.{js,ts}' 'test/**/*.{js,ts}' && tslint --fix --config tslint.json --project tsconfig.json",
+    "lint": "tslint --config tslint.json --project tsconfig.json",
+    "test": "mocha --timeout 20000 --exit",
+    "build": "tsc && cp -Rf src/utils dist/src/",
+    "watch": "tsc -w"
   }
 }

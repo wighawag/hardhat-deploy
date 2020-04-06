@@ -38,7 +38,7 @@ function linkLibrary(bytecode, libraryName, libraryAddress) {
 }
 
 let provider;
-function addHelpers(env, getArtifact) {
+function addHelpers(env, deploymentsExtension, getArtifact) {
   
   function init() {
     if (!provider) {
@@ -340,11 +340,10 @@ function addHelpers(env, getArtifact) {
   }
 
   
-  env.deployments = env.deployments || {};
-  env.deployments.deploy = deploy;
-  env.deployments.deployIfDifferent = deployIfDifferent;
-  env.deployments.sendTxAndWait = sendTxAndWait;
-  env.deployments.batchTxAndWait = batchTxAndWait;
+  deploymentsExtension.deploy = deploy;
+  deploymentsExtension.deployIfDifferent = deployIfDifferent;
+  deploymentsExtension.sendTxAndWait = sendTxAndWait;
+  deploymentsExtension.batchTxAndWait = batchTxAndWait;
 }
 
 function chainConfig(object, chainId) {
