@@ -1,3 +1,4 @@
+import { BuidlerRuntimeEnvironment } from "@nomiclabs/buidler/types";
 import {
   extendEnvironment,
   internalTask,
@@ -15,15 +16,46 @@ import chalk from "chalk";
 const TASK_NODE = "node";
 
 import { DeploymentsManager } from "./DeploymentsManager";
+
 const { addNamedAccounts, getChainId } = require("./utils");
 
+function fixProvider(env: BuidlerRuntimeEnvironment) {
+  // alow it to be used by ethers without any change
+  const provider = env.ethereum as any;
+  if (provider.sendAsync === undefined) {
+    provider.sendAsync = async (
+      req: {
+        id: number;
+        jsonrpc: string;
+        method: string;
+        params: any[];
+      },
+      callback: (error: any, result: any) => void
+    ) => {
+      let result;
+      try {
+        result = await provider.send(req.method, req.params);
+      } catch (e) {
+        callback(e, null);
+        return;
+      }
+      const response = { result, id: req.id, jsonrpc: req.jsonrpc };
+      callback(null, response);
+    };
+  }
+}
 export default function() {
   let deploymentsManager: DeploymentsManager;
   extendEnvironment(env => {
+    // console.log({
+    //   envChainId: process.env.BUIDLER__DEPLOY_PLUGIN_CHAIN_ID,
+    //   envAccounts: process.env.BUIDLER__DEPLOY_PLUGIN_ACCOUNTS,
+    // });
+    fixProvider(env);
     if (deploymentsManager === undefined || env.deployments === undefined) {
+      env.namedAccounts = {};
       deploymentsManager = new DeploymentsManager(env);
       env.deployments = deploymentsManager.deploymentsExtension;
-      env.namedAccounts = {};
     }
   });
 

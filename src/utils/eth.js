@@ -42,7 +42,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
   
   function init() {
     if (!provider) {
-      provider = new EthersProviderWrapper(env.ethereum);
+      provider = env.ethereum; // new EthersProviderWrapper(env.ethereum);
     }
   }
 
@@ -339,7 +339,74 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
     return tx.wait();
   }
 
-  
+  async function rawCall(to, data) { // TODO call it eth_call?
+    return provider.send('eth_call', [{
+        to,
+        data
+    }, 'latest']); // TODO overrides
+}
+
+async function call(options, contractName, methodName, ...args) {
+    if (typeof options === 'string') {
+        if(typeof methodName !== 'undefined') {
+            args.unshift(methodName);
+        }
+        methodName = contractName;
+        contractName = options;
+        options = {};
+    }
+    if (typeof args === 'undefined') {
+        args = [];
+    }
+    let from = options.from;
+    let ethersSigner;
+    if(from && from.length >= 64) {
+        if(from.length == 64) {
+            from = '0x' + from;
+        }
+        ethersSigner = new Wallet(from);
+        from = ethersSigner.address;
+    }
+    if(!ethersSigner) {
+        ethersSigner = provider; // TODO rename ethersSigner
+    }
+    const deployment = env.deployments.get(contractName);
+    if (!deployment) {
+        throw new Error(`no contract named "${contractName}"`);
+    }
+    const abi = deployment.abi
+    const overrides = {
+      gasLimit: options.gas,
+      gasPrice: options.gasPrice ? BigNumber.from(options.gasPrice) : undefined,  // TODO cinfig
+      value: options.value ? BigNumber.from(options.value) : undefined,
+      nonce: options.nonce,
+      chainId: options.chainId,
+    }
+    const ethersContract = new Contract(deployment.address, abi, ethersSigner);
+    if (options.outputTx) {
+        const method = ethersContract.populateTransaction[methodName];
+        if (!method) {
+            throw new Error(`no method named "${methodName}" on contract "${contractName}"`);
+        }
+        if(args.length > 0) {
+            return method(...args, overrides);
+        } else {
+            return method(overrides);
+        } 
+    }
+    const method = ethersContract.callStatic[methodName];
+    if (!method) {
+        throw new Error(`no method named "${methodName}" on contract "${contractName}"`);
+    }
+    if(args.length > 0) {
+        return method(...args, overrides);
+    } else {
+        return method(overrides);
+    }
+  }
+
+  deploymentsExtension.call = call;
+  deploymentsExtension.rawCall = rawCall;
   deploymentsExtension.deploy = deploy;
   deploymentsExtension.deployIfDifferent = deployIfDifferent;
   deploymentsExtension.sendTxAndWait = sendTxAndWait;

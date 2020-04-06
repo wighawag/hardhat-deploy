@@ -1,4 +1,5 @@
 import "@nomiclabs/buidler/types";
+import { Artifact } from "@nomiclabs/buidler/types";
 
 declare module "@nomiclabs/buidler/types" {
   
@@ -52,6 +53,7 @@ declare module "@nomiclabs/buidler/types" {
     save(name: string, deployment: Deployment): void;
     get(name: string): Deployment;
     all(): { [name: string]: Deployment };
+    getArtifact(): Artifact;
     run(
       tags: string | string[],
       options?:{ reset: boolean }
@@ -61,7 +63,10 @@ declare module "@nomiclabs/buidler/types" {
     deploy(name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
     deployIfDifferent(fieldsToCompare: string[], name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
     sendTxAndWait(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
-    sendTxAndWait(contractName: string, methodName: string, ...args: any[]) : void;
+    sendTxAndWait(contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
+    call(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<any>;
+    call(contractName: string, methodName: string, ...args: any[]) : Promise<any>;
+    rawCall(to: Address, data: string): Promise<any>;
     batchTxAndWait(txs: any[][], batchOptions: {dev_forceMine: boolean}): void; // TODO use TxObject instead of arrays
   }
 

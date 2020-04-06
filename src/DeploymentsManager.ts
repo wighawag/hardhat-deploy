@@ -57,6 +57,9 @@ export class DeploymentsManager {
       all: () => {
         return this.db.deployments; // TODO copy
       },
+      getArtifact: (contractName: string) => {
+        return readArtifactSync(this.env.config.paths.artifacts, contractName);
+      },
       run: (
         tags: string | string[],
         options: {
@@ -82,8 +85,10 @@ export class DeploymentsManager {
       }
     } as any;
 
-    addHelpers(env, this.deploymentsExtension, (contractName: string) =>
-      readArtifactSync(env.config.paths.artifacts, contractName)
+    addHelpers(
+      env,
+      this.deploymentsExtension,
+      this.deploymentsExtension.getArtifact
     );
   }
 

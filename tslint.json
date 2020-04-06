@@ -20,7 +20,7 @@
       "allow-pascal-case"
     ],
     "ordered-imports": [
-      true,
+      false,
       {
         "grouped-imports": true,
         "import-sources-order": "case-insensitive"
