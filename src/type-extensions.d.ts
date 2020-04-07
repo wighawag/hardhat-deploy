@@ -9,6 +9,14 @@ declare module "@nomiclabs/buidler/types" {
     ethers: {getContract(contractName: string, signer?: any): Promise<any>} // TODO as ethers type
   }
 
+  export interface BuidlerNetworkConfig {
+    saveDeployments?: boolean;
+  }
+
+  export interface HttpNetworkConfig {
+    saveDeployments?: boolean;
+  }
+
   export interface DeployFunction {
     (env: BuidlerRuntimeEnvironment): Promise<void>;
     skip?: (env: BuidlerRuntimeEnvironment) => Promise<boolean>;
@@ -71,11 +79,10 @@ declare module "@nomiclabs/buidler/types" {
     batchTxAndWait(txs: any[][], batchOptions: {dev_forceMine: boolean}): void; // TODO use TxObject instead of arrays
   }
 
-  export interface ResolvedBuidlerConfig {
-    deploymentChainIds: string[] // TODO remove, use network config option
-  }
+  // export interface ResolvedBuidlerConfig {
+    
+  // }
   export interface BuidlerConfig {
-    deploymentChainIds?: string[]; // TODO remove, use network config option
     namedAccounts?: {[name: string]: any};
   }
 

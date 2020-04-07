@@ -27,6 +27,7 @@ export class DeploymentsManager {
   private db: { deployments: any; noSaving: boolean };
 
   private env: BuidlerRuntimeEnvironment;
+  private deploymentsPath: string;
 
   constructor(env: BuidlerRuntimeEnvironment) {
     this.db = {
@@ -34,7 +35,8 @@ export class DeploymentsManager {
       noSaving: false
     };
     this.env = env;
-    const deploymentsPath = env.config.paths.deployments || "deployments";
+    this.deploymentsPath =
+      env.config.paths.deployments || env.config.paths.root + "/deployments";
 
     // SUPPORT budiler run that recreate an BRE
     const envChainId = process.env.BUIDLER__DEPLOY_PLUGIN_CHAIN_ID;
@@ -45,7 +47,11 @@ export class DeploymentsManager {
         envAccounts ? envAccounts.split(".") : [],
         envChainId
       );
-      addDeployments(this.db, deploymentsPath, envChainId);
+      addDeployments(
+        this.db,
+        this.deploymentsPath,
+        this.getDeploymentsSubPath(envChainId)
+      );
     }
 
     this.deploymentsExtension = {
@@ -106,9 +112,8 @@ export class DeploymentsManager {
     this.env.deployments.chainId = chainId;
     addDeployments(
       this.db,
-      this.env.config.paths.deployments ||
-        this.env.config.paths.root + "/deployments",
-      chainId
+      this.deploymentsPath,
+      this.getDeploymentsSubPath(chainId)
     );
     return this.db.deployments;
   }
@@ -119,19 +124,22 @@ export class DeploymentsManager {
   ): Promise<boolean> {
     const chainId = await getChainId(this.env);
 
-    // TODO remove, use network config option :
-    const deploymentChainIds = this.env.config.deploymentChainIds || [
-      "1",
-      "2",
-      "4",
-      "42"
-    ]; // TODO better default ?
-    const toSave =
-      !this.db.noSaving && deploymentChainIds.indexOf(chainId) !== -1;
+    let saveDeployments = true;
+    if (
+      this.env.network.name === "localhost" ||
+      this.env.network.name === "buidlerevm"
+    ) {
+      // by default do not save on these 2 default network
+      saveDeployments = false;
+    }
+    if (this.env.network.config.saveDeployments !== undefined) {
+      saveDeployments = this.env.network.config.saveDeployments;
+    }
+    const toSave = !this.db.noSaving && saveDeployments;
 
     const filepath = path.join(
-      this.env.config.paths.deployments || "deployments",
-      chainId,
+      this.deploymentsPath,
+      this.getDeploymentsSubPath(chainId),
       name + ".json"
     );
 
@@ -166,15 +174,13 @@ export class DeploymentsManager {
 
     // console.log({chainId, typeOfChainId: typeof chainId});
     if (toSave) {
-      console.log("writing " + filepath); // TODO remove
+      // console.log("writing " + filepath); // TODO remove
       try {
-        fs.mkdirSync(
-          path.join(this.env.config.paths.deployments || "deployments")
-        );
+        fs.mkdirSync(this.deploymentsPath);
       } catch (e) {}
       try {
         fs.mkdirSync(
-          path.join(this.env.config.paths.deployments || "deployments", chainId)
+          path.join(this.deploymentsPath, this.getDeploymentsSubPath(chainId))
         );
       } catch (e) {}
       fs.writeFileSync(filepath, JSON.stringify(obj, null, "  "));
@@ -343,5 +349,9 @@ export class DeploymentsManager {
       fs.writeFileSync(options.export, JSON.stringify(all, null, "  ")); // TODO remove bytecode ?
     }
     return this.db.deployments;
+  }
+
+  private getDeploymentsSubPath(chainId: string): string {
+    return this.env.network.name || chainId;
   }
 }

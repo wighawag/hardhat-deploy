@@ -23,9 +23,8 @@ async function getChainId(bre) {
 
 function loadAllDeployments(deploymentsPath) {
   const all = {};
-  const deployPath = deploymentsPath || 'deployments';
-  fs.readdirSync(deployPath).forEach((name) => {
-    const fPath = path.resolve(deployPath, name);
+  fs.readdirSync(deploymentsPath).forEach((name) => {
+    const fPath = path.resolve(deploymentsPath, name);
     const stats = fs.statSync(fPath);
     if (stats.isDirectory()) {
       const contracts = loadDeployments(deploymentsPath, name);
@@ -35,9 +34,9 @@ function loadAllDeployments(deploymentsPath) {
   return all;
 }
 
-function loadDeployments(deploymentsPath, chainId) {
+function loadDeployments(deploymentsPath, subPath) {
   const contracts = {};
-  const deployPath = path.join(deploymentsPath || 'deployments', chainId);
+  const deployPath = path.join(deploymentsPath, subPath);
   let filesStats;
   try {
       filesStats = traverse(deployPath);
@@ -64,8 +63,8 @@ function loadDeployments(deploymentsPath, chainId) {
   return contracts;
 }
 
-function addDeployments(db, deploymentsPath, chainId) {
-  const contracts = loadDeployments(deploymentsPath, chainId);
+function addDeployments(db, deploymentsPath, subPath) {
+  const contracts = loadDeployments(deploymentsPath, subPath);
   for (const key of Object.keys(contracts)) {
     db.deployments[key] = contracts[key];
   }
@@ -73,7 +72,7 @@ function addDeployments(db, deploymentsPath, chainId) {
 
 function addNamedAccounts(bre, accounts, chainId) {
   if (bre.config.namedAccounts) {
-    bre.namedAccounts = transformNamedAccounts(bre.config.namedAccounts, chainId, accounts);
+    bre.namedAccounts = transformNamedAccounts(bre.config.namedAccounts, chainId, accounts, bre.network.name);
   } else {
     bre.namedAccounts = {};
   }

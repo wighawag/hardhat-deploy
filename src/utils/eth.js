@@ -413,21 +413,19 @@ async function call(options, contractName, methodName, ...args) {
   deploymentsExtension.batchTxAndWait = batchTxAndWait;
 }
 
-function chainConfig(object, chainId) {
-  // TODO ?
-  // const isDeploymentChainId = config.deploymentChainIds && config.deploymentChainIds.indexOf('' + chainId) != -1;
-  if (typeof object["" + chainId] != 'undefined') {
+function chainConfig(object, chainId, networkConfigName) {
+  if (typeof object[networkConfigName] != 'undefined') {
+    return object[networkConfigName];
+  } else if (typeof object["" + chainId] != 'undefined') {
       return object["" + chainId];
   } else if (typeof object[chainId] != 'undefined') {
       return object[chainId];
-  // } else if (isDeploymentChainId && typeof object['deployments'] != 'undefined') {
-  //     return object['deployments'];
   } else {
       return object['default'];
   }
 }
 
-function transformNamedAccounts(configNamedAccounts, chainId, accounts) {
+function transformNamedAccounts(configNamedAccounts, chainId, accounts, networkConfigName) {
   const namedAccounts = {}
   // TODO transform into checksum  address
   if (configNamedAccounts) {
@@ -467,7 +465,7 @@ function transformNamedAccounts(configNamedAccounts, chainId, accounts) {
                 address.push(parseSpec(spec[j]));
               }
             } else {
-              const newSpec = chainConfig(spec, chainId);
+              const newSpec = chainConfig(spec, chainId, networkConfigName);
               if(typeof newSpec != 'undefined') {
                 address = parseSpec(newSpec);
               }
