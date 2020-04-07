@@ -42,7 +42,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
   
   function init() {
     if (!provider) {
-      provider = env.ethereum; // new EthersProviderWrapper(env.ethereum);
+      provider = new Web3Provider(env.ethereum); // new EthersProviderWrapper(env.ethereum);
     }
   }
 

@@ -6,13 +6,14 @@ declare module "@nomiclabs/buidler/types" {
   export interface BuidlerRuntimeEnvironment {
     deployments: DeploymentsExtension;
     namedAccounts: { [name: string]: Address; }; // TODO Address type ?
+    ethers: {getContract(contractName: string, signer?: any): Promise<any>} // TODO as ethers type
   }
 
   export interface DeployFunction {
     (env: BuidlerRuntimeEnvironment): Promise<void>;
     skip?: (env: BuidlerRuntimeEnvironment) => Promise<boolean>;
-    tags: string[];
-    dependencies: string[];
+    tags?: string[];
+    dependencies?: string[];
   }
 
   export type BigNumber = any; // TODO bignumber form ethers
@@ -74,7 +75,8 @@ declare module "@nomiclabs/buidler/types" {
     deploymentChainIds: string[] // TODO remove, use network config option
   }
   export interface BuidlerConfig {
-    deploymentChainIds: string[] // TODO remove, use network config option
+    deploymentChainIds?: string[]; // TODO remove, use network config option
+    namedAccounts?: {[name: string]: any};
   }
 
   export interface ProjectPaths {

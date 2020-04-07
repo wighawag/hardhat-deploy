@@ -97,6 +97,9 @@ export default function() {
     const chainId = await getChainId(bre);
     // console.log('run chainId ', chainId);
     (bre.buidlerArguments as any)._deployPluginChainId = chainId;
+    // TODO add argument to deploy too (useful for testing script on buidlerevm)
+    // this will then set an flag on buidlerArguments so when run execute the script, the env can be fetched to check if deploy need to run
+    // Note this won't run now as run execute the buidler env twice currently
     const accounts = await bre.ethereum.send("eth_accounts");
     if (accounts.length > 0) {
       (bre.buidlerArguments as any)._deployPluginAccounts = accounts.join(".");

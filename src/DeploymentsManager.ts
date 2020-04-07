@@ -61,7 +61,7 @@ export class DeploymentsManager {
         return readArtifactSync(this.env.config.paths.artifacts, contractName);
       },
       run: (
-        tags: string | string[],
+        tags?: string | string[],
         options: {
           reset: boolean;
           noSaving?: boolean;
@@ -90,6 +90,8 @@ export class DeploymentsManager {
       this.deploymentsExtension,
       this.deploymentsExtension.getArtifact
     );
+
+    // this.runDeploy().catch(console.error);
   }
 
   public async addNamedAccounts() {
@@ -181,7 +183,7 @@ export class DeploymentsManager {
   }
 
   public async runDeploy(
-    tags: string | string[],
+    tags?: string | string[],
     options: { reset: boolean; noSaving: boolean; export?: string } = {
       reset: true,
       noSaving: false
@@ -221,6 +223,9 @@ export class DeploymentsManager {
       // console.log('fetching ' + scriptFilePath);
       try {
         deployScript = require(scriptFilePath);
+        if ((deployScript as any).default) {
+          deployScript = (deployScript as any).default as DeployFunction;
+        }
         scriptPaths[deployScript as any] = scriptFilePath;
       } catch (e) {
         console.error("require failed", e);
@@ -239,7 +244,7 @@ export class DeploymentsManager {
           bag.push(deployScript);
         }
       }
-      if (tags) {
+      if (tags !== undefined) {
         let found = false;
         if (tags) {
           for (const tagToFind of tags) {
