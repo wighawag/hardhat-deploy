@@ -56,7 +56,7 @@ declare module "@nomiclabs/buidler/types" {
     all(): { [name: string]: Deployment };
     getArtifact(): Artifact;
     run(
-      tags: string | string[],
+      tags?: string | string[],
       options?:{ reset: boolean }
     ): Promise<{ [name: string]: Deployment }>;
     log(...args: any[]): void;
