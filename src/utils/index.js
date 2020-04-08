@@ -21,20 +21,20 @@ async function getChainId(bre) {
   return chainId;
 }
 
-function loadAllDeployments(deploymentsPath) {
+function loadAllDeployments(deploymentsPath, onlyABIAndAddress) {
   const all = {};
   fs.readdirSync(deploymentsPath).forEach((name) => {
     const fPath = path.resolve(deploymentsPath, name);
     const stats = fs.statSync(fPath);
     if (stats.isDirectory()) {
-      const contracts = loadDeployments(deploymentsPath, name);
+      const contracts = loadDeployments(deploymentsPath, name, onlyABIAndAddress);
       all[name] = contracts;
     }
   });
   return all;
 }
 
-function loadDeployments(deploymentsPath, subPath) {
+function loadDeployments(deploymentsPath, subPath, onlyABIAndAddress) {
   const contracts = {};
   const deployPath = path.join(deploymentsPath, subPath);
   let filesStats;
@@ -54,7 +54,13 @@ function loadDeployments(deploymentsPath, subPath) {
   for (const fileName of fileNames) {
     if (fileName.substr(fileName.length-5) == '.json') {
       const deploymentFileName = path.join(deployPath, fileName);
-      const deployment = JSON.parse(fs.readFileSync(deploymentFileName).toString());
+      let deployment = JSON.parse(fs.readFileSync(deploymentFileName).toString());
+      if (onlyABIAndAddress) {
+        deployment = {
+          address: deployment.address,
+          abi: deployment.abi
+        };
+      }
       const name = fileName.slice(0, fileName.length-5);
       // console.log('fetching ' + deploymentFileName + '  for ' + name);
       contracts[name] = deployment;

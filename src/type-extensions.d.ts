@@ -10,11 +10,11 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface BuidlerNetworkConfig {
-    saveDeployments?: boolean;
+    live?: boolean;
   }
 
   export interface HttpNetworkConfig {
-    saveDeployments?: boolean;
+    live?: boolean;
   }
 
   export interface DeployFunction {

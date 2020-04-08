@@ -132,8 +132,8 @@ export class DeploymentsManager {
       // by default do not save on these 2 default network
       saveDeployments = false;
     }
-    if (this.env.network.config.saveDeployments !== undefined) {
-      saveDeployments = this.env.network.config.saveDeployments;
+    if (this.env.network.config.live !== undefined) {
+      saveDeployments = this.env.network.config.live;
     }
     const toSave = !this.db.noSaving && saveDeployments;
 
@@ -170,6 +170,7 @@ export class DeploymentsManager {
         return false; // TODO throw error ?
       }
     }
+
     this.db.deployments[name] = obj;
 
     // console.log({chainId, typeOfChainId: typeof chainId});
@@ -185,6 +186,9 @@ export class DeploymentsManager {
       } catch (e) {}
       fs.writeFileSync(filepath, JSON.stringify(obj, null, "  "));
     }
+
+    // this.spreadEvents();
+
     return true;
   }
 
@@ -337,12 +341,21 @@ export class DeploymentsManager {
     }
     this.db.noSaving = false;
     if (options.export !== undefined) {
-      const all = loadAllDeployments(
-        this.env.config.paths.deployments ||
-          this.env.config.paths.root + "/deployments"
-      );
+      const all = loadAllDeployments(this.deploymentsPath, true);
       if (this.env.deployments.chainId !== undefined) {
-        all[this.env.deployments.chainId] = this.db.deployments;
+        const subPath = this.getDeploymentsSubPath(
+          this.env.deployments.chainId
+        );
+        const currentNetworkDeployments: {[contractName: string]: {address: string, abi: any[]}} = {};
+        const currentDeployments = this.db.deployments;
+        for (const contractName of Object.keys(currentDeployments)) {
+          const deployment = currentDeployments[contractName];
+          currentNetworkDeployments[contractName] = {
+            address: deployment.address,
+            abi: deployment.abi
+          };
+        }
+        all[subPath] = currentNetworkDeployments;
       } else {
         console.error("chainId is undefined");
       }
@@ -354,4 +367,18 @@ export class DeploymentsManager {
   private getDeploymentsSubPath(chainId: string): string {
     return this.env.network.name || chainId;
   }
+
+  // TODO ?
+  // private spreadEvents() {
+  //   const allEvents [];
+  //   const allEventsNames
+  //   for (const contractName of Object.keys(this.db.deployments)) {
+  //     const deployment = this.db.deployments[contractName];
+  //     replaceEvents(deployment, allEvents);
+  //   }
+  //   for (const contractName of Object.keys(this.db.deployments)) {
+  //     const deployment = this.db.deployments[contractName];
+  //     replaceEvents(deployment, allEvents);
+  //   }
+  // }
 }

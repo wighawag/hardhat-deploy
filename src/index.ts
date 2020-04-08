@@ -75,7 +75,7 @@ export default function() {
     .addOptionalParam("node", "specify node to connect to")
     .setAction(async args => {
       return deploymentsManager.runDeploy(args.tags, {
-        reset: true,
+        reset: false,
         noSaving: false
       });
     });
