@@ -335,7 +335,9 @@ export class DeploymentsManager {
         const subPath = this.getDeploymentsSubPath(
           this.env.deployments.chainId
         );
-        const currentNetworkDeployments: {[contractName: string]: {address: string, abi: any[]}} = {};
+        const currentNetworkDeployments: {
+          [contractName: string]: { address: string; abi: any[] };
+        } = {};
         const currentDeployments = this.db.deployments;
         for (const contractName of Object.keys(currentDeployments)) {
           const deployment = currentDeployments[contractName];

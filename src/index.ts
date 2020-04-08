@@ -85,7 +85,8 @@ export default function() {
     .setAction(async args => {
       return deploymentsManager.runDeploy(args.tags, {
         reset: false,
-        noSaving: false
+        noSaving: false,
+        export: args.export
       });
     });
 
