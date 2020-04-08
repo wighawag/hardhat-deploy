@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Buidler Plugin For Deployments",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -42,11 +42,9 @@
   "dependencies": {
     "@ethersproject/bignumber": "^5.0.0-beta.136",
     "@ethersproject/contracts": "^5.0.0-beta.145",
+    "@ethersproject/logger": "^5.0.0-beta.136",
     "@ethersproject/providers": "^5.0.0-beta.156",
     "chalk": "^4.0.0"
-  },
-  "resolutions": {
-    "@ethersproject/logger": "5.0.0-beta.136"
   },
   "scripts": {
     "lint:fix": "prettier --write 'src/**/*.{js,ts}' 'test/**/*.{js,ts}' && tslint --fix --config tslint.json --project tsconfig.json",

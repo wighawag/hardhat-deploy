@@ -149,7 +149,7 @@
     "@ethersproject/bytes" ">=5.0.0-beta.129"
     js-sha3 "0.5.7"
 
-"@ethersproject/logger@5.0.0-beta.136", "@ethersproject/logger@>=5.0.0-beta.129":
+"@ethersproject/logger@>=5.0.0-beta.129", "@ethersproject/logger@^5.0.0-beta.136":
   version "5.0.0-beta.136"
   resolved "https://registry.yarnpkg.com/@ethersproject/logger/-/logger-5.0.0-beta.136.tgz#a140cea77e1d820a97384fb02bfad63c130f31c1"
   integrity sha512-baWK/4ccsVcyUU20nhp7k+hoRYsiaOfURYlyvQCoUUFKD3mpSRQCH42wxCosZZSCWz4rTHgASLQDdKkBtNVz1w==
