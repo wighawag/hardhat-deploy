@@ -79,19 +79,22 @@ export default function() {
   );
 
   internalTask("deploy:runDeploy", "execute the deployment scripts")
-    .addOptionalParam("export", "export deployment info into one file")
+    .addOptionalParam("export", "export current network deployments")
+    .addOptionalParam("exportAll", "export all deployments into one file")
     .addOptionalParam("tags", "dependencies to run")
     .addOptionalParam("node", "specify node to connect to")
     .setAction(async args => {
       return deploymentsManager.runDeploy(args.tags, {
         reset: false,
         noSaving: false,
-        export: args.export
+        export: args.export,
+        exportAll: args.exportAll
       });
     });
 
   task("deploy", "Deploy contracts")
-    .addOptionalParam("export", "export deployment info into one file")
+    .addOptionalParam("export", "export current network deployments")
+    .addOptionalParam("exportAll", "export all deployments into one file")
     .setAction(async (args, bre) => {
       await bre.run("compile");
       await bre.run("deploy:runDeploy", args);
@@ -118,7 +121,8 @@ export default function() {
   });
 
   task("listen")
-    .addOptionalParam("export", "export deployment info into one file")
+    .addOptionalParam("export", "export current network deployments")
+    .addOptionalParam("exportAll", "export all deployments into one file")
     .addOptionalParam("hostname")
     .addOptionalParam("port")
     .setAction(async (args, bre) => {

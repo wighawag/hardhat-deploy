@@ -13,7 +13,8 @@ const {
   addNamedAccounts,
   getChainId,
   loadAllDeployments,
-  traverse
+  traverse,
+  nameToChainId
 } = require("./utils");
 const {
   addHelpers,
@@ -183,7 +184,12 @@ export class DeploymentsManager {
 
   public async runDeploy(
     tags?: string | string[],
-    options: { reset: boolean; noSaving: boolean; export?: string } = {
+    options: {
+      reset: boolean;
+      noSaving: boolean;
+      export?: string;
+      exportAll?: string;
+    } = {
       reset: true,
       noSaving: false
     }
@@ -329,12 +335,9 @@ export class DeploymentsManager {
       throw e;
     }
     this.db.noSaving = false;
-    if (options.export !== undefined) {
+    if (options.exportAll !== undefined) {
       const all = loadAllDeployments(this.deploymentsPath, true);
       if (this.env.deployments.chainId !== undefined) {
-        const subPath = this.getDeploymentsSubPath(
-          this.env.deployments.chainId
-        );
         const currentNetworkDeployments: {
           [contractName: string]: { address: string; abi: any[] };
         } = {};
@@ -346,17 +349,74 @@ export class DeploymentsManager {
             abi: deployment.abi
           };
         }
-        all[subPath] = currentNetworkDeployments;
+        if (all[this.env.deployments.chainId] === undefined) {
+          all[this.env.deployments.chainId] = [];
+        } else {
+          // Ensure no past deployments are recorded
+          all[this.env.deployments.chainId] = all[
+            this.env.deployments.chainId
+          ].filter((value: any) => value.name !== this.env.network.name);
+        }
+        all[this.env.deployments.chainId].push({
+          name: this.env.network.name,
+          contracts: currentNetworkDeployments
+        });
       } else {
-        console.error("chainId is undefined");
+        throw new Error("chainId is undefined");
       }
-      fs.writeFileSync(options.export, JSON.stringify(all, null, "  ")); // TODO remove bytecode ?
+      fs.writeFileSync(options.exportAll, JSON.stringify(all, null, "  ")); // TODO remove bytecode ?
     }
+
+    if (options.export !== undefined) {
+      const currentNetworkDeployments: {
+        [contractName: string]: { address: string; abi: any[] };
+      } = {};
+      if (this.env.deployments.chainId !== undefined) {
+        const currentDeployments = this.db.deployments;
+        for (const contractName of Object.keys(currentDeployments)) {
+          const deployment = currentDeployments[contractName];
+          currentNetworkDeployments[contractName] = {
+            address: deployment.address,
+            abi: deployment.abi
+          };
+        }
+      } else {
+        throw new Error("chainId is undefined");
+      }
+      fs.writeFileSync(
+        options.export,
+        JSON.stringify(
+          {
+            chainId: this.env.deployments.chainId,
+            contracts: currentNetworkDeployments
+          },
+          null,
+          "  "
+        )
+      ); // TODO remove bytecode ?
+    }
+
     return this.db.deployments;
   }
 
   private getDeploymentsSubPath(chainId: string): string {
-    return this.env.network.name || chainId;
+    const name = this.env.network.name;
+    const num = parseInt(name, 10);
+    let expectedChainId: string;
+    if (typeof num === "number" && !isNaN(num)) {
+      expectedChainId = name;
+    } else {
+      expectedChainId = nameToChainId[name];
+    }
+    if (expectedChainId !== undefined) {
+      if (expectedChainId !== chainId) {
+        throw new Error(
+          `Network name ("${name}") is confusing, chainId is ${chainId}. Was expecting ${expectedChainId}`
+        );
+      }
+      return name;
+    }
+    return name + "_" + chainId;
   }
 
   // TODO ?

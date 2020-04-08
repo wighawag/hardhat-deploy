@@ -2,6 +2,16 @@ const fs = require('fs');
 const path = require('path');
 const {transformNamedAccounts} = require('./eth');
 
+const nameToChainId = {
+  mainnet: "1",
+  eth: "1",
+  rinkeby: "4",
+  kovan: "42",
+  xdai: "100",
+  sokol: "77",
+  ropsten: "3",
+}
+
 let chainId;
 async function getChainId(bre) {
   if (chainId) {
@@ -23,12 +33,35 @@ async function getChainId(bre) {
 
 function loadAllDeployments(deploymentsPath, onlyABIAndAddress) {
   const all = {};
-  fs.readdirSync(deploymentsPath).forEach((name) => {
-    const fPath = path.resolve(deploymentsPath, name);
+  fs.readdirSync(deploymentsPath).forEach((fileName) => {
+    const fPath = path.resolve(deploymentsPath, fileName);
     const stats = fs.statSync(fPath);
+    let name = fileName;
     if (stats.isDirectory()) {
-      const contracts = loadDeployments(deploymentsPath, name, onlyABIAndAddress);
-      all[name] = contracts;
+      let chainId;
+      const _index = fileName.lastIndexOf("_");
+      if (_index === -1) {
+        chainId = nameToChainId[fileName];
+        if (chainId === undefined) {
+          const num = parseInt(fileName, 10);
+          if (typeof num === "number" && !isNaN(num)) {
+            chainId = fileName;
+          } else {
+            throw new Error(`invalid chainId on deployments folder name: ${fileName}`);
+          }
+        }
+      } else {
+        chainId = fileName.substr(_index + 1);
+        name = fileName.substr(0, _index);
+      }
+      if (!all[chainId]) {
+        all[chainId] = [];
+      }
+      const contracts = loadDeployments(deploymentsPath, fileName, onlyABIAndAddress);
+      all[chainId].push({
+        name,
+        contracts
+      });
     }
   });
   return all;
@@ -107,4 +140,5 @@ module.exports = {
     addDeployments,
     addNamedAccounts,
     loadAllDeployments,
+    nameToChainId,
 }
