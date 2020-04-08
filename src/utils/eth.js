@@ -69,7 +69,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
     } else {
         ethersSigner = provider.getSigner(from);
     }
-    const Artifact = getArtifact(contractName);
+    const Artifact = await getArtifact(contractName);
     const abi = Artifact.abi;
     let byteCode = Artifact.bytecode
     if (options && options.libraries) {
@@ -87,11 +87,18 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
         nonce: options.nonce,
         chainId: options.chainId,
     }
-    const ethersContract = await factory.deploy(...args, overrides);
+    let ethersContract
+    // try {
+      ethersContract = await factory.deploy(...args, overrides);
+    // } catch (e) {
+      // console.error('cannot deploy', e);
+      // throw e;
+    // }
+    
     const tx = ethersContract.deployTransaction;
     const transactionHash = tx.hash;
     if (register) {
-        env.deployments.save(name, {
+       await env.deployments.save(name, {
             address: null,
             abi,
             transactionHash,
@@ -104,12 +111,21 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
             await provider.send('evm_mine', []);
         } catch(e) {}
     }
-    const receipt = await tx.wait(); // TODO return tx.wait
+
+    let receipt;
+    // try {
+      receipt = await tx.wait(); // TODO return tx.wait
+    // } catch (e) {
+      // console.log({name, options, contractName, ...args});
+      // console.error('cannot deploy', e);
+      // throw e;
+    // }
+
     const address = receipt.contractAddress;
     const contract = {address, abi};
 
     if (register) {
-      env.deployments.save(name, {
+      await env.deployments.save(name, {
         address: contract.address,
         abi,
         transactionHash,
@@ -126,11 +142,17 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
   };
 
   async function getDeployedContractWithTransactionHash(name) {
-    const deployment = env.deployments.get(name);
+    const deployment = await env.deployments.get(name);
     if (!deployment) {
         return null;
     }
-    const receipt = await provider.getTransactionReceipt(deployment.transactionHash);
+    let receipt;
+    try {
+      receipt = await provider.getTransactionReceipt(deployment.transactionHash);
+    } catch (e) {
+      console.error('cannot get receipt', e);
+      throw e;
+    }
     return { contract: {address: deployment.address, abi : deployment.abi}, transactionHash: deployment.transactionHash, receipt };
   }
 
@@ -138,11 +160,11 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
     if (typeof fieldsToCompare === 'string') {
       fieldsToCompare = [fieldsToCompare];
     }
-    const deployment = env.deployments.get(name);
+    const deployment = await env.deployments.get(name);
     if (deployment) {
         const transaction = await provider.getTransaction(deployment.transactionHash);
         if (transaction) {
-            const Artifact = getArtifact(contractName);
+            const Artifact = await getArtifact(contractName);
             const abi = Artifact.abi;
             const factory = new ContractFactory(abi, Artifact.bytecode, provider.getSigner(options.from));
 
@@ -225,7 +247,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
 
   // TODO ?
   async function sendTxAndWaitOnlyFrom(from, options, contractName, methodName, ...args) {
-    const deployment = env.deployments.get(contractName);
+    const deployment = await env.deployments.get(contractName);
     const abi = deployment.abi;
     const ethersContract = new Contract(deployment.address, abi, provider);
     if (from.toLowerCase() !== options.from.toLowerCase()) {
@@ -272,7 +294,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
 
     let tx;
     if (contractName) {
-      const deployment = env.deployments.get(contractName);
+      const deployment = await env.deployments.get(contractName);
       const abi = deployment.abi
       const overrides = {
         gasLimit: options.gas,
@@ -370,7 +392,7 @@ async function call(options, contractName, methodName, ...args) {
     if(!ethersSigner) {
         ethersSigner = provider; // TODO rename ethersSigner
     }
-    const deployment = env.deployments.get(contractName);
+    const deployment = await env.deployments.get(contractName);
     if (!deployment) {
         throw new Error(`no contract named "${contractName}"`);
     }
