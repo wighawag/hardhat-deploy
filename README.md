@@ -28,7 +28,7 @@ usePlugin('buidler-deploy');
 
 This plugin adds the _deploy_ task to Buidler
 
-This tasks will be executing scripts in the `deploy` folder and save contract deployment for configured chains
+This tasks will be executing scripts in the `deploy` folder and save contract deployments
 
 
 ## Environment extensions
@@ -36,7 +36,6 @@ This tasks will be executing scripts in the `deploy` folder and save contract de
 This plugin extends the Buidler Runtime Environment by adding 2 fields
 - namedAccounts that is an object where keys are names and value are addresses. It is parsed from the namedAccounts configuration (see Configuration)
 - deployments which contains functions to access past deployment or save new one, as well as helpers functions
-
 
 
 ## Configuration
@@ -101,10 +100,10 @@ module.exports = async ({namedAccounts, deployments}) => {
     const {deployIfDifferent, log} = deployments;
     const {deployer} = namedAccounts;
 
-    let contract = deployments.get('GenericMetaTxProcessor');
+    let contract = await deployments.get('GenericMetaTxProcessor');
     if (!contract) {
         const deployResult = await deployIfDifferent(['data'], "GenericMetaTxProcessor",  {from: deployer, gas: 4000000}, "GenericMetaTxProcessor");
-        contract = deployments.get('GenericMetaTxProcessor');
+        contract = await deployments.get('GenericMetaTxProcessor');
         if(deployResult.newlyDeployed) {
             log(`GenericMetaTxProcessor deployed at ${contract.address} for ${deployResult.receipt.gasUsed}`);
         }
@@ -117,7 +116,7 @@ As you can see the BRE passed in has 2 new fields :
 - deployments which contains functions to access past deployment or save new one, as well as helpers functions
 
 
-Note that running `buidler deploy` without network will use the defautl network. If the default network is an internal ganache or buidlerevm then nothing will happen as a result but this can be used to ensure the deployment is without issues.
+Note that running `buidler deploy` without network will use the default network. If the default network is an internal ganache or buidlerevm then nothing will happen as a result but this can be used to ensure the deployment is without issues.
 
 ### test
 
@@ -142,9 +141,9 @@ describe("Token", () => {
       await deployments.run(['ERC721BidSale']);
     })
     it("testing 1 2 3", async function() {
-      const Token = deployments.get('Token'); // Token is available because Token is a dependency of ERC721BidSale deploy script
+      const Token = await deployments.get('Token'); // Token is available because Token is a dependency of ERC721BidSale deploy script
       console.log(Token.address);
-      const ERC721BidSale = deployments.get('ERC721BidSale');
+      const ERC721BidSale = await deployments.get('ERC721BidSale');
       console.log({ERC721BidSale});
     });
 });
@@ -156,7 +155,7 @@ describe("Token", () => {
 
 The node command is updated so that now when the node is serving, all contract are already deployed.
 
-It also add an argument `--export` that allow you to specify a destination file where the info about all contracts deployed (across networks) is written.
+It also add an argument `--export` that allow you to specify a destination file where the info about the contracts deployed is written.
 Your webapp can then access all contracts information.
 
 Note: for now, you have to use `buidler listen` instead of `buidler node` as buidler does not let plugin add options to existing task yet.
@@ -173,9 +172,12 @@ Here is an example of script that run can support
 const bre = require('@nomiclabs/buidler');
 const { deployments, namedAccounts } = bre;
 
-console.log(deployments.all())
-console.log({namedAccounts});
+(async() => {
+    console.log(await deployments.all())
+    console.log({namedAccounts});
+})()
 ```
+You can also run it directly from the command line as usual.
 
 
 ### compile
@@ -217,7 +219,7 @@ module.exports.tags = ['Token'];
 module.exports = async function({namedAccounts, deployments}) {
     const {deployIfDifferent, log} = deployments;
     const {deployer} = namedAccounts;
-    const Token = deployments.get('Token');
+    const Token = await deployments.get('Token');
     const deployResult = await deployIfDifferent('data', 'ERC721BidSale', {from: deployer}, 'ERC721BidSale', Token.address, 1, 3600);
     if (deployResult.newlyDeployed) {
         log(`contract ERC721BidSale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
