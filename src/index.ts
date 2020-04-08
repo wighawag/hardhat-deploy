@@ -47,6 +47,15 @@ function fixProvider(env: BuidlerRuntimeEnvironment) {
 export default function() {
   let deploymentsManager: DeploymentsManager;
   extendEnvironment(env => {
+    let live = true;
+    if (env.network.name === "localhost" || env.network.name === "buidlerevm") {
+      // the 2 default network are not live network
+      live = false;
+    }
+    if (env.network.config.live !== undefined) {
+      live = env.network.config.live;
+    }
+    env.network.live = live;
     // console.log({
     //   envChainId: process.env.BUIDLER__DEPLOY_PLUGIN_CHAIN_ID,
     //   envAccounts: process.env.BUIDLER__DEPLOY_PLUGIN_ACCOUNTS,

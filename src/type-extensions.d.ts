@@ -1,12 +1,10 @@
 import "@nomiclabs/buidler/types";
-import { Artifact } from "@nomiclabs/buidler/types";
 
 declare module "@nomiclabs/buidler/types" {
   
   export interface BuidlerRuntimeEnvironment {
     deployments: DeploymentsExtension;
     namedAccounts: { [name: string]: Address; }; // TODO Address type ?
-    ethers: {getContract(contractName: string, signer?: any): Promise<any>} // TODO as ethers type
   }
 
   export interface BuidlerNetworkConfig {
@@ -15,6 +13,10 @@ declare module "@nomiclabs/buidler/types" {
 
   export interface HttpNetworkConfig {
     live?: boolean;
+  }
+
+  export interface Network {
+    live: boolean;
   }
 
   export interface DeployFunction {
@@ -79,9 +81,6 @@ declare module "@nomiclabs/buidler/types" {
     batchTxAndWait(txs: any[][], batchOptions: {dev_forceMine: boolean}): void; // TODO use TxObject instead of arrays
   }
 
-  // export interface ResolvedBuidlerConfig {
-    
-  // }
   export interface BuidlerConfig {
     namedAccounts?: {[name: string]: any};
   }

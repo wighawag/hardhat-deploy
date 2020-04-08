@@ -124,18 +124,7 @@ export class DeploymentsManager {
   ): Promise<boolean> {
     const chainId = await getChainId(this.env);
 
-    let saveDeployments = true;
-    if (
-      this.env.network.name === "localhost" ||
-      this.env.network.name === "buidlerevm"
-    ) {
-      // by default do not save on these 2 default network
-      saveDeployments = false;
-    }
-    if (this.env.network.config.live !== undefined) {
-      saveDeployments = this.env.network.config.live;
-    }
-    const toSave = !this.db.noSaving && saveDeployments;
+    const toSave = !this.db.noSaving && this.env.network.live;
 
     const filepath = path.join(
       this.deploymentsPath,
@@ -247,7 +236,7 @@ export class DeploymentsManager {
         );
       }
       const scriptTags = deployScript.tags;
-      if (scriptTags) {
+      if (scriptTags !== undefined) {
         for (const tag of scriptTags) {
           const bag = scriptsBags[tag] || [];
           scriptsBags[tag] = bag;
@@ -256,9 +245,9 @@ export class DeploymentsManager {
       }
       if (tags !== undefined) {
         let found = false;
-        if (tags) {
+        if (scriptTags !== undefined) {
           for (const tagToFind of tags) {
-            for (const tag of tags) {
+            for (const tag of scriptTags) {
               if (tag === tagToFind) {
                 scripts.push(deployScript);
                 found = true;
