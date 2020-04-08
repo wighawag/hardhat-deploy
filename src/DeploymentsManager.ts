@@ -25,13 +25,14 @@ const {
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
 
-  private db: { deployments: any; noSaving: boolean };
+  private db: { loaded: boolean; deployments: any; noSaving: boolean };
 
   private env: BuidlerRuntimeEnvironment;
   private deploymentsPath: string;
 
   constructor(env: BuidlerRuntimeEnvironment) {
     this.db = {
+      loaded: false,
       deployments: {},
       noSaving: false
     };
@@ -48,23 +49,32 @@ export class DeploymentsManager {
         envAccounts ? envAccounts.split(".") : [],
         envChainId
       );
-      addDeployments(
-        this.db,
-        this.deploymentsPath,
-        this.getDeploymentsSubPath(envChainId)
-      );
+      if (!this.db.loaded) {
+        addDeployments(
+          this.db,
+          this.deploymentsPath,
+          this.getDeploymentsSubPath(envChainId)
+        );
+        this.db.loaded = true;
+      }
     }
 
     this.deploymentsExtension = {
-      save: (name: string, deployment: Deployment): Promise<boolean> =>
+      save: async (name: string, deployment: Deployment): Promise<boolean> =>
         this.saveDeployment(name, deployment),
-      get: (name: string) => {
+      get: async (name: string) => {
+        if (!this.db.loaded) {
+          await this.loadDeployments();
+        }
         return this.db.deployments[name];
       },
-      all: () => {
+      all: async () => {
         return this.db.deployments; // TODO copy
       },
-      getArtifact: (contractName: string) => {
+      getArtifact: async (contractName: string): Promise<any> => {
+        return readArtifactSync(this.env.config.paths.artifacts, contractName);
+      },
+      getArtifactSync: (contractName: string): any => {
         return readArtifactSync(this.env.config.paths.artifacts, contractName);
       },
       run: (
@@ -110,12 +120,13 @@ export class DeploymentsManager {
 
   public async loadDeployments(): Promise<{ [name: string]: Deployment }> {
     const chainId = await getChainId(this.env);
-    this.env.deployments.chainId = chainId;
+    // this.env.deployments.chainId = chainId;
     addDeployments(
       this.db,
       this.deploymentsPath,
       this.getDeploymentsSubPath(chainId)
     );
+    this.db.loaded = true;
     return this.db.deployments;
   }
 
@@ -334,36 +345,32 @@ export class DeploymentsManager {
       this.db.noSaving = false;
       throw e;
     }
+
+    const chainId = await getChainId();
     this.db.noSaving = false;
     if (options.exportAll !== undefined) {
       const all = loadAllDeployments(this.deploymentsPath, true);
-      if (this.env.deployments.chainId !== undefined) {
-        const currentNetworkDeployments: {
-          [contractName: string]: { address: string; abi: any[] };
-        } = {};
-        const currentDeployments = this.db.deployments;
-        for (const contractName of Object.keys(currentDeployments)) {
-          const deployment = currentDeployments[contractName];
-          currentNetworkDeployments[contractName] = {
-            address: deployment.address,
-            abi: deployment.abi
-          };
-        }
-        if (all[this.env.deployments.chainId] === undefined) {
-          all[this.env.deployments.chainId] = [];
-        } else {
-          // Ensure no past deployments are recorded
-          all[this.env.deployments.chainId] = all[
-            this.env.deployments.chainId
-          ].filter((value: any) => value.name !== this.env.network.name);
-        }
-        all[this.env.deployments.chainId].push({
-          name: this.env.network.name,
-          contracts: currentNetworkDeployments
-        });
-      } else {
-        throw new Error("chainId is undefined");
+      const currentNetworkDeployments: {
+        [contractName: string]: { address: string; abi: any[] };
+      } = {};
+      const currentDeployments = this.db.deployments;
+      for (const contractName of Object.keys(currentDeployments)) {
+        const deployment = currentDeployments[contractName];
+        currentNetworkDeployments[contractName] = {
+          address: deployment.address,
+          abi: deployment.abi
+        };
       }
+      if (all[chainId] === undefined) {
+        all[chainId] = [];
+      } else {
+        // Ensure no past deployments are recorded
+        all[chainId] = all[chainId].filter((value: any) => value.name !== this.env.network.name);
+      }
+      all[chainId].push({
+        name: this.env.network.name,
+        contracts: currentNetworkDeployments
+      });
       fs.writeFileSync(options.exportAll, JSON.stringify(all, null, "  ")); // TODO remove bytecode ?
     }
 
@@ -371,7 +378,7 @@ export class DeploymentsManager {
       const currentNetworkDeployments: {
         [contractName: string]: { address: string; abi: any[] };
       } = {};
-      if (this.env.deployments.chainId !== undefined) {
+      if (chainId !== undefined) {
         const currentDeployments = this.db.deployments;
         for (const contractName of Object.keys(currentDeployments)) {
           const deployment = currentDeployments[contractName];
@@ -387,7 +394,7 @@ export class DeploymentsManager {
         options.export,
         JSON.stringify(
           {
-            chainId: this.env.deployments.chainId,
+            chainId,
             contracts: currentNetworkDeployments
           },
           null,

@@ -61,16 +61,17 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface DeploymentsExtension {
-    save(name: string, deployment: Deployment): void;
-    get(name: string): Deployment;
-    all(): { [name: string]: Deployment };
-    getArtifact(): Artifact;
+    save(name: string, deployment: Deployment): Promise<void>;
+    get(name: string): Promise<Deployment>;
+    all(): Promise<{ [name: string]: Deployment }>;
+    getArtifactSync(): Artifact; // TODO remove ?
+    getArtifact(): Promise<Artifact>;
     run(
       tags?: string | string[],
       options?:{ reset: boolean }
     ): Promise<{ [name: string]: Deployment }>;
     log(...args: any[]): void;
-    chainId?: string;
+    // chainId?: string; // TODO remove ? or make it getChainId(): Promise<string> ? (but that would be not much useful)
     deploy(name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
     deployIfDifferent(fieldsToCompare: string[], name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
     sendTxAndWait(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
@@ -78,7 +79,7 @@ declare module "@nomiclabs/buidler/types" {
     call(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<any>;
     call(contractName: string, methodName: string, ...args: any[]) : Promise<any>;
     rawCall(to: Address, data: string): Promise<any>;
-    batchTxAndWait(txs: any[][], batchOptions: {dev_forceMine: boolean}): void; // TODO use TxObject instead of arrays
+    batchTxAndWait(txs: any[][], batchOptions: {dev_forceMine: boolean}): Promise<any>; // TODO use TxObject instead of arrays
   }
 
   export interface BuidlerConfig {
