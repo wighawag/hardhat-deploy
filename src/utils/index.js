@@ -91,7 +91,8 @@ function loadDeployments(deploymentsPath, subPath, onlyABIAndAddress) {
       if (onlyABIAndAddress) {
         deployment = {
           address: deployment.address,
-          abi: deployment.abi
+          abi: deployment.abi,
+          linkedData: deployment.linkedData
         };
       }
       const name = fileName.slice(0, fileName.length-5);

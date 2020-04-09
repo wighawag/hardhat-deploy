@@ -351,21 +351,28 @@ export class DeploymentsManager {
     if (options.exportAll !== undefined) {
       const all = loadAllDeployments(this.deploymentsPath, true);
       const currentNetworkDeployments: {
-        [contractName: string]: { address: string; abi: any[] };
+        [contractName: string]: {
+          address: string;
+          abi: any[];
+          linkedData?: any;
+        };
       } = {};
       const currentDeployments = this.db.deployments;
       for (const contractName of Object.keys(currentDeployments)) {
         const deployment = currentDeployments[contractName];
         currentNetworkDeployments[contractName] = {
           address: deployment.address,
-          abi: deployment.abi
+          abi: deployment.abi,
+          linkedData: deployment.linkedData
         };
       }
       if (all[chainId] === undefined) {
         all[chainId] = [];
       } else {
         // Ensure no past deployments are recorded
-        all[chainId] = all[chainId].filter((value: any) => value.name !== this.env.network.name);
+        all[chainId] = all[chainId].filter(
+          (value: any) => value.name !== this.env.network.name
+        );
       }
       all[chainId].push({
         name: this.env.network.name,
@@ -376,7 +383,11 @@ export class DeploymentsManager {
 
     if (options.export !== undefined) {
       const currentNetworkDeployments: {
-        [contractName: string]: { address: string; abi: any[] };
+        [contractName: string]: {
+          address: string;
+          abi: any[];
+          linkedData?: any;
+        };
       } = {};
       if (chainId !== undefined) {
         const currentDeployments = this.db.deployments;
@@ -384,7 +395,8 @@ export class DeploymentsManager {
           const deployment = currentDeployments[contractName];
           currentNetworkDeployments[contractName] = {
             address: deployment.address,
-            abi: deployment.abi
+            abi: deployment.abi,
+            linkedData: deployment.linkedData
           };
         }
       } else {
