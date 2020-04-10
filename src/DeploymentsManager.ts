@@ -362,6 +362,10 @@ export class DeploymentsManager {
       func: DeployFunction;
       filePath: string;
     }> = [];
+    const scriptsToRunAtTheEnd: Array<{
+      func: DeployFunction;
+      filePath: string;
+    }> = [];
     function recurseDependencies(scriptFilePath: string) {
       if (scriptsRegisteredToRun[scriptFilePath]) {
         return;
@@ -378,10 +382,17 @@ export class DeploymentsManager {
         }
       }
       if (!scriptsRegisteredToRun[scriptFilePath]) {
-        scriptsToRun.push({
-          filePath: scriptFilePath,
-          func: deployFunc
-        });
+        if (deployFunc.runAtTheEnd) {
+          scriptsToRunAtTheEnd.push({
+            filePath: scriptFilePath,
+            func: deployFunc
+          });
+        } else {
+          scriptsToRun.push({
+            filePath: scriptFilePath,
+            func: deployFunc
+          });
+        }
         scriptsRegisteredToRun[scriptFilePath] = true;
       }
     }
@@ -394,7 +405,7 @@ export class DeploymentsManager {
       this.db.noSaving = true;
     }
     try {
-      for (const deployScript of scriptsToRun) {
+      for (const deployScript of scriptsToRun.concat(scriptsToRunAtTheEnd)) {
         let skip = false;
         if (deployScript.func.skip) {
           log(`should we skip  ${deployScript.filePath} ?`);
@@ -409,9 +420,10 @@ export class DeploymentsManager {
                 (e.stack || e)
             );
           }
+          log(`checking skip for ${deployScript.filePath} complete`);
         }
         if (!skip) {
-          log(`executing  ${deployScript.filePath} ?`);
+          log(`executing  ${deployScript.filePath}`);
           try {
             await deployScript.func(this.env);
           } catch (e) {
@@ -423,12 +435,14 @@ export class DeploymentsManager {
                 (e.stack || e)
             );
           }
+          log(`executing ${deployScript.filePath} complete`);
         }
       }
     } catch (e) {
       this.db.noSaving = false;
       throw e;
     }
+    log("deploy scripts complete");
 
     const chainId = await getChainId();
     this.db.noSaving = false;
@@ -500,8 +514,8 @@ export class DeploymentsManager {
           "  "
         )
       ); // TODO remove bytecode ?
+      log("single export complete");
     }
-    log("single export complete");
     return this.db.deployments;
   }
 

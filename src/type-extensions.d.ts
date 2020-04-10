@@ -24,6 +24,7 @@ declare module "@nomiclabs/buidler/types" {
     skip?: (env: BuidlerRuntimeEnvironment) => Promise<boolean>;
     tags?: string[];
     dependencies?: string[];
+    runAtTheEnd?:boolean;
   }
 
   export type BigNumber = any; // TODO bignumber form ethers
