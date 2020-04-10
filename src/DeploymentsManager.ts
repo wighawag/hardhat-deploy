@@ -230,19 +230,19 @@ export class DeploymentsManager {
       return 0;
     });
 
-    const scriptPaths: any = {};
-    const scriptsBags: { [tag: string]: DeployFunction[] } = {};
-    const scripts: DeployFunction[] = [];
-    for (const fileName of fileNames) {
-      const scriptFilePath = deployPath + "/" + fileName;
-      let deployScript: DeployFunction;
+    const funcByFilePath: { [filename: string]: DeployFunction } = {};
+    const scriptPathBags: { [tag: string]: string[] } = {};
+    const scriptFilePaths: string[] = [];
+    for (const filename of fileNames) {
+      const scriptFilePath = deployPath + "/" + filename;
+      let deployFunc: DeployFunction;
       // console.log('fetching ' + scriptFilePath);
       try {
-        deployScript = require(scriptFilePath);
-        if ((deployScript as any).default) {
-          deployScript = (deployScript as any).default as DeployFunction;
+        deployFunc = require(scriptFilePath);
+        if ((deployFunc as any).default) {
+          deployFunc = (deployFunc as any).default as DeployFunction;
         }
-        scriptPaths[deployScript as any] = scriptFilePath;
+        funcByFilePath[scriptFilePath] = deployFunc;
       } catch (e) {
         console.error("require failed", e);
         throw new Error(
@@ -252,15 +252,15 @@ export class DeploymentsManager {
             (e.stack || e)
         );
       }
-      let scriptTags = deployScript.tags;
+      let scriptTags = deployFunc.tags;
       if (scriptTags !== undefined) {
         if (typeof scriptTags === "string") {
           scriptTags = [scriptTags];
         }
         for (const tag of scriptTags) {
-          const bag = scriptsBags[tag] || [];
-          scriptsBags[tag] = bag;
-          bag.push(deployScript);
+          const bag = scriptPathBags[tag] || [];
+          scriptPathBags[tag] = bag;
+          bag.push(scriptFilePath);
         }
       }
       if (tags !== undefined) {
@@ -269,7 +269,7 @@ export class DeploymentsManager {
           for (const tagToFind of tags) {
             for (const tag of scriptTags) {
               if (tag === tagToFind) {
-                scripts.push(deployScript);
+                scriptFilePaths.push(scriptFilePath);
                 found = true;
                 break;
               }
@@ -280,36 +280,47 @@ export class DeploymentsManager {
           }
         }
       } else {
-        scripts.push(deployScript);
+        scriptFilePaths.push(scriptFilePath);
       }
     }
 
-    const scriptsRegisteredToRun: any = {};
-    const scriptsToRun: DeployFunction[] = [];
-    function recurseDependencies(deployScript: DeployFunction) {
-      if (deployScript.dependencies) {
-        for (const dependency of deployScript.dependencies) {
-          const scriptsToAdd = scriptsBags[dependency];
-          if (scriptsToAdd) {
-            for (const scriptToAdd of scriptsToAdd) {
-              if (!scriptsRegisteredToRun[scriptsToAdd as any]) {
-                recurseDependencies(scriptToAdd);
-                if (!scriptsRegisteredToRun[deployScript as any]) {
-                  scriptsToRun.push(scriptToAdd);
-                  scriptsRegisteredToRun[scriptsToAdd as any] = true;
+    const scriptsRegisteredToRun: { [filename: string]: boolean } = {};
+    const scriptsToRun: Array<{
+      func: DeployFunction;
+      filePath: string;
+    }> = [];
+    function recurseDependencies(scriptFilePath: string) {
+      const deployFunc = funcByFilePath[scriptFilePath];
+      if (deployFunc.dependencies) {
+        for (const dependency of deployFunc.dependencies) {
+          const scriptFilePathsToAdd = scriptPathBags[dependency];
+          if (scriptFilePathsToAdd) {
+            for (const scriptFilenameToAdd of scriptFilePathsToAdd) {
+              const scriptToAdd = funcByFilePath[scriptFilenameToAdd];
+              if (!scriptsRegisteredToRun[scriptFilenameToAdd]) {
+                recurseDependencies(scriptFilenameToAdd);
+                if (!scriptsRegisteredToRun[deployFunc as any]) {
+                  scriptsToRun.push({
+                    filePath: scriptFilenameToAdd,
+                    func: scriptToAdd
+                  });
+                  scriptsRegisteredToRun[scriptFilenameToAdd] = true;
                 }
               }
             }
           }
         }
       }
-      if (!scriptsRegisteredToRun[deployScript as any]) {
-        scriptsToRun.push(deployScript);
-        scriptsRegisteredToRun[deployScript as any] = true;
+      if (!scriptsRegisteredToRun[scriptFilePath]) {
+        scriptsToRun.push({
+          filePath: scriptFilePath,
+          func: deployFunc
+        });
+        scriptsRegisteredToRun[scriptFilePath] = true;
       }
     }
-    for (const deployScript of scripts) {
-      recurseDependencies(deployScript);
+    for (const scriptFilePath of scriptFilePaths) {
+      recurseDependencies(scriptFilePath);
     }
 
     if (options.noSaving) {
@@ -318,28 +329,29 @@ export class DeploymentsManager {
     try {
       for (const deployScript of scriptsToRun) {
         let skip = false;
-        // console.log('trying ' + scriptPaths[deployScript as any]);
-        if (deployScript.skip) {
+        if (deployScript.func.skip) {
+          // console.log(`should we skip  ${deployScript.filePath} ?`);
           try {
-            skip = await deployScript.skip(this.env);
+            skip = await deployScript.func.skip(this.env);
           } catch (e) {
-            console.error("skip failed", e);
+            // console.error("skip failed", e);
             throw new Error(
               "ERROR processing skip func of " +
-                scriptPaths[deployScript as any] +
+                deployScript.filePath +
                 ":\n" +
                 (e.stack || e)
             );
           }
         }
         if (!skip) {
+          // console.log(`trying  ${deployScript.filePath}`);
           try {
-            await deployScript(this.env);
+            await deployScript.func(this.env);
           } catch (e) {
-            console.error("execution failed", e);
+            // console.error("execution failed", e);
             throw new Error(
               "ERROR processing " +
-                scriptPaths[deployScript as any] +
+                deployScript.filePath +
                 ":\n" +
                 (e.stack || e)
             );
