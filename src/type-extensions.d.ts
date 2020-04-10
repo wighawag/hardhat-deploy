@@ -71,7 +71,7 @@ declare module "@nomiclabs/buidler/types" {
       options?:{ reset: boolean }
     ): Promise<{ [name: string]: Deployment }>;
     log(...args: any[]): void;
-    // chainId?: string; // TODO remove ? or make it getChainId(): Promise<string> ? (but that would be not much useful)
+    getChainId(): Promise<string>;
     deploy(name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
     deployIfDifferent(fieldsToCompare: string[], name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
     sendTxAndWait(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
@@ -89,6 +89,7 @@ declare module "@nomiclabs/buidler/types" {
   export interface ProjectPaths {
     deploy?: string;
     deployments?: string;
+    imports?: string;
   }
 
   export interface Deployment {

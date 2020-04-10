@@ -1,4 +1,4 @@
-import { readArtifactSync } from "@nomiclabs/buidler/plugins";
+import { readArtifactSync, readArtifact } from "@nomiclabs/buidler/plugins";
 import {
   BuidlerRuntimeEnvironment,
   DeployFunction,
@@ -38,7 +38,8 @@ export class DeploymentsManager {
     };
     this.env = env;
     this.deploymentsPath =
-      env.config.paths.deployments || env.config.paths.root + "/deployments";
+      env.config.paths.deployments ||
+      path.join(env.config.paths.root, "/deployments");
 
     // SUPPORT budiler run that recreate an BRE
     const envChainId = process.env.BUIDLER__DEPLOY_PLUGIN_CHAIN_ID;
@@ -72,11 +73,46 @@ export class DeploymentsManager {
         return this.db.deployments; // TODO copy
       },
       getArtifact: async (contractName: string): Promise<any> => {
-        return readArtifactSync(this.env.config.paths.artifacts, contractName);
+        let artifact;
+        try {
+          artifact = await readArtifact(
+            this.env.config.paths.artifacts,
+            contractName
+          );
+        } catch (e) {
+          try {
+            artifact = await readArtifact(
+              this.env.config.paths.imports ||
+                path.join(this.env.config.paths.root, "imports"),
+              contractName
+            );
+          } catch (ee) {
+            throw e;
+          }
+        }
+        return artifact;
       },
       getArtifactSync: (contractName: string): any => {
-        return readArtifactSync(this.env.config.paths.artifacts, contractName);
+        let artifact;
+        try {
+          artifact = readArtifactSync(
+            this.env.config.paths.artifacts,
+            contractName
+          );
+        } catch (e) {
+          try {
+            artifact = readArtifactSync(
+              this.env.config.paths.imports ||
+                path.join(this.env.config.paths.root, "imports"),
+              contractName
+            );
+          } catch (ee) {
+            throw e;
+          }
+        }
+        return artifact;
       },
+      getChainId,
       run: (
         tags?: string | string[],
         options: {
@@ -209,7 +245,8 @@ export class DeploymentsManager {
       this.db.deployments = {};
     }
     const deployPath =
-      this.env.config.paths.deploy || this.env.config.paths.root + "/deploy"; // TODO extendConfig ?
+      this.env.config.paths.deploy ||
+      path.join(this.env.config.paths.root, "/deploy"); // TODO extendConfig ?
     let filesStats;
     try {
       filesStats = traverse(deployPath);
@@ -234,9 +271,9 @@ export class DeploymentsManager {
     const scriptPathBags: { [tag: string]: string[] } = {};
     const scriptFilePaths: string[] = [];
     for (const filename of fileNames) {
-      const scriptFilePath = deployPath + "/" + filename;
+      const scriptFilePath = path.join(deployPath, filename);
       let deployFunc: DeployFunction;
-      // console.log('fetching ' + scriptFilePath);
+      // console.log("fetching " + scriptFilePath);
       try {
         deployFunc = require(scriptFilePath);
         if ((deployFunc as any).default) {
@@ -244,7 +281,7 @@ export class DeploymentsManager {
         }
         funcByFilePath[scriptFilePath] = deployFunc;
       } catch (e) {
-        console.error("require failed", e);
+        // console.error("require failed", e);
         throw new Error(
           "ERROR processing skip func of " +
             scriptFilePath +
@@ -252,6 +289,7 @@ export class DeploymentsManager {
             (e.stack || e)
         );
       }
+      // console.log("get tags if any for " + scriptFilePath);
       let scriptTags = deployFunc.tags;
       if (scriptTags !== undefined) {
         if (typeof scriptTags === "string") {
@@ -263,6 +301,7 @@ export class DeploymentsManager {
           bag.push(scriptFilePath);
         }
       }
+      // console.log("tags found " + scriptFilePath, scriptTags);
       if (tags !== undefined) {
         let found = false;
         if (scriptTags !== undefined) {
@@ -284,6 +323,7 @@ export class DeploymentsManager {
       }
     }
 
+    // console.log({ scriptFilePaths });
     const scriptsRegisteredToRun: { [filename: string]: boolean } = {};
     const scriptsToRun: Array<{
       func: DeployFunction;
