@@ -130,7 +130,9 @@ export class DeploymentsManager {
         }
         return artifact;
       },
-      getChainId,
+      getChainId: () => {
+        return getChainId(this.env);
+      },
       run: (
         tags?: string | string[],
         options: {
@@ -444,7 +446,7 @@ export class DeploymentsManager {
     }
     log("deploy scripts complete");
 
-    const chainId = await getChainId();
+    const chainId = await getChainId(this.env);
     this.db.noSaving = false;
     if (options.exportAll !== undefined) {
       log("load all deployments for export-all");
