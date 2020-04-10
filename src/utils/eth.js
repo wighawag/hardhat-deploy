@@ -87,6 +87,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
         nonce: options.nonce,
         chainId: options.chainId,
     }
+    // console.log({overrides});
     let ethersContract
     // try {
       ethersContract = await factory.deploy(...args, overrides);

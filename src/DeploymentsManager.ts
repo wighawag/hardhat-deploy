@@ -241,6 +241,9 @@ export class DeploymentsManager {
       noSaving: false
     }
   ): Promise<{ [name: string]: Deployment }> {
+    if (tags !== undefined && typeof tags === "string") {
+      tags = [tags];
+    }
     if (options.reset) {
       this.db.deployments = {};
     }
