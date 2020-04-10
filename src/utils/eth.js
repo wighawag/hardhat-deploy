@@ -229,7 +229,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
       } else {
         try {
           ethersSigner = provider.getSigner(from);
-        } catch{}
+        } catch(e) {}
       }
       // console.log(tx);
       const nonce = options.nonce || currentNonces[from] || await provider.getTransactionCount(from);
@@ -289,7 +289,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
     } else {
       try {
         ethersSigner = provider.getSigner(from);
-      } catch{}
+      } catch(e) {}
   }
 
     let tx;

@@ -252,8 +252,11 @@ export class DeploymentsManager {
             (e.stack || e)
         );
       }
-      const scriptTags = deployScript.tags;
+      let scriptTags = deployScript.tags;
       if (scriptTags !== undefined) {
+        if (typeof scriptTags === "string") {
+          scriptTags = [scriptTags];
+        }
         for (const tag of scriptTags) {
           const bag = scriptsBags[tag] || [];
           scriptsBags[tag] = bag;
@@ -291,8 +294,10 @@ export class DeploymentsManager {
             for (const scriptToAdd of scriptsToAdd) {
               if (!scriptsRegisteredToRun[scriptsToAdd as any]) {
                 recurseDependencies(scriptToAdd);
-                scriptsToRun.push(scriptToAdd);
-                scriptsRegisteredToRun[scriptsToAdd as any] = true;
+                if (!scriptsRegisteredToRun[deployScript as any]) {
+                  scriptsToRun.push(scriptToAdd);
+                  scriptsRegisteredToRun[scriptsToAdd as any] = true;
+                }
               }
             }
           }
