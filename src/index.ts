@@ -14,10 +14,12 @@ import { ERRORS } from "@nomiclabs/buidler/internal/core/errors-list";
 import chalk from "chalk";
 // import { TASK_NODE } from "./task-names";
 const TASK_NODE = "node";
+import debug from "debug";
+const log = debug("buidler:wighawag:buidler-deploy");
 
 import { DeploymentsManager } from "./DeploymentsManager";
 
-const { addNamedAccounts, getChainId } = require("./utils");
+const { getChainId } = require("./utils");
 
 function fixProvider(env: BuidlerRuntimeEnvironment) {
   // alow it to be used by ethers without any change
@@ -45,6 +47,7 @@ function fixProvider(env: BuidlerRuntimeEnvironment) {
   }
 }
 export default function() {
+  log("start...");
   let deploymentsManager: DeploymentsManager;
   extendEnvironment(env => {
     let live = true;
@@ -60,12 +63,16 @@ export default function() {
     //   envChainId: process.env.BUIDLER__DEPLOY_PLUGIN_CHAIN_ID,
     //   envAccounts: process.env.BUIDLER__DEPLOY_PLUGIN_ACCOUNTS,
     // });
+    log("ensuring provider work with ethers");
     fixProvider(env);
     if (deploymentsManager === undefined || env.deployments === undefined) {
-      env.namedAccounts = {};
       deploymentsManager = new DeploymentsManager(env);
       env.deployments = deploymentsManager.deploymentsExtension;
+      env.getNamedAccounts = deploymentsManager.getNamedAccounts.bind(
+        deploymentsManager
+      );
     }
+    log("ready");
   });
 
   internalTask("_resolveNamedAccounts", "resolve named accounts", async () => {

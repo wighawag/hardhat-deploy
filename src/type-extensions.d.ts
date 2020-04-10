@@ -4,7 +4,7 @@ declare module "@nomiclabs/buidler/types" {
   
   export interface BuidlerRuntimeEnvironment {
     deployments: DeploymentsExtension;
-    namedAccounts: { [name: string]: Address; }; // TODO Address type ?
+    getNamedAccounts: () => Promise<{ [name: string]: Address; }>;
   }
 
   export interface BuidlerNetworkConfig {

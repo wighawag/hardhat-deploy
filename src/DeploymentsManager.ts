@@ -8,9 +8,12 @@ import {
 import fs from "fs";
 import path from "path";
 
+import debug from "debug";
+const log = debug("buidler:wighawag:buidler-deploy");
+
 const {
   addDeployments,
-  addNamedAccounts,
+  processNamedAccounts,
   getChainId,
   loadAllDeployments,
   traverse,
@@ -25,13 +28,22 @@ const {
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
 
-  private db: { loaded: boolean; deployments: any; noSaving: boolean };
+  private db: {
+    accountsLoaded: boolean;
+    namedAccounts: { [name: string]: string };
+    loaded: boolean;
+    deployments: any;
+    noSaving: boolean;
+  };
 
   private env: BuidlerRuntimeEnvironment;
   private deploymentsPath: string;
 
   constructor(env: BuidlerRuntimeEnvironment) {
+    log("constructing DeploymentsManager");
     this.db = {
+      accountsLoaded: false,
+      namedAccounts: {},
       loaded: false,
       deployments: {},
       noSaving: false
@@ -45,12 +57,18 @@ export class DeploymentsManager {
     const envChainId = process.env.BUIDLER__DEPLOY_PLUGIN_CHAIN_ID;
     const envAccounts = process.env.BUIDLER__DEPLOY_PLUGIN_ACCOUNTS;
     if (envChainId) {
-      addNamedAccounts(
-        env,
-        envAccounts ? envAccounts.split(".") : [],
-        envChainId
-      );
+      log("processing namedAccounts synchronously");
+      if (!this.db.accountsLoaded) {
+        // TODO loadd all ?
+        this.db.namedAccounts = processNamedAccounts(
+          env,
+          envAccounts ? envAccounts.split(".") : [],
+          envChainId
+        );
+        this.db.accountsLoaded = true;
+      }
       if (!this.db.loaded) {
+        log("loading deployments synchronously");
         addDeployments(
           this.db,
           this.deploymentsPath,
@@ -138,6 +156,7 @@ export class DeploymentsManager {
       }
     } as any;
 
+    log("adding helpers");
     addHelpers(
       env,
       this.deploymentsExtension,
@@ -147,11 +166,19 @@ export class DeploymentsManager {
     // this.runDeploy().catch(console.error);
   }
 
+  public async getNamedAccounts(): Promise<{ [name: string]: string }> {
+    if (!this.db.accountsLoaded) {
+      await this.addNamedAccounts();
+    }
+    return this.db.namedAccounts;
+  }
+
   public async addNamedAccounts() {
     const chainId = await getChainId(this.env);
     const accounts = await this.env.ethereum.send("eth_accounts");
-    addNamedAccounts(this.env, accounts, chainId);
-    return this.env.namedAccounts;
+    this.db.namedAccounts = processNamedAccounts(this.env, accounts, chainId);
+    this.db.accountsLoaded = true;
+    return this.db.namedAccounts;
   }
 
   public async loadDeployments(): Promise<{ [name: string]: Deployment }> {
@@ -241,6 +268,7 @@ export class DeploymentsManager {
       noSaving: false
     }
   ): Promise<{ [name: string]: Deployment }> {
+    log("runDeploy");
     if (tags !== undefined && typeof tags === "string") {
       tags = [tags];
     }
@@ -269,6 +297,7 @@ export class DeploymentsManager {
       }
       return 0;
     });
+    log("deploy script folder parsed");
 
     const funcByFilePath: { [filename: string]: DeployFunction } = {};
     const scriptPathBags: { [tag: string]: string[] } = {};
@@ -325,6 +354,7 @@ export class DeploymentsManager {
         scriptFilePaths.push(scriptFilePath);
       }
     }
+    log("tag collected");
 
     // console.log({ scriptFilePaths });
     const scriptsRegisteredToRun: { [filename: string]: boolean } = {};
@@ -333,23 +363,16 @@ export class DeploymentsManager {
       filePath: string;
     }> = [];
     function recurseDependencies(scriptFilePath: string) {
+      if (scriptsRegisteredToRun[scriptFilePath]) {
+        return;
+      }
       const deployFunc = funcByFilePath[scriptFilePath];
       if (deployFunc.dependencies) {
         for (const dependency of deployFunc.dependencies) {
           const scriptFilePathsToAdd = scriptPathBags[dependency];
           if (scriptFilePathsToAdd) {
             for (const scriptFilenameToAdd of scriptFilePathsToAdd) {
-              const scriptToAdd = funcByFilePath[scriptFilenameToAdd];
-              if (!scriptsRegisteredToRun[scriptFilenameToAdd]) {
-                recurseDependencies(scriptFilenameToAdd);
-                if (!scriptsRegisteredToRun[deployFunc as any]) {
-                  scriptsToRun.push({
-                    filePath: scriptFilenameToAdd,
-                    func: scriptToAdd
-                  });
-                  scriptsRegisteredToRun[scriptFilenameToAdd] = true;
-                }
-              }
+              recurseDependencies(scriptFilenameToAdd);
             }
           }
         }
@@ -365,6 +388,7 @@ export class DeploymentsManager {
     for (const scriptFilePath of scriptFilePaths) {
       recurseDependencies(scriptFilePath);
     }
+    log("dependencies collected");
 
     if (options.noSaving) {
       this.db.noSaving = true;
@@ -373,7 +397,7 @@ export class DeploymentsManager {
       for (const deployScript of scriptsToRun) {
         let skip = false;
         if (deployScript.func.skip) {
-          // console.log(`should we skip  ${deployScript.filePath} ?`);
+          log(`should we skip  ${deployScript.filePath} ?`);
           try {
             skip = await deployScript.func.skip(this.env);
           } catch (e) {
@@ -387,7 +411,7 @@ export class DeploymentsManager {
           }
         }
         if (!skip) {
-          // console.log(`trying  ${deployScript.filePath}`);
+          log(`executing  ${deployScript.filePath} ?`);
           try {
             await deployScript.func(this.env);
           } catch (e) {
@@ -409,6 +433,7 @@ export class DeploymentsManager {
     const chainId = await getChainId();
     this.db.noSaving = false;
     if (options.exportAll !== undefined) {
+      log("load all deployments for export-all");
       const all = loadAllDeployments(this.deploymentsPath, true);
       const currentNetworkDeployments: {
         [contractName: string]: {
@@ -439,9 +464,11 @@ export class DeploymentsManager {
         contracts: currentNetworkDeployments
       });
       fs.writeFileSync(options.exportAll, JSON.stringify(all, null, "  ")); // TODO remove bytecode ?
+      log("export-all complete");
     }
 
     if (options.export !== undefined) {
+      log("single export...");
       const currentNetworkDeployments: {
         [contractName: string]: {
           address: string;
@@ -474,7 +501,7 @@ export class DeploymentsManager {
         )
       ); // TODO remove bytecode ?
     }
-
+    log("single export complete");
     return this.db.deployments;
   }
 

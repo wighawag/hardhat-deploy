@@ -2,6 +2,7 @@ const {Web3Provider} = require('@ethersproject/providers');
 const {Contract, ContractFactory} = require('@ethersproject/contracts');
 const {BigNumber} = require('@ethersproject/bignumber');
 const {Logger} = require('@ethersproject/logger');
+const {getAddress} = require('@ethersproject/address');
 
 try {
   Logger.setLogLevel('off');
@@ -495,6 +496,11 @@ function transformNamedAccounts(configNamedAccounts, chainId, accounts, networkC
             }
           }
           break;
+      }
+      if (typeof address === "string") {
+        address = getAddress(address);
+      } else {
+        address = address.map(getAddress);
       }
       return address;
     }

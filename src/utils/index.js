@@ -110,11 +110,11 @@ function addDeployments(db, deploymentsPath, subPath) {
   }
 }
 
-function addNamedAccounts(bre, accounts, chainId) {
+function processNamedAccounts(bre, accounts, chainId) {
   if (bre.config.namedAccounts) {
-    bre.namedAccounts = transformNamedAccounts(bre.config.namedAccounts, chainId, accounts, bre.network.name);
+    return transformNamedAccounts(bre.config.namedAccounts, chainId, accounts, bre.network.name);
   } else {
-    bre.namedAccounts = {};
+    return {};
   }
 }
 
@@ -139,7 +139,7 @@ module.exports = {
     traverse,
     getChainId,
     addDeployments,
-    addNamedAccounts,
+    processNamedAccounts,
     loadAllDeployments,
     nameToChainId,
 }
