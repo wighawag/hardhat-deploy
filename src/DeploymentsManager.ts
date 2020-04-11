@@ -37,6 +37,7 @@ export class DeploymentsManager {
     noSaving: boolean;
     global_snapshot?: any;
     snapshots: { [name: string]: any };
+    pastFixtures: { [name: string]: { data: any; id: any } };
   };
 
   private env: BuidlerRuntimeEnvironment;
@@ -50,7 +51,8 @@ export class DeploymentsManager {
       loaded: false,
       deployments: {},
       noSaving: false,
-      snapshots: {}
+      snapshots: {},
+      pastFixtures: {}
     };
     this.env = env;
     this.deploymentsPath =
@@ -197,12 +199,27 @@ export class DeploymentsManager {
         }
         return this.db.deployments;
       },
-      createFixture: async (func: FixtureFunc) => {
-        const data = await func(this.env);
-        let id = await this.env.ethereum.send("evm_snapshot", []);
+      createFixture: (func: FixtureFunc, forceId?: string) => {
+        let id: any;
+        let data: any;
+        if (
+          forceId !== undefined &&
+          this.db.pastFixtures[forceId] !== undefined
+        ) {
+          id = this.db.pastFixtures[forceId].id;
+          data = this.db.pastFixtures[forceId].data;
+        }
         return async () => {
-          await this.env.ethereum.send("evm_revert", [id]);
-          id = await this.env.ethereum.send("evm_snapshot", []); // is that necesary
+          if (id === undefined) {
+            data = await func(this.env);
+            id = await this.env.ethereum.send("evm_snapshot", []);
+            if (forceId !== undefined) {
+              this.db.pastFixtures[forceId] = { id, data };
+            }
+          } else {
+            await this.env.ethereum.send("evm_revert", [id]);
+            id = await this.env.ethereum.send("evm_snapshot", []); // is that necesary
+          }
           return data;
         };
       },

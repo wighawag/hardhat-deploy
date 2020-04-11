@@ -74,7 +74,7 @@ declare module "@nomiclabs/buidler/types" {
       options?:{ reset: boolean }
     ): Promise<{ [name: string]: Deployment }>;
     fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
-    createFixture(func: FixtureFunc): Promise<() => Promise<any>>;
+    createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
     log(...args: any[]): void;
     getChainId(): Promise<string>;
     deploy(name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
