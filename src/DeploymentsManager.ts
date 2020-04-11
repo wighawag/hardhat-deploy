@@ -3,7 +3,8 @@ import {
   BuidlerRuntimeEnvironment,
   DeployFunction,
   Deployment,
-  DeploymentsExtension
+  DeploymentsExtension,
+  FixtureFunc
 } from "@nomiclabs/buidler/types";
 import fs from "fs";
 import path from "path";
@@ -34,6 +35,8 @@ export class DeploymentsManager {
     loaded: boolean;
     deployments: any;
     noSaving: boolean;
+    global_snapshot?: any;
+    snapshots: { [name: string]: any };
   };
 
   private env: BuidlerRuntimeEnvironment;
@@ -46,7 +49,8 @@ export class DeploymentsManager {
       namedAccounts: {},
       loaded: false,
       deployments: {},
-      noSaving: false
+      noSaving: false,
+      snapshots: {}
     };
     this.env = env;
     this.deploymentsPath =
@@ -150,6 +154,57 @@ export class DeploymentsManager {
           export: options.export
         };
         return this.runDeploy(tags, opt);
+      },
+      fixture: async (tags?: string | string[]) => {
+        if (typeof tags === "string") {
+          tags = [tags];
+        }
+        let snapshotKey;
+        if (tags !== undefined) {
+          snapshotKey = tags.join(".");
+        }
+        if (this.db.global_snapshot) {
+          await this.env.ethereum.send("evm_revert", [this.db.global_snapshot]);
+          this.db.global_snapshot = await this.env.ethereum.send(
+            "evm_snapshot",
+            []
+          ); // is that necessary ?
+          return this.db.deployments;
+        } else if (
+          tags !== undefined &&
+          snapshotKey !== undefined &&
+          this.db.snapshots[snapshotKey]
+        ) {
+          await this.env.ethereum.send("evm_revert", [
+            this.db.snapshots[snapshotKey]
+          ]);
+          this.db.snapshots[snapshotKey] = await this.env.ethereum.send(
+            "evm_snapshot",
+            []
+          ); // is that necessary ?
+          return this.db.deployments;
+        }
+        await this.runDeploy(tags, {
+          reset: true,
+          noSaving: true
+        });
+
+        const id = await this.env.ethereum.send("evm_snapshot", []);
+        if (snapshotKey !== undefined) {
+          this.db.snapshots[snapshotKey] = id;
+        } else {
+          this.db.global_snapshot = id;
+        }
+        return this.db.deployments;
+      },
+      createFixture: async (func: FixtureFunc) => {
+        const data = await func(this.env);
+        let id = await this.env.ethereum.send("evm_snapshot", []);
+        return async () => {
+          await this.env.ethereum.send("evm_revert", [id]);
+          id = await this.env.ethereum.send("evm_snapshot", []); // is that necesary
+          return data;
+        };
       },
       log: (...args: any[]) => {
         if (!this.db.noSaving) {

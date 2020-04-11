@@ -61,6 +61,8 @@ declare module "@nomiclabs/buidler/types" {
     newlyDeployed: boolean;
   }
 
+  export type FixtureFunc = (env: BuidlerRuntimeEnvironment) => Promise<any>;
+
   export interface DeploymentsExtension {
     save(name: string, deployment: Deployment): Promise<void>;
     get(name: string): Promise<Deployment>;
@@ -71,6 +73,8 @@ declare module "@nomiclabs/buidler/types" {
       tags?: string | string[],
       options?:{ reset: boolean }
     ): Promise<{ [name: string]: Deployment }>;
+    fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
+    createFixture(func: FixtureFunc): Promise<() => Promise<any>>;
     log(...args: any[]): void;
     getChainId(): Promise<string>;
     deploy(name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
