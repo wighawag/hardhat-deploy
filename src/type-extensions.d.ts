@@ -5,6 +5,7 @@ declare module "@nomiclabs/buidler/types" {
   export interface BuidlerRuntimeEnvironment {
     deployments: DeploymentsExtension;
     getNamedAccounts: () => Promise<{ [name: string]: Address; }>;
+    getChainId(): Promise<string>;
   }
 
   export interface BuidlerNetworkConfig {
@@ -76,7 +77,6 @@ declare module "@nomiclabs/buidler/types" {
     fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
     createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
     log(...args: any[]): void;
-    getChainId(): Promise<string>;
     deploy(name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
     deployIfDifferent(fieldsToCompare: string[], name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
     sendTxAndWait(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;

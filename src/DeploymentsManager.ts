@@ -84,6 +84,10 @@ export class DeploymentsManager {
       }
     }
 
+    this.env.getChainId = () => {
+      return getChainId(this.env);
+    };
+
     this.deploymentsExtension = {
       save: async (name: string, deployment: Deployment): Promise<boolean> =>
         this.saveDeployment(name, deployment),
@@ -136,9 +140,9 @@ export class DeploymentsManager {
         }
         return artifact;
       },
-      getChainId: () => {
-        return getChainId(this.env);
-      },
+      // getChainId: () => {
+      //   return getChainId(this.env);
+      // },
       run: (
         tags?: string | string[],
         options: {
