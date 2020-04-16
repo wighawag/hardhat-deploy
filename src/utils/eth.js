@@ -144,7 +144,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
   };
 
   async function getDeployedContractWithTransactionHash(name) {
-    const deployment = await env.deployments.get(name);
+    const deployment = await env.deployments.getOrNull(name);
     if (!deployment) {
         return null;
     }
@@ -162,7 +162,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
     if (typeof fieldsToCompare === 'string') {
       fieldsToCompare = [fieldsToCompare];
     }
-    const deployment = await env.deployments.get(name);
+    const deployment = await env.deployments.getOrNull(name);
     if (deployment) {
         const transaction = await provider.getTransaction(deployment.transactionHash);
         if (transaction) {
