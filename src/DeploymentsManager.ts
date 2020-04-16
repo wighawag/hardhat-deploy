@@ -95,6 +95,16 @@ export class DeploymentsManager {
         if (!this.db.loaded) {
           await this.loadDeployments();
         }
+        const deployment = this.db.deployments[name];
+        if (deployment === undefined) {
+          throw new Error(`No deployment found for: ${name}`);
+        }
+        return deployment;
+      },
+      getOrNull: async (name: string) => {
+        if (!this.db.loaded) {
+          await this.loadDeployments();
+        }
         return this.db.deployments[name];
       },
       all: async () => {

@@ -67,6 +67,7 @@ declare module "@nomiclabs/buidler/types" {
   export interface DeploymentsExtension {
     save(name: string, deployment: Deployment): Promise<void>;
     get(name: string): Promise<Deployment>;
+    getOrNull(name: string): Promise<Deployment | null>;
     all(): Promise<{ [name: string]: Deployment }>;
     getArtifactSync(): Artifact; // TODO remove ?
     getArtifact(): Promise<Artifact>;
