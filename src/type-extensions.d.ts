@@ -33,7 +33,29 @@ declare module "@nomiclabs/buidler/types" {
 
   export type ABI = any[]; // TODO abi
 
-  export type Receipt = any; // TODO receipt
+  export type Log = {
+    blockNumber: number;
+    blockHash: string;
+    transactionHash: string;
+    transactionIndex: number;
+    logIndex: number;
+    removed: boolean;
+    address: string;
+    topics: string[];
+    data: string;
+  }
+
+  export type Receipt = {
+    transactionHash: string;
+    blockHash: string;
+    blockNumber: number;
+    transactionIndex: number;
+    contractAddress?: string;
+    cumulativeGasUsed: BigNumber | string | number;
+    gasUsed: BigNumber | string | number;
+    log?: Log[];
+    logsBloom?: string;
+  }
 
   export interface DeployTxOptions {
     from: Address;
@@ -55,17 +77,14 @@ declare module "@nomiclabs/buidler/types" {
     abi: ABI;
   }
 
-  export interface DeployResult {
-    contract: DeployedContract;
-    transactionHash: string;
-    receipt: Receipt;
+  export interface DeployResult extends Deployment {
     newlyDeployed: boolean;
   }
 
   export type FixtureFunc = (env: BuidlerRuntimeEnvironment) => Promise<any>;
 
   export interface DeploymentsExtension {
-    save(name: string, deployment: Deployment): Promise<void>;
+    save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;
     getOrNull(name: string): Promise<Deployment | null>;
     all(): Promise<{ [name: string]: Deployment }>;
@@ -78,7 +97,7 @@ declare module "@nomiclabs/buidler/types" {
     fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
     createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
     log(...args: any[]): void;
-    deploy(name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
+    deploy(name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<Deployment>;
     deployIfDifferent(fieldsToCompare: string[], name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
     sendTxAndWait(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
     sendTxAndWait(contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
@@ -98,13 +117,32 @@ declare module "@nomiclabs/buidler/types" {
     imports?: string;
   }
 
-  export interface Deployment {
-    transactionHash?: string;
+  export interface DeploymentSubmission {
+    abi: ABI;
+    receipt: Receipt;
     args?: any[];
-    abi?: ABI; // TODO ABI type
-    address?: Address;
     linkedData?: any;
-    solidityJson?: any; // TODO solidityJson
+    solidityJson?: any; // TODO solidityJson type
     solidityMetadata?: string;
+    bytecode?: string;
+    deployedBytecode?: string;
+    userdoc: any;
+    devdoc: any;
+    methodIdentifiers: any;
+  }
+
+  export interface Deployment {
+    abi: ABI;
+    address: Address;
+    receipt: Receipt;
+    args?: any[];
+    linkedData?: any;
+    solidityJson?: any; // TODO solidityJson type
+    solidityMetadata?: string;
+    bytecode?: string;
+    deployedBytecode?: string;
+    userdoc: any;
+    devdoc: any;
+    methodIdentifiers: any;
   }
 }

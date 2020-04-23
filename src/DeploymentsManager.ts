@@ -4,7 +4,8 @@ import {
   DeployFunction,
   Deployment,
   DeploymentsExtension,
-  FixtureFunc
+  FixtureFunc,
+  DeploymentSubmission
 } from "@nomiclabs/buidler/types";
 import fs from "fs";
 import path from "path";
@@ -283,8 +284,18 @@ export class DeploymentsManager {
 
   public async saveDeployment(
     name: string,
-    deployment: Deployment
+    deployment: DeploymentSubmission
   ): Promise<boolean> {
+    if (typeof deployment.receipt === undefined) {
+      throw new Error("deployment need a receipt");
+    }
+    if (typeof deployment.receipt.contractAddress === undefined) {
+      throw new Error("deployment need a receipt with contractAddress");
+    }
+    if (typeof deployment.abi === undefined) {
+      throw new Error("deployment need an ABI");
+    }
+
     const chainId = await getChainId(this.env);
 
     const toSave = !this.db.noSaving && this.env.network.live;
@@ -297,13 +308,15 @@ export class DeploymentsManager {
 
     const obj = JSON.parse(
       JSON.stringify({
-        transactionHash: deployment.transactionHash,
-        args: deployment.args,
         abi: deployment.abi,
-        address: deployment.address,
+        receipt: deployment.receipt,
+        address: deployment.receipt.contractAddress,
+        args: deployment.args,
         linkedData: deployment.linkedData,
         solidityJson: deployment.solidityJson,
-        solidityMetadata: deployment.solidityMetadata
+        solidityMetadata: deployment.solidityMetadata,
+        bytecode: deployment.bytecode,
+        deployedBytecode: deployment.deployedBytecode
       })
     );
     this.db.deployments[name] = obj;

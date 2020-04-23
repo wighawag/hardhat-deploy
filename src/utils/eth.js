@@ -99,15 +99,20 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
     
     const tx = ethersContract.deployTransaction;
     const transactionHash = tx.hash;
-    if (register) {
-       await env.deployments.save(name, {
-            address: null,
-            abi,
-            transactionHash,
-            args,
-            linkedData: options.linkedData,
-        });
-    }
+    // TODO temporary register
+    // if (register) {
+    //    await env.deployments.save(name, {
+    //         address: null,
+    //         abi,
+    //         transactionHash,
+    //         args,
+    //         linkedData: options.linkedData,
+    //         solidityJson: Artifact.solidityJson,
+    //         solidityMetadata: Artifact.solidityMetadata,
+    //         bytecode: Artifact.bytecode,
+    //         deployedBytecode: Artifact.deployedBytecode
+    //     });
+    // }
     if (options.dev_forceMine) {
         try {
             await provider.send('evm_mine', []);
@@ -124,38 +129,41 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
     // }
 
     const address = receipt.contractAddress;
-    const contract = {address, abi};
 
     if (register) {
       await env.deployments.save(name, {
-        address: contract.address,
+        receipt,
         abi,
-        transactionHash,
         args,
-        linkedData: options.linkedData
+        linkedData: options.linkedData,
+        solidityJson: Artifact.solidityJson,
+        solidityMetadata: Artifact.solidityMetadata,
+        bytecode: Artifact.bytecode,
+        deployedBytecode: Artifact.deployedBytecode,
+        userdoc: Artifact.userdoc,
+        devdoc: Artifact.devdoc,
+        methodIdentifiers: Artifact.methodIdentifiers
       });
     }
     return {
-        contract,
-        transactionHash,
-        receipt,
-        newlyDeployed: true,
+      receipt,
+      abi,
+      address,
+      args,
+      linkedData: options.linkedData,
+      solidityJson: Artifact.solidityJson,
+      solidityMetadata: Artifact.solidityMetadata,
+      bytecode: Artifact.bytecode,
+      deployedBytecode: Artifact.deployedBytecode,
+      userdoc: Artifact.userdoc,
+      devdoc: Artifact.devdoc,
+      methodIdentifiers: Artifact.methodIdentifiers,
+      newlyDeployed: true
     };
   };
 
-  async function getDeployedContractWithTransactionHash(name) {
-    const deployment = await env.deployments.getOrNull(name);
-    if (!deployment) {
-        return null;
-    }
-    let receipt;
-    try {
-      receipt = await provider.getTransactionReceipt(deployment.transactionHash);
-    } catch (e) {
-      console.error('cannot get receipt', e);
-      throw e;
-    }
-    return { contract: {address: deployment.address, abi : deployment.abi}, transactionHash: deployment.transactionHash, receipt };
+  function getDeployment(name) {
+    return env.deployments.getOrNull(name);  
   }
 
   async function fetchIfDifferent(fieldsToCompare, name, options, contractName, ...args) {
@@ -164,7 +172,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
     }
     const deployment = await env.deployments.getOrNull(name);
     if (deployment) {
-        const transaction = await provider.getTransaction(deployment.transactionHash);
+        const transaction = await provider.getTransaction(deployment.receipt.transactionHash);
         if (transaction) {
             const Artifact = await getArtifact(contractName);
             const abi = Artifact.abi;
@@ -211,7 +219,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
     if (differences) {
         return deploy(name, options, contractName, ...args);
     } else {
-        return getDeployedContractWithTransactionHash(name);
+        return getDeployment(name);
     }
   }
 
