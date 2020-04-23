@@ -446,14 +446,15 @@ async function call(options, contractName, methodName, ...args) {
 }
 
 function chainConfig(object, chainId, networkConfigName) {
+  const chainIdDecimal = "" + parseInt(chainId.slice(2), 16);
   if (typeof object[networkConfigName] != 'undefined') {
     return object[networkConfigName];
-  } else if (typeof object["" + chainId] != 'undefined') {
-      return object["" + chainId];
   } else if (typeof object[chainId] != 'undefined') {
-      return object[chainId];
+    return object[chainId];
+  } else if (typeof object[chainIdDecimal] !== 'undefined') {
+    return object[chainIdDecimal];
   } else {
-      return object['default'];
+    return object['default'];
   }
 }
 

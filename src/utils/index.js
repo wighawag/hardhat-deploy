@@ -3,13 +3,13 @@ const path = require('path');
 const {transformNamedAccounts} = require('./eth');
 
 const nameToChainId = {
-  mainnet: "1",
-  eth: "1",
-  rinkeby: "4",
-  kovan: "42",
-  xdai: "100",
-  sokol: "77",
-  ropsten: "3",
+  mainnet: "0x01",
+  eth: "0x01",
+  rinkeby: "0x04",
+  kovan: "0x2A",
+  xdai: "0x64",
+  sokol: "0x4D",
+  ropsten: "0x03",
 }
 
 let chainId;
@@ -24,9 +24,9 @@ async function getChainId(bre) {
     chainId = await bre.ethereum.send('net_version');
   }
 
-  if (chainId.startsWith('0x')) {
-    chainId = '' + parseInt(chainId.slice(2), 16); // TODO better
-  }
+  // if (chainId.startsWith('0x')) {
+  //   chainId = '' + parseInt(chainId.slice(2), 16); // TODO better
+  // }
 
   return chainId;
 }
