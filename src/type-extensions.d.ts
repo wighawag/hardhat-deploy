@@ -46,6 +46,8 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export type Receipt = {
+    to?: Address;
+    from: Address;
     transactionHash: string;
     blockHash: string;
     blockNumber: number;
@@ -53,8 +55,11 @@ declare module "@nomiclabs/buidler/types" {
     contractAddress?: string;
     cumulativeGasUsed: BigNumber | string | number;
     gasUsed: BigNumber | string | number;
-    log?: Log[];
+    logs?: Log[];
     logsBloom?: string;
+    byzantium?: boolean;
+    status?: number;
+    confirmations?: number;
   }
 
   export interface DeployTxOptions {

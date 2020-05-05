@@ -306,11 +306,35 @@ export class DeploymentsManager {
       name + ".json"
     );
 
+    // handle ethers receipt :
+    const receipt = deployment.receipt;
+    const actualReceipt = {
+      to: receipt.to,
+      from: receipt.from,
+      contractAddress: receipt.contractAddress,
+      transactionIndex: receipt.transactionIndex,
+      gasUsed:
+        receipt.gasUsed && receipt.gasUsed._isBigNumber
+          ? receipt.gasUsed.toString()
+          : receipt.gasUsed,
+      logsBloom: receipt.logsBloom,
+      blockHash: receipt.blockHash,
+      transactionHash: receipt.transactionHash,
+      logs: receipt.logs,
+      blockNumber: receipt.blockNumber,
+      cumulativeGasUsed:
+        receipt.cumulativeGasUsed && receipt.cumulativeGasUsed._isBigNumber
+          ? receipt.cumulativeGasUsed.toString()
+          : receipt.cumulativeGasUsed,
+      status: receipt.status,
+      byzantium: receipt.byzantium
+    };
+
     const obj = JSON.parse(
       JSON.stringify({
         abi: deployment.abi,
-        receipt: deployment.receipt, // TODO
-        address: deployment.address || deployment.receipt.contractAddress,
+        receipt: actualReceipt,
+        address: deployment.address || actualReceipt.contractAddress,
         args: deployment.args,
         linkedData: deployment.linkedData,
         solidityJson: deployment.solidityJson,
@@ -321,10 +345,14 @@ export class DeploymentsManager {
     );
     this.db.deployments[name] = obj;
     if (obj.address === undefined && obj.transactionHash !== undefined) {
-      let receipt;
+      let receiptFetched;
       try {
-        receipt = await waitForTx(this.env.ethereum, obj.transactionHash, true);
-        obj.address = receipt.contractAddress;
+        receiptFetched = await waitForTx(
+          this.env.ethereum,
+          obj.transactionHash,
+          true
+        );
+        obj.address = receiptFetched.contractAddress;
       } catch (e) {
         console.error(e);
         if (toSave) {
