@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Buidler Plugin For Deployments",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",

@@ -309,8 +309,8 @@ export class DeploymentsManager {
     const obj = JSON.parse(
       JSON.stringify({
         abi: deployment.abi,
-        receipt: deployment.receipt,
-        address: deployment.receipt.contractAddress,
+        receipt: deployment.receipt, // TODO
+        address: deployment.address || deployment.receipt.contractAddress,
         args: deployment.args,
         linkedData: deployment.linkedData,
         solidityJson: deployment.solidityJson,

@@ -25,7 +25,7 @@ function fixProvider(env: BuidlerRuntimeEnvironment) {
   // alow it to be used by ethers without any change
   const provider = env.ethereum as any;
   if (provider.sendAsync === undefined) {
-    provider.sendAsync = async (
+    provider.sendAsync = (
       req: {
         id: number;
         jsonrpc: string;
@@ -34,15 +34,12 @@ function fixProvider(env: BuidlerRuntimeEnvironment) {
       },
       callback: (error: any, result: any) => void
     ) => {
-      let result;
-      try {
-        result = await provider.send(req.method, req.params);
-      } catch (e) {
-        callback(e, null);
-        return;
-      }
-      const response = { result, id: req.id, jsonrpc: req.jsonrpc };
-      callback(null, response);
+      provider
+        .send(req.method, req.params)
+        .then((result: any) =>
+          callback(null, { result, id: req.id, jsonrpc: req.jsonrpc })
+        )
+        .catch((error: any) => callback(error, null));
     };
   }
 }

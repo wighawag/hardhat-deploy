@@ -120,6 +120,7 @@ declare module "@nomiclabs/buidler/types" {
   export interface DeploymentSubmission {
     abi: ABI;
     receipt: Receipt;
+    address?: Address; // used to override receipt.contractAddress (useful for proxies)
     args?: any[];
     linkedData?: any;
     solidityJson?: any; // TODO solidityJson type
