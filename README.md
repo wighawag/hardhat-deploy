@@ -96,9 +96,9 @@ It will scan for file in alphabetical order and execute them in turn.
 An example of a deploy script :
 
 ```
-module.exports = async ({namedAccounts, deployments}) => {
+module.exports = async ({getNamedAccounts, deployments}) => {
     const {deployIfDifferent, log} = deployments;
-    const {deployer} = namedAccounts;
+    const {deployer} = await getNamedAccounts();
 
     let contract = await deployments.get('GenericMetaTxProcessor');
     if (!contract) {
@@ -112,7 +112,7 @@ module.exports = async ({namedAccounts, deployments}) => {
 ```
 
 As you can see the BRE passed in has 2 new fields :
-- namedAccounts that is an object where keys are names and value are addresses. It is parsed from the namedAccounts configuration (see namedAccounts)
+- getNamedAccounts a function that return a promise to an object where keys are names and value are addresses. It is parsed from the namedAccounts configuration (see namedAccounts)
 - deployments which contains functions to access past deployment or save new one, as well as helpers functions
 
 
@@ -124,7 +124,7 @@ Note that running `buidler deploy` without network will use the default network.
 
 The test task is like normal except that names are resolved and past deployment are loaded.
 
-test can then use the `bre.deployments.run` function to run the deployment for the test.
+test can then use the `bre.deployments.fixture` function to run the deployment for the test and snapshot it so test do not need to perform the all deploy flow, they simply reuse the snapshot for every test (this leverage `evm_snapshot` and `evm_revert` provided by both `buidlerevm` and `ganache`).
 You can for example set them in a `beaforeEach`
 
 You can also specify to run a subset of the deploy scripts by specifying a tag or an array of tag
@@ -138,7 +138,7 @@ const { deployments } = require('@nomiclabs/buidler');
 
 describe("Token", () => {
     beforeEach(async () => {
-      await deployments.run(['ERC721BidSale']);
+      await deployments.fixture();
     })
     it("testing 1 2 3", async function() {
       const Token = await deployments.get('Token'); // Token is available because Token is a dependency of ERC721BidSale deploy script
@@ -170,11 +170,11 @@ Here is an example of script that run can support
 
 ```
 const bre = require('@nomiclabs/buidler');
-const { deployments, namedAccounts } = bre;
+const { deployments, getNamedAccounts } = bre;
 
 (async() => {
     console.log(await deployments.all())
-    console.log({namedAccounts});
+    console.log({namedAccounts: await getNamedAccounts()});
 })()
 ```
 You can also run it directly from the command line as usual.
@@ -190,6 +190,8 @@ This is not yet enable in any way though.
 
 ## deploy scripts tags and dependencies
 
+These following paragraphs were written before the `deployments.fixture` function was implemented and while it is possible to run a subset of the deploy scripts via `run` this is now mostly useful for partial deployment, in script for example as tests can now benefit from an even faster method via `deployments.fixture`
+
 When you run test, you want to replicate the same set of contract that will be deployed without having to copy the deployment procedure.
 That is why the test have access to `bre.deployments.run` function to be able to easily setup the contracts for testing.
 Now though, for efficiency reason it would be nice if you could only deploy the necessary contract for a particular test.
@@ -203,8 +205,9 @@ Then if another deploy script have such tag as dependency, then when this latter
 Here is an example of 2 deploy scripts :
 
 ```js
-module.exports = async ({namedAccounts, deployments}) => {
+module.exports = async ({getNamedAccounts, deployments}) => {
     const {deployIfDifferent, log} = deployments;
+    const namedAccounts = await getNamedAccounts();
     const {deployer} = namedAccounts;
     const deployResult = await deployIfDifferent('data', 'Token', {from: deployer}, 'Token');
     if (deployResult.newlyDeployed) {
@@ -216,8 +219,9 @@ module.exports.tags = ['Token'];
 
 
 ```js
-module.exports = async function({namedAccounts, deployments}) {
+module.exports = async function({getNamedAccounts, deployments}) {
     const {deployIfDifferent, log} = deployments;
+    const namedAccounts = await getNamedAccounts();
     const {deployer} = namedAccounts;
     const Token = await deployments.get('Token');
     const deployResult = await deployIfDifferent('data', 'ERC721BidSale', {from: deployer}, 'ERC721BidSale', Token.address, 1, 3600);
