@@ -6,9 +6,9 @@ const nameToChainId = {
   mainnet: "0x01",
   eth: "0x01",
   rinkeby: "0x04",
-  kovan: "0x2A",
+  kovan: "0x2a",
   xdai: "0x64",
-  sokol: "0x4D",
+  sokol: "0x4d",
   ropsten: "0x03",
 }
 

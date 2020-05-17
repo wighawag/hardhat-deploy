@@ -10,6 +10,8 @@ import {
 import fs from "fs";
 import path from "path";
 
+import { BigNumber } from "@ethersproject/bignumber";
+
 import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
 
@@ -658,14 +660,14 @@ export class DeploymentsManager {
       expectedChainId = nameToChainId[name];
     }
     if (expectedChainId !== undefined) {
-      if (expectedChainId !== chainId) {
+      if (expectedChainId !== BigNumber.from(chainId).toHexString()) {
         throw new Error(
           `Network name ("${name}") is confusing, chainId is ${chainId}. Was expecting ${expectedChainId}`
         );
       }
       return name;
     }
-    return name + "_" + chainId;
+    return name + "_" + BigNumber.from(chainId).toHexString();
   }
 
   // TODO ?
