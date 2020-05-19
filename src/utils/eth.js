@@ -39,16 +39,24 @@ function linkLibrary(bytecode, libraryName, libraryAddress) {
 }
 
 let provider;
+let availableAccounts = {};
 function addHelpers(env, deploymentsExtension, getArtifact) {
   
-  function init() {
+  async function init() {
     if (!provider) {
       provider = new Web3Provider(env.ethereum); // new EthersProviderWrapper(env.ethereum);
+      try {
+        const accounts = await provider.send("eth_accounts", []);
+        for (const account of accounts) {
+          availableAccounts[account.toLowerCase()] = true;
+        }
+      } catch (e) {}
+      
     }
   }
 
   async function deploy(name, options, contractName, ...args) {
-    init();
+    await init();
     let register = true;
     if (typeof name != 'string') {
         register = false;
@@ -167,6 +175,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
   }
 
   async function fetchIfDifferent(fieldsToCompare, name, options, contractName, ...args) {
+    await init();
     if (typeof fieldsToCompare === 'string') {
       fieldsToCompare = [fieldsToCompare];
     }
@@ -214,7 +223,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
   }
 
   async function deployIfDifferent(fieldsToCompare, name, options, contractName, ...args) {
-    init();
+    await init();
     const differences = await fetchIfDifferent(fieldsToCompare, name, options, contractName, ...args);
     if (differences) {
         return deploy(name, options, contractName, ...args);
@@ -224,6 +233,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
   }
 
   async function batchTxAndWait(txs, batchOptions) {
+    await init();
     const promises = [];
     const currentNonces = {}
     for (const tx of txs) {
@@ -237,9 +247,11 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
         ethersSigner = new Wallet(from);
         from = ethersSigner.address;
       } else {
-        try {
-          ethersSigner = provider.getSigner(from);
-        } catch(e) {}
+        if (availableAccounts[from.toLowerCase()]) {
+          try {
+            ethersSigner = provider.getSigner(from);
+          } catch(e) {}
+        }
       }
       // console.log(tx);
       const nonce = options.nonce || currentNonces[from] || await provider.getTransactionCount(from);
@@ -257,6 +269,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
 
   // TODO ?
   async function sendTxAndWaitOnlyFrom(from, options, contractName, methodName, ...args) {
+    await init();
     const deployment = await env.deployments.get(contractName);
     const abi = deployment.abi;
     const ethersContract = new Contract(deployment.address, abi, provider);
@@ -285,6 +298,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
   }
 
   async function sendTxAndWait(options, contractName, methodName, ...args) {
+    await init();
     // console.log({
     //     options, contractName, methodName, args
     // });
@@ -297,10 +311,12 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
       ethersSigner = new Wallet(from);
       from = ethersSigner.address;
     } else {
-      try {
-        ethersSigner = provider.getSigner(from);
-      } catch(e) {}
-  }
+      if (availableAccounts[from.toLowerCase()]) {
+        try {
+          ethersSigner = provider.getSigner(from);
+        } catch(e) {}
+      }
+    }
 
     let tx;
     if (contractName) {
@@ -329,6 +345,9 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
           method: methodName,
           args,
         }, null, '  '));
+        if (options.skipError) {
+          return null;
+        }
         throw new Error('ABORT, ACTION REQUIRED, see above')
       } else {
         const ethersContract = new Contract(deployment.address, abi, ethersSigner);
@@ -372,6 +391,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
   }
 
   async function rawCall(to, data) { // TODO call it eth_call?
+    await init();
     return provider.send('eth_call', [{
         to,
         data
@@ -379,6 +399,7 @@ function addHelpers(env, deploymentsExtension, getArtifact) {
 }
 
 async function call(options, contractName, methodName, ...args) {
+    await init();
     if (typeof options === 'string') {
         if(typeof methodName !== 'undefined') {
             args.unshift(methodName);
