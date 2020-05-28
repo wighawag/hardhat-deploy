@@ -283,7 +283,7 @@ export function addHelpers(
     return Promise.all(promises);
   }
 
-  async function waitForRawTx(tx: SimpleTx): Promise<Receipt | null> {
+  async function rawTx(tx: SimpleTx): Promise<Receipt | null> {
     await init();
     let from = tx.from;
     let ethersSigner;
@@ -463,7 +463,7 @@ export function addHelpers(
   //   ]); // TODO overrides
   // }
 
-  async function call(
+  async function read(
     name: string,
     options: CallOptions | string,
     methodName?: string | any,
@@ -534,15 +534,59 @@ export function addHelpers(
     }
   }
 
-  return {
+  const result: DeploymentsExtension = {
     ...partialExtension,
     fetchIfDifferent,
     deploy,
     execute,
     batchExecute,
-    waitForRawTx,
-    call
+    rawTx,
+    read
   };
+
+  // ////////// Backward compatible for transition: //////////////////
+  (result as any).call = (
+    options: any,
+    name: string,
+    methodName: string,
+    ...args: any[]
+  ): Promise<any> => {
+    if (typeof options === "string") {
+      args = args || [];
+      if (methodName !== undefined) {
+        args.unshift(methodName);
+      }
+      methodName = name;
+      name = options;
+      options = {};
+    }
+    return read(name, options, methodName, ...args);
+  };
+
+  (result as any).sendTxAndWait = (
+    options: TxOptions,
+    name: string,
+    methodName: string,
+    ...args: any[]
+  ): Promise<Receipt | null> => {
+    return execute(name, options, methodName, ...args);
+  };
+
+  (result as any).deployIfDifferent = (
+    fieldsToCompare: string | string[],
+    name: string,
+    options: DeployOptions,
+    contractName: string,
+    ...args: any[]
+  ): Promise<DeployResult> => {
+    options.fieldsToCompare = fieldsToCompare;
+    options.contractName = contractName;
+    options.args = args;
+    return deploy(name, options);
+  };
+  // ////////////////////////////////////////////////////////////////////
+
+  return result;
 }
 
 function pause(duration: number): Promise<void> {

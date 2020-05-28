@@ -128,9 +128,9 @@ declare module "@nomiclabs/buidler/types" {
     
     execute(name: string, options: TxOptions, methodName: string, ...args: any[]) : Promise<Receipt | null>;
     batchExecute(txs: Execute[], batchOptions: {dev_forceMine: boolean}): Promise<(Receipt | null)[]>;
-    waitForRawTx(tx: SimpleTx) : Promise<Receipt | null>;
-    call(name: string, options: CallOptions, methodName: string, ...args: any[]) : Promise<any>;
-    call(name: string, methodName: string, ...args: any[]) : Promise<any>;
+    rawTx(tx: SimpleTx) : Promise<Receipt | null>;
+    read(name: string, options: CallOptions, methodName: string, ...args: any[]) : Promise<any>;
+    read(name: string, methodName: string, ...args: any[]) : Promise<any>;
     // rawCall(to: Address, data: string): Promise<any>; // TODO ?
   }
 

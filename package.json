@@ -43,10 +43,10 @@
   "dependencies": {
     "@ethersproject/abstract-signer": "^5.0.0-beta.144",
     "@ethersproject/address": "^5.0.0-beta.135",
-    "@ethersproject/bignumber": "^5.0.0-beta.136",
-    "@ethersproject/contracts": "^5.0.0-beta.145",
-    "@ethersproject/logger": "^5.0.0-beta.136",
-    "@ethersproject/providers": "^5.0.0-beta.156",
+    "@ethersproject/bignumber": "^5.0.0-beta.139",
+    "@ethersproject/contracts": "^5.0.0-beta.153",
+    "@ethersproject/logger": "^5.0.0-beta.137",
+    "@ethersproject/providers": "^5.0.0-beta.168",
     "@ethersproject/wallet": "^5.0.0-beta.141",
     "chalk": "^4.0.0",
     "debug": "^4.1.1"
@@ -56,6 +56,7 @@
     "lint": "tslint --config tslint.json --project tsconfig.json",
     "test": "mocha --timeout 20000 --exit",
     "build": "tsc",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "publish:next": "npm publish --tag next"
   }
 }
