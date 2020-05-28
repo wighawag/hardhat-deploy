@@ -41,6 +41,7 @@
     "@nomiclabs/buidler": "^1.0.1"
   },
   "dependencies": {
+    "@ethersproject/abstract-signer": "^5.0.0-beta.144",
     "@ethersproject/address": "^5.0.0-beta.135",
     "@ethersproject/bignumber": "^5.0.0-beta.136",
     "@ethersproject/contracts": "^5.0.0-beta.145",

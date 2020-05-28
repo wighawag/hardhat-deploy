@@ -1,3 +1,4 @@
+import { Signer } from "@ethersproject/abstract-signer";
 import { Web3Provider } from "@ethersproject/providers";
 import { Contract, ContractFactory } from "@ethersproject/contracts";
 import { BigNumber } from "@ethersproject/bignumber";
@@ -93,7 +94,7 @@ export function addHelpers(
     //     byteCode = linkLibrary(byteCode, libName, libAddress);
     //   }
     // }
-    const factory = new ContractFactory(abi, byteCode, ethersSigner);
+    const factory = new ContractFactory(abi, byteCode, ethersSigner as Signer);
 
     const overrides = {
       gasLimit: options.gasLimit,
@@ -374,7 +375,7 @@ export function addHelpers(
     const ethersContract = new Contract(
       deployment.address,
       abi,
-      ethersSigner || provider
+      (ethersSigner as Signer) || provider
     );
     if (!ethersContract.functions[methodName]) {
       throw new Error(
@@ -503,7 +504,11 @@ export function addHelpers(
       nonce: options.nonce,
       chainId: options.chainId
     };
-    const ethersContract = new Contract(deployment.address, abi, ethersSigner);
+    const ethersContract = new Contract(
+      deployment.address,
+      abi,
+      ethersSigner as Signer
+    );
     // populate function
     // if (options.outputTx) {
     //   const method = ethersContract.populateTransaction[methodName];
