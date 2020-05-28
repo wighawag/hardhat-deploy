@@ -209,7 +209,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const {deployIfDifferent, log} = deployments;
     const namedAccounts = await getNamedAccounts();
     const {deployer} = namedAccounts;
-    const deployResult = await deployIfDifferent('data', 'Token', {from: deployer}, 'Token');
+    const deployResult = await deploy('Token', {from: deployer, args: ["hello", 100]});
     if (deployResult.newlyDeployed) {
         log(`contract Token deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
     }
@@ -224,12 +224,12 @@ module.exports = async function({getNamedAccounts, deployments}) {
     const namedAccounts = await getNamedAccounts();
     const {deployer} = namedAccounts;
     const Token = await deployments.get('Token');
-    const deployResult = await deployIfDifferent('data', 'ERC721BidSale', {from: deployer}, 'ERC721BidSale', Token.address, 1, 3600);
+    const deployResult = await deploy('Sale', {from: deployer, contractName: 'ERC721BidSale', args: [Token.address, 1, 3600]});
     if (deployResult.newlyDeployed) {
-        log(`contract ERC721BidSale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
+        log(`contract Sale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
     }
 };
-module.exports.tags = ['ERC721BidSale'];
+module.exports.tags = ['Sale'];
 module.exports.dependencies = ['Token'];
 ```
 
@@ -238,8 +238,23 @@ As you can see the second one depends on the first. This is because the second d
 With that when `bre.deployments.run` is executed as follow :
 
 ```js
-bre.deployments.run(['ERC721BidSale'])
+bre.deployments.run(['Sale'])
 ```
 
-then both script will be run, ensuring ERC721BidSale is ready
+then both script will be run, ensuring Sale is ready
 
+
+You can also define the script as running after other script are run by setting `runAtTheEnd` to be true
+
+Like the following:
+
+```js
+module.exports = async function({getNamedAccounts, deployments}) {
+    const {deployIfDifferent, execute, log} = deployments;
+    const namedAccounts = await getNamedAccounts();
+    const {deployer, admin} = namedAccounts;
+    await execute("Sale", {from: deployer}, "setAdmin", admin);
+};
+module.exports.tags = ['Sale'];
+module.exports.runAtTheEnd = true;
+```

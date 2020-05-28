@@ -131,7 +131,6 @@ declare module "@nomiclabs/buidler/types" {
     waitForRawTx(tx: SimpleTx) : Promise<Receipt | null>;
     call(name: string, options: CallOptions, methodName: string, ...args: any[]) : Promise<any>;
     call(name: string, methodName: string, ...args: any[]) : Promise<any>;
-    // call(name: string, options: CallOptions | string, methodName?: string | null, ...args: any[]) : Promise<any>;
     // rawCall(to: Address, data: string): Promise<any>; // TODO ?
   }
 
@@ -144,6 +143,19 @@ declare module "@nomiclabs/buidler/types" {
     deployments?: string;
     imports?: string;
   }
+
+  export interface ContractExport {
+    address: string,
+    abi: any[],
+    linkedData?: any
+  }
+
+  export interface Export {
+    chainId: string;
+    contracts: { [name: string]: ContractExport }
+  }
+
+  export type MultiExport = { [chainId: string]: { [networkName: string]: Export } }
 
   export interface DeploymentSubmission {
     abi: ABI;

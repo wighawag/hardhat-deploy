@@ -1,16 +1,17 @@
 import * as fs from "fs";
 import * as path from "path";
 import { getAddress } from "@ethersproject/address";
-import { BuidlerRuntimeEnvironment } from "@nomiclabs/buidler/types";
+import { BuidlerRuntimeEnvironment, MultiExport } from "@nomiclabs/buidler/types";
+import { BigNumber } from "@ethersproject/bignumber";
 
 export const nameToChainId: { [name: string]: string } = {
-  mainnet: "0x01",
-  eth: "0x01",
-  rinkeby: "0x04",
-  kovan: "0x2a",
-  xdai: "0x64",
-  sokol: "0x4d",
-  ropsten: "0x03"
+  mainnet: "1",
+  eth: "1",
+  rinkeby: "4",
+  kovan: "42",
+  xdai: "100",
+  sokol: "77",
+  ropsten: "3"
 };
 
 let chainId: string;
@@ -25,9 +26,9 @@ export async function getChainId(bre: BuidlerRuntimeEnvironment) {
     chainId = await bre.ethereum.send("net_version");
   }
 
-  // if (chainId.startsWith('0x')) {
-  //   chainId = '' + parseInt(chainId.slice(2), 16); // TODO better
-  // }
+  if (chainId.startsWith('0x')) {
+    chainId = BigNumber.from(chainId).toString();
+  }
 
   return chainId;
 }
@@ -36,7 +37,7 @@ export function loadAllDeployments(
   deploymentsPath: string,
   onlyABIAndAddress?: boolean
 ) {
-  const all: { [chainId: string]: any[] } = {};
+  const all: MultiExport = {}; // TODO any is chainConfig
   fs.readdirSync(deploymentsPath).forEach(fileName => {
     const fPath = path.resolve(deploymentsPath, fileName);
     const stats = fs.statSync(fPath);
@@ -61,17 +62,17 @@ export function loadAllDeployments(
         name = fileName.substr(0, _index);
       }
       if (!all[chainIdFound]) {
-        all[chainIdFound] = [];
+        all[chainIdFound] = {};
       }
       const contracts = loadDeployments(
         deploymentsPath,
         fileName,
         onlyABIAndAddress
       );
-      all[chainIdFound].push({
-        name,
+      all[chainIdFound][name] = {
+        chainId: chainIdFound,
         contracts
-      });
+      };
     }
   });
   return all;

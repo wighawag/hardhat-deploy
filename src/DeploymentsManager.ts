@@ -5,7 +5,9 @@ import {
   Deployment,
   DeploymentsExtension,
   FixtureFunc,
-  DeploymentSubmission
+  DeploymentSubmission,
+  Export,
+  MultiExport
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
 
@@ -151,9 +153,6 @@ export class DeploymentsManager {
         }
         return artifact;
       },
-      // getChainId: () => {
-      //   return getChainId(this.env);
-      // },
       run: (
         tags?: string | string[],
         options: {
@@ -593,17 +592,15 @@ export class DeploymentsManager {
         };
       }
       if (all[chainId] === undefined) {
-        all[chainId] = [];
+        all[chainId] = {};
       } else {
         // Ensure no past deployments are recorded
-        all[chainId] = all[chainId].filter(
-          (value: any) => value.name !== this.env.network.name
-        );
+        delete all[chainId][this.env.network.name];
       }
-      all[chainId].push({
-        name: this.env.network.name,
+      all[chainId][this.env.network.name] = {
+        chainId,
         contracts: currentNetworkDeployments
-      });
+      };
       fs.writeFileSync(options.exportAll, JSON.stringify(all, null, "  ")); // TODO remove bytecode ?
       log("export-all complete");
     }
@@ -630,16 +627,13 @@ export class DeploymentsManager {
       } else {
         throw new Error("chainId is undefined");
       }
+      const singleExport: Export = {
+        chainId,
+        contracts: currentNetworkDeployments
+      };
       fs.writeFileSync(
         options.export,
-        JSON.stringify(
-          {
-            chainId,
-            contracts: currentNetworkDeployments
-          },
-          null,
-          "  "
-        )
+        JSON.stringify(singleExport, null, "  ")
       ); // TODO remove bytecode ?
       log("single export complete");
     }
@@ -656,14 +650,14 @@ export class DeploymentsManager {
       expectedChainId = nameToChainId[name];
     }
     if (expectedChainId !== undefined) {
-      if (expectedChainId !== BigNumber.from(chainId).toHexString()) {
+      if (expectedChainId !== BigNumber.from(chainId).toString()) {
         throw new Error(
           `Network name ("${name}") is confusing, chainId is ${chainId}. Was expecting ${expectedChainId}`
         );
       }
       return name;
     }
-    return name + "_" + BigNumber.from(chainId).toHexString();
+    return name + "_" + BigNumber.from(chainId).toString();
   }
 
   // TODO ?

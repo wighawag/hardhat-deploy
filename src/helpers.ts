@@ -152,10 +152,9 @@ export function addHelpers(
 
   async function fetchIfDifferent(
     name: string,
-    options: DeployOptions,
-    ...args: unknown[]
+    options: DeployOptions
   ): Promise<boolean> {
-    const argArray = args || [];
+    const argArray = options.args ? [...options.args] : [];
     await init();
     const fieldsToCompareArray =
       typeof options.fieldsToCompare === "string"
@@ -214,11 +213,20 @@ export function addHelpers(
     options: DeployOptions
   ): Promise<DeployResult> {
     await init();
-    const differences = await fetchIfDifferent(name, options);
-    if (differences) {
-      return _deploy(name, options);
+    const argsArray = options.args ? [...options.args] : [];
+    options = { ...options, args: argsArray };
+    if (options.fieldsToCompare === undefined) {
+      options.fieldsToCompare = ["data"];
+    }
+    if (options.fieldsToCompare) {
+      const differences = await fetchIfDifferent(name, options);
+      if (differences) {
+        return _deploy(name, options);
+      } else {
+        return (getDeployment(name) as unknown) as DeployResult;
+      }
     } else {
-      return (getDeployment(name) as unknown) as DeployResult;
+      return _deploy(name, options);
     }
   }
 
