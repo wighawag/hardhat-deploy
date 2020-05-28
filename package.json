@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.3.5",
+  "version": "0.4.0-beta.1",
   "description": "Buidler Plugin For Deployments",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -41,10 +41,12 @@
     "@nomiclabs/buidler": "^1.0.1"
   },
   "dependencies": {
+    "@ethersproject/address": "^5.0.0-beta.135",
     "@ethersproject/bignumber": "^5.0.0-beta.136",
     "@ethersproject/contracts": "^5.0.0-beta.145",
     "@ethersproject/logger": "^5.0.0-beta.136",
     "@ethersproject/providers": "^5.0.0-beta.156",
+    "@ethersproject/wallet": "^5.0.0-beta.141",
     "chalk": "^4.0.0",
     "debug": "^4.1.1"
   },
@@ -52,7 +54,7 @@
     "lint:fix": "prettier --write 'src/**/*.{js,ts}' 'test/**/*.{js,ts}' && tslint --fix --config tslint.json --project tsconfig.json",
     "lint": "tslint --config tslint.json --project tsconfig.json",
     "test": "mocha --timeout 20000 --exit",
-    "build": "tsc && cp -Rf src/utils dist/src/",
+    "build": "tsc",
     "watch": "tsc -w"
   }
 }

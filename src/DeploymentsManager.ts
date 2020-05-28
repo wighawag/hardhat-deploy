@@ -15,19 +15,15 @@ import { BigNumber } from "@ethersproject/bignumber";
 import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
 
-const {
+import {
   addDeployments,
   processNamedAccounts,
   getChainId,
   loadAllDeployments,
   traverse,
   nameToChainId
-} = require("./utils");
-const {
-  addHelpers,
-  transformNamedAccounts,
-  waitForTx
-} = require("./utils/eth");
+} from "./utils";
+import { addHelpers, waitForTx } from "./helpers";
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;

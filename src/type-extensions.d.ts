@@ -62,19 +62,30 @@ declare module "@nomiclabs/buidler/types" {
     confirmations?: number;
   }
 
-  export interface DeployTxOptions {
-    from: Address;
-    value?: number | string | BigNumber;
-    gas?: number | string | BigNumber;
-    gasPrice?: number | string | BigNumber;
+  export interface DeployOptions extends TxOptions {
+    contractName?: string,
+    args?: any[],
+    fieldsToCompare?: string | string[],
+    linkedData?: any; // JSONable ?
   }
 
-  export interface TxOptions {
-    from: Address;
-    value?: number | string | BigNumber;
-    gas?: number | string | BigNumber;
-    gasPrice?: number | string | BigNumber;
+  export interface CallOptions {
+    from?: string;
+    gasLimit?: string | number | BigNumber;
+    gasPrice?: string | BigNumber;
+    value?: string | BigNumber;
+    nonce?: string | number | BigNumber;
+    chainId?: string | number;
+    to?: string; // TODO make to and data part of a `SimpleCallOptions` interface
     data?: string;
+  }
+
+  export interface TxOptions extends CallOptions {
+    from: string;
+    dev_forceMine?: boolean;
+    skipError?: boolean;
+    estimatedGasLimit?: string | number | BigNumber;
+    estimateGasExtra?: string | number | BigNumber;
   }
 
   export interface DeployedContract {
@@ -89,12 +100,14 @@ declare module "@nomiclabs/buidler/types" {
   export type FixtureFunc = (env: BuidlerRuntimeEnvironment) => Promise<any>;
 
   export interface DeploymentsExtension {
+    deploy(name: string, options: DeployOptions): Promise<DeployResult>;
+    fetchIfDifferent(name: string, options: DeployOptions): Promise<boolean>;
     save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;
     getOrNull(name: string): Promise<Deployment | null>;
     all(): Promise<{ [name: string]: Deployment }>;
-    getArtifactSync(): Artifact; // TODO remove ?
-    getArtifact(): Promise<Artifact>;
+    // getArtifactSync(name: string): Artifact; // TODO remove ?
+    getArtifact(name: string): Promise<Artifact>;
     run(
       tags?: string | string[],
       options?:{ reset: boolean }
@@ -102,14 +115,13 @@ declare module "@nomiclabs/buidler/types" {
     fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
     createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
     log(...args: any[]): void;
-    deploy(name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<Deployment>;
-    deployIfDifferent(fieldsToCompare: string[], name: string, options: DeployTxOptions, contractName: string, ...args: any[]): Promise<DeployResult>;
+    
     sendTxAndWait(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
     sendTxAndWait(contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
-    call(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<any>;
+    call(options: CallOptions, contractName: string, methodName: string, ...args: any[]) : Promise<any>;
     call(contractName: string, methodName: string, ...args: any[]) : Promise<any>;
-    rawCall(to: Address, data: string): Promise<any>;
-    batchTxAndWait(txs: any[][], batchOptions: {dev_forceMine: boolean}): Promise<any>; // TODO use TxObject instead of arrays
+    // rawCall(to: Address, data: string): Promise<any>;
+    // batchTxAndWait(txs: any[][], batchOptions: {dev_forceMine: boolean}): Promise<any>; // TODO use TxObject instead of arrays
   }
 
   export interface BuidlerConfig {

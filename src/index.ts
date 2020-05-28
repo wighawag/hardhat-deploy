@@ -21,28 +21,6 @@ import { DeploymentsManager } from "./DeploymentsManager";
 
 const { getChainId } = require("./utils");
 
-function fixProvider(env: BuidlerRuntimeEnvironment) {
-  // alow it to be used by ethers without any change
-  const provider = env.ethereum as any;
-  if (provider.sendAsync === undefined) {
-    provider.sendAsync = (
-      req: {
-        id: number;
-        jsonrpc: string;
-        method: string;
-        params: any[];
-      },
-      callback: (error: any, result: any) => void
-    ) => {
-      provider
-        .send(req.method, req.params)
-        .then((result: any) =>
-          callback(null, { result, id: req.id, jsonrpc: req.jsonrpc })
-        )
-        .catch((error: any) => callback(error, null));
-    };
-  }
-}
 export default function() {
   log("start...");
   let deploymentsManager: DeploymentsManager;
@@ -61,7 +39,6 @@ export default function() {
     //   envAccounts: process.env.BUIDLER__DEPLOY_PLUGIN_ACCOUNTS,
     // });
     log("ensuring provider work with ethers");
-    fixProvider(env);
     if (deploymentsManager === undefined || env.deployments === undefined) {
       deploymentsManager = new DeploymentsManager(env);
       env.deployments = deploymentsManager.deploymentsExtension;
