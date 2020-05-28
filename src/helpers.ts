@@ -14,8 +14,12 @@ import {
   DeployOptions,
   EthereumProvider,
   TxOptions,
-  CallOptions
+  CallOptions,
+  SimpleTx,
+  Receipt,
+  Execute
 } from "@nomiclabs/buidler/types";
+import { PartialExtension } from "./types";
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -44,9 +48,9 @@ let provider: Web3Provider;
 const availableAccounts: { [name: string]: boolean } = {};
 export function addHelpers(
   env: BuidlerRuntimeEnvironment,
-  deploymentsExtension: any, // TODO
+  partialExtension: PartialExtension, // TODO
   getArtifact: (name: string) => Promise<Artifact>
-) {
+): DeploymentsExtension {
   async function init() {
     if (!provider) {
       provider = new Web3Provider(fixProvider(env.ethereum));
@@ -218,25 +222,27 @@ export function addHelpers(
     }
   }
 
-  async function batchTxAndWait(
-    txs: any[][],
-    batchOptions: { dev_forceMine?: boolean }
-  ) {
+  async function batchExecute(
+    txs: Execute[],
+    batchOptions: { dev_forceMine: boolean }
+  ): Promise<Array<Receipt | null>> {
     await init();
     const promises = [];
     const currentNonces: {
       [address: string]: number | string | BigNumber;
     } = {};
-    const savedTxs: any[][] = [];
+    const savedTxs: Execute[] = [];
     for (const tx of txs) {
-      const savedTx: any[] = [];
-      for (const v of tx) {
-        savedTxs.push({ ...v });
+      const newTx = { ...tx };
+      if (tx.args) {
+        newTx.args = [...tx.args];
+      } else {
+        newTx.args = [];
       }
-      savedTxs.push(savedTx);
+      savedTxs.push();
     }
     for (const tx of savedTxs) {
-      let from = tx[0].from;
+      let from = tx.from;
       let ethersSigner;
       if (from.length >= 64) {
         if (from.length === 64) {
@@ -252,31 +258,83 @@ export function addHelpers(
         }
       }
       const nonce =
-        tx[0].nonce ||
+        tx.nonce ||
         currentNonces[from] ||
         (await provider.getTransactionCount(from));
-      tx[0].nonce = nonce;
+      tx.nonce = nonce;
       currentNonces[from] = nonce + 1;
-      if (tx.length > 2) {
-        promises.push(sendTxAndWait(tx[0], tx[1], tx[2], ...tx.slice(3)));
-      } else {
-        promises.push(sendTxAndWait(tx[0], tx[1], tx[2]));
-      }
+      const args = tx.args || [];
+      promises.push(execute(tx.name, tx, tx.methodName, ...args));
     }
     if (batchOptions.dev_forceMine) {
       try {
         await provider.send("evm_mine", []);
       } catch (e) {}
     }
-    await Promise.all(promises);
+    return Promise.all(promises);
   }
 
-  async function sendTxAndWait(
+  async function waitForRawTx(tx: SimpleTx): Promise<Receipt | null> {
+    await init();
+    let from = tx.from;
+    let ethersSigner;
+    if (from.length >= 64) {
+      if (from.length === 64) {
+        from = "0x" + from;
+      }
+      ethersSigner = new Wallet(from);
+      from = ethersSigner.address;
+    } else {
+      if (availableAccounts[from.toLowerCase()]) {
+        try {
+          ethersSigner = provider.getSigner(from);
+        } catch (e) {}
+      }
+    }
+
+    if (!ethersSigner) {
+      console.error("no signer for " + from);
+      console.log("Please execute the following as " + from);
+      console.log(
+        JSON.stringify(
+          {
+            to: tx.to,
+            data: tx.data
+          },
+          null,
+          "  "
+        )
+      );
+      if (tx.skipError) {
+        return null;
+      }
+      throw new Error("ABORT, ACTION REQUIRED, see above");
+    } else {
+      const transactionData = {
+        to: tx.to,
+        gasLimit: tx.gasLimit,
+        gasPrice: tx.gasPrice ? BigNumber.from(tx.gasPrice) : undefined, // TODO cinfig
+        value: tx.value ? BigNumber.from(tx.value) : undefined,
+        nonce: tx.nonce,
+        data: tx.data,
+        chainId: Number(tx.chainId)
+      };
+      const pendingTx = await ethersSigner.sendTransaction(transactionData);
+      if (tx.dev_forceMine) {
+        try {
+          await provider.send("evm_mine", []);
+        } catch (e) {}
+      }
+      return pendingTx.wait();
+    }
+  }
+
+  async function execute(
+    name: string,
     options: TxOptions,
-    contractName: string,
     methodName: string,
-    ...args: unknown[]
-  ) {
+    ...args: any[]
+  ): Promise<Receipt | null> {
     await init();
     let from = options.from;
     let ethersSigner;
@@ -295,101 +353,86 @@ export function addHelpers(
     }
 
     let tx;
-    if (contractName) {
-      const deployment = await env.deployments.get(contractName);
-      const abi = deployment.abi;
-      const overrides = {
-        gasLimit: options.gasLimit,
-        gasPrice: options.gasPrice
-          ? BigNumber.from(options.gasPrice)
-          : undefined, // TODO cinfig
-        value: options.value ? BigNumber.from(options.value) : undefined,
-        nonce: options.nonce,
-        chainId: options.chainId
-      };
-      if (!ethersSigner) {
-        // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
-        console.error("no signer for " + from);
-        console.log("Please execute the following as " + from);
-        const ethersContract = new Contract(deployment.address, abi, provider);
-        const ethersArgs = args ? args.concat([overrides]) : [overrides];
-        const data = await ethersContract.populateTransaction[methodName](
-          ...ethersArgs
-        );
-        console.log(
-          JSON.stringify(
-            {
-              to: deployment.address,
-              data
-            },
-            null,
-            "  "
+    const deployment = await env.deployments.get(name);
+    const abi = deployment.abi;
+    const overrides = {
+      gasLimit: options.gasLimit,
+      gasPrice: options.gasPrice ? BigNumber.from(options.gasPrice) : undefined, // TODO cinfig
+      value: options.value ? BigNumber.from(options.value) : undefined,
+      nonce: options.nonce,
+      chainId: options.chainId
+    };
+
+    const ethersContract = new Contract(
+      deployment.address,
+      abi,
+      ethersSigner || provider
+    );
+    if (!ethersContract.functions[methodName]) {
+      throw new Error(
+        `No method named "${methodName}" on contract deployed as "${name}"`
+      );
+    }
+    if (!ethersSigner) {
+      // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
+      console.error("no signer for " + from);
+      console.log("Please execute the following as " + from);
+      const ethersContract = new Contract(deployment.address, abi, provider);
+      const ethersArgs = args ? args.concat([overrides]) : [overrides];
+      const data = await ethersContract.populateTransaction[methodName](
+        ...ethersArgs
+      );
+      console.log(
+        JSON.stringify(
+          {
+            to: deployment.address,
+            data
+          },
+          null,
+          "  "
+        )
+      );
+      console.log("if you have an interface use the following");
+      console.log(
+        JSON.stringify(
+          {
+            to: deployment.address,
+            method: methodName,
+            args
+          },
+          null,
+          "  "
+        )
+      );
+      if (options.skipError) {
+        return null;
+      }
+      throw new Error("ABORT, ACTION REQUIRED, see above");
+    } else {
+      if (!overrides.gasLimit) {
+        overrides.gasLimit = options.estimatedGasLimit;
+        const ethersArgsWithGasLimit = args
+          ? args.concat([overrides])
+          : [overrides];
+        overrides.gasLimit = (
+          await ethersContract.estimateGas[methodName](
+            ...ethersArgsWithGasLimit
           )
-        );
-        console.log("if you have an interface use the following");
-        console.log(
-          JSON.stringify(
-            {
-              to: deployment.address,
-              method: methodName,
-              args
-            },
-            null,
-            "  "
-          )
-        );
-        if (options.skipError) {
-          return null;
-        }
-        throw new Error("ABORT, ACTION REQUIRED, see above");
-      } else {
-        const ethersContract = new Contract(
-          deployment.address,
-          abi,
-          ethersSigner
-        );
-        if (!overrides.gasLimit) {
-          overrides.gasLimit = options.estimatedGasLimit;
-          const ethersArgsWithGasLimit = args
-            ? args.concat([overrides])
-            : [overrides];
-          overrides.gasLimit = (
-            await ethersContract.estimateGas[methodName](
-              ...ethersArgsWithGasLimit
-            )
-          ).toNumber();
-          if (options.estimateGasExtra) {
-            overrides.gasLimit = overrides.gasLimit + options.estimateGasExtra;
-            if (options.estimatedGasLimit) {
-              overrides.gasLimit = Math.min(
-                overrides.gasLimit,
-                options.estimatedGasLimit
-              );
-            }
+        ).toNumber();
+        if (options.estimateGasExtra) {
+          overrides.gasLimit = overrides.gasLimit + options.estimateGasExtra;
+          if (options.estimatedGasLimit) {
+            overrides.gasLimit = Math.min(
+              overrides.gasLimit,
+              options.estimatedGasLimit
+            );
           }
         }
-        const ethersArgs = args ? args.concat([overrides]) : [overrides];
-        tx = await ethersContract.functions[methodName](...ethersArgs);
       }
-    } else {
-      if (!ethersSigner) {
-        // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
-        console.error("no signer for " + from);
-      } else {
-        const transactionData = {
-          to: options.to,
-          gasLimit: options.gasLimit,
-          gasPrice: options.gasPrice
-            ? BigNumber.from(options.gasPrice)
-            : undefined, // TODO cinfig
-          value: options.value ? BigNumber.from(options.value) : undefined,
-          nonce: options.nonce,
-          data: options.data,
-          chainId: Number(options.chainId)
-        };
-        tx = await ethersSigner.sendTransaction(transactionData);
-      }
+      const ethersArgs = args ? args.concat([overrides]) : [overrides];
+      tx = await ethersContract.functions[methodName](...ethersArgs);
     }
+
     if (options.dev_forceMine) {
       try {
         await provider.send("evm_mine", []);
@@ -412,9 +455,9 @@ export function addHelpers(
   // }
 
   async function call(
-    options: CallOptions,
-    contractName: string,
-    methodName: string,
+    name: string,
+    options: CallOptions | string,
+    methodName?: string | any,
     ...args: unknown[]
   ) {
     await init();
@@ -422,8 +465,7 @@ export function addHelpers(
       if (typeof methodName !== "undefined") {
         args.unshift(methodName);
       }
-      methodName = contractName;
-      contractName = options;
+      methodName = options;
       options = {};
     }
     if (typeof args === "undefined") {
@@ -441,9 +483,9 @@ export function addHelpers(
     if (!ethersSigner) {
       ethersSigner = provider; // TODO rename ethersSigner
     }
-    const deployment = await env.deployments.get(contractName);
+    const deployment = await env.deployments.get(name);
     if (!deployment) {
-      throw new Error(`no contract named "${contractName}"`);
+      throw new Error(`no contract named "${name}"`);
     }
     const abi = deployment.abi;
     const overrides = {
@@ -459,7 +501,7 @@ export function addHelpers(
     //   const method = ethersContract.populateTransaction[methodName];
     //   if (!method) {
     //     throw new Error(
-    //       `no method named "${methodName}" on contract "${contractName}"`
+    //       `no method named "${methodName}" on contract "${name}"`
     //     );
     //   }
     //   if (args.length > 0) {
@@ -470,9 +512,7 @@ export function addHelpers(
     // }
     const method = ethersContract.callStatic[methodName];
     if (!method) {
-      throw new Error(
-        `no method named "${methodName}" on contract "${contractName}"`
-      );
+      throw new Error(`no method named "${methodName}" on contract "${name}"`);
     }
     if (args.length > 0) {
       return method(...args, overrides);
@@ -481,16 +521,15 @@ export function addHelpers(
     }
   }
 
-  // return {
-  //   call,
-  //   deploy,
-  //   sendTxAndWait,
-  //   batchTxAndWait
-  // };
-  deploymentsExtension.call = call;
-  deploymentsExtension.deploy = deploy;
-  deploymentsExtension.sendTxAndWait = sendTxAndWait;
-  deploymentsExtension.batchTxAndWait = batchTxAndWait;
+  return {
+    ...partialExtension,
+    fetchIfDifferent,
+    deploy,
+    execute,
+    batchExecute,
+    waitForRawTx,
+    call
+  };
 }
 
 function pause(duration: number): Promise<void> {

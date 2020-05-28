@@ -88,6 +88,16 @@ declare module "@nomiclabs/buidler/types" {
     estimateGasExtra?: string | number | BigNumber;
   }
 
+  export interface Execute extends TxOptions {
+    name: string;
+    methodName: string;
+    args?: any[];
+  }
+
+  export interface SimpleTx extends TxOptions {
+    to: string;
+  }
+
   export interface DeployedContract {
     address: Address;
     abi: ABI;
@@ -116,12 +126,13 @@ declare module "@nomiclabs/buidler/types" {
     createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
     log(...args: any[]): void;
     
-    sendTxAndWait(options: TxOptions, contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
-    sendTxAndWait(contractName: string, methodName: string, ...args: any[]) : Promise<Receipt>;
-    call(options: CallOptions, contractName: string, methodName: string, ...args: any[]) : Promise<any>;
-    call(contractName: string, methodName: string, ...args: any[]) : Promise<any>;
-    // rawCall(to: Address, data: string): Promise<any>;
-    // batchTxAndWait(txs: any[][], batchOptions: {dev_forceMine: boolean}): Promise<any>; // TODO use TxObject instead of arrays
+    execute(name: string, options: TxOptions, methodName: string, ...args: any[]) : Promise<Receipt | null>;
+    batchExecute(txs: Execute[], batchOptions: {dev_forceMine: boolean}): Promise<(Receipt | null)[]>;
+    waitForRawTx(tx: SimpleTx) : Promise<Receipt | null>;
+    call(name: string, options: CallOptions, methodName: string, ...args: any[]) : Promise<any>;
+    call(name: string, methodName: string, ...args: any[]) : Promise<any>;
+    // call(name: string, options: CallOptions | string, methodName?: string | null, ...args: any[]) : Promise<any>;
+    // rawCall(to: Address, data: string): Promise<any>; // TODO ?
   }
 
   export interface BuidlerConfig {

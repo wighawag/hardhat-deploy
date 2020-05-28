@@ -7,6 +7,8 @@ import {
   FixtureFunc,
   DeploymentSubmission
 } from "@nomiclabs/buidler/types";
+import { PartialExtension } from "./types";
+
 import fs from "fs";
 import path from "path";
 
@@ -87,7 +89,7 @@ export class DeploymentsManager {
       return getChainId(this.env);
     };
 
-    this.deploymentsExtension = {
+    const partialExtension: PartialExtension = {
       save: async (name: string, deployment: Deployment): Promise<boolean> =>
         this.saveDeployment(name, deployment),
       get: async (name: string) => {
@@ -244,13 +246,11 @@ export class DeploymentsManager {
     } as any;
 
     log("adding helpers");
-    addHelpers(
+    this.deploymentsExtension = addHelpers(
       env,
-      this.deploymentsExtension,
-      this.deploymentsExtension.getArtifact
+      partialExtension,
+      partialExtension.getArtifact
     );
-
-    // this.runDeploy().catch(console.error);
   }
 
   public async getNamedAccounts(): Promise<{ [name: string]: string }> {
