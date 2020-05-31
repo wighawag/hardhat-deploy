@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.4.0-beta.2",
+  "version": "0.4.0-beta.3",
   "description": "Buidler Plugin For Deployments",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -52,7 +52,7 @@
     "debug": "^4.1.1"
   },
   "scripts": {
-    "lint:fix": "prettier --write 'src/**/*.{js,ts}' 'test/**/*.{js,ts}' && tslint --fix --config tslint.json --project tsconfig.json",
+    "lint:fix": "prettier --write src/**/*.{js,ts} test/**/*.{js,ts} && tslint --fix --config tslint.json --project tsconfig.json",
     "lint": "tslint --config tslint.json --project tsconfig.json",
     "test": "mocha --timeout 20000 --exit",
     "build": "tsc",

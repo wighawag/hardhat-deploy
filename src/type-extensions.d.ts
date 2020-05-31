@@ -1,10 +1,9 @@
 import "@nomiclabs/buidler/types";
 
 declare module "@nomiclabs/buidler/types" {
-  
   export interface BuidlerRuntimeEnvironment {
     deployments: DeploymentsExtension;
-    getNamedAccounts: () => Promise<{ [name: string]: Address; }>;
+    getNamedAccounts: () => Promise<{ [name: string]: Address }>;
     getChainId(): Promise<string>;
   }
 
@@ -28,7 +27,7 @@ declare module "@nomiclabs/buidler/types" {
     skip?: (env: BuidlerRuntimeEnvironment) => Promise<boolean>;
     tags?: string[];
     dependencies?: string[];
-    runAtTheEnd?:boolean;
+    runAtTheEnd?: boolean;
   }
 
   export type BigNumber = any; // TODO bignumber form ethers
@@ -46,7 +45,7 @@ declare module "@nomiclabs/buidler/types" {
     address: string;
     topics: string[];
     data: string;
-  }
+  };
 
   export type Receipt = {
     to?: Address;
@@ -63,13 +62,13 @@ declare module "@nomiclabs/buidler/types" {
     byzantium?: boolean;
     status?: number;
     confirmations?: number;
-  }
+  };
 
   export interface DeployOptions extends TxOptions {
-    contractName?: string,
-    args?: any[],
-    fieldsToCompare?: string | string[],
-    log?: boolean,
+    contractName?: string;
+    args?: any[];
+    fieldsToCompare?: string | string[];
+    log?: boolean;
     linkedData?: any; // JSONable ?
   }
 
@@ -124,22 +123,35 @@ declare module "@nomiclabs/buidler/types" {
     getArtifact(name: string): Promise<Artifact>;
     run(
       tags?: string | string[],
-      options?:{ reset: boolean }
+      options?: { reset: boolean }
     ): Promise<{ [name: string]: Deployment }>;
     fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
     createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
     log(...args: any[]): void;
-    
-    execute(name: string, options: TxOptions, methodName: string, ...args: any[]) : Promise<Receipt | null>;
-    batchExecute(txs: Execute[], batchOptions: {dev_forceMine: boolean}): Promise<(Receipt | null)[]>;
-    rawTx(tx: SimpleTx) : Promise<Receipt | null>;
-    read(name: string, options: CallOptions, methodName: string, ...args: any[]) : Promise<any>;
-    read(name: string, methodName: string, ...args: any[]) : Promise<any>;
+
+    execute(
+      name: string,
+      options: TxOptions,
+      methodName: string,
+      ...args: any[]
+    ): Promise<Receipt | null>;
+    batchExecute(
+      txs: Execute[],
+      batchOptions: { dev_forceMine: boolean }
+    ): Promise<(Receipt | null)[]>;
+    rawTx(tx: SimpleTx): Promise<Receipt | null>;
+    read(
+      name: string,
+      options: CallOptions,
+      methodName: string,
+      ...args: any[]
+    ): Promise<any>;
+    read(name: string, methodName: string, ...args: any[]): Promise<any>;
     // rawCall(to: Address, data: string): Promise<any>; // TODO ?
   }
 
   export interface BuidlerConfig {
-    namedAccounts?: {[name: string]: any};
+    namedAccounts?: { [name: string]: any };
   }
 
   export interface ProjectPaths {
@@ -149,17 +161,19 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface ContractExport {
-    address: string,
-    abi: any[],
-    linkedData?: any
+    address: string;
+    abi: any[];
+    linkedData?: any;
   }
 
   export interface Export {
     chainId: string;
-    contracts: { [name: string]: ContractExport }
+    contracts: { [name: string]: ContractExport };
   }
 
-  export type MultiExport = { [chainId: string]: { [networkName: string]: Export } }
+  export type MultiExport = {
+    [chainId: string]: { [networkName: string]: Export };
+  };
 
   export interface DeploymentSubmission {
     abi: ABI;

@@ -2,7 +2,7 @@ import {
   Deployment,
   FixtureFunc,
   DeploymentSubmission,
-  Artifact,
+  Artifact
 } from "@nomiclabs/buidler/types";
 
 export interface PartialExtension {
@@ -14,7 +14,7 @@ export interface PartialExtension {
   getArtifact(name: string): Promise<Artifact>;
   run(
     tags?: string | string[],
-    options?:{ reset: boolean }
+    options?: { reset: boolean }
   ): Promise<{ [name: string]: Deployment }>;
   fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
   createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter

@@ -1,7 +1,7 @@
 import {
   BuidlerNetworkConfig,
   EthereumProvider,
-  ResolvedBuidlerConfig,
+  ResolvedBuidlerConfig
 } from "@nomiclabs/buidler/types";
 import { createProvider } from "@nomiclabs/buidler/internal/core/providers/construction";
 import { lazyObject } from "@nomiclabs/buidler/internal/util/lazy";
@@ -21,8 +21,6 @@ import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
 
 import { DeploymentsManager } from "./DeploymentsManager";
-
-const { getChainId } = require("./utils");
 
 export default function() {
   log("start...");

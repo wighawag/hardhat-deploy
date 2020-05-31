@@ -224,7 +224,7 @@ export class DeploymentsManager {
       env,
       partialExtension,
       partialExtension.getArtifact,
-      partialExtension.log,
+      partialExtension.log
     );
   }
 

@@ -1,7 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import { getAddress } from "@ethersproject/address";
-import { BuidlerRuntimeEnvironment, MultiExport } from "@nomiclabs/buidler/types";
+import {
+  BuidlerRuntimeEnvironment,
+  MultiExport
+} from "@nomiclabs/buidler/types";
 import { BigNumber } from "@ethersproject/bignumber";
 
 export const nameToChainId: { [name: string]: string } = {
@@ -26,7 +29,7 @@ export async function getChainId(bre: BuidlerRuntimeEnvironment) {
     chainId = await bre.ethereum.send("net_version");
   }
 
-  if (chainId.startsWith('0x')) {
+  if (chainId.startsWith("0x")) {
     chainId = BigNumber.from(chainId).toString();
   }
 
@@ -104,7 +107,7 @@ function loadDeployments(
   });
 
   for (const fileName of fileNames) {
-    if (fileName.substr(fileName.length - 5) == ".json") {
+    if (fileName.substr(fileName.length - 5) === ".json") {
       const deploymentFileName = path.join(deployPath, fileName);
       let deployment = JSON.parse(
         fs.readFileSync(deploymentFileName).toString()
@@ -124,7 +127,11 @@ function loadDeployments(
   return deploymentsFound;
 }
 
-export function addDeployments(db: any, deploymentsPath: string, subPath: string) {
+export function addDeployments(
+  db: any,
+  deploymentsPath: string,
+  subPath: string
+) {
   const contracts = loadDeployments(deploymentsPath, subPath);
   for (const key of Object.keys(contracts)) {
     db.deployments[key] = contracts[key];
