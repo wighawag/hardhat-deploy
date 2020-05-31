@@ -62,31 +62,6 @@ export class DeploymentsManager {
       env.config.paths.deployments ||
       path.join(env.config.paths.root, "/deployments");
 
-    // SUPPORT budiler run that recreate an BRE
-    const envChainId = process.env.BUIDLER__DEPLOY_PLUGIN_CHAIN_ID;
-    const envAccounts = process.env.BUIDLER__DEPLOY_PLUGIN_ACCOUNTS;
-    if (envChainId) {
-      log("processing namedAccounts synchronously");
-      if (!this.db.accountsLoaded) {
-        // TODO loadd all ?
-        this.db.namedAccounts = processNamedAccounts(
-          env,
-          envAccounts ? envAccounts.split(".") : [],
-          envChainId
-        );
-        this.db.accountsLoaded = true;
-      }
-      if (!this.db.loaded) {
-        log("loading deployments synchronously");
-        addDeployments(
-          this.db,
-          this.deploymentsPath,
-          this.getDeploymentsSubPath(envChainId)
-        );
-        this.db.loaded = true;
-      }
-    }
-
     this.env.getChainId = () => {
       return getChainId(this.env);
     };
@@ -248,22 +223,18 @@ export class DeploymentsManager {
     this.deploymentsExtension = addHelpers(
       env,
       partialExtension,
-      partialExtension.getArtifact
+      partialExtension.getArtifact,
+      partialExtension.log,
     );
   }
 
   public async getNamedAccounts(): Promise<{ [name: string]: string }> {
     if (!this.db.accountsLoaded) {
-      await this.addNamedAccounts();
+      const chainId = await getChainId(this.env);
+      const accounts = await this.env.ethereum.send("eth_accounts");
+      this.db.namedAccounts = processNamedAccounts(this.env, accounts, chainId);
+      this.db.accountsLoaded = true;
     }
-    return this.db.namedAccounts;
-  }
-
-  public async addNamedAccounts() {
-    const chainId = await getChainId(this.env);
-    const accounts = await this.env.ethereum.send("eth_accounts");
-    this.db.namedAccounts = processNamedAccounts(this.env, accounts, chainId);
-    this.db.accountsLoaded = true;
     return this.db.namedAccounts;
   }
 
@@ -295,7 +266,7 @@ export class DeploymentsManager {
 
     const chainId = await getChainId(this.env);
 
-    const toSave = !this.db.noSaving && this.env.network.live;
+    const toSave = !this.db.noSaving && this.env.network.saveDeployments;
 
     const filepath = path.join(
       this.deploymentsPath,

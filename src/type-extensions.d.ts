@@ -10,14 +10,17 @@ declare module "@nomiclabs/buidler/types" {
 
   export interface BuidlerNetworkConfig {
     live?: boolean;
+    saveDeployments?: boolean;
   }
 
   export interface HttpNetworkConfig {
     live?: boolean;
+    saveDeployments?: boolean;
   }
 
   export interface Network {
     live: boolean;
+    saveDeployments: boolean;
   }
 
   export interface DeployFunction {
@@ -66,6 +69,7 @@ declare module "@nomiclabs/buidler/types" {
     contractName?: string,
     args?: any[],
     fieldsToCompare?: string | string[],
+    log?: boolean,
     linkedData?: any; // JSONable ?
   }
 
@@ -83,7 +87,7 @@ declare module "@nomiclabs/buidler/types" {
   export interface TxOptions extends CallOptions {
     from: string;
     dev_forceMine?: boolean;
-    skipError?: boolean;
+    skipUnknownSigner?: boolean;
     estimatedGasLimit?: string | number | BigNumber;
     estimateGasExtra?: string | number | BigNumber;
   }

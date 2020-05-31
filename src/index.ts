@@ -1,15 +1,18 @@
-import { BuidlerRuntimeEnvironment } from "@nomiclabs/buidler/types";
 import {
-  extendEnvironment,
-  internalTask,
-  task
-} from "@nomiclabs/buidler/config";
+  BuidlerNetworkConfig,
+  EthereumProvider,
+  ResolvedBuidlerConfig,
+} from "@nomiclabs/buidler/types";
+import { createProvider } from "@nomiclabs/buidler/internal/core/providers/construction";
+import { lazyObject } from "@nomiclabs/buidler/internal/util/lazy";
+import { extendEnvironment, task } from "@nomiclabs/buidler/config";
 import { BuidlerError } from "@nomiclabs/buidler/internal//core/errors";
 import {
   JsonRpcServer,
   JsonRpcServerConfig
 } from "@nomiclabs/buidler/internal/buidler-evm/jsonrpc/server";
 import { BUIDLEREVM_NETWORK_NAME } from "@nomiclabs/buidler/internal/constants";
+import * as types from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 import { ERRORS } from "@nomiclabs/buidler/internal/core/errors-list";
 import chalk from "chalk";
 // import { TASK_NODE } from "./task-names";
@@ -34,11 +37,13 @@ export default function() {
       live = env.network.config.live;
     }
     env.network.live = live;
-    // console.log({
-    //   envChainId: process.env.BUIDLER__DEPLOY_PLUGIN_CHAIN_ID,
-    //   envAccounts: process.env.BUIDLER__DEPLOY_PLUGIN_ACCOUNTS,
-    // });
-    log("ensuring provider work with ethers");
+
+    if (env.network.config.saveDeployments === undefined) {
+      env.network.saveDeployments = true; // always save (unless fixture or test? env.network.live;
+    } else {
+      env.network.saveDeployments = env.network.config.saveDeployments;
+    }
+
     if (deploymentsManager === undefined || env.deployments === undefined) {
       deploymentsManager = new DeploymentsManager(env);
       env.deployments = deploymentsManager.deploymentsExtension;
@@ -49,22 +54,12 @@ export default function() {
     log("ready");
   });
 
-  internalTask("_resolveNamedAccounts", "resolve named accounts", async () => {
-    return deploymentsManager.addNamedAccounts();
-  });
-
-  internalTask("deploy:loadDeployments", "load existing deployments").setAction(
-    async () => {
-      await deploymentsManager.loadDeployments();
-    }
-  );
-
-  internalTask("deploy:runDeploy", "execute the deployment scripts")
+  task("deploy", "Deploy contracts")
     .addOptionalParam("export", "export current network deployments")
     .addOptionalParam("exportAll", "export all deployments into one file")
     .addOptionalParam("tags", "dependencies to run")
-    .addOptionalParam("node", "specify node to connect to")
-    .setAction(async args => {
+    .setAction(async (args, bre) => {
+      await bre.run("compile");
       return deploymentsManager.runDeploy(args.tags, {
         reset: false,
         noSaving: false,
@@ -73,72 +68,75 @@ export default function() {
       });
     });
 
-  task("deploy", "Deploy contracts")
-    .addOptionalParam("export", "export current network deployments")
-    .addOptionalParam("exportAll", "export all deployments into one file")
-    .setAction(async (args, bre) => {
-      await bre.run("compile");
-      await bre.run("deploy:runDeploy", args);
+  // // TODO remove:
+  // task("listen")
+  //   .addOptionalParam("export", "export current network deployments")
+  //   .addOptionalParam("exportAll", "export all deployments into one file")
+  //   // .setAction(async (args, bre, runSuper) => {
+  //   //   await bre.run("deploy", args);
+  //   //   return runSuper(args);
+  //   // }); // TODO remove :
+  //   .addOptionalParam(
+  //     "hostname",
+  //     "The host to which to bind to for new connections",
+  //     "localhost",
+  //     types.string
+  //   )
+  //   .addOptionalParam(
+  //     "port",
+  //     "The port on which to listen for new connections",
+  //     8545,
+  //     types.int
+  //   )
+  //   .setAction(async (args, bre) => {
+  //     await bre.run("node", args);
+  //   });
+
+  function _createBuidlerEVMProvider(
+    config: ResolvedBuidlerConfig
+  ): EthereumProvider {
+    log("Creating BuidlerEVM Provider");
+
+    const networkName = BUIDLEREVM_NETWORK_NAME;
+    const networkConfig = config.networks[networkName] as BuidlerNetworkConfig;
+
+    return lazyObject(() => {
+      log(`Creating buidlerevm provider for JSON-RPC sever`);
+      return createProvider(
+        networkName,
+        { loggingEnabled: true, ...networkConfig },
+        config.solc.version,
+        config.paths
+      );
     });
+  }
 
-  task("compile").setAction(async (args, bre, runSuper) => {
-    await bre.run("_resolveNamedAccounts");
-    await bre.run("deploy:loadDeployments");
-    await runSuper(args);
-  });
-
-  task("run").setAction(async (args, bre, runSuper) => {
-    const chainId = await getChainId(bre);
-    // console.log('run chainId ', chainId);
-    (bre.buidlerArguments as any)._deployPluginChainId = chainId;
-    // TODO add argument to deploy too (useful for testing script on buidlerevm)
-    // this will then set an flag on buidlerArguments so when run execute the script, the env can be fetched to check if deploy need to run
-    // Note this won't run now as run execute the buidler env twice currently
-    const accounts = await bre.ethereum.send("eth_accounts");
-    if (accounts.length > 0) {
-      (bre.buidlerArguments as any)._deployPluginAccounts = accounts.join(".");
-    }
-    await runSuper(args);
-  });
-
-  task("listen")
+  task(TASK_NODE, "Starts a JSON-RPC server on top of Buidler EVM")
     .addOptionalParam("export", "export current network deployments")
     .addOptionalParam("exportAll", "export all deployments into one file")
-    .addOptionalParam("hostname")
-    .addOptionalParam("port")
-    .setAction(async (args, bre) => {
+    .setAction(async (args, bre, runSuper) => {
       await bre.run("deploy", args);
-      await bre.run("node", {
-        ...args,
-        hostname: args.hostname || "localhost",
-        port: args.ports || 8545
-      });
-    });
-
-  task(TASK_NODE, "Starts a JSON-RPC server on top of Buidler EVM").setAction(
-    async (
-      { hostname, port },
-      { network, buidlerArguments, config, ethereum }
-    ) => {
-      // if (
-      //   network.name !== BUIDLEREVM_NETWORK_NAME &&
-      //   // We normally set the default network as buidlerArguments.network,
-      //   // so this check isn't enough, and we add the next one. This has the
-      //   // effect of `--network <defaultNetwork>` being a false negative, but
-      //   // not a big deal.
-      //   buidlerArguments.network !== undefined &&
-      //   buidlerArguments.network !== config.defaultNetwork
-      // ) {
-      //   throw new BuidlerError(
-      //     ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
-      //   );
-      // }
-
+      // TODO return runSuper(args); and remove the rest (used for now to remove login privateKeys)
+      const { network, buidlerArguments, config } = bre;
+      if (
+        network.name !== BUIDLEREVM_NETWORK_NAME &&
+        // We normally set the default network as buidlerArguments.network,
+        // so this check isn't enough, and we add the next one. This has the
+        // effect of `--network <defaultNetwork>` being a false negative, but
+        // not a big deal.
+        buidlerArguments.network !== undefined &&
+        buidlerArguments.network !== config.defaultNetwork
+      ) {
+        throw new BuidlerError(
+          ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
+        );
+      }
+      const { hostname, port } = args;
       try {
-        const serverConfig = {
+        const serverConfig: JsonRpcServerConfig = {
           hostname,
           port,
-          provider: ethereum
+          provider: _createBuidlerEVMProvider(config)
         };
 
         const server = new JsonRpcServer(serverConfig);
@@ -165,6 +163,5 @@ export default function() {
           error
         );
       }
-    }
-  );
+    });
 }

@@ -50,7 +50,8 @@ const availableAccounts: { [name: string]: boolean } = {};
 export function addHelpers(
   env: BuidlerRuntimeEnvironment,
   partialExtension: PartialExtension, // TODO
-  getArtifact: (name: string) => Promise<Artifact>
+  getArtifact: (name: string) => Promise<Artifact>,
+  log: (...args: any[]) => void
 ): DeploymentsExtension {
   async function init() {
     if (!provider) {
@@ -219,16 +220,27 @@ export function addHelpers(
     if (options.fieldsToCompare === undefined) {
       options.fieldsToCompare = ["data"];
     }
+    let result: DeployResult;
     if (options.fieldsToCompare) {
       const differences = await fetchIfDifferent(name, options);
       if (differences) {
-        return _deploy(name, options);
+        result = await _deploy(name, options);
       } else {
-        return (getDeployment(name) as unknown) as DeployResult;
+        result = ((await getDeployment(name)) as unknown) as DeployResult;
       }
     } else {
-      return _deploy(name, options);
+      result = await _deploy(name, options);
     }
+    if (options.log) {
+      if (result.newlyDeployed) {
+        log(
+          `"${name}" deployed at ${result.address} with ${result.receipt.gasUsed} gas`
+        );
+      } else {
+        log(`reusing "${name}" at ${result.address}`);
+      }
+    }
+    return result;
   }
 
   async function batchExecute(
@@ -303,8 +315,8 @@ export function addHelpers(
 
     if (!ethersSigner) {
       console.error("no signer for " + from);
-      console.log("Please execute the following as " + from);
-      console.log(
+      log("Please execute the following as " + from);
+      log(
         JSON.stringify(
           {
             to: tx.to,
@@ -314,7 +326,7 @@ export function addHelpers(
           "  "
         )
       );
-      if (tx.skipError) {
+      if (tx.skipUnknownSigner) {
         return null;
       }
       throw new Error("ABORT, ACTION REQUIRED, see above");
@@ -385,13 +397,12 @@ export function addHelpers(
     if (!ethersSigner) {
       // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
       console.error("no signer for " + from);
-      console.log("Please execute the following as " + from);
-      const ethersContract = new Contract(deployment.address, abi, provider);
+      log("Please execute the following as " + from);
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
-      const data = await ethersContract.populateTransaction[methodName](
+      const { data } = await ethersContract.populateTransaction[methodName](
         ...ethersArgs
       );
-      console.log(
+      log(
         JSON.stringify(
           {
             to: deployment.address,
@@ -401,8 +412,8 @@ export function addHelpers(
           "  "
         )
       );
-      console.log("if you have an interface use the following");
-      console.log(
+      log("if you have an interface use the following");
+      log(
         JSON.stringify(
           {
             to: deployment.address,
@@ -413,7 +424,7 @@ export function addHelpers(
           "  "
         )
       );
-      if (options.skipError) {
+      if (options.skipUnknownSigner) {
         return null;
       }
       throw new Error("ABORT, ACTION REQUIRED, see above");
@@ -534,7 +545,7 @@ export function addHelpers(
     }
   }
 
-  const result: DeploymentsExtension = {
+  const extension: DeploymentsExtension = {
     ...partialExtension,
     fetchIfDifferent,
     deploy,
@@ -545,7 +556,7 @@ export function addHelpers(
   };
 
   // ////////// Backward compatible for transition: //////////////////
-  (result as any).call = (
+  (extension as any).call = (
     options: any,
     name: string,
     methodName: string,
@@ -563,7 +574,7 @@ export function addHelpers(
     return read(name, options, methodName, ...args);
   };
 
-  (result as any).sendTxAndWait = (
+  (extension as any).sendTxAndWait = (
     options: TxOptions,
     name: string,
     methodName: string,
@@ -572,7 +583,7 @@ export function addHelpers(
     return execute(name, options, methodName, ...args);
   };
 
-  (result as any).deployIfDifferent = (
+  (extension as any).deployIfDifferent = (
     fieldsToCompare: string | string[],
     name: string,
     options: DeployOptions,
@@ -586,7 +597,7 @@ export function addHelpers(
   };
   // ////////////////////////////////////////////////////////////////////
 
-  return result;
+  return extension;
 }
 
 function pause(duration: number): Promise<void> {
