@@ -60,7 +60,7 @@ export default function() {
       await bre.run("compile");
       return deploymentsManager.runDeploy(args.tags, {
         reset: false,
-        noSaving: false,
+        writeDeploymentsToFiles: true,
         export: args.export,
         exportAll: args.exportAll
       });

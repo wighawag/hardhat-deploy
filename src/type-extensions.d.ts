@@ -123,7 +123,12 @@ declare module "@nomiclabs/buidler/types" {
     getArtifact(name: string): Promise<Artifact>;
     run(
       tags?: string | string[],
-      options?: { reset: boolean }
+      options?: { 
+        reset?: boolean;
+        writeDeploymentsToFiles?: boolean;
+        export?: string;
+        exportAll?: string;
+      }
     ): Promise<{ [name: string]: Deployment }>;
     fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
     createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter

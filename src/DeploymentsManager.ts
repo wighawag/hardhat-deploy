@@ -35,9 +35,9 @@ export class DeploymentsManager {
   private db: {
     accountsLoaded: boolean;
     namedAccounts: { [name: string]: string };
-    loaded: boolean;
+    deploymentsLoaded: boolean;
     deployments: any;
-    noSaving: boolean;
+    writeDeploymentsToFiles: boolean;
     global_snapshot?: any;
     snapshots: { [name: string]: any };
     pastFixtures: { [name: string]: { data: any; id: any } };
@@ -51,9 +51,9 @@ export class DeploymentsManager {
     this.db = {
       accountsLoaded: false,
       namedAccounts: {},
-      loaded: false,
+      deploymentsLoaded: false,
       deployments: {},
-      noSaving: false,
+      writeDeploymentsToFiles: false,
       snapshots: {},
       pastFixtures: {}
     };
@@ -70,7 +70,7 @@ export class DeploymentsManager {
       save: async (name: string, deployment: Deployment): Promise<boolean> =>
         this.saveDeployment(name, deployment),
       get: async (name: string) => {
-        if (!this.db.loaded) {
+        if (!this.db.deploymentsLoaded) {
           await this.loadDeployments();
         }
         const deployment = this.db.deployments[name];
@@ -80,7 +80,7 @@ export class DeploymentsManager {
         return deployment;
       },
       getOrNull: async (name: string) => {
-        if (!this.db.loaded) {
+        if (!this.db.deploymentsLoaded) {
           await this.loadDeployments();
         }
         return this.db.deployments[name];
@@ -131,20 +131,24 @@ export class DeploymentsManager {
       run: (
         tags?: string | string[],
         options: {
-          reset: boolean;
-          noSaving?: boolean;
+          reset?: boolean;
+          writeDeploymentsToFiles?: boolean;
           export?: string;
+          exportAll?: string;
         } = {
           reset: true,
-          noSaving: true
+          writeDeploymentsToFiles: false
         }
       ) => {
-        const opt = {
-          reset: options.reset,
-          noSaving: options.noSaving === undefined ? true : options.noSaving,
-          export: options.export
-        };
-        return this.runDeploy(tags, opt);
+        return this.runDeploy(tags, {
+          reset: options.reset === undefined ? true : options.reset,
+          writeDeploymentsToFiles:
+            options.writeDeploymentsToFiles === undefined
+              ? false
+              : options.writeDeploymentsToFiles,
+          export: options.export,
+          exportAll: options.exportAll
+        });
       },
       fixture: async (tags?: string | string[]) => {
         if (typeof tags === "string") {
@@ -177,7 +181,7 @@ export class DeploymentsManager {
         }
         await this.runDeploy(tags, {
           reset: true,
-          noSaving: true
+          writeDeploymentsToFiles: false
         });
 
         const id = await this.env.ethereum.send("evm_snapshot", []);
@@ -213,7 +217,7 @@ export class DeploymentsManager {
         };
       },
       log: (...args: any[]) => {
-        if (!this.db.noSaving) {
+        if (this.db.writeDeploymentsToFiles) {
           console.log(...args);
         }
       }
@@ -246,7 +250,7 @@ export class DeploymentsManager {
       this.deploymentsPath,
       this.getDeploymentsSubPath(chainId)
     );
-    this.db.loaded = true;
+    this.db.deploymentsLoaded = true;
     return this.db.deployments;
   }
 
@@ -266,7 +270,8 @@ export class DeploymentsManager {
 
     const chainId = await getChainId(this.env);
 
-    const toSave = !this.db.noSaving && this.env.network.saveDeployments;
+    const toSave =
+      this.db.writeDeploymentsToFiles && this.env.network.saveDeployments;
 
     const filepath = path.join(
       this.deploymentsPath,
@@ -357,12 +362,12 @@ export class DeploymentsManager {
     tags?: string | string[],
     options: {
       reset: boolean;
-      noSaving: boolean;
+      writeDeploymentsToFiles: boolean;
       export?: string;
       exportAll?: string;
     } = {
       reset: true,
-      noSaving: false
+      writeDeploymentsToFiles: true
     }
   ): Promise<{ [name: string]: Deployment }> {
     log("runDeploy");
@@ -498,9 +503,8 @@ export class DeploymentsManager {
     }
     log("dependencies collected");
 
-    if (options.noSaving) {
-      this.db.noSaving = true;
-    }
+    const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
+    this.db.writeDeploymentsToFiles = options.writeDeploymentsToFiles;
     try {
       for (const deployScript of scriptsToRun.concat(scriptsToRunAtTheEnd)) {
         let skip = false;
@@ -536,13 +540,13 @@ export class DeploymentsManager {
         }
       }
     } catch (e) {
-      this.db.noSaving = false;
+      this.db.writeDeploymentsToFiles = wasWrittingToFiles;
       throw e;
     }
+    this.db.writeDeploymentsToFiles = wasWrittingToFiles;
     log("deploy scripts complete");
 
     const chainId = await getChainId(this.env);
-    this.db.noSaving = false;
     if (options.exportAll !== undefined) {
       log("load all deployments for export-all");
       const all = loadAllDeployments(this.deploymentsPath, true);
