@@ -123,7 +123,7 @@ declare module "@nomiclabs/buidler/types" {
     getArtifact(name: string): Promise<Artifact>;
     run(
       tags?: string | string[],
-      options?: { 
+      options?: {
         reset?: boolean;
         writeDeploymentsToFiles?: boolean;
         export?: string;
