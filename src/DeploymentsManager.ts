@@ -25,7 +25,8 @@ import {
   getChainId,
   loadAllDeployments,
   traverse,
-  nameToChainId
+  nameToChainId,
+  deleteDeployments
 } from "./utils";
 import { addHelpers, waitForTx } from "./helpers";
 
@@ -41,6 +42,7 @@ export class DeploymentsManager {
     global_snapshot?: any;
     snapshots: { [name: string]: any };
     pastFixtures: { [name: string]: { data: any; id: any } };
+    logEnabled: boolean;
   };
 
   private env: BuidlerRuntimeEnvironment;
@@ -55,7 +57,8 @@ export class DeploymentsManager {
       deployments: {},
       writeDeploymentsToFiles: false,
       snapshots: {},
-      pastFixtures: {}
+      pastFixtures: {},
+      logEnabled: false
     };
     this.env = env;
     this.deploymentsPath =
@@ -132,22 +135,29 @@ export class DeploymentsManager {
         tags?: string | string[],
         options: {
           reset?: boolean;
+          deletePreviousDeployments?: boolean;
           writeDeploymentsToFiles?: boolean;
           export?: string;
           exportAll?: string;
         } = {
           reset: true,
-          writeDeploymentsToFiles: false
+          writeDeploymentsToFiles: false,
+          deletePreviousDeployments: false
         }
       ) => {
         return this.runDeploy(tags, {
           reset: options.reset === undefined ? true : options.reset,
+          deletePreviousDeployments:
+            options.deletePreviousDeployments === undefined
+              ? false
+              : options.deletePreviousDeployments,
           writeDeploymentsToFiles:
             options.writeDeploymentsToFiles === undefined
               ? false
               : options.writeDeploymentsToFiles,
           export: options.export,
-          exportAll: options.exportAll
+          exportAll: options.exportAll,
+          log: false
         });
       },
       fixture: async (tags?: string | string[]) => {
@@ -181,7 +191,9 @@ export class DeploymentsManager {
         }
         await this.runDeploy(tags, {
           reset: true,
-          writeDeploymentsToFiles: false
+          writeDeploymentsToFiles: false,
+          deletePreviousDeployments: false,
+          log: false
         });
 
         const id = await this.env.ethereum.send("evm_snapshot", []);
@@ -217,7 +229,7 @@ export class DeploymentsManager {
         };
       },
       log: (...args: any[]) => {
-        if (this.db.writeDeploymentsToFiles) {
+        if (this.db.logEnabled) {
           console.log(...args);
         }
       }
@@ -252,6 +264,14 @@ export class DeploymentsManager {
     );
     this.db.deploymentsLoaded = true;
     return this.db.deployments;
+  }
+
+  public async deletePreviousDeployments(): Promise<void> {
+    const chainId = await getChainId(this.env);
+    deleteDeployments(
+      this.deploymentsPath,
+      this.getDeploymentsSubPath(chainId)
+    );
   }
 
   public async saveDeployment(
@@ -361,16 +381,24 @@ export class DeploymentsManager {
   public async runDeploy(
     tags?: string | string[],
     options: {
+      deletePreviousDeployments: boolean;
+      log: boolean;
       reset: boolean;
       writeDeploymentsToFiles: boolean;
       export?: string;
       exportAll?: string;
     } = {
+      log: false,
       reset: true,
+      deletePreviousDeployments: false,
       writeDeploymentsToFiles: true
     }
   ): Promise<{ [name: string]: Deployment }> {
     log("runDeploy");
+    this.db.logEnabled = options.log;
+    if (options.deletePreviousDeployments) {
+      await this.deletePreviousDeployments();
+    }
     if (tags !== undefined && typeof tags === "string") {
       tags = [tags];
     }

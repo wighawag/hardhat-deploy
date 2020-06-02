@@ -1,11 +1,16 @@
 import {
   BuidlerNetworkConfig,
   EthereumProvider,
-  ResolvedBuidlerConfig
+  ResolvedBuidlerConfig,
+  BuidlerRuntimeEnvironment
 } from "@nomiclabs/buidler/types";
 import { createProvider } from "@nomiclabs/buidler/internal/core/providers/construction";
 import { lazyObject } from "@nomiclabs/buidler/internal/util/lazy";
-import { extendEnvironment, task } from "@nomiclabs/buidler/config";
+import {
+  extendEnvironment,
+  task,
+  internalTask
+} from "@nomiclabs/buidler/config";
 import { BuidlerError } from "@nomiclabs/buidler/internal//core/errors";
 import {
   JsonRpcServer,
@@ -21,6 +26,19 @@ import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
 
 import { DeploymentsManager } from "./DeploymentsManager";
+
+function isBuidlerEVM(bre: BuidlerRuntimeEnvironment): boolean {
+  const { network, buidlerArguments, config } = bre;
+  return !(
+    network.name !== BUIDLEREVM_NETWORK_NAME &&
+    // We normally set the default network as buidlerArguments.network,
+    // so this check isn't enough, and we add the next one. This has the
+    // effect of `--network <defaultNetwork>` being a false negative, but
+    // not a big deal.
+    buidlerArguments.network !== undefined &&
+    buidlerArguments.network !== config.defaultNetwork
+  );
+}
 
 export default function() {
   log("start...");
@@ -52,43 +70,58 @@ export default function() {
     log("ready");
   });
 
-  task("deploy", "Deploy contracts")
+  internalTask("deploy:run", "deploy ")
     .addOptionalParam("export", "export current network deployments")
     .addOptionalParam("exportAll", "export all deployments into one file")
     .addOptionalParam("tags", "dependencies to run")
+    .addOptionalParam(
+      "write",
+      "whether to write deployments to file",
+      true,
+      types.boolean
+    )
+    .addOptionalParam(
+      "reset",
+      "whether to delete deployments files first",
+      false,
+      types.boolean
+    )
+    .addOptionalParam("log", "whether to output log", false, types.boolean)
     .setAction(async (args, bre) => {
       await bre.run("compile");
       return deploymentsManager.runDeploy(args.tags, {
-        reset: false,
-        writeDeploymentsToFiles: true,
+        log: args.log,
+        reset: false, // this is memory reset, TODO rename it
+        deletePreviousDeployments: args.reset,
+        writeDeploymentsToFiles: args.write,
         export: args.export,
         exportAll: args.exportAll
       });
     });
 
-  // // TODO remove:
-  // task("listen")
-  //   .addOptionalParam("export", "export current network deployments")
-  //   .addOptionalParam("exportAll", "export all deployments into one file")
-  //   // .setAction(async (args, bre, runSuper) => {
-  //   //   await bre.run("deploy", args);
-  //   //   return runSuper(args);
-  //   // }); // TODO remove :
-  //   .addOptionalParam(
-  //     "hostname",
-  //     "The host to which to bind to for new connections",
-  //     "localhost",
-  //     types.string
-  //   )
-  //   .addOptionalParam(
-  //     "port",
-  //     "The port on which to listen for new connections",
-  //     8545,
-  //     types.int
-  //   )
-  //   .setAction(async (args, bre) => {
-  //     await bre.run("node", args);
-  //   });
+  task("deploy", "Deploy contracts")
+    .addOptionalParam("export", "export current network deployments")
+    .addOptionalParam("exportAll", "export all deployments into one file")
+    .addOptionalParam("tags", "dependencies to run")
+    .addOptionalParam(
+      "write",
+      "whether to write deployments to file",
+      undefined,
+      types.boolean
+    )
+    .addOptionalParam(
+      "reset",
+      "whether to delete deployments files first",
+      false,
+      types.boolean
+    )
+    .addOptionalParam("log", "whether to output log", true, types.boolean)
+    .setAction(async (args, bre) => {
+      if (args.write === undefined) {
+        args.write = !isBuidlerEVM(bre);
+      }
+      await bre.run("deploy:run", args);
+    });
 
   function _createBuidlerEVMProvider(
     config: ResolvedBuidlerConfig
@@ -112,19 +145,24 @@ export default function() {
   task(TASK_NODE, "Starts a JSON-RPC server on top of Buidler EVM")
     .addOptionalParam("export", "export current network deployments")
     .addOptionalParam("exportAll", "export all deployments into one file")
+    .addOptionalParam("tags", "dependencies to run")
+    .addOptionalParam(
+      "write",
+      "whether to write deployments to file",
+      true,
+      types.boolean
+    )
+    .addOptionalParam(
+      "reset",
+      "whether to delete deployments files first",
+      true,
+      types.boolean
+    )
+    .addOptionalParam("log", "whether to output log", true, types.boolean)
     .setAction(async (args, bre, runSuper) => {
-      await bre.run("deploy", args);
+      await bre.run("deploy:run", args);
       // TODO return runSuper(args); and remove the rest (used for now to remove login privateKeys)
-      const { network, buidlerArguments, config } = bre;
-      if (
-        network.name !== BUIDLEREVM_NETWORK_NAME &&
-        // We normally set the default network as buidlerArguments.network,
-        // so this check isn't enough, and we add the next one. This has the
-        // effect of `--network <defaultNetwork>` being a false negative, but
-        // not a big deal.
-        buidlerArguments.network !== undefined &&
-        buidlerArguments.network !== config.defaultNetwork
-      ) {
+      if (!isBuidlerEVM(bre)) {
         throw new BuidlerError(
           ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
         );
@@ -134,7 +172,7 @@ export default function() {
         const serverConfig: JsonRpcServerConfig = {
           hostname,
           port,
-          provider: _createBuidlerEVMProvider(config)
+          provider: _createBuidlerEVMProvider(bre.config)
         };
 
         const server = new JsonRpcServer(serverConfig);
