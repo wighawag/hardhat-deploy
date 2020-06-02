@@ -11,7 +11,7 @@ import {
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
 
-import fs from "fs";
+import fs from "fs-extra";
 import path from "path";
 
 import { BigNumber } from "@ethersproject/bignumber";
@@ -29,7 +29,10 @@ import {
   deleteDeployments
 } from "./utils";
 import { addHelpers, waitForTx } from "./helpers";
-import { TransactionResponse } from "@ethersproject/providers";
+import {
+  TransactionResponse,
+  TransactionRequest
+} from "@ethersproject/providers";
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -44,6 +47,9 @@ export class DeploymentsManager {
     snapshots: { [name: string]: any };
     pastFixtures: { [name: string]: { data: any; id: any } };
     logEnabled: boolean;
+    pendingTransactions: { [hash: string]: any };
+    savePendingTx: boolean;
+    gasPrice?: string;
   };
 
   private env: BuidlerRuntimeEnvironment;
@@ -59,7 +65,10 @@ export class DeploymentsManager {
       writeDeploymentsToFiles: false,
       snapshots: {},
       pastFixtures: {},
-      logEnabled: false
+      logEnabled: false,
+      pendingTransactions: {},
+      savePendingTx: false,
+      gasPrice: undefined
     };
     this.env = env;
     this.deploymentsPath =
@@ -158,7 +167,8 @@ export class DeploymentsManager {
               : options.writeDeploymentsToFiles,
           export: options.export,
           exportAll: options.exportAll,
-          log: false
+          log: false,
+          savePendingTx: false
         });
       },
       fixture: async (tags?: string | string[]) => {
@@ -194,7 +204,8 @@ export class DeploymentsManager {
           reset: true,
           writeDeploymentsToFiles: false,
           deletePreviousDeployments: false,
-          log: false
+          log: false,
+          savePendingTx: false
         });
 
         const id = await this.env.ethereum.send("evm_snapshot", []);
@@ -242,23 +253,92 @@ export class DeploymentsManager {
       partialExtension,
       partialExtension.getArtifact,
       this.onPendingTx.bind(this),
+      async () => {
+        // TODO extraGasPrice ?
+        if (this.db.gasPrice) {
+          return BigNumber.from(this.db.gasPrice);
+        } else {
+          return undefined;
+        }
+      },
       partialExtension.log
     );
   }
 
+  public async dealWithPendingTransactions() {
+    let pendingTxs: { [txHash: string]: any } = {};
+    const chainId = await getChainId(this.env);
+    const pendingTxPath = path.join(
+      this.deploymentsPath,
+      this.getDeploymentsSubPath(chainId),
+      ".pendingTransactions"
+    );
+    try {
+      pendingTxs = JSON.parse(fs.readFileSync(pendingTxPath).toString());
+    } catch (e) {}
+    const txHashes = Object.keys(pendingTxs);
+    for (const txHash of txHashes) {
+      const txData = pendingTxs[txHash];
+      // TODO is gasPrice requested is bigger than txData.txRequest.gasPrice
+      // resubmit the tx but keep track of both in case old one os included instead
+      // alternative add options to deploy task to delete pending tx, combined with --gasprice this would work (except for timing edge case)
+      if (this.db.logEnabled) {
+        console.log(
+          `waiting for tx ${txHash}` +
+            (txData.name ? ` for ${txData.name} Deployment` : "")
+        );
+      }
+      const receipt = await waitForTx(this.env.ethereum, txHash, false);
+      if (receipt.contractAddress && txData.name) {
+        await this.saveDeployment(txData.name, {
+          ...txData.deployment,
+          receipt
+        });
+      }
+      delete pendingTxs[txHash];
+      if (Object.keys(pendingTxs).length === 0) {
+        fs.removeSync(pendingTxPath);
+      } else {
+        fs.writeFileSync(pendingTxPath, JSON.stringify(pendingTxs, null, "  "));
+      }
+    }
+  }
+
   public async onPendingTx(
     tx: TransactionResponse,
-    data?: any
+    txRequest: TransactionRequest,
+    name?: string,
+    deployment?: any
   ): Promise<TransactionResponse> {
-    // TODO add tx
-    console.log("adding pending tx", tx.hash);
-    const wait = tx.wait.bind(tx);
-    tx.wait = async () => {
-      const receipt = await wait();
-      // TODO remove tx
-      console.log("tx processed", tx.hash);
-      return receipt;
-    };
+    if (this.db.writeDeploymentsToFiles && this.db.savePendingTx) {
+      const chainId = await getChainId(this.env);
+      const deployFolderPath = path.join(
+        this.deploymentsPath,
+        this.getDeploymentsSubPath(chainId));
+      const pendingTxPath = path.join(deployFolderPath, ".pendingTransactions");
+      fs.ensureDirSync(deployFolderPath);
+      this.db.pendingTransactions[tx.hash] = name
+        ? { name, txRequest, deployment }
+        : { txRequest };
+      fs.writeFileSync(
+        pendingTxPath,
+        JSON.stringify(this.db.pendingTransactions, null, "  ")
+      );
+      const wait = tx.wait.bind(tx);
+      tx.wait = async () => {
+        const receipt = await wait();
+        delete this.db.pendingTransactions[tx.hash];
+        if (Object.keys(this.db.pendingTransactions).length === 0) {
+          fs.removeSync(pendingTxPath);
+        } else {
+          fs.writeFileSync(
+            pendingTxPath,
+            JSON.stringify(this.db.pendingTransactions, null, "  ")
+          );
+        }
+        return receipt;
+      };
+    }
     return tx;
   }
 
@@ -403,25 +483,36 @@ export class DeploymentsManager {
       log: boolean;
       reset: boolean;
       writeDeploymentsToFiles: boolean;
+      savePendingTx: boolean;
       export?: string;
       exportAll?: string;
+      gasPrice?: string;
     } = {
       log: false,
       reset: true,
       deletePreviousDeployments: false,
-      writeDeploymentsToFiles: true
+      writeDeploymentsToFiles: true,
+      savePendingTx: false
     }
   ): Promise<{ [name: string]: Deployment }> {
     log("runDeploy");
+    const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
+    this.db.writeDeploymentsToFiles = options.writeDeploymentsToFiles;
+    this.db.savePendingTx = options.savePendingTx;
     this.db.logEnabled = options.log;
+    this.db.gasPrice = options.gasPrice;
+    if (options.reset) {
+      this.db.deployments = {};
+    }
     if (options.deletePreviousDeployments) {
       await this.deletePreviousDeployments();
+    } else {
+      if (options.savePendingTx) {
+        await this.dealWithPendingTransactions(); // TODO deal with reset ?
+      }
     }
     if (tags !== undefined && typeof tags === "string") {
       tags = [tags];
-    }
-    if (options.reset) {
-      this.db.deployments = {};
     }
     const deployPath =
       this.env.config.paths.deploy ||
@@ -549,8 +640,6 @@ export class DeploymentsManager {
     }
     log("dependencies collected");
 
-    const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
-    this.db.writeDeploymentsToFiles = options.writeDeploymentsToFiles;
     try {
       for (const deployScript of scriptsToRun.concat(scriptsToRunAtTheEnd)) {
         let skip = false;

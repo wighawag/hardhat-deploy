@@ -87,6 +87,18 @@ export default function() {
       types.boolean
     )
     .addOptionalParam("log", "whether to output log", false, types.boolean)
+    .addOptionalParam(
+      "pendingtx",
+      "whether to save pending tx",
+      false,
+      types.boolean
+    )
+    .addOptionalParam(
+      "gasprice",
+      "gas price to use for transactions",
+      undefined,
+      types.string
+    )
     .setAction(async (args, bre) => {
       await bre.run("compile");
       return deploymentsManager.runDeploy(args.tags, {
@@ -95,7 +107,9 @@ export default function() {
         deletePreviousDeployments: args.reset,
         writeDeploymentsToFiles: args.write,
         export: args.export,
-        exportAll: args.exportAll
+        exportAll: args.exportAll,
+        savePendingTx: args.pendingtx,
+        gasPrice: args.gasprice
       });
     });
 
@@ -116,10 +130,17 @@ export default function() {
       types.boolean
     )
     .addOptionalParam("log", "whether to output log", true, types.boolean)
+    .addOptionalParam(
+      "gasprice",
+      "gas price to use for transactions",
+      undefined,
+      types.string
+    )
     .setAction(async (args, bre) => {
       if (args.write === undefined) {
         args.write = !isBuidlerEVM(bre);
       }
+      args.pendingtx = !isBuidlerEVM(bre);
       await bre.run("deploy:run", args);
     });
 
@@ -160,6 +181,7 @@ export default function() {
     )
     .addOptionalParam("log", "whether to output log", true, types.boolean)
     .setAction(async (args, bre, runSuper) => {
+      args.pendingtx = !isBuidlerEVM(bre);
       await bre.run("deploy:run", args);
       // TODO return runSuper(args); and remove the rest (used for now to remove login privateKeys)
       if (!isBuidlerEVM(bre)) {

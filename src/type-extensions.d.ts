@@ -78,7 +78,6 @@ declare module "@nomiclabs/buidler/types" {
     gasPrice?: string | BigNumber;
     value?: string | BigNumber;
     nonce?: string | number | BigNumber;
-    chainId?: string | number;
     to?: string; // TODO make to and data part of a `SimpleCallOptions` interface
     data?: string;
   }
