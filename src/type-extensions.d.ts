@@ -123,7 +123,8 @@ declare module "@nomiclabs/buidler/types" {
     run(
       tags?: string | string[],
       options?: {
-        reset?: boolean;
+        resetMemory?: boolean;
+        deletePreviousDeployments?: boolean;
         writeDeploymentsToFiles?: boolean;
         export?: string;
         exportAll?: string;

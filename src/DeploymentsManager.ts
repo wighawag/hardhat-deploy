@@ -145,19 +145,20 @@ export class DeploymentsManager {
       run: (
         tags?: string | string[],
         options: {
-          reset?: boolean;
+          resetMemory?: boolean;
           deletePreviousDeployments?: boolean;
           writeDeploymentsToFiles?: boolean;
           export?: string;
           exportAll?: string;
         } = {
-          reset: true,
+          resetMemory: true,
           writeDeploymentsToFiles: false,
           deletePreviousDeployments: false
         }
       ) => {
         return this.runDeploy(tags, {
-          reset: options.reset === undefined ? true : options.reset,
+          resetMemory:
+            options.resetMemory === undefined ? true : options.resetMemory,
           deletePreviousDeployments:
             options.deletePreviousDeployments === undefined
               ? false
@@ -202,7 +203,7 @@ export class DeploymentsManager {
           return this.db.deployments;
         }
         await this.runDeploy(tags, {
-          reset: true,
+          resetMemory: true,
           writeDeploymentsToFiles: false,
           deletePreviousDeployments: false,
           log: false,
@@ -494,7 +495,7 @@ export class DeploymentsManager {
     options: {
       deletePreviousDeployments: boolean;
       log: boolean;
-      reset: boolean;
+      resetMemory: boolean;
       writeDeploymentsToFiles: boolean;
       savePendingTx: boolean;
       export?: string;
@@ -502,7 +503,7 @@ export class DeploymentsManager {
       gasPrice?: string;
     } = {
       log: false,
-      reset: true,
+      resetMemory: true,
       deletePreviousDeployments: false,
       writeDeploymentsToFiles: true,
       savePendingTx: false
@@ -514,7 +515,7 @@ export class DeploymentsManager {
     this.db.savePendingTx = options.savePendingTx;
     this.db.logEnabled = options.log;
     this.db.gasPrice = options.gasPrice;
-    if (options.reset) {
+    if (options.resetMemory) {
       this.db.deployments = {};
     }
     if (options.deletePreviousDeployments) {

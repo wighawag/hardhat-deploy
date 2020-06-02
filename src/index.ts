@@ -103,7 +103,7 @@ export default function() {
       await bre.run("compile");
       return deploymentsManager.runDeploy(args.tags, {
         log: args.log,
-        reset: false, // this is memory reset, TODO rename it
+        resetMemory: false, // this is memory reset, TODO rename it
         deletePreviousDeployments: args.reset,
         writeDeploymentsToFiles: args.write,
         export: args.export,
