@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import * as fs from "fs-extra";
 import * as path from "path";
 import { getAddress } from "@ethersproject/address";
 import {
@@ -79,6 +79,11 @@ export function loadAllDeployments(
     }
   });
   return all;
+}
+
+export function deleteDeployments(deploymentsPath: string, subPath: string) {
+  const deployPath = path.join(deploymentsPath, subPath);
+  fs.removeSync(deployPath);
 }
 
 function loadDeployments(
