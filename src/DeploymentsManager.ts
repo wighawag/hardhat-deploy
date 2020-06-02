@@ -28,6 +28,7 @@ import {
   nameToChainId
 } from "./utils";
 import { addHelpers, waitForTx } from "./helpers";
+import { TransactionResponse } from "@ethersproject/providers";
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -228,8 +229,25 @@ export class DeploymentsManager {
       env,
       partialExtension,
       partialExtension.getArtifact,
+      this.onPendingTx.bind(this),
       partialExtension.log
     );
+  }
+
+  public async onPendingTx(
+    tx: TransactionResponse,
+    data?: any
+  ): Promise<TransactionResponse> {
+    // TODO add tx
+    console.log("adding pending tx", tx.hash);
+    const wait = tx.wait.bind(tx);
+    tx.wait = async () => {
+      const receipt = await wait();
+      // TODO remove tx
+      console.log("tx processed", tx.hash);
+      return receipt;
+    };
+    return tx;
   }
 
   public async getNamedAccounts(): Promise<{ [name: string]: string }> {
