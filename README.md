@@ -158,8 +158,6 @@ The node command is updated so that now when the node is serving, all contract a
 It also add an argument `--export` that allow you to specify a destination file where the info about the contracts deployed is written.
 Your webapp can then access all contracts information.
 
-Note: for now, you have to use `buidler listen` instead of `buidler node` as buidler does not let plugin add options to existing task yet.
-
 ### run
 
 `buidler run <script>`
@@ -179,13 +177,18 @@ const { deployments, getNamedAccounts } = bre;
 ```
 You can also run it directly from the command line as usual.
 
+### console 
+
+`buidler console`
+
+The same applies to the `console` task
 
 ### compile
 
 `buidler compile`
 
 The compile command is also updated so that you could potentially have the compiler do different thing depending on the deployed contract. Like for example you might want to inject the address of a deployed contract in the bytecode for efficiency reason.
-This is not yet enable in any way though. 
+This is not yet enabled in any way though. 
 
 
 ## deploy scripts tags and dependencies
