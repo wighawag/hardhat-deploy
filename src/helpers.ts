@@ -1,5 +1,9 @@
 import { Signer } from "@ethersproject/abstract-signer";
-import { Web3Provider, TransactionResponse, TransactionRequest } from "@ethersproject/providers";
+import {
+  Web3Provider,
+  TransactionResponse,
+  TransactionRequest
+} from "@ethersproject/providers";
 import {
   Contract,
   ContractFactory,
@@ -56,8 +60,7 @@ export function addHelpers(
   partialExtension: PartialExtension, // TODO
   getArtifact: (name: string) => Promise<Artifact>,
   onPendingTx: (
-    txHash: TransactionResponse,
-    unsignedTx: TransactionRequest,
+    txResponse: TransactionResponse,
     name?: string,
     data?: any
   ) => Promise<TransactionResponse>,
@@ -163,7 +166,7 @@ export function addHelpers(
     // ethersContract = await factory.deploy(...args, overrides);
     // let unsignedTx = {};
     // let tx = ethersContract.deployTransaction;
-  
+
     if (options.dev_forceMine) {
       try {
         await provider.send("evm_mine", []);
@@ -182,7 +185,7 @@ export function addHelpers(
       devdoc: extendedAtifact.devdoc,
       methodIdentifiers: extendedAtifact.methodIdentifiers
     };
-    tx = await onPendingTx(tx, unsignedTx, name, preDeployment);
+    tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait();
     const address = receipt.contractAddress;
     const deployment = {
@@ -389,7 +392,7 @@ export function addHelpers(
         data: tx.data
       };
       let pendingTx = await ethersSigner.sendTransaction(transactionData);
-      pendingTx = await onPendingTx(pendingTx, transactionData);
+      pendingTx = await onPendingTx(pendingTx);
       if (tx.dev_forceMine) {
         try {
           await provider.send("evm_mine", []);
@@ -496,7 +499,7 @@ export function addHelpers(
       tx = await ethersSigner.sendTransaction(unsignedTx);
     }
 
-    tx = await onPendingTx(tx, unsignedTx);
+    tx = await onPendingTx(tx);
 
     if (options.dev_forceMine) {
       try {

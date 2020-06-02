@@ -15,6 +15,7 @@ import fs from "fs-extra";
 import path from "path";
 
 import { BigNumber } from "@ethersproject/bignumber";
+import { parse as parseTransaction } from "@ethersproject/transactions";
 
 import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
@@ -266,7 +267,13 @@ export class DeploymentsManager {
   }
 
   public async dealWithPendingTransactions() {
-    let pendingTxs: { [txHash: string]: any } = {};
+    let pendingTxs: {
+      [txHash: string]: {
+        name: string;
+        deployment?: any;
+        rawTx: string;
+      };
+    } = {};
     const chainId = await getChainId(this.env);
     const pendingTxPath = path.join(
       this.deploymentsPath,
@@ -279,8 +286,12 @@ export class DeploymentsManager {
     const txHashes = Object.keys(pendingTxs);
     for (const txHash of txHashes) {
       const txData = pendingTxs[txHash];
-      // TODO is gasPrice requested is bigger than txData.txRequest.gasPrice
-      // resubmit the tx but keep track of both in case old one os included instead
+      const tx = parseTransaction(txData.rawTx);
+      // if (this.db.gasPrice) {
+      //   if (tx.gasPrice.lt(this.db.gasPrice)) {
+      //     //TODO
+      //   }
+      // }
       // alternative add options to deploy task to delete pending tx, combined with --gasprice this would work (except for timing edge case)
       if (this.db.logEnabled) {
         console.log(
@@ -306,7 +317,6 @@ export class DeploymentsManager {
 
   public async onPendingTx(
     tx: TransactionResponse,
-    txRequest: TransactionRequest,
     name?: string,
     deployment?: any
   ): Promise<TransactionResponse> {
@@ -314,12 +324,13 @@ export class DeploymentsManager {
       const chainId = await getChainId(this.env);
       const deployFolderPath = path.join(
         this.deploymentsPath,
-        this.getDeploymentsSubPath(chainId));
+        this.getDeploymentsSubPath(chainId)
+      );
       const pendingTxPath = path.join(deployFolderPath, ".pendingTransactions");
       fs.ensureDirSync(deployFolderPath);
       this.db.pendingTransactions[tx.hash] = name
-        ? { name, txRequest, deployment }
-        : { txRequest };
+        ? { name, deployment, rawTx: tx.raw }
+        : {};
       fs.writeFileSync(
         pendingTxPath,
         JSON.stringify(this.db.pendingTransactions, null, "  ")
