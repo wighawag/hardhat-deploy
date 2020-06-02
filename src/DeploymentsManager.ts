@@ -326,6 +326,7 @@ export class DeploymentsManager {
         this.deploymentsPath,
         this.getDeploymentsSubPath(chainId)
       );
+      // console.log("tx", tx.hash);
       const pendingTxPath = path.join(deployFolderPath, ".pendingTransactions");
       fs.ensureDirSync(deployFolderPath);
       this.db.pendingTransactions[tx.hash] = name
@@ -335,6 +336,7 @@ export class DeploymentsManager {
         pendingTxPath,
         JSON.stringify(this.db.pendingTransactions, null, "  ")
       );
+      // await new Promise(r => setTimeout(r, 20000));
       const wait = tx.wait.bind(tx);
       tx.wait = async () => {
         const receipt = await wait();
