@@ -59,6 +59,7 @@
     "test": "mocha --timeout 20000 --exit",
     "build": "tsc",
     "watch": "tsc -w",
-    "publish:next": "npm publish --tag next"
+    "publish:next": "npm publish --tag next",
+    "publish:release": "npm publish"
   }
 }
