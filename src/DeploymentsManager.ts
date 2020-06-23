@@ -218,27 +218,24 @@ export class DeploymentsManager {
         }
         return this.db.deployments;
       },
-      createFixture: (func: FixtureFunc, forceId?: string) => {
-        let id: any;
-        let data: any;
-        if (
-          forceId !== undefined &&
-          this.db.pastFixtures[forceId] !== undefined
-        ) {
-          id = this.db.pastFixtures[forceId].id;
-          data = this.db.pastFixtures[forceId].data;
-        }
-        return async () => {
-          if (id === undefined) {
-            data = await func(this.env);
-            id = await this.env.ethereum.send("evm_snapshot", []);
-            if (forceId !== undefined) {
-              this.db.pastFixtures[forceId] = { id, data };
-            }
-          } else {
-            await this.env.ethereum.send("evm_revert", [id]);
-            id = await this.env.ethereum.send("evm_snapshot", []); // is that necesary
+      createFixture: (func: FixtureFunc) => {
+        const pastFixtures: {
+          [key: string]: { snapshot: any; data: any };
+        } = {};
+        return async (options?: any) => {
+          let id = "";
+          if (options !== undefined) {
+            id = JSON.stringify(options);
           }
+          const saved = pastFixtures[id];
+          if (saved) {
+            await this.env.ethereum.send("evm_revert", [saved.snapshot]);
+            saved.snapshot = await this.env.ethereum.send("evm_snapshot", []); // is that necesary
+            return saved.data;
+          }
+          const data = await func(this.env, options);
+          const snapshot = await this.env.ethereum.send("evm_snapshot", []);
+          pastFixtures[id] = { snapshot, data };
           return data;
         };
       },

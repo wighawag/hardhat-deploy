@@ -109,7 +109,26 @@ declare module "@nomiclabs/buidler/types" {
     newlyDeployed: boolean;
   }
 
-  export type FixtureFunc = (env: BuidlerRuntimeEnvironment) => Promise<any>;
+  export type Json =
+  | null
+  | boolean
+  | number
+  | string
+  | Json[]
+  | { [prop: string]: Json };
+
+  // from https://github.com/Microsoft/TypeScript/issues/1897#issuecomment-580962081
+  type JsonCompatible<T> = {
+    [P in keyof T]: T[P] extends Json
+      ? T[P]
+      : Pick<T, P> extends Required<Pick<T, P>>
+      ? never
+      : T[P] extends (() => any) | undefined
+      ? never
+      : JsonCompatible<T[P]>;
+  };
+
+  export type FixtureFunc = (env: BuidlerRuntimeEnvironment, options? : Json) => Promise<any>;
 
   export interface DeploymentsExtension {
     deploy(name: string, options: DeployOptions): Promise<DeployResult>;
