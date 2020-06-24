@@ -44,9 +44,16 @@ export class DeploymentsManager {
     deploymentsLoaded: boolean;
     deployments: any;
     writeDeploymentsToFiles: boolean;
-    global_snapshot?: any;
-    snapshots: { [name: string]: any };
-    pastFixtures: { [name: string]: { data: any; id: any } };
+    fixtureCounter: number;
+    snapshotCounter: number;
+    pastFixtures: {
+      [name: string]: {
+        index: number;
+        data?: any;
+        snapshot: any;
+        deployments: any;
+      };
+    };
     logEnabled: boolean;
     pendingTransactions: { [hash: string]: any };
     savePendingTx: boolean;
@@ -64,7 +71,8 @@ export class DeploymentsManager {
       deploymentsLoaded: false,
       deployments: {},
       writeDeploymentsToFiles: false,
-      snapshots: {},
+      fixtureCounter: 0,
+      snapshotCounter: 0,
       pastFixtures: {},
       logEnabled: false,
       pendingTransactions: {},
@@ -177,32 +185,23 @@ export class DeploymentsManager {
         if (typeof tags === "string") {
           tags = [tags];
         }
-        let snapshotKey;
+        const globalKey = "::global";
+        let fixtureKey;
         if (tags !== undefined) {
-          snapshotKey = tags.join(".");
+          fixtureKey = "::" + tags.join(".");
         }
-        if (this.db.global_snapshot) {
-          await this.env.ethereum.send("evm_revert", [
-            this.db.global_snapshot.snapshot
-          ]);
-          this.db.global_snapshot.snapshot = await this.env.ethereum.send(
-            "evm_snapshot",
-            []
-          ); // it is necessary to re-snapshot it
-          this.db.deployments = this.db.global_snapshot.deployments;
+
+        const global = this.db.pastFixtures[globalKey];
+        if (global) {
+          await this.revertSnapshot(globalKey, global);
           return this.db.deployments;
         } else if (
           tags !== undefined &&
-          snapshotKey !== undefined &&
-          this.db.snapshots[snapshotKey]
+          fixtureKey !== undefined &&
+          this.db.pastFixtures[fixtureKey]
         ) {
-          await this.env.ethereum.send("evm_revert", [
-            this.db.snapshots[snapshotKey].snapshot
-          ]);
-          this.db.snapshots[
-            snapshotKey
-          ].snapshot = await this.env.ethereum.send("evm_snapshot", []); // it is necessary to re-snapshot it
-          this.db.deployments = this.db.snapshots[snapshotKey].deployments;
+          const pastFixture = this.db.pastFixtures[fixtureKey];
+          await this.revertSnapshot(fixtureKey, pastFixture);
           return this.db.deployments;
         }
         await this.runDeploy(tags, {
@@ -213,43 +212,27 @@ export class DeploymentsManager {
           savePendingTx: false
         });
 
-        const id = await this.env.ethereum.send("evm_snapshot", []);
-        if (snapshotKey !== undefined) {
-          this.db.snapshots[snapshotKey] = {
-            snapshot: id,
-            deployments: { ...this.db.deployments }
-          };
+        if (fixtureKey !== undefined) {
+          await this.saveSnapshot(fixtureKey);
         } else {
-          this.db.global_snapshot = {
-            snapshot: id,
-            deployments: { ...this.db.deployments }
-          };
+          await this.saveSnapshot(globalKey);
         }
         return this.db.deployments;
       },
       createFixture: (func: FixtureFunc) => {
-        const pastFixtures: {
-          [key: string]: { snapshot: any; data: any; deployments: any };
-        } = {};
+        const baseId = "" + ++this.db.fixtureCounter + "::";
         return async (options?: any) => {
-          let id = "";
+          let id = baseId;
           if (options !== undefined) {
-            id = JSON.stringify(options);
+            id = id + JSON.stringify(options);
           }
-          const saved = pastFixtures[id];
+          const saved = this.db.pastFixtures[id];
           if (saved) {
-            await this.env.ethereum.send("evm_revert", [saved.snapshot]);
-            saved.snapshot = await this.env.ethereum.send("evm_snapshot", []); // it is necessary to re-snapshot it
-            this.db.deployments = saved.deployments;
+            await this.revertSnapshot(id, saved);
             return saved.data;
           }
           const data = await func(this.env, options);
-          const snapshot = await this.env.ethereum.send("evm_snapshot", []);
-          pastFixtures[id] = {
-            snapshot,
-            data,
-            deployments: { ...this.db.deployments }
-          };
+          await this.saveSnapshot(id, data);
           return data;
         };
       },
@@ -773,6 +756,36 @@ export class DeploymentsManager {
       log("single export complete");
     }
     return this.db.deployments;
+  }
+
+  private async saveSnapshot(key: string, data?: any) {
+    const snapshot = await this.env.ethereum.send("evm_snapshot", []);
+    this.db.pastFixtures[key] = {
+      index: ++this.db.snapshotCounter,
+      snapshot,
+      data,
+      deployments: { ...this.db.deployments }
+    };
+  }
+
+  private async revertSnapshot(
+    key: string,
+    saved: {
+      index: number;
+      snapshot: any;
+      deployments: any;
+    }
+  ) {
+    const snapshotToRevertIndex = saved.index;
+    for (const fixtureKey of Object.keys(this.db.pastFixtures)) {
+      const snapshotIndex = this.db.pastFixtures[fixtureKey].index;
+      if (snapshotIndex > snapshotToRevertIndex) {
+        delete this.db.pastFixtures[fixtureKey];
+      }
+    }
+    await this.env.ethereum.send("evm_revert", [saved.snapshot]);
+    saved.snapshot = await this.env.ethereum.send("evm_snapshot", []); // it is necessary to re-snapshot it
+    this.db.deployments = { ...saved.deployments };
   }
 
   private getDeploymentsSubPath(chainId: string): string {
