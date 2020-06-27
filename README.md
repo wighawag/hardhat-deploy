@@ -94,7 +94,7 @@ It will scan for files in alphabetical order and execute them in turn.
 
 An example of a deploy script :
 
-```
+```js
 module.exports = async ({getNamedAccounts, deployments}) => {
     const {deployIfDifferent, log} = deployments;
     const {deployer} = await getNamedAccounts();
@@ -130,7 +130,7 @@ A tag is simply a string value, that deploy scripts can advertise (see tags and 
 
 Here is an example of a test :
 
-```
+```js
 const { deployments } = require('@nomiclabs/buidler');
 
 describe("Token", () => {
@@ -163,7 +163,7 @@ The run command is also updated in that now when the script runs it has access t
 
 Here is an example of script that run can support:
 
-```
+```js
 const bre = require('@nomiclabs/buidler');
 const { deployments, getNamedAccounts } = bre;
 
