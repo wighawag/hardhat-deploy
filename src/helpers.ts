@@ -11,6 +11,7 @@ import {
 } from "@ethersproject/contracts";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Wallet } from "@ethersproject/wallet";
+import { keccak256 as solidityKeccak256 } from "@ethersproject/solidity";
 import {
   BuidlerRuntimeEnvironment,
   DeployFunction,
@@ -51,6 +52,25 @@ function fixProvider(providerGiven: any): any {
     };
   }
   return providerGiven;
+}
+
+function linkLibrary(
+  bytecode: string,
+  libraryName: string,
+  libraryAddress: string
+): string {
+  const address = libraryAddress.replace("0x", "");
+  const encodedLibraryName = solidityKeccak256(["string"], [libraryName]).slice(
+    2,
+    36
+  );
+  const pattern = new RegExp(`_+\\$${encodedLibraryName}\\$_+`, "g");
+  if (!pattern.exec(bytecode)) {
+    throw new Error(
+      `Can't link '${libraryName}' (${encodedLibraryName}) in \n----\n ${bytecode}\n----\n`
+    );
+  }
+  return bytecode.replace(pattern, address);
 }
 
 let provider: Web3Provider;
@@ -138,14 +158,14 @@ export function addHelpers(
     }
     const artifact = await getArtifact(options.contractName || name);
     const abi = artifact.abi;
-    const byteCode = artifact.bytecode;
-    // TOOD :
-    // if (options && options.libraries) {
-    //   for (const libName of Object.keys(options.libraries)) {
-    //     const libAddress = options.libraries[libName];
-    //     byteCode = linkLibrary(byteCode, libName, libAddress);
-    //   }
-    // }
+    let byteCode = artifact.bytecode;
+
+    if (options && options.libraries) {
+      for (const libName of Object.keys(options.libraries)) {
+        const libAddress = options.libraries[libName];
+        byteCode = linkLibrary(byteCode, libName, libAddress);
+      }
+    }
     const factory = new ContractFactory(abi, byteCode, ethersSigner);
 
     const overrides: PayableOverrides = {

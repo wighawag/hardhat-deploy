@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Buidler Plugin For Deployments",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -47,6 +47,7 @@
     "@ethersproject/contracts": "^5.0.0-beta.155",
     "@ethersproject/logger": "^5.0.0-beta.137",
     "@ethersproject/providers": "^5.0.0-beta.168",
+    "@ethersproject/solidity": "^5.0.1",
     "@ethersproject/transactions": "^5.0.0-beta.136",
     "@ethersproject/wallet": "^5.0.0-beta.141",
     "chalk": "^4.0.0",

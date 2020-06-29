@@ -70,6 +70,7 @@ declare module "@nomiclabs/buidler/types" {
     fieldsToCompare?: string | string[];
     log?: boolean;
     linkedData?: any; // JSONable ?
+    libraries?: {[libraryName: string]: Address}
   }
 
   export interface CallOptions {
