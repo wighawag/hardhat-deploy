@@ -97,17 +97,10 @@ An example of a deploy script :
 
 ```
 module.exports = async ({getNamedAccounts, deployments}) => {
-    const {deployIfDifferent, log} = deployments;
+    const {deploy} = deployments;
     const {deployer} = await getNamedAccounts();
 
-    let contract = await deployments.get('GenericMetaTxProcessor');
-    if (!contract) {
-        const deployResult = await deployIfDifferent(['data'], "GenericMetaTxProcessor",  {from: deployer, gas: 4000000}, "GenericMetaTxProcessor");
-        contract = await deployments.get('GenericMetaTxProcessor');
-        if(deployResult.newlyDeployed) {
-            log(`GenericMetaTxProcessor deployed at ${contract.address} for ${deployResult.receipt.gasUsed}`);
-        }
-    }
+    await deploy("GenericMetaTxProcessor",  {from: deployer, gas: 4000000}, args: []});
 }
 ```
 
@@ -233,7 +226,7 @@ module.exports = async function({getNamedAccounts, deployments}) {
     }
 };
 module.exports.tags = ['Sale'];
-module.exports.dependencies = ['Token'];
+module.exports.dependencies = ['Token'];  // this ensure the TOken script above is executed first, so `deployments.get('Token') succeeds
 ```
 
 As you can see the second one depends on the first. This is because the second depends on a tag that the first script register as using.
