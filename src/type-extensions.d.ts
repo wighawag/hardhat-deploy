@@ -70,7 +70,8 @@ declare module "@nomiclabs/buidler/types" {
     fieldsToCompare?: string | string[];
     log?: boolean;
     linkedData?: any; // JSONable ?
-    libraries?: {[libraryName: string]: Address}
+    libraries?: {[libraryName: string]: Address};
+    proxied?: boolean; // TODO support different type of proxies ? 
   }
 
   export interface CallOptions {
