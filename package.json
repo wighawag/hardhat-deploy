@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.4.8-beta.3",
+  "version": "0.4.8-beta.4",
   "description": "Buidler Plugin For Deployments",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -19,7 +19,7 @@
     "src/",
     "LICENSE",
     "README.md",
-    "contract/**/*.sol",
+    "solc_0.6/**/*.sol",
     "artifacts/*.json"
   ],
   "devDependencies": {
