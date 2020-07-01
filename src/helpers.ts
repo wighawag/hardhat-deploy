@@ -30,6 +30,7 @@ import {
   Execute
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
+import { string } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -71,6 +72,19 @@ function linkLibrary(
     );
   }
   return bytecode.replace(pattern, address);
+}
+
+function linkLibraries(
+  bytecode: string,
+  options: DeployOptions
+): string {
+  if (options && options.libraries) {
+    for (const libName of Object.keys(options.libraries)) {
+      const libAddress = options.libraries[libName];
+      bytecode = linkLibrary(bytecode, libName, libAddress);
+    }
+  }
+  return bytecode;
 }
 
 let provider: Web3Provider;
@@ -158,14 +172,7 @@ export function addHelpers(
     }
     const artifact = await getArtifact(options.contractName || name);
     const abi = artifact.abi;
-    let byteCode = artifact.bytecode;
-
-    if (options && options.libraries) {
-      for (const libName of Object.keys(options.libraries)) {
-        const libAddress = options.libraries[libName];
-        byteCode = linkLibrary(byteCode, libName, libAddress);
-      }
-    }
+    const byteCode = linkLibraries(artifact.bytecode, options);
     const factory = new ContractFactory(abi, byteCode, ethersSigner);
 
     const overrides: PayableOverrides = {
@@ -242,11 +249,8 @@ export function addHelpers(
       if (transaction) {
         const artifact = await getArtifact(options.contractName || name);
         const abi = artifact.abi;
-        const factory = new ContractFactory(
-          abi,
-          artifact.bytecode,
-          provider.getSigner(options.from)
-        );
+        const byteCode = linkLibraries(artifact.bytecode, options);
+        const factory = new ContractFactory(abi, byteCode, provider.getSigner(options.from));
 
         const compareOnData = fieldsToCompareArray.indexOf("data") !== -1;
 
