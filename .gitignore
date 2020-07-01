@@ -1,2 +1,7 @@
 /dist
-node_modules/
+node_modules/*
+bin/
+cache/
+
+.vscode/*
+!.vscode/settings.json.default

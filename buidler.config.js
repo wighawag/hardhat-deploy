@@ -7,6 +7,6 @@ module.exports = {
     },
   },
   paths: {
-    sources: "src",
-  }
+    sources: "solc_0.6",
+  },
 };

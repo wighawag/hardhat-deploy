@@ -30,7 +30,7 @@ import {
   Execute
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
-import transparentProxy from "../contracts/artifacts/TransparentProxy.json";
+import transparentProxy from "../artifacts/TransparentProxy.json";
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -74,10 +74,7 @@ function linkLibrary(
   return bytecode.replace(pattern, address);
 }
 
-function linkLibraries(
-  bytecode: string,
-  options: DeployOptions
-): string {
+function linkLibraries(bytecode: string, options: DeployOptions): string {
   if (options && options.libraries) {
     for (const libName of Object.keys(options.libraries)) {
       const libAddress = options.libraries[libName];
@@ -272,7 +269,11 @@ export function addHelpers(
         const artifact = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact.bytecode, options);
-        const factory = new ContractFactory(abi, byteCode, provider.getSigner(options.from));
+        const factory = new ContractFactory(
+          abi,
+          byteCode,
+          provider.getSigner(options.from)
+        );
 
         const compareOnData = fieldsToCompareArray.indexOf("data") !== -1;
 
@@ -383,7 +384,7 @@ export function addHelpers(
       delete implementationOptions.args;
       if (constructor && constructor.inputs.length > 0) {
         throw new Error(
-`Proxy based contract constructor can only have either zero argument or the exact same argument as the "${updateMethod}" method.
+          `Proxy based contract constructor can only have either zero argument or the exact same argument as the "${updateMethod}" method.
 Plus they are only used when the contract is meant to be used as standalone when development ends.
 `
         );
