@@ -148,6 +148,7 @@ export default function() {
                 })
                 .catch(error => {
                   rejectPending = null;
+                  currentPromise = null;
                   console.error(error);
                 });
             } else {
@@ -173,10 +174,18 @@ export default function() {
             }
           }
           currentPromise = compileAndDeploy();
-          await currentPromise;
+          try {
+            await currentPromise;
+          } catch (e) {
+            console.error(e);
+          }
           currentPromise = null;
         });
-        await currentPromise;
+        try {
+          await currentPromise;
+        } catch (e) {
+          console.error(e);
+        }
         currentPromise = null;
         await new Promise(resolve => setTimeout(resolve, 2000000000)); // TODO better way ?
       } else {

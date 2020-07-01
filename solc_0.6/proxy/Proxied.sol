@@ -2,7 +2,7 @@
 pragma solidity ^0.6.0;
 
 abstract contract Proxied {
-    modifier proxy() {
+    modifier proxied() {
         address adminAddress;
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
