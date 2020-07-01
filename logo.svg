@@ -9,9 +9,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="210mm"
-   height="297mm"
-   viewBox="0 0 210 297"
+   width="164mm"
+   height="164mm"
+   viewBox="0 0 164 164"
    version="1.1"
    id="svg8"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
@@ -42,9 +42,9 @@
        inkscape:collect="always"
        style="color-interpolation-filters:sRGB"
        id="filter4963"
-       x="-0.0036"
+       x="-0.0035999999"
        width="1.0072"
-       y="-0.0036"
+       y="-0.0035999999"
        height="1.0072">
       <feGaussianBlur
          inkscape:collect="always"
@@ -60,10 +60,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.979899"
-     inkscape:cx="189.03007"
-     inkscape:cy="675.35781"
+     inkscape:cx="-57.787582"
+     inkscape:cy="272.94704"
      inkscape:document-units="mm"
-     inkscape:current-layer="g5121"
+     inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:measure-start="0,0"
      inkscape:measure-end="0,0"
@@ -71,7 +71,11 @@
      inkscape:window-height="2004"
      inkscape:window-x="-16"
      inkscape:window-y="-16"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -80,17 +84,18 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(-25.881582,-26.528815)">
     <g
        id="g4576"
-       transform="rotate(40.242129,159.90443,152.76005)">
+       transform="rotate(40.242129,171.41235,161.50432)">
       <g
          id="el-1"
          transform="matrix(0.08458985,-0.07159064,0.07159064,0.08458985,130.08675,162.66294)"
@@ -139,7 +144,7 @@
         <polygon
            style="fill:#010101;fill-rule:nonzero"
            id="polygon21-8"
-           points="79.798319,381 68,381 68,378.03708 69.584034,373.96306 81,373.96306 " />
+           points="69.584034,373.96306 81,373.96306 79.798319,381 68,381 68,378.03708 " />
         <polyline
            style="fill:#292c33;fill-rule:nonzero"
            id="polyline23-4"
@@ -147,7 +152,7 @@
         <polygon
            style="fill:#17181c;fill-rule:nonzero"
            id="polygon25-3"
-           points="79.798319,381 68,381 68,378.03708 69.584034,373.96306 81,373.96306 " />
+           points="69.584034,373.96306 81,373.96306 79.798319,381 68,381 68,378.03708 " />
         <polyline
            style="fill:#17181c;fill-rule:nonzero"
            id="polyline27-2"
@@ -165,7 +170,7 @@
         <polygon
            style="fill:#ffffff;fill-rule:nonzero"
            id="polygon33-1"
-           points="76.093023,281.75167 60.085271,223.1715 51.186047,223.1715 67.248062,281.75167 45,281.75167 45,290.52507 136,290.52507 132.14729,281.75167 85.534884,281.75167 122.92248,223.1715 114.07752,223.1715 " />
+           points="136,290.52507 132.14729,281.75167 85.534884,281.75167 122.92248,223.1715 114.07752,223.1715 76.093023,281.75167 60.085271,223.1715 51.186047,223.1715 67.248062,281.75167 45,281.75167 45,290.52507 " />
         <path
            style="fill:#f9aa36;fill-rule:nonzero"
            inkscape:connector-curvature="0"
@@ -501,7 +506,7 @@
                     <polygon
                        style="fill:#ffffff"
                        id="polygon133"
-                       points="94.026132,60.625262 109.95819,1.805626 118.81533,1.805626 102.82927,60.625262 124.97213,60.625262 124.97213,69.434528 34.402439,69.434528 38.236934,60.625262 84.62892,60.625262 47.418118,1.805626 56.221254,1.805626 " />
+                       points="38.236934,60.625262 84.62892,60.625262 47.418118,1.805626 56.221254,1.805626 94.026132,60.625262 109.95819,1.805626 118.81533,1.805626 102.82927,60.625262 124.97213,60.625262 124.97213,69.434528 34.402439,69.434528 " />
                     <path
                        style="fill:#f9aa36"
                        inkscape:connector-curvature="0"
@@ -585,11 +590,11 @@
                   <polygon
                      style="fill:#292c33;fill-rule:nonzero"
                      id="polygon169"
-                     points="113.47263,44.237838 93,77.566295 113.47263,89.481081 134,77.566295 " />
+                     points="93,77.566295 113.47263,89.481081 134,77.566295 113.47263,44.237838 " />
                   <polygon
                      style="fill:#292c33;fill-rule:nonzero"
                      id="polygon171"
-                     points="113.47263,97.138067 93,84.454054 113.47263,113.61081 134,84.454054 " />
+                     points="93,84.454054 113.47263,113.61081 134,84.454054 113.47263,97.138067 " />
                   <path
                      style="fill:#f9aa36;fill-rule:nonzero"
                      inkscape:connector-curvature="0"
