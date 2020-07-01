@@ -1,0 +1,19 @@
+{
+  "extends": ["plugin:mocha/recommended", "plugin:prettier/recommended", "prettier"],
+  "env": {
+    "node": true,
+    "mocha": true
+  },
+  "plugins": ["mocha", "prettier"],
+  "parserOptions": {
+    "ecmaVersion": 9
+  },
+  "rules": {
+    "prettier/prettier": "error",
+    "no-unused-vars": ["error", {"argsIgnorePattern": "^_"}],
+    "no-multi-spaces": ["error", {"exceptions": {"VariableDeclarator": true}}],
+    "no-else-return": ["error", {"allowElseIf": true}],
+    "max-params": ["error", 4],
+    "no-await-in-loop": "off"
+  }
+}
