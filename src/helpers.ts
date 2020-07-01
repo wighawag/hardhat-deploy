@@ -30,7 +30,6 @@ import {
   Execute
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
-import { string } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
