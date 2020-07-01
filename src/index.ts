@@ -2,7 +2,8 @@ import {
   BuidlerNetworkConfig,
   EthereumProvider,
   ResolvedBuidlerConfig,
-  BuidlerRuntimeEnvironment
+  BuidlerRuntimeEnvironment,
+  Deployment
 } from "@nomiclabs/buidler/types";
 import { createProvider } from "@nomiclabs/buidler/internal/core/providers/construction";
 import { lazyObject } from "@nomiclabs/buidler/internal/util/lazy";
@@ -26,6 +27,7 @@ import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
 
 import { DeploymentsManager } from "./DeploymentsManager";
+import chokidar from "chokidar";
 
 function isBuidlerEVM(bre: BuidlerRuntimeEnvironment): boolean {
   const { network, buidlerArguments, config } = bre;
@@ -99,18 +101,93 @@ export default function() {
       undefined,
       types.string
     )
+    .addOptionalParam(
+      "watch",
+      "redeploy on every change of contract"
+      // ".",
+      // types.string
+    )
     .setAction(async (args, bre) => {
-      await bre.run("compile");
-      return deploymentsManager.runDeploy(args.tags, {
-        log: args.log,
-        resetMemory: false, // this is memory reset, TODO rename it
-        deletePreviousDeployments: args.reset,
-        writeDeploymentsToFiles: args.write,
-        export: args.export,
-        exportAll: args.exportAll,
-        savePendingTx: args.pendingtx,
-        gasPrice: args.gasprice
-      });
+      async function compileAndDeploy() {
+        await bre.run("compile");
+        return deploymentsManager.runDeploy(args.tags, {
+          log: args.log,
+          resetMemory: false, // this is memory reset, TODO rename it
+          deletePreviousDeployments: args.reset,
+          writeDeploymentsToFiles: args.write,
+          export: args.export,
+          exportAll: args.exportAll,
+          savePendingTx: args.pendingtx,
+          gasPrice: args.gasprice
+        });
+      }
+
+      const firstDeployments = await compileAndDeploy();
+      if (args.watch) {
+        const watcher = chokidar.watch(
+          [
+            bre.config.paths.sources,
+            bre.config.paths.deploy || bre.config.paths.root + "/deploy"
+          ],
+          {
+            ignored: /(^|[\/\\])\../, // ignore dotfiles
+            persistent: true
+          }
+        );
+
+        console.log("starting watching...");
+        watcher.on("ready", () =>
+          console.log("Initial scan complete. Ready for changes")
+        );
+
+        let currentPromise: Promise<{ [name: string]: Deployment }> | null;
+        let rejectPending: any = null;
+        function pending(): Promise<any> {
+          return new Promise((resolve, reject) => {
+            rejectPending = reject;
+            if (currentPromise) {
+              currentPromise
+                .then(() => {
+                  rejectPending = null;
+                  resolve();
+                })
+                .catch(error => {
+                  rejectPending = null;
+                  console.error(error);
+                });
+            } else {
+              rejectPending = null;
+              resolve();
+            }
+          });
+        }
+        watcher.on("change", async (path, stats) => {
+          console.log("change detected");
+          if (currentPromise) {
+            console.log("redeployment in progress...");
+            if (rejectPending) {
+              console.log("disabling previously pending redeployments...");
+              rejectPending();
+            }
+            try {
+              console.log("waiting for current redeployment...");
+              await pending();
+              console.log("pending finished");
+            } catch (e) {
+              return;
+            }
+          }
+          console.log("compile and deploy");
+          currentPromise = compileAndDeploy();
+          console.log("...");
+          await currentPromise;
+          console.log("DONE");
+          currentPromise = null;
+        });
+        await new Promise(resolve => setTimeout(resolve, 2000000000)); // TODO better way ?
+      } else {
+        return firstDeployments;
+      }
     });
 
   task("deploy", "Deploy contracts")
@@ -135,6 +212,12 @@ export default function() {
       "gas price to use for transactions",
       undefined,
       types.string
+    )
+    .addOptionalParam(
+      "watch",
+      "redeploy on every change of contract"
+      // ".",
+      // types.string
     )
     .setAction(async (args, bre) => {
       if (args.write === undefined) {
@@ -190,6 +273,12 @@ export default function() {
       types.boolean
     )
     .addOptionalParam("log", "whether to output log", true, types.boolean)
+    .addOptionalParam(
+      "watch",
+      "redeploy on every change of contract"
+      // ".",
+      // types.string
+    )
     .setAction(async (args, bre, runSuper) => {
       args.pendingtx = !isBuidlerEVM(bre);
       await bre.run("deploy:run", args);
