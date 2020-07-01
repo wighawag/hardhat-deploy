@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.4.8-beta.1",
+  "version": "0.4.8-beta.2",
   "description": "Buidler Plugin For Deployments",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -58,7 +58,6 @@
     "fs-extra": "^9.0.0"
   },
   "scripts": {
-    "postinstall": "node ./.setup.js",
     "compile": "buidler compile",
     "lint:fix": "prettier --write src/**/*.{js,ts} test/**/*.{js,ts} && tslint --fix --config tslint.json --project tsconfig.json",
     "lint": "tslint --config tslint.json --project tsconfig.json",
