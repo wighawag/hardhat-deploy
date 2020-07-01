@@ -101,12 +101,7 @@ export default function() {
       undefined,
       types.string
     )
-    .addOptionalParam(
-      "watch",
-      "redeploy on every change of contract"
-      // ".",
-      // types.string
-    )
+    .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre) => {
       async function compileAndDeploy() {
         await bre.run("compile");
@@ -122,7 +117,9 @@ export default function() {
         });
       }
 
-      const firstDeployments = await compileAndDeploy();
+      let currentPromise: Promise<{
+        [name: string]: Deployment;
+      }> | null = compileAndDeploy();
       if (args.watch) {
         const watcher = chokidar.watch(
           [
@@ -135,12 +132,10 @@ export default function() {
           }
         );
 
-        console.log("starting watching...");
         watcher.on("ready", () =>
           console.log("Initial scan complete. Ready for changes")
         );
 
-        let currentPromise: Promise<{ [name: string]: Deployment }> | null;
         let rejectPending: any = null;
         function pending(): Promise<any> {
           return new Promise((resolve, reject) => {
@@ -164,28 +159,28 @@ export default function() {
         watcher.on("change", async (path, stats) => {
           console.log("change detected");
           if (currentPromise) {
-            console.log("redeployment in progress...");
+            console.log("deployment in progress, please wait ...");
             if (rejectPending) {
-              console.log("disabling previously pending redeployments...");
+              // console.log("disabling previously pending redeployments...");
               rejectPending();
             }
             try {
-              console.log("waiting for current redeployment...");
+              // console.log("waiting for current redeployment...");
               await pending();
-              console.log("pending finished");
+              // console.log("pending finished");
             } catch (e) {
               return;
             }
           }
-          console.log("compile and deploy");
           currentPromise = compileAndDeploy();
-          console.log("...");
           await currentPromise;
-          console.log("DONE");
           currentPromise = null;
         });
+        await currentPromise;
+        currentPromise = null;
         await new Promise(resolve => setTimeout(resolve, 2000000000)); // TODO better way ?
       } else {
+        const firstDeployments = await currentPromise;
         return firstDeployments;
       }
     });
@@ -213,12 +208,7 @@ export default function() {
       undefined,
       types.string
     )
-    .addOptionalParam(
-      "watch",
-      "redeploy on every change of contract"
-      // ".",
-      // types.string
-    )
+    .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre) => {
       if (args.write === undefined) {
         args.write = !isBuidlerEVM(bre);
@@ -273,21 +263,18 @@ export default function() {
       types.boolean
     )
     .addOptionalParam("log", "whether to output log", true, types.boolean)
-    .addOptionalParam(
-      "watch",
-      "redeploy on every change of contract"
-      // ".",
-      // types.string
-    )
+    .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre, runSuper) => {
       args.pendingtx = !isBuidlerEVM(bre);
-      await bre.run("deploy:run", args);
+
       // TODO return runSuper(args); and remove the rest (used for now to remove login privateKeys)
       if (!isBuidlerEVM(bre)) {
         throw new BuidlerError(
           ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
         );
       }
+
+      let server;
       const { hostname, port } = args;
       try {
         const serverConfig: JsonRpcServerConfig = {
@@ -296,7 +283,7 @@ export default function() {
           provider: _createBuidlerEVMProvider(bre.config)
         };
 
-        const server = new JsonRpcServer(serverConfig);
+        server = new JsonRpcServer(serverConfig);
 
         const { port: actualPort, address } = await server.listen();
 
@@ -305,8 +292,6 @@ export default function() {
             `Started HTTP and WebSocket JSON-RPC server at http://${address}:${actualPort}/`
           )
         );
-
-        await server.waitUntilClosed();
       } catch (error) {
         if (BuidlerError.isBuidlerError(error)) {
           throw error;
@@ -320,5 +305,7 @@ export default function() {
           error
         );
       }
+      await bre.run("deploy:run", args);
+      await server.waitUntilClosed();
     });
 }
