@@ -30,6 +30,7 @@ import {
   Execute
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
+import transparentProxy from "../contracts/artifacts/TransparentProxy.json";
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -131,6 +132,23 @@ export function addHelpers(
     }
   }
 
+  async function getArtifactFromOptions(
+    name: string,
+    options: DeployOptions
+  ): Promise<{ abi: any; bytecode: string; deployedBytecode?: string }> {
+    let artifact: { abi: any; bytecode: string; deployedBytecode?: string };
+    if (options.contract) {
+      if (typeof options.contract === "string") {
+        artifact = await getArtifact(options.contract);
+      } else {
+        artifact = options.contract;
+      }
+    } else {
+      artifact = await getArtifact(name);
+    }
+    return artifact;
+  }
+
   async function _deploy(
     name: string,
     options: DeployOptions
@@ -156,7 +174,8 @@ export function addHelpers(
         throw new Error(`no signer for ${from}`);
       }
     }
-    const artifact = await getArtifact(options.contractName || name);
+    const artifact = await getArtifactFromOptions(name, options);
+
     const abi = artifact.abi;
     let byteCode = artifact.bytecode;
 
@@ -224,6 +243,10 @@ export function addHelpers(
     return env.deployments.get(name);
   }
 
+  function getDeploymentOrNUll(name: string): Promise<Deployment | null> {
+    return env.deployments.getOrNull(name);
+  }
+
   async function fetchIfDifferent(
     name: string,
     options: DeployOptions
@@ -240,7 +263,7 @@ export function addHelpers(
         deployment.receipt.transactionHash
       );
       if (transaction) {
-        const artifact = await getArtifact(options.contractName || name);
+        const artifact = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
         const factory = new ContractFactory(
           abi,
@@ -282,11 +305,10 @@ export function addHelpers(
     return true;
   }
 
-  async function deploy(
+  async function _deployOne(
     name: string,
     options: DeployOptions
   ): Promise<DeployResult> {
-    await init();
     const argsArray = options.args ? [...options.args] : [];
     options = { ...options, args: argsArray };
     if (options.fieldsToCompare === undefined) {
@@ -313,6 +335,109 @@ export function addHelpers(
       }
     }
     return result;
+  }
+
+  async function deploy(
+    name: string,
+    options: DeployOptions
+  ): Promise<DeployResult> {
+    await init();
+    if (!options.proxy) {
+      return _deployOne(name, options);
+    }
+    const implementationName = name + "_Implementation";
+    const proxyName = name + "_Proxy";
+
+    const argsArray = options.args ? [...options.args] : [];
+    const implementationOptions = { ...options };
+    if (!implementationOptions.contract) {
+      implementationOptions.contract = name;
+    }
+
+    const updateMethod = "postUpgrade"; // force using that function name
+    let admin = options.from; // TODO check if from is not a pro
+    if (typeof options.proxy === "object") {
+      admin = options.proxy.admin || admin;
+      //   updateMethod = options.proxy.updateMethod || "update";
+    }
+    if (admin.length >= 64) {
+      if (admin.length === 64) {
+        admin = "0x" + admin;
+      }
+      const wallet = new Wallet(admin);
+      admin = wallet.address;
+    }
+
+    const artifact = await getArtifactFromOptions(
+      implementationName,
+      implementationOptions
+    );
+    const constructor = artifact.abi.find(
+      (fragment: { type: string; inputs: any[] }) =>
+        fragment.type === "constructor"
+    );
+    if (!constructor || constructor.inputs.length !== argsArray.length) {
+      delete implementationOptions.args;
+      if (constructor && constructor.inputs.length > 0) {
+        throw new Error(
+`Proxy based contract constructor can only have either zero argument or the exact same argument as the "${updateMethod}" method.
+Plus they are only used when the contract is meant to be used as standalone when development ends.
+`
+        );
+      }
+    }
+
+    const implementation = await _deployOne(
+      implementationName,
+      implementationOptions
+    );
+    if (implementation.newlyDeployed) {
+      // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
+      const implementationContract = new Contract(
+        implementation.address,
+        implementation.abi
+      );
+
+      const { data } = await implementationContract.populateTransaction[
+        updateMethod
+      ](...argsArray);
+
+      let proxy = await getDeploymentOrNUll(proxyName);
+      if (!proxy) {
+        const proxyOptions = { ...options };
+        delete proxyOptions.proxy;
+        proxyOptions.contract = transparentProxy;
+        proxyOptions.args = [implementation.address, data, admin];
+        proxy = await _deployOne(proxyName, proxyOptions);
+        // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
+      } else {
+        await execute(
+          proxyName,
+          { ...options },
+          "changeImplementation",
+          implementation.address,
+          data
+        );
+      }
+      const proxiedDeployment = {
+        ...implementation,
+        address: proxy.address,
+        args: argsArray
+      };
+      await env.deployments.save(name, proxiedDeployment);
+
+      const deployment = await env.deployments.get(name);
+      return {
+        ...deployment,
+        newlyDeployed: true
+      };
+    } else {
+      const deployment = await env.deployments.get(name);
+      return {
+        ...deployment,
+        newlyDeployed: false
+      };
+    }
   }
 
   async function batchExecute(
@@ -658,7 +783,7 @@ export function addHelpers(
     ...args: any[]
   ): Promise<DeployResult> => {
     options.fieldsToCompare = fieldsToCompare;
-    options.contractName = contractName;
+    options.contract = contractName;
     options.args = args;
     return deploy(name, options);
   };

@@ -65,13 +65,20 @@ declare module "@nomiclabs/buidler/types" {
   };
 
   export interface DeployOptions extends TxOptions {
-    contractName?: string;
+    contract?: string | {
+      abi: ABI;
+      bytecode: string;
+      deployedBytecode?: string;
+    };
     args?: any[];
     fieldsToCompare?: string | string[];
     log?: boolean;
     linkedData?: any; // JSONable ?
     libraries?: {[libraryName: string]: Address};
-    proxied?: boolean; // TODO support different type of proxies ? 
+    proxy?: boolean | {
+      updateMethod?: string;
+      admin: Address;
+    }; // TODO support different type of proxies ? 
   }
 
   export interface CallOptions {

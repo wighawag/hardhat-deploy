@@ -1,15 +1,21 @@
 pragma solidity 0.6.5;
 
-contract Proxy {
+abstract contract Proxy {
     // /////////////////////// CONSTRUCTOR //////////////////////////////////////////////////////////////////////
 
-    constructor(address implementationAddress, bytes memory data) public {
+    function _construct(address implementationAddress, bytes memory data) internal {
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
             sstore(0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc, implementationAddress)
         }
         (bool success, ) = implementationAddress.delegatecall(data);
-        require(success, "Construction failed");
+        if (!success) {
+            assembly {
+                let returnDataSize := returndatasize()
+                returndatacopy(0, 0, returnDataSize)
+                revert(0, returnDataSize)
+            }
+        }
     }
 
     // ///////////////////// EXTERNAL ///////////////////////////////////////////////////////////////////////////
