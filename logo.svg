@@ -15,7 +15,10 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
-   sodipodi:docname="logo.svg">
+   sodipodi:docname="logo.svg"
+   inkscape:export-filename="C:\dev\projects\wighawag\buidler-deploy-logo.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
   <defs
      id="defs2">
     <clipPath
@@ -60,7 +63,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.979899"
-     inkscape:cx="-57.787582"
+     inkscape:cx="139.70834"
      inkscape:cy="272.94704"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -84,7 +87,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -144,7 +147,7 @@
         <polygon
            style="fill:#010101;fill-rule:nonzero"
            id="polygon21-8"
-           points="69.584034,373.96306 81,373.96306 79.798319,381 68,381 68,378.03708 " />
+           points="81,373.96306 79.798319,381 68,381 68,378.03708 69.584034,373.96306 " />
         <polyline
            style="fill:#292c33;fill-rule:nonzero"
            id="polyline23-4"
@@ -152,7 +155,7 @@
         <polygon
            style="fill:#17181c;fill-rule:nonzero"
            id="polygon25-3"
-           points="69.584034,373.96306 81,373.96306 79.798319,381 68,381 68,378.03708 " />
+           points="81,373.96306 79.798319,381 68,381 68,378.03708 69.584034,373.96306 " />
         <polyline
            style="fill:#17181c;fill-rule:nonzero"
            id="polyline27-2"
@@ -170,7 +173,7 @@
         <polygon
            style="fill:#ffffff;fill-rule:nonzero"
            id="polygon33-1"
-           points="136,290.52507 132.14729,281.75167 85.534884,281.75167 122.92248,223.1715 114.07752,223.1715 76.093023,281.75167 60.085271,223.1715 51.186047,223.1715 67.248062,281.75167 45,281.75167 45,290.52507 " />
+           points="132.14729,281.75167 85.534884,281.75167 122.92248,223.1715 114.07752,223.1715 76.093023,281.75167 60.085271,223.1715 51.186047,223.1715 67.248062,281.75167 45,281.75167 45,290.52507 136,290.52507 " />
         <path
            style="fill:#f9aa36;fill-rule:nonzero"
            inkscape:connector-curvature="0"
@@ -299,11 +302,11 @@
           <polygon
              style="fill:#292c33;fill-rule:nonzero"
              id="polygon84-0"
-             points="100.29409,76.907008 79.931183,43.915804 59.56828,76.907008 79.931183,88.701228 " />
+             points="79.931183,43.915804 59.56828,76.907008 79.931183,88.701228 100.29409,76.907008 " />
           <polygon
              style="fill:#292c33;fill-rule:nonzero"
              id="polygon86-0"
-             points="100.29409,84.353128 79.931183,96.908265 59.56828,84.353128 79.931183,113.21364 " />
+             points="79.931183,96.908265 59.56828,84.353128 79.931183,113.21364 100.29409,84.353128 " />
           <path
              style="fill:#f9aa36;fill-rule:nonzero"
              inkscape:connector-curvature="0"
@@ -480,7 +483,7 @@
                     <polygon
                        style="fill:#010101"
                        id="polygon121"
-                       points="101.26307,157.69134 99.696864,153.47821 88.409408,153.47821 89.597561,160.75543 101.26307,160.75543 " />
+                       points="99.696864,153.47821 88.409408,153.47821 89.597561,160.75543 101.26307,160.75543 101.26307,157.69134 " />
                     <polyline
                        style="fill:#292c33"
                        id="polyline123"
@@ -488,7 +491,7 @@
                     <polygon
                        style="fill:#17181c"
                        id="polygon125"
-                       points="101.26307,157.69134 99.696864,153.47821 88.409408,153.47821 89.597561,160.75543 101.26307,160.75543 " />
+                       points="99.696864,153.47821 88.409408,153.47821 89.597561,160.75543 101.26307,160.75543 101.26307,157.69134 " />
                     <polyline
                        style="fill:#17181c"
                        id="polyline127"
@@ -506,7 +509,7 @@
                     <polygon
                        style="fill:#ffffff"
                        id="polygon133"
-                       points="38.236934,60.625262 84.62892,60.625262 47.418118,1.805626 56.221254,1.805626 94.026132,60.625262 109.95819,1.805626 118.81533,1.805626 102.82927,60.625262 124.97213,60.625262 124.97213,69.434528 34.402439,69.434528 " />
+                       points="84.62892,60.625262 47.418118,1.805626 56.221254,1.805626 94.026132,60.625262 109.95819,1.805626 118.81533,1.805626 102.82927,60.625262 124.97213,60.625262 124.97213,69.434528 34.402439,69.434528 38.236934,60.625262 " />
                     <path
                        style="fill:#f9aa36"
                        inkscape:connector-curvature="0"
@@ -590,11 +593,11 @@
                   <polygon
                      style="fill:#292c33;fill-rule:nonzero"
                      id="polygon169"
-                     points="93,77.566295 113.47263,89.481081 134,77.566295 113.47263,44.237838 " />
+                     points="113.47263,89.481081 134,77.566295 113.47263,44.237838 93,77.566295 " />
                   <polygon
                      style="fill:#292c33;fill-rule:nonzero"
                      id="polygon171"
-                     points="93,84.454054 113.47263,113.61081 134,84.454054 113.47263,97.138067 " />
+                     points="113.47263,113.61081 134,84.454054 113.47263,97.138067 93,84.454054 " />
                   <path
                      style="fill:#f9aa36;fill-rule:nonzero"
                      inkscape:connector-curvature="0"
