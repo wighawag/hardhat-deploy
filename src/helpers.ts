@@ -60,10 +60,16 @@ function linkLibrary(
   libraryAddress: string
 ): string {
   const address = libraryAddress.replace("0x", "");
-  const encodedLibraryName = solidityKeccak256(["string"], [libraryName]).slice(
-    2,
-    36
-  );
+  let encodedLibraryName;
+  console.log("dd");
+  if (libraryName.startsWith("$") && libraryName.endsWith("$")) {
+    encodedLibraryName = libraryName.slice(1, libraryName.length - 1);
+  } else {
+    encodedLibraryName = solidityKeccak256(["string"], [libraryName]).slice(
+      2,
+      36
+    );
+  }
   const pattern = new RegExp(`_+\\$${encodedLibraryName}\\$_+`, "g");
   if (!pattern.exec(bytecode)) {
     throw new Error(
@@ -73,10 +79,7 @@ function linkLibrary(
   return bytecode.replace(pattern, address);
 }
 
-function linkLibraries(
-  bytecode: string,
-  options: DeployOptions
-): string {
+function linkLibraries(bytecode: string, options: DeployOptions): string {
   if (options && options.libraries) {
     for (const libName of Object.keys(options.libraries)) {
       const libAddress = options.libraries[libName];
@@ -249,7 +252,11 @@ export function addHelpers(
         const artifact = await getArtifact(options.contractName || name);
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact.bytecode, options);
-        const factory = new ContractFactory(abi, byteCode, provider.getSigner(options.from));
+        const factory = new ContractFactory(
+          abi,
+          byteCode,
+          provider.getSigner(options.from)
+        );
 
         const compareOnData = fieldsToCompareArray.indexOf("data") !== -1;
 
