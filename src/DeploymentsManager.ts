@@ -554,6 +554,7 @@ export class DeploymentsManager {
       let deployFunc: DeployFunction;
       // console.log("fetching " + scriptFilePath);
       try {
+        // TODO when watch is enabled : delete require.cache[path.resolve(scriptFilePath)]; // ensure we reload it every time, so changes are taken in consideration
         deployFunc = require(scriptFilePath);
         if ((deployFunc as any).default) {
           deployFunc = (deployFunc as any).default as DeployFunction;
