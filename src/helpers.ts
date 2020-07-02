@@ -27,7 +27,8 @@ import {
   CallOptions,
   SimpleTx,
   Receipt,
-  Execute
+  Execute,
+  Address
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
 import transparentProxy from "../artifacts/TransparentProxy.json";
@@ -61,10 +62,16 @@ function linkLibrary(
   libraryAddress: string
 ): string {
   const address = libraryAddress.replace("0x", "");
-  const encodedLibraryName = solidityKeccak256(["string"], [libraryName]).slice(
-    2,
-    36
-  );
+  let encodedLibraryName;
+  console.log("dd");
+  if (libraryName.startsWith("$") && libraryName.endsWith("$")) {
+    encodedLibraryName = libraryName.slice(1, libraryName.length - 1);
+  } else {
+    encodedLibraryName = solidityKeccak256(["string"], [libraryName]).slice(
+      2,
+      36
+    );
+  }
   const pattern = new RegExp(`_+\\$${encodedLibraryName}\\$_+`, "g");
   if (!pattern.exec(bytecode)) {
     throw new Error(
@@ -74,13 +81,54 @@ function linkLibrary(
   return bytecode.replace(pattern, address);
 }
 
-function linkLibraries(bytecode: string, options: DeployOptions): string {
-  if (options && options.libraries) {
-    for (const libName of Object.keys(options.libraries)) {
-      const libAddress = options.libraries[libName];
-      bytecode = linkLibrary(bytecode, libName, libAddress);
+function linkRawLibraries(
+  bytecode: string,
+  libraries: { [libraryName: string]: Address }
+): string {
+  for (const libName of Object.keys(libraries)) {
+    const libAddress = libraries[libName];
+    bytecode = linkLibrary(bytecode, libName, libAddress);
+  }
+  return bytecode;
+}
+
+function linkLibraries(
+  artifact: {
+    bytecode: string;
+    linkReferences?: {
+      [libraryFileName: string]: {
+        [libraryName: string]: Array<{ length: number; start: number }>;
+      };
+    };
+  },
+  libraries?: { [libraryName: string]: Address }
+) {
+  let bytecode = artifact.bytecode;
+
+  if (libraries) {
+    if (artifact.linkReferences) {
+      for (const [fileName, fileReferences] of Object.entries(
+        artifact.linkReferences
+      )) {
+        for (const [libName, fixups] of Object.entries(fileReferences)) {
+          const addr = libraries[libName];
+          if (addr === undefined) {
+            continue;
+          }
+
+          for (const fixup of fixups) {
+            bytecode =
+              bytecode.substr(0, 2 + fixup.start * 2) +
+              addr.substr(2) +
+              bytecode.substr(2 + (fixup.start + fixup.length) * 2);
+          }
+        }
+      }
+    } else {
+      bytecode = linkRawLibraries(bytecode, libraries);
     }
   }
+
   return bytecode;
 }
 
@@ -187,7 +235,7 @@ export function addHelpers(
     const artifact = await getArtifactFromOptions(name, options);
 
     const abi = artifact.abi;
-    const byteCode = linkLibraries(artifact.bytecode, options);
+    const byteCode = linkLibraries(artifact, options.libraries);
     const factory = new ContractFactory(abi, byteCode, ethersSigner);
 
     const overrides: PayableOverrides = {
@@ -268,7 +316,7 @@ export function addHelpers(
       if (transaction) {
         const artifact = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
-        const byteCode = linkLibraries(artifact.bytecode, options);
+        const byteCode = linkLibraries(artifact, options.libraries);
         const factory = new ContractFactory(
           abi,
           byteCode,
