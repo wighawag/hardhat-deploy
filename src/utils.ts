@@ -239,7 +239,7 @@ function chainConfig(
   } else if (typeof object[chainIdDecimal] !== "undefined") {
     return object[chainIdDecimal];
   } else {
-    return object.default;
+    return object[object.default];
   }
 }
 
