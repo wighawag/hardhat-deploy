@@ -64,21 +64,28 @@ declare module "@nomiclabs/buidler/types" {
     confirmations?: number;
   };
 
+  export type DiamondFacets = Array<string>;
+  export interface ProxyOptions {
+    // type?: string; // TODO not necessary for now
+    facets?: DiamondFacets; // TODO support Object/Array of Deployments
+    updateMethod?: string;
+    admin: Address;
+  }
+
   export interface DeployOptions extends TxOptions {
-    contract?: string | {
-      abi: ABI;
-      bytecode: string;
-      deployedBytecode?: string;
-    };
+    contract?:
+      | string
+      | {
+          abi: ABI;
+          bytecode: string;
+          deployedBytecode?: string;
+        };
     args?: any[];
     fieldsToCompare?: string | string[];
     log?: boolean;
     linkedData?: any; // JSONable ?
-    libraries?: {[libraryName: string]: Address};
-    proxy?: boolean | {
-      updateMethod?: string;
-      admin: Address;
-    }; // TODO support different type of proxies ? 
+    libraries?: { [libraryName: string]: Address };
+    proxy?: boolean | ProxyOptions; // TODO support different type of proxies ?
   }
 
   export interface CallOptions {
@@ -119,12 +126,12 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export type Json =
-  | null
-  | boolean
-  | number
-  | string
-  | Json[]
-  | { [prop: string]: Json };
+    | null
+    | boolean
+    | number
+    | string
+    | Json[]
+    | { [prop: string]: Json };
 
   // from https://github.com/Microsoft/TypeScript/issues/1897#issuecomment-580962081
   type JsonCompatible<T> = {
@@ -137,7 +144,10 @@ declare module "@nomiclabs/buidler/types" {
       : JsonCompatible<T[P]>;
   };
 
-  export type FixtureFunc = (env: BuidlerRuntimeEnvironment, options? : Json) => Promise<any>;
+  export type FixtureFunc = (
+    env: BuidlerRuntimeEnvironment,
+    options?: Json
+  ) => Promise<any>;
 
   export interface DeploymentsExtension {
     deploy(name: string, options: DeployOptions): Promise<DeployResult>;

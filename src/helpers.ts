@@ -28,10 +28,13 @@ import {
   SimpleTx,
   Receipt,
   Execute,
-  Address
+  Address,
+  ProxyOptions,
+  DiamondFacets
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
 import transparentProxy from "../artifacts/TransparentProxy.json";
+import diamondBase from "../artifacts/DiamondBase.json";
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -213,24 +216,9 @@ export function addHelpers(
   ): Promise<DeployResult> {
     const args: any[] = options.args || [];
     await init();
-    let from = options.from;
-    let ethersSigner: Signer;
-    if (!from) {
-      throw new Error("no from specified");
-    }
-    if (from.length >= 64) {
-      if (from.length === 64) {
-        from = "0x" + from;
-      }
-      const wallet = new Wallet(from);
-      from = wallet.address;
-      ethersSigner = wallet;
-    } else {
-      if (availableAccounts[from.toLowerCase()]) {
-        ethersSigner = provider.getSigner(from);
-      } else {
-        throw new Error(`no signer for ${from}`);
-      }
+    const { address: from, ethersSigner } = getFrom(options.from);
+    if (!ethersSigner) {
+      throw new Error("no signer for " + from);
     }
     const artifact = await getArtifactFromOptions(name, options);
 
@@ -389,14 +377,10 @@ export function addHelpers(
     return result;
   }
 
-  async function deploy(
+  async function _deployViaTransparentProxy(
     name: string,
     options: DeployOptions
   ): Promise<DeployResult> {
-    await init();
-    if (!options.proxy) {
-      return _deployOne(name, options);
-    }
     const implementationName = name + "_Implementation";
     const proxyName = name + "_Proxy";
 
@@ -407,18 +391,7 @@ export function addHelpers(
     }
 
     const updateMethod = "postUpgrade"; // force using that function name
-    let admin = options.from; // TODO check if from is not a pro
-    if (typeof options.proxy === "object") {
-      admin = options.proxy.admin || admin;
-      //   updateMethod = options.proxy.updateMethod || "update";
-    }
-    if (admin.length >= 64) {
-      if (admin.length === 64) {
-        admin = "0x" + admin;
-      }
-      const wallet = new Wallet(admin);
-      admin = wallet.address;
-    }
+    const { address: admin } = getProxyAdmin(options);
 
     const artifact = await getArtifactFromOptions(
       implementationName,
@@ -492,6 +465,131 @@ Plus they are only used when the contract is meant to be used as standalone when
     }
   }
 
+  function getProxyAdmin(options: DeployOptions) {
+    let address = options.from; // admim default to msg.sender
+    if (typeof options.proxy === "object") {
+      address = options.proxy.admin || address;
+    }
+    return getFrom(address, true);
+  }
+
+  function getFrom(
+    from?: string,
+    optional?: boolean
+  ): { address: Address; ethersSigner?: Signer } {
+    let ethersSigner: Signer | undefined;
+    if (!from) {
+      throw new Error("no from specified");
+    }
+    if (from.length >= 64) {
+      if (from.length === 64) {
+        from = "0x" + from;
+      }
+      const wallet = new Wallet(from);
+      from = wallet.address;
+      ethersSigner = wallet;
+    } else {
+      if (availableAccounts[from.toLowerCase()]) {
+        ethersSigner = provider.getSigner(from);
+      } else if (!optional) {
+        throw new Error(`no signer for ${from}`);
+      }
+    }
+
+    return { address: from, ethersSigner };
+  }
+
+  async function _deployViaDiamondProxy(
+    name: string,
+    proxyOptions: ProxyOptions,
+    facets: DiamondFacets,
+    options: DeployOptions
+  ): Promise<DeployResult> {
+    const proxyName = name + "_DiamondProxy";
+    // const argsArray = options.args ? [...options.args] : []; // TODO later : using Diamantaire
+
+    let atLeastOneNewlyDeployed = false;
+    const cuts: any = []; // TODO type
+    for (const facet of facets) {
+      const artifact = await getArtifact(facet); // TODO getArtifactFromOptions( // allowing to pass bytecode / abi
+      const constructor = artifact.abi.find(
+        (fragment: { type: string; inputs: any[] }) =>
+          fragment.type === "constructor"
+      );
+      if (constructor) {
+        throw new Error(`Facet must not have a constructor`);
+      }
+      // TODO allow facet to be named so multiple version could coexist
+      const implementation = await _deployOne(facet, {
+        from: options.from,
+        fieldsToCompare: options.fieldsToCompare,
+        log: options.log,
+        linkedData: options.linkedData,
+        libraries: options.libraries
+      });
+      if (implementation.newlyDeployed) {
+        atLeastOneNewlyDeployed = true;
+        // cuts.push() // TODO
+      }
+    }
+
+    if (atLeastOneNewlyDeployed) {
+      let proxy = await getDeploymentOrNUll(proxyName);
+      if (!proxy) {
+        const actualProxyOptions = { ...options };
+        delete actualProxyOptions.proxy;
+        actualProxyOptions.contract = diamondBase;
+        actualProxyOptions.args = [cuts]; // TODO
+        proxy = await _deployOne(proxyName, actualProxyOptions);
+        await env.deployments.save(name, await env.deployments.get(name));
+      } else {
+        const pastDeployment = await env.deployments.get(name);
+        await execute(proxyName, { ...options }, "diamondCut", cuts);
+        await env.deployments.save(name, {
+          ...pastDeployment,
+          address: proxy.address,
+          args: [cuts]
+        });
+      }
+
+      const deployment = await env.deployments.get(name);
+      return {
+        ...deployment,
+        newlyDeployed: true
+      };
+    } else {
+      const deployment = await env.deployments.get(name);
+      return {
+        ...deployment,
+        newlyDeployed: false
+      };
+    }
+  }
+
+  async function deploy(
+    name: string,
+    options: DeployOptions
+  ): Promise<DeployResult> {
+    await init();
+    if (!options.proxy) {
+      return _deployOne(name, options);
+    }
+    // if (!options.proxy.type) {
+    if (typeof options.proxy === "object" && options.proxy.facets) {
+      return _deployViaDiamondProxy(
+        name,
+        options.proxy,
+        options.proxy.facets,
+        options
+      );
+    } else {
+      return _deployViaTransparentProxy(name, options);
+    }
+    // } else if (options.proxy.type === "transparent") {
+    //   return _deployViaTransparentProxy(name, options);
+    // }
+  }
+
   async function batchExecute(
     txs: Execute[],
     batchOptions: { dev_forceMine: boolean }
@@ -512,21 +610,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       savedTxs.push();
     }
     for (const tx of savedTxs) {
-      let from = tx.from;
-      let ethersSigner;
-      if (from.length >= 64) {
-        if (from.length === 64) {
-          from = "0x" + from;
-        }
-        ethersSigner = new Wallet(from);
-        from = ethersSigner.address;
-      } else {
-        if (availableAccounts[from.toLowerCase()]) {
-          try {
-            ethersSigner = provider.getSigner(from);
-          } catch (e) {}
-        }
-      }
+      const { address: from, ethersSigner } = getFrom(tx.from);
       const nonce =
         tx.nonce ||
         currentNonces[from] ||
@@ -546,22 +630,7 @@ Plus they are only used when the contract is meant to be used as standalone when
 
   async function rawTx(tx: SimpleTx): Promise<Receipt | null> {
     await init();
-    let from = tx.from;
-    let ethersSigner;
-    if (from.length >= 64) {
-      if (from.length === 64) {
-        from = "0x" + from;
-      }
-      ethersSigner = new Wallet(from);
-      from = ethersSigner.address;
-    } else {
-      if (availableAccounts[from.toLowerCase()]) {
-        try {
-          ethersSigner = provider.getSigner(from);
-        } catch (e) {}
-      }
-    }
-
+    const { address: from, ethersSigner } = getFrom(tx.from);
     if (!ethersSigner) {
       console.error("no signer for " + from);
       log("Please execute the following as " + from);
@@ -606,21 +675,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     ...args: any[]
   ): Promise<Receipt | null> {
     await init();
-    let from = options.from;
-    let ethersSigner;
-    if (from.length >= 64) {
-      if (from.length === 64) {
-        from = "0x" + from;
-      }
-      ethersSigner = new Wallet(from);
-      from = ethersSigner.address;
-    } else {
-      if (availableAccounts[from.toLowerCase()]) {
-        try {
-          ethersSigner = provider.getSigner(from);
-        } catch (e) {}
-      }
-    }
+    const { address: from, ethersSigner } = getFrom(options.from);
 
     let tx;
     let unsignedTx;
@@ -736,17 +791,10 @@ Plus they are only used when the contract is meant to be used as standalone when
     if (typeof args === "undefined") {
       args = [];
     }
-    let from = options.from;
-    let ethersSigner;
-    if (from && from.length >= 64) {
-      if (from.length === 64) {
-        from = "0x" + from;
-      }
-      ethersSigner = new Wallet(from);
-      from = ethersSigner.address;
-    }
-    if (!ethersSigner) {
-      ethersSigner = provider; // TODO rename ethersSigner
+    let caller: Web3Provider | Signer = provider;
+    const { ethersSigner } = getFrom(options.from);
+    if (ethersSigner) {
+      caller = ethersSigner;
     }
     const deployment = await env.deployments.get(name);
     if (!deployment) {
@@ -762,7 +810,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     const ethersContract = new Contract(
       deployment.address,
       abi,
-      ethersSigner as Signer
+      caller as Signer
     );
     // populate function
     // if (options.outputTx) {
