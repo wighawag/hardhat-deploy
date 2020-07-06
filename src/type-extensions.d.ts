@@ -64,12 +64,23 @@ declare module "@nomiclabs/buidler/types" {
     confirmations?: number;
   };
 
-  export type DiamondFacets = Array<string>;
+  export type DiamondFacets = Array<string>; // TODO support Object for facet : {contract}
+  export interface DiamondOptions extends TxOptions {
+    admin?: Address;
+    facets: DiamondFacets;
+    log?: boolean;
+    libraries?: { [libraryName: string]: Address };
+    linkedData?: any; // JSONable ?
+    upgradeIndex?: number;
+    execute?: {
+      methodName: string;
+      args: any[];
+    };
+  }
+
   export interface ProxyOptions {
-    // type?: string; // TODO not necessary for now
-    facets?: DiamondFacets; // TODO support Object/Array of Deployments
-    updateMethod?: string;
-    admin: Address;
+    admin?: Address;
+    upgradeIndex?: number;
   }
 
   export interface DeployOptions extends TxOptions {
@@ -82,6 +93,7 @@ declare module "@nomiclabs/buidler/types" {
         };
     args?: any[];
     fieldsToCompare?: string | string[];
+    skipIfAlreadyDeployed?: boolean;
     log?: boolean;
     linkedData?: any; // JSONable ?
     libraries?: { [libraryName: string]: Address };
@@ -151,6 +163,7 @@ declare module "@nomiclabs/buidler/types" {
 
   export interface DeploymentsExtension {
     deploy(name: string, options: DeployOptions): Promise<DeployResult>;
+    diamond(name: string, options: DiamondOptions): Promise<DeployResult>;
     fetchIfDifferent(name: string, options: DeployOptions): Promise<boolean>;
     save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;
@@ -222,6 +235,7 @@ declare module "@nomiclabs/buidler/types" {
     abi: ABI;
     receipt: Receipt;
     address?: Address; // used to override receipt.contractAddress (useful for proxies)
+    history?: Deployment[];
     args?: any[];
     linkedData?: any;
     solidityJson?: any; // TODO solidityJson type
@@ -231,12 +245,15 @@ declare module "@nomiclabs/buidler/types" {
     userdoc: any;
     devdoc: any;
     methodIdentifiers: any;
+    diamondCuts?: string[];
+    facets?: { address: string; sigs: string[] }[];
   }
 
   export interface Deployment {
     abi: ABI;
     address: Address;
     receipt: Receipt;
+    history?: Deployment[];
     args?: any[];
     linkedData?: any;
     solidityJson?: any; // TODO solidityJson type
@@ -246,5 +263,7 @@ declare module "@nomiclabs/buidler/types" {
     userdoc: any;
     devdoc: any;
     methodIdentifiers: any;
+    diamondCuts?: string[];
+    facets?: { address: string; sigs: string[] }[];
   }
 }
