@@ -58,6 +58,7 @@ declare module "@nomiclabs/buidler/types" {
     cumulativeGasUsed: BigNumber | string | number;
     gasUsed: BigNumber | string | number;
     logs?: Log[];
+    events?: any[];
     logsBloom?: string;
     byzantium?: boolean;
     status?: number;
@@ -243,9 +244,9 @@ declare module "@nomiclabs/buidler/types" {
     solidityMetadata?: string;
     bytecode?: string;
     deployedBytecode?: string;
-    userdoc: any;
-    devdoc: any;
-    methodIdentifiers: any;
+    userdoc?: any;
+    devdoc?: any;
+    methodIdentifiers?: any;
     diamondCuts?: string[];
     facets?: { address: string; sigs: string[] }[];
   }
@@ -261,9 +262,9 @@ declare module "@nomiclabs/buidler/types" {
     solidityMetadata?: string;
     bytecode?: string;
     deployedBytecode?: string;
-    userdoc: any;
-    devdoc: any;
-    methodIdentifiers: any;
+    userdoc?: any;
+    devdoc?: any;
+    methodIdentifiers?: any;
     diamondCuts?: string[];
     facets?: { address: string; sigs: string[] }[];
   }

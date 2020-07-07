@@ -5,6 +5,8 @@ import "./DiamondHeaders.sol";
 import "./DiamondBase.sol";
 
 contract Diamantaire {
+    event DiamondCreated(address diamond);
+
     address immutable _admin;
 
     constructor(address admin) public {
@@ -15,7 +17,10 @@ contract Diamantaire {
         public
         returns (Diamond diamond)
     {
-        diamond = Diamond(address(new DiamondBase(address(this))));
+        address diamondAddress = address(new DiamondBase(address(this)));
+        diamond = Diamond(diamondAddress);
+        emit DiamondCreated(diamondAddress);
+
         if (_diamondCut.length > 0) {
             cut(diamond, _diamondCut);
         }
@@ -47,7 +52,11 @@ contract Diamantaire {
         bytes memory data
     ) public payable {
         require(msg.sender == _admin, "NOT_AUTHORIZED");
-        cut(diamond, _diamondCut);
-        execute(diamond, data);
+        if (_diamondCut.length > 0) {
+            cut(diamond, _diamondCut);
+        }
+        if (data.length > 0) {
+            execute(diamond, data);
+        }
     }
 }

@@ -540,7 +540,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     if (typeof options.proxy === "object") {
       address = options.proxy.admin || address;
     }
-    return getOptionalFrom(address);
+    return getFrom(address);
   }
 
   function getOptionalFrom(
@@ -623,6 +623,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     const { address: admin, ethersSigner: adminSigner } = getProxyAdmin(
       options
     );
+    const diamantaireName = "Diamantaire_" + admin.toLowerCase();
     const facetSnapshot: FacetCut[] = [];
     const oldFacets: FacetCut[] = [];
     if (oldDeployment) {
@@ -710,24 +711,59 @@ Plus they are only used when the contract is meant to be used as standalone when
       });
       let proxy = await getDeploymentOrNUll(proxyName);
       if (!proxy) {
-        proxy = await _deployOne(proxyName, {
-          ...options,
-          contract: diamondBase,
-          args: [admin]
-        });
-        // TODO use Diamantaire
-        await execute(proxyName, { ...options }, "diamondCut", cuts);
+        let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
+        if (!diamantaireDeployment) {
+          diamantaireDeployment = await _deployOne(diamantaireName, {
+            from: options.from,
+            contract: diamantaire,
+            args: [admin],
+            log: true
+          });
+        }
+        const data = "0x"; // TODO
+        const receipt = await execute(
+          diamantaireName,
+          { ...options, from: admin },
+          "createDiamond",
+          cuts,
+          data
+        );
+        if (!receipt) {
+          throw new Error("could not execute 'createDiamon'");
+        }
+        // console.log(JSON.stringify(receipt, null, "  "));
+        const diamondCreatedEvent =
+          receipt.events &&
+          receipt.events.find(event => event.event === "DiamondCreated");
+        const proxyAddress = diamondCreatedEvent.args.diamond;
+        console.log(`proxy address ${proxyAddress}`);
+        proxy = {
+          abi: diamondBase.abi,
+          address: proxyAddress,
+          receipt,
+          args: [diamantaireDeployment.address],
+          bytecode: diamondBase.bytecode,
+          deployedBytecode: diamondBase.deployedBytecode
+        };
+        await env.deployments.save(proxyName, proxy);
         await env.deployments.save(name, {
           ...proxy,
           linkedData: options.linkedData,
           facets: facetSnapshot,
           diamondCuts: cuts,
           abi
+          // TODO args:
         });
       } else {
         const pastDeployment = await env.deployments.get(name);
-        console.log(`cutting ${cuts} ...`);
-        await execute(proxyName, { ...options }, "diamondCut", cuts);
+        // console.log(`cutting ${cuts} ...`);
+        await execute(
+          diamantaireName,
+          { ...options, from: admin },
+          "cut",
+          proxy.address,
+          cuts
+        );
         await env.deployments.save(name, {
           ...pastDeployment,
           history: pastDeployment.history
@@ -927,12 +963,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       });
       await setupGasPrice(overrides);
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
-      const { data, to } = await ethersContract.populateTransaction[methodName](
-        ...ethersArgs
-      );
-
-      unsignedTx = { ...overrides, data, to };
-      tx = await ethersSigner.sendTransaction(unsignedTx);
+      tx = await ethersContract.functions[methodName](...ethersArgs);
     }
 
     tx = await onPendingTx(tx);
