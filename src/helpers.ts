@@ -68,14 +68,13 @@ function fixProvider(providerGiven: any): any {
   return providerGiven;
 }
 
-function linkLibrary(
+function linkRawLibrary(
   bytecode: string,
   libraryName: string,
   libraryAddress: string
 ): string {
   const address = libraryAddress.replace("0x", "");
   let encodedLibraryName;
-  console.log("dd");
   if (libraryName.startsWith("$") && libraryName.endsWith("$")) {
     encodedLibraryName = libraryName.slice(1, libraryName.length - 1);
   } else {
@@ -99,7 +98,7 @@ function linkRawLibraries(
 ): string {
   for (const libName of Object.keys(libraries)) {
     const libAddress = libraries[libName];
-    bytecode = linkLibrary(bytecode, libName, libAddress);
+    bytecode = linkRawLibrary(bytecode, libName, libAddress);
   }
   return bytecode;
 }
