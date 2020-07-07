@@ -39,6 +39,7 @@ import transparentProxy from "../artifacts/TransparentProxy.json";
 import diamondBase from "../artifacts/DiamondBase.json";
 import diamondFacet from "../artifacts/DiamondFacet.json";
 import diamondLoopeFacet from "../artifacts/DiamondLoupeFacet.json";
+import diamantaire from "../artifacts/Diamantaire.json";
 import { string } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 
 diamondBase.abi = diamondBase.abi
@@ -635,12 +636,13 @@ Plus they are only used when the contract is meant to be used as standalone when
       const facetsBytes = await diamondProxy.facets();
       for (const facetBytes of facetsBytes) {
         oldFacets.push(extractFacetInfo(facetBytes));
-        // ensure EIP165, LoupeFacet and DiamondFacet are kept
+        // ensure EIP165, LoupeFacet, DiamondOwnershipFacet and DiamondFacet are kept // TODO options to delete cut them out
         const sigsBytes = facetBytes.slice(42);
         if (
           sigsBytes === "01ffc9a7" || // ERC165
           sigsBytes === "adfca15e7a0ed627cdffacc652ef6b2c" || // Loupe
-          sigsBytes === "99f5f52e" // DiamoncCut
+          sigsBytes === "99f5f52e" || // DiamoncCut
+          sigsBytes === "f2fde38b" // DiamondOwnership
         ) {
           facetSnapshot.push(extractFacetInfo(facetBytes));
         }
@@ -724,7 +726,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         });
       } else {
         const pastDeployment = await env.deployments.get(name);
-        // console.log(`cutting ${cuts} ...`);
+        console.log(`cutting ${cuts} ...`);
         await execute(proxyName, { ...options }, "diamondCut", cuts);
         await env.deployments.save(name, {
           ...pastDeployment,

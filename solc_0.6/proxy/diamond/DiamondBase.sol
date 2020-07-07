@@ -11,21 +11,21 @@ pragma experimental ABIEncoderV2;
 * - rename to DiamondBase
 * - allow to pass owner in constructor
 * - reject on receive()
+* - use DiamondOwnership for Ownership event
+* - use DiamondOwnershipFacet for allowing owner to change owner
 *
 * Implementation of an example of a diamond.
 /******************************************************************************/
 
+import "./DiamondOwnership.sol";
+import "./DiamondOwnershipEvents.sol";
+import "./DiamondOwnershipFacet.sol";
 import "./DiamondStorageContract.sol";
 import "./DiamondHeaders.sol";
 import "./DiamondFacet.sol";
 import "./DiamondLoupeFacet.sol";
 
-contract DiamondBase is DiamondStorageContract {
-    event OwnershipTransferred(
-        address indexed previousOwner,
-        address indexed newOwner
-    );
-
+contract DiamondBase is DiamondOwnershipEvents, DiamondStorageContract {
     constructor(address owner) public {
         DiamondStorage storage ds = diamondStorage();
         ds.contractOwner = owner;
@@ -37,7 +37,13 @@ contract DiamondBase is DiamondStorageContract {
         // Create a DiamondLoupeFacet contract which implements the Diamond Loupe interface
         DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
 
-        bytes[] memory diamondCut = new bytes[](3);
+        // Create a DiamondOwnershipFacet contract which implements the Diamond Ownership interface
+
+
+            DiamondOwnershipFacet diamondOwnershipFacet
+         = new DiamondOwnershipFacet();
+
+        bytes[] memory diamondCut = new bytes[](4);
 
         // Adding cut function
         diamondCut[0] = abi.encodePacked(
@@ -54,8 +60,14 @@ contract DiamondBase is DiamondStorageContract {
             DiamondLoupe.facetAddresses.selector
         );
 
-        // Adding supportsInterface function
+        // Adding diamond tansferOwnership function
         diamondCut[2] = abi.encodePacked(
+            diamondOwnershipFacet,
+            DiamondOwnership.transferOwnership.selector
+        );
+
+        // Adding supportsInterface function
+        diamondCut[3] = abi.encodePacked(
             address(this),
             ERC165.supportsInterface.selector
         );
