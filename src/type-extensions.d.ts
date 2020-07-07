@@ -81,6 +81,7 @@ declare module "@nomiclabs/buidler/types" {
   export interface ProxyOptions {
     admin?: Address;
     upgradeIndex?: number;
+    methodName?: string;
   }
 
   export interface DeployOptions extends TxOptions {

@@ -435,9 +435,11 @@ export function addHelpers(
     options: DeployOptions
   ): Promise<DeployResult> {
     const oldDeployment = await getDeploymentOrNUll(name);
+    let updateMethod = "postUpgrade";
     let upgradeIndex;
     if (typeof options.proxy === "object") {
       upgradeIndex = options.proxy.upgradeIndex;
+      updateMethod = options.proxy.methodName || updateMethod;
     }
     const deployResult = _checkUpgradeIndex(oldDeployment, upgradeIndex);
     if (deployResult) {
@@ -453,7 +455,6 @@ export function addHelpers(
       implementationOptions.contract = name;
     }
 
-    const updateMethod = "postUpgrade"; // force using that function name
     const { address: admin } = getProxyAdmin(options);
 
     const artifact = await getArtifactFromOptions(
