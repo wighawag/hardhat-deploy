@@ -702,6 +702,18 @@ Plus they are only used when the contract is meant to be used as standalone when
       }
     }
 
+    let data = "0x"; // TODO
+    if (options.execute) {
+      const diamondContract = new Contract(
+        "0x0000000000000000000000000000000000000001",
+        abi
+      );
+      const txData = await diamondContract.populateTransaction[
+        options.execute.methodName
+      ](...options.execute.args);
+      data = txData.data || "0x";
+    }
+
     if (changesDetected) {
       const cuts = facetCuts.map(facetCut => {
         return facetCut.sigs.reduce(
@@ -720,7 +732,7 @@ Plus they are only used when the contract is meant to be used as standalone when
             log: true
           });
         }
-        const data = "0x"; // TODO
+
         const receipt = await execute(
           diamantaireName,
           { ...options, from: admin },
@@ -760,9 +772,10 @@ Plus they are only used when the contract is meant to be used as standalone when
         await execute(
           diamantaireName,
           { ...options, from: admin },
-          "cut",
+          "cutAndExecute",
           proxy.address,
-          cuts
+          cuts,
+          data
         );
         await env.deployments.save(name, {
           ...pastDeployment,
