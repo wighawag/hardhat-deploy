@@ -4,11 +4,6 @@ pragma solidity ^0.6.0;
 import "./Proxy.sol";
 
 contract TransparentProxy is Proxy {
-    // ////////////////////////// EVENTS ///////////////////////////////////////////////////////////////////////
-
-    event ProxyAdmin(address adminAddress);
-    event ProxyImplementation(address implementationContractAddress);
-
     // /////////////////////// CONSTRUCTOR //////////////////////////////////////////////////////////////////////
 
     constructor(
@@ -16,16 +11,8 @@ contract TransparentProxy is Proxy {
         bytes memory data,
         address adminAddress
     ) public {
-        // solhint-disable-next-line security/no-inline-assembly
-        assembly {
-            sstore(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103,
-                adminAddress
-            )
-        }
-        _construct(implementationAddress, data);
-        emit ProxyImplementation(implementationAddress);
-        emit ProxyAdmin(adminAddress);
+        _setImplementation(implementationAddress, data);
+        _setAdmin(adminAddress);
     }
 
     // ///////////////////// EXTERNAL ///////////////////////////////////////////////////////////////////////////
@@ -34,39 +21,37 @@ contract TransparentProxy is Proxy {
         address newImplementation,
         bytes calldata data
     ) external ifAdmin {
-        // solhint-disable-next-line security/no-inline-assembly
-        assembly {
-            sstore(
-                0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc,
-                newImplementation
-            )
-        }
-
-        (bool success, ) = newImplementation.delegatecall(data);
-        if (!success) {
-            assembly {
-                // This assembly ensure the revert contains the exact string data
-                let returnDataSize := returndatasize()
-                returndatacopy(0, 0, returnDataSize)
-                revert(0, returnDataSize)
-            }
-        }
-        emit ProxyImplementation(newImplementation);
+        _setImplementation(newImplementation, data);
     }
 
-    function admin() external ifAdmin returns (address) {
+    function proxyAdmin() external ifAdmin returns (address) {
         return _admin();
     }
 
-    function changeAdmin(address newAdmin) external ifAdmin {
+    // Transfer of adminship on the other hand is only visible to the admin of the Proxy
+    function changeProxyAdmin(address newAdmin) external ifAdmin {
+        uint256 disabled;
+        // solhint-disable-next-line security/no-inline-assembly
+        assembly {
+            disabled := sload(
+                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6102
+            )
+        }
+        require(disabled == 0, "changeAdmin has been disabled");
+
+        _setAdmin(newAdmin);
+    }
+
+    // to be used if EIP-173 needs to be implemented in the implementation contract so that change of admin can be constrained
+    // in a way that OwnershipTransfered is trigger all the time
+    function disableChangeProxyAdmin() external ifAdmin {
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
             sstore(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103,
-                newAdmin
+                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6102,
+                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             )
         }
-        emit ProxyAdmin(newAdmin);
     }
 
     // /////////////////////// MODIFIERS ////////////////////////////////////////////////////////////////////////
@@ -86,6 +71,16 @@ contract TransparentProxy is Proxy {
         assembly {
             adminAddress := sload(
                 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
+            )
+        }
+    }
+
+    function _setAdmin(address newAdmin) internal {
+        // solhint-disable-next-line security/no-inline-assembly
+        assembly {
+            sstore(
+                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103,
+                newAdmin
             )
         }
     }

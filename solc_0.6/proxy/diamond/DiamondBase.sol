@@ -11,21 +11,20 @@ pragma experimental ABIEncoderV2;
 * - rename to DiamondBase
 * - allow to pass owner in constructor
 * - reject on receive()
-* - use DiamondOwnership for Ownership event
-* - use DiamondOwnershipFacet for allowing owner to change owner
+* - use ERC173Events for Ownership event
+* - use OwnershipFacet for allowing owner to change owner
 *
 * Implementation of an example of a diamond.
 /******************************************************************************/
 
-import "./DiamondOwnership.sol";
-import "./DiamondOwnershipEvents.sol";
-import "./DiamondOwnershipFacet.sol";
+import "./ERC173.sol";
+import "./OwnershipFacet.sol";
 import "./DiamondStorageContract.sol";
 import "./DiamondHeaders.sol";
 import "./DiamondFacet.sol";
 import "./DiamondLoupeFacet.sol";
 
-contract DiamondBase is DiamondOwnershipEvents, DiamondStorageContract {
+contract DiamondBase is ERC173Events, DiamondStorageContract {
     constructor(address owner) public {
         DiamondStorage storage ds = diamondStorage();
         ds.contractOwner = owner;
@@ -37,11 +36,8 @@ contract DiamondBase is DiamondOwnershipEvents, DiamondStorageContract {
         // Create a DiamondLoupeFacet contract which implements the Diamond Loupe interface
         DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
 
-        // Create a DiamondOwnershipFacet contract which implements the Diamond Ownership interface
-
-
-            DiamondOwnershipFacet diamondOwnershipFacet
-         = new DiamondOwnershipFacet();
+        // Create a OwnershipFacet contract which implements the ERC-173 Ownership interface
+        OwnershipFacet ownershipFacet = new OwnershipFacet();
 
         bytes[] memory diamondCut = new bytes[](4);
 
@@ -60,10 +56,11 @@ contract DiamondBase is DiamondOwnershipEvents, DiamondStorageContract {
             DiamondLoupe.facetAddresses.selector
         );
 
-        // Adding diamond tansferOwnership function
+        // Adding diamond ERC173 functions
         diamondCut[2] = abi.encodePacked(
-            diamondOwnershipFacet,
-            DiamondOwnership.transferOwnership.selector
+            ownershipFacet,
+            ERC173.transferOwnership.selector,
+            ERC173.owner.selector
         );
 
         // Adding supportsInterface function
@@ -81,13 +78,22 @@ contract DiamondBase is DiamondOwnershipEvents, DiamondStorageContract {
         require(success, "Adding functions failed.");
 
         // adding ERC165 data
+        // ERC165
         ds.supportedInterfaces[ERC165.supportsInterface.selector] = true;
+
+        // DiamondCut
         ds.supportedInterfaces[Diamond.diamondCut.selector] = true;
+
+        // DiamondLoupe
         bytes4 interfaceID = DiamondLoupe.facets.selector ^
             DiamondLoupe.facetFunctionSelectors.selector ^
             DiamondLoupe.facetAddresses.selector ^
             DiamondLoupe.facetAddress.selector;
         ds.supportedInterfaces[interfaceID] = true;
+
+        // ERC173
+        ds.supportedInterfaces[ERC173.transferOwnership.selector ^
+            ERC173.owner.selector] = true;
     }
 
     // This is an immutable functions because it is defined directly in the diamond.

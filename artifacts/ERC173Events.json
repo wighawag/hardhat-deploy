@@ -1,5 +1,5 @@
 {
-  "contractName": "DiamondOwnershipEvents",
+  "contractName": "ERC173Events",
   "abi": [
     {
       "anonymous": false,

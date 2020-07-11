@@ -65,9 +65,9 @@ declare module "@nomiclabs/buidler/types" {
     confirmations?: number;
   };
 
-  export type DiamondFacets = Array<string>; // TODO support Object for facet : {contract}
+  export type DiamondFacets = Array<string>; // TODO support Object for facet : {contract} // could be deploymentNames too ? or {abi,address}
   export interface DiamondOptions extends TxOptions {
-    admin?: Address;
+    owner?: Address;
     facets: DiamondFacets;
     log?: boolean;
     libraries?: { [libraryName: string]: Address };
@@ -80,7 +80,7 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface ProxyOptions {
-    admin?: Address;
+    owner?: Address;
     upgradeIndex?: number;
     methodName?: string;
   }
@@ -249,6 +249,10 @@ declare module "@nomiclabs/buidler/types" {
     methodIdentifiers?: any;
     diamondCuts?: string[];
     facets?: { address: string; sigs: string[] }[];
+    execute?: {
+      methodName: string;
+      args: any[];
+    };
   }
 
   export interface Deployment {
