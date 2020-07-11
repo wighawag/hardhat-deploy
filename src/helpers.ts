@@ -42,6 +42,7 @@ import ownershipFacet from "../artifacts/OwnershipFacet.json";
 import diamondLoopeFacet from "../artifacts/DiamondLoupeFacet.json";
 import diamantaire from "../artifacts/Diamantaire.json";
 import { string } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
+import { eventNames } from "process";
 
 diamondBase.abi = diamondBase.abi
   .concat(diamondFacet.abi)
@@ -251,9 +252,12 @@ export function addHelpers(
     await setupGasPrice(unsignedTx);
     let tx = await ethersSigner.sendTransaction(unsignedTx);
 
-    // let ethersContract;
-    // ethersContract = await factory.deploy(...args, overrides);
-    // let unsignedTx = {};
+    // await overrideGasLimit(overrides, options, newOverrides =>
+    //   ethersSigner.estimateGas(newOverrides)
+    // );
+    // await setupGasPrice(overrides);
+    // console.log({ args, overrides });
+    // const ethersContract = await factory.deploy(...args, overrides);
     // let tx = ethersContract.deployTransaction;
 
     if (options.dev_forceMine) {
@@ -596,6 +600,17 @@ Plus they are only used when the contract is meant to be used as standalone when
     return { address: from, ethersSigner };
   }
 
+  async function findEvents(
+    contract: Contract,
+    event: string,
+    blockHash: string
+  ): Promise<any[]> {
+    // TODO type the return type
+    const filter = contract.filters[event]();
+    const events = await contract.queryFilter(filter, blockHash);
+    return events;
+  }
+
   interface FacetCut {
     address: string;
     sigs: string[];
@@ -627,6 +642,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     options: DiamondOptions
   ): Promise<DeployResult> {
     const oldDeployment = await getDeploymentOrNUll(name);
+    let proxy;
     const deployResult = _checkUpgradeIndex(
       oldDeployment,
       options.upgradeIndex
@@ -639,16 +655,12 @@ Plus they are only used when the contract is meant to be used as standalone when
     const { address: owner, ethersSigner: ownerSigner } = getProxyOwner(
       options
     );
-    const diamantaireName = "Diamantaire_" + owner.toLowerCase();
+    const diamantaireName = name + "_Diamantaire";
     const facetSnapshot: FacetCut[] = [];
     const oldFacets: FacetCut[] = [];
     if (oldDeployment) {
-      const diamondProxyDeployment = await getDeployment(proxyName);
-      const diamondProxy = new Contract(
-        diamondProxyDeployment.address,
-        diamondProxyDeployment.abi,
-        provider
-      );
+      proxy = await getDeployment(proxyName);
+      const diamondProxy = new Contract(proxy.address, proxy.abi, provider);
 
       const facetsBytes = await diamondProxy.facets();
       for (const facetBytes of facetsBytes) {
@@ -697,10 +709,18 @@ Plus they are only used when the contract is meant to be used as standalone when
         facetSnapshot.push(facetCut);
       } else {
         const oldImpl = await getDeployment(facet);
-        facetSnapshot.push({
+        const facetCut = {
           address: oldImpl.address,
           sigs: sigsFromABI(oldImpl.abi)
-        });
+        };
+        facetSnapshot.push(facetCut);
+        if (
+          !oldFacets.find(
+            f => f.address.toLowerCase() === oldImpl.address.toLowerCase()
+          )
+        ) {
+          facetCuts.push(facetCut);
+        }
       }
     }
 
@@ -729,6 +749,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       ](...options.execute.args);
       data = txData.data || "0x";
     }
+    const diamantaireABI = diamantaire.abi.concat(abi); // TODO merge
 
     if (changesDetected) {
       const cuts = facetCuts.map(facetCut => {
@@ -737,39 +758,59 @@ Plus they are only used when the contract is meant to be used as standalone when
           facetCut.address
         );
       });
-      // console.log(`cutting ${cuts} ...`);
+      log(`cutting ${cuts} ...`);
 
-      let proxy = await getDeploymentOrNUll(proxyName);
       let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
-      if (!diamantaireDeployment) {
+      if (!proxy || !diamantaireDeployment) {
+        if (proxy || diamantaireDeployment) {
+          throw new Error(
+            "proxy and Diamantaire should go together, something is wrong with your saved deployments"
+          );
+        }
         diamantaireDeployment = await _deployOne(diamantaireName, {
           from: options.from,
-          contract: diamantaire,
-          args: [owner],
+          contract: {
+            ...diamantaire,
+            abi: diamantaireABI
+          },
+          args: [owner, cuts, data],
           log: true
         });
-      }
-      if (!proxy) {
-        const executeReceipt = await execute(
-          diamantaireName,
-          { ...options, from: owner },
-          "createDiamond",
-          cuts,
-          data
-        );
-        if (!executeReceipt) {
-          throw new Error("could not execute 'createDiamon'");
-        }
+
+        const receipt = diamantaireDeployment.receipt;
         // console.log(JSON.stringify(receipt, null, "  "));
-        const diamondCreatedEvent =
-          executeReceipt.events &&
-          executeReceipt.events.find(event => event.event === "DiamondCreated");
+
+        // const diamondCreatedEvent =
+        //   receipt.events &&
+        //   receipt.events.find(event => event.event === "DiamondCreated");
+
+        const diamantaireContract = new Contract(
+          diamantaireDeployment.address,
+          diamantaire.abi,
+          provider
+        );
+
+        const events = [];
+        if (receipt.logs) {
+          for (const l of receipt.logs) {
+            try {
+              events.push(diamantaireContract.interface.parseLog(l));
+            } catch (e) {}
+          }
+        }
+
+        const diamondCreatedEvent = events.find(
+          e => e.name === "DiamondCreated"
+        );
+        if (!diamondCreatedEvent) {
+          throw new Error("DiamondCreated Not Emitted");
+        }
         const proxyAddress = diamondCreatedEvent.args.diamond;
         // console.log(`proxy address ${proxyAddress}`);
         proxy = {
           abi: diamondBase.abi,
           address: proxyAddress,
-          receipt: executeReceipt,
+          receipt,
           args: [diamantaireDeployment.address],
           bytecode: diamondBase.bytecode,
           deployedBytecode: diamondBase.deployedBytecode // TODO if more fiels are added, we need to add more
@@ -786,23 +827,23 @@ Plus they are only used when the contract is meant to be used as standalone when
           execute: options.execute
         });
       } else {
-        const pastDeployment = await env.deployments.get(name);
-
+        if (!oldDeployment) {
+          throw new Error(`Cannot find Deployment for ${name}`);
+        }
         const currentOwner = await read(proxyName, "owner");
         if (
           currentOwner.toLowerCase() !==
           diamantaireDeployment.address.toLowerCase()
         ) {
           throw new Error(
-            `To change owner, you need to call "transferOwnership" with new diamantaire : ${diamantaireDeployment.address}`
+            `The Diamond owner is not the Diamantaire Contract anymore. Cannot proceed.`
           );
         }
 
         const executeReceipt = await execute(
           diamantaireName,
-          { ...options, from: owner },
+          options,
           "cutAndExecute",
-          proxy.address,
           cuts,
           data
         );
@@ -811,15 +852,19 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
         await env.deployments.save(name, {
           receipt: executeReceipt,
-          history: pastDeployment.history
-            ? pastDeployment.history.concat(pastDeployment)
-            : [pastDeployment],
+          history: oldDeployment.history
+            ? oldDeployment.history.concat(oldDeployment)
+            : [oldDeployment],
           linkedData: options.linkedData,
           address: proxy.address,
           abi,
           facets: facetSnapshot,
           diamondCuts: cuts,
           execute: options.execute
+        });
+        await env.deployments.save(diamantaireName, {
+          ...diamantaireDeployment,
+          abi: diamantaireABI
         });
       }
 

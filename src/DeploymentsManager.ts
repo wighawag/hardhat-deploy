@@ -283,13 +283,17 @@ export class DeploymentsManager {
     const txHashes = Object.keys(pendingTxs);
     for (const txHash of txHashes) {
       const txData = pendingTxs[txHash];
-      const tx = parseTransaction(txData.rawTx); // TODO fix
-      // if (this.db.gasPrice) {
-      //   if (tx.gasPrice.lt(this.db.gasPrice)) {
-      //     //TODO
-      //   }
-      // }
-      // alternative add options to deploy task to delete pending tx, combined with --gasprice this would work (except for timing edge case)
+      if (txData.rawTx) {
+        const tx = parseTransaction(txData.rawTx); // TODO fix
+        // if (this.db.gasPrice) {
+        //   if (tx.gasPrice.lt(this.db.gasPrice)) {
+        //     //TODO
+        //   }
+        // }
+        // alternative add options to deploy task to delete pending tx, combined with --gasprice this would work (except for timing edge case)
+      } else {
+        console.error(`no access to raw data for tx ${txHash}`);
+      }
       if (this.db.logEnabled) {
         console.log(
           `waiting for tx ${txHash}` +
@@ -460,7 +464,13 @@ export class DeploymentsManager {
         solidityJson: deployment.solidityJson,
         solidityMetadata: deployment.solidityMetadata,
         bytecode: deployment.bytecode,
-        deployedBytecode: deployment.deployedBytecode
+        deployedBytecode: deployment.deployedBytecode,
+        facets: deployment.facets,
+        diamondCuts: deployment.diamondCuts,
+        execute: deployment.execute,
+        history: deployment.history,
+        devdoc: deployment.devdoc,
+        userdoc: deployment.userdoc
       })
     );
     this.db.deployments[name] = obj;
