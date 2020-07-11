@@ -58,6 +58,7 @@ export class DeploymentsManager {
     pendingTransactions: { [hash: string]: any };
     savePendingTx: boolean;
     gasPrice?: string;
+    migrations: { [filename: string]: number };
   };
 
   private env: BuidlerRuntimeEnvironment;
@@ -70,6 +71,7 @@ export class DeploymentsManager {
       namedAccounts: {},
       deploymentsLoaded: false,
       deployments: {},
+      migrations: {},
       writeDeploymentsToFiles: false,
       fixtureCounter: 0,
       snapshotCounter: 0,
@@ -281,7 +283,7 @@ export class DeploymentsManager {
     const txHashes = Object.keys(pendingTxs);
     for (const txHash of txHashes) {
       const txData = pendingTxs[txHash];
-      const tx = parseTransaction(txData.rawTx);
+      const tx = parseTransaction(txData.rawTx); // TODO fix
       // if (this.db.gasPrice) {
       //   if (tx.gasPrice.lt(this.db.gasPrice)) {
       //     //TODO
@@ -326,7 +328,7 @@ export class DeploymentsManager {
       fs.ensureDirSync(deployFolderPath);
       this.db.pendingTransactions[tx.hash] = name
         ? { name, deployment, rawTx: tx.raw }
-        : {};
+        : { rawTx: tx.raw };
       fs.writeFileSync(
         pendingTxPath,
         JSON.stringify(this.db.pendingTransactions, null, "  ")
@@ -363,21 +365,34 @@ export class DeploymentsManager {
   public async loadDeployments(): Promise<{ [name: string]: Deployment }> {
     const chainId = await getChainId(this.env);
     // this.env.deployments.chainId = chainId;
-    addDeployments(
-      this.db,
-      this.deploymentsPath,
-      this.getDeploymentsSubPath(chainId)
-    );
+    const folderPath = this.getDeploymentsSubPath(chainId);
+    let migrations = {};
+    try {
+      log("loading migrations");
+      migrations = JSON.parse(
+        fs
+          .readFileSync(
+            path.join(this.deploymentsPath, folderPath, ".migrations.json")
+          )
+          .toString()
+      );
+    } catch (e) {}
+    this.db.migrations = migrations;
+    // console.log({ migrations: this.db.migrations });
+    addDeployments(this.db, this.deploymentsPath, folderPath);
     this.db.deploymentsLoaded = true;
     return this.db.deployments;
   }
 
   public async deletePreviousDeployments(): Promise<void> {
     const chainId = await getChainId(this.env);
-    deleteDeployments(
-      this.deploymentsPath,
-      this.getDeploymentsSubPath(chainId)
-    );
+    const folderPath = this.getDeploymentsSubPath(chainId);
+    try {
+      fs.removeSync(
+        path.join(this.deploymentsPath, folderPath, ".migrations.json")
+      );
+    } catch (e) {}
+    deleteDeployments(this.deploymentsPath, folderPath);
   }
 
   public async saveDeployment(
@@ -513,15 +528,23 @@ export class DeploymentsManager {
     }
   ): Promise<{ [name: string]: Deployment }> {
     log("runDeploy");
+    const chainId = await getChainId(this.env);
+    await this.loadDeployments();
+    const deploymentFolderPath = this.getDeploymentsSubPath(chainId);
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
     this.db.writeDeploymentsToFiles = options.writeDeploymentsToFiles;
     this.db.savePendingTx = options.savePendingTx;
     this.db.logEnabled = options.log;
     this.db.gasPrice = options.gasPrice;
     if (options.resetMemory) {
+      log("reseting memory");
       this.db.deployments = {};
+      this.db.migrations = {};
     }
     if (options.deletePreviousDeployments) {
+      log("deleting previous deployments");
+      this.db.deployments = {};
+      this.db.migrations = {};
       await this.deletePreviousDeployments();
     } else {
       if (options.savePendingTx) {
@@ -660,6 +683,13 @@ export class DeploymentsManager {
 
     try {
       for (const deployScript of scriptsToRun.concat(scriptsToRunAtTheEnd)) {
+        const filename = path.basename(deployScript.filePath);
+        if (this.db.migrations[filename]) {
+          log(
+            `skipping ${filename} as migrations already executed and complete`
+          );
+          continue;
+        }
         let skip = false;
         if (deployScript.func.skip) {
           log(`should we skip  ${deployScript.filePath} ?`);
@@ -678,8 +708,9 @@ export class DeploymentsManager {
         }
         if (!skip) {
           log(`executing  ${deployScript.filePath}`);
+          let result;
           try {
-            await deployScript.func(this.env);
+            result = await deployScript.func(this.env);
           } catch (e) {
             // console.error("execution failed", e);
             throw new Error(
@@ -690,6 +721,31 @@ export class DeploymentsManager {
             );
           }
           log(`executing ${deployScript.filePath} complete`);
+          if (result && typeof result === "boolean") {
+            this.db.migrations[filename] = Math.floor(Date.now() / 1000);
+            // TODO refactor to extract this whole path and folder existence stuff
+            const toSave =
+              this.db.writeDeploymentsToFiles &&
+              this.env.network.saveDeployments;
+            if (toSave) {
+              try {
+                fs.mkdirSync(this.deploymentsPath);
+              } catch (e) {}
+              try {
+                fs.mkdirSync(
+                  path.join(this.deploymentsPath, deploymentFolderPath)
+                );
+              } catch (e) {}
+              fs.writeFileSync(
+                path.join(
+                  this.deploymentsPath,
+                  deploymentFolderPath,
+                  ".migrations.json"
+                ),
+                JSON.stringify(this.db.migrations)
+              );
+            }
+          }
         }
       }
     } catch (e) {
@@ -699,7 +755,6 @@ export class DeploymentsManager {
     this.db.writeDeploymentsToFiles = wasWrittingToFiles;
     log("deploy scripts complete");
 
-    const chainId = await getChainId(this.env);
     if (options.exportAll !== undefined) {
       log("load all deployments for export-all");
       const all = loadAllDeployments(this.deploymentsPath, true);

@@ -1,4 +1,5 @@
 import "@nomiclabs/buidler/types";
+import { boolean } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 
 declare module "@nomiclabs/buidler/types" {
   export interface BuidlerRuntimeEnvironment {
@@ -23,7 +24,7 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface DeployFunction {
-    (env: BuidlerRuntimeEnvironment): Promise<void>;
+    (env: BuidlerRuntimeEnvironment): Promise<undefined | boolean>;
     skip?: (env: BuidlerRuntimeEnvironment) => Promise<boolean>;
     tags?: string[];
     dependencies?: string[];
