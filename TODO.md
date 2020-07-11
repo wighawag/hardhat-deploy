@@ -9,3 +9,5 @@
 [] library name vs <path>:<name> and error out if ambiguity (when using only name)
 [] tags for network config => can be used in namedAccounts too
 [] add skipIfDeployed
+[] add deploy script to register as to be executed only once (saved in deploymemnts/.migrations ?)
+[] libraries : address should not need to be address, they could be names of deployments or {address}
