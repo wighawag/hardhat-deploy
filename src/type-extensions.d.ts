@@ -100,7 +100,7 @@ declare module "@nomiclabs/buidler/types" {
     log?: boolean;
     linkedData?: any; // JSONable ?
     libraries?: { [libraryName: string]: Address };
-    proxy?: boolean | ProxyOptions; // TODO support different type of proxies ?
+    proxy?: boolean | string | ProxyOptions; // TODO support different type of proxies ?
   }
 
   export interface CallOptions {

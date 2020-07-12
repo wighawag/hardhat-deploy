@@ -442,11 +442,13 @@ export function addHelpers(
     options: DeployOptions
   ): Promise<DeployResult> {
     const oldDeployment = await getDeploymentOrNUll(name);
-    let updateMethod = "postUpgrade";
+    let updateMethod;
     let upgradeIndex;
     if (typeof options.proxy === "object") {
       upgradeIndex = options.proxy.upgradeIndex;
-      updateMethod = options.proxy.methodName || updateMethod;
+      updateMethod = options.proxy.methodName;
+    } else if (typeof options.proxy === "string") {
+      updateMethod = options.proxy;
     }
     const deployResult = _checkUpgradeIndex(oldDeployment, upgradeIndex);
     if (deployResult) {
@@ -476,7 +478,9 @@ export function addHelpers(
       delete implementationOptions.args;
       if (constructor && constructor.inputs.length > 0) {
         throw new Error(
-          `Proxy based contract constructor can only have either zero argument or the exact same argument as the "${updateMethod}" method.
+          `Proxy based contract constructor can only have either zero argument or the exact same argument as the method used for postUpgrade actions ${
+            updateMethod ? "(" + updateMethod + "}" : ""
+          }.
 Plus they are only used when the contract is meant to be used as standalone when development ends.
 `
         );
@@ -494,9 +498,18 @@ Plus they are only used when the contract is meant to be used as standalone when
         implementation.abi
       );
 
-      const { data } = await implementationContract.populateTransaction[
-        updateMethod
-      ](...argsArray);
+      let data = "0x";
+      if (updateMethod) {
+        if (!implementationContract[updateMethod]) {
+          throw new Error(
+            `contract need to implement function ${updateMethod}`
+          );
+        }
+        const txData = await implementationContract.populateTransaction[
+          updateMethod
+        ](...argsArray);
+        data = txData.data || "0x";
+      }
 
       let proxy = await getDeploymentOrNUll(proxyName);
       if (!proxy) {
@@ -527,10 +540,12 @@ Plus they are only used when the contract is meant to be used as standalone when
       const proxiedDeployment = {
         ...implementation,
         address: proxy.address,
-        execute: {
-          methodName: updateMethod,
-          args: argsArray
-        }
+        execute: updateMethod
+          ? {
+              methodName: updateMethod,
+              args: argsArray
+            }
+          : undefined
       };
       if (oldDeployment) {
         proxiedDeployment.history = proxiedDeployment.history

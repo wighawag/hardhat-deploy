@@ -30,19 +30,23 @@ abstract contract Proxy {
                 newImplementation
             )
         }
-        (bool success, ) = newImplementation.delegatecall(data);
-        if (!success) {
-            assembly {
-                // This assembly ensure the revert contains the exact string data
-                let returnDataSize := returndatasize()
-                returndatacopy(0, 0, returnDataSize)
-                revert(0, returnDataSize)
-            }
-        }
+
         emit ProxyImplementationUpdated(
             previousImplementation,
             newImplementation
         );
+
+        if (data.length > 0) {
+            (bool success, ) = newImplementation.delegatecall(data);
+            if (!success) {
+                assembly {
+                    // This assembly ensure the revert contains the exact string data
+                    let returnDataSize := returndatasize()
+                    returndatacopy(0, 0, returnDataSize)
+                    revert(0, returnDataSize)
+                }
+            }
+        }
     }
 
     // ///////////////////// EXTERNAL ///////////////////////////////////////////////////////////////////////////
