@@ -166,7 +166,15 @@ declare module "@nomiclabs/buidler/types" {
 
   export interface DeploymentsExtension {
     deploy(name: string, options: DeployOptions): Promise<DeployResult>;
-    diamond(name: string, options: DiamondOptions): Promise<DeployResult>;
+    diamond: {
+      deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
+      executeAsOwner(
+        name: string,
+        options: TxOptions,
+        methodName: string,
+        ...args: any[]
+      ): Promise<Receipt | null>;
+    };
     fetchIfDifferent(name: string, options: DeployOptions): Promise<boolean>;
     save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;

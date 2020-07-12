@@ -410,7 +410,7 @@ export function addHelpers(
     } else if (upgradeIndex === 1) {
       if (!oldDeployment) {
         throw new Error(
-          "upgradeIndex === 1 : exepects Deployments to already exists"
+          "upgradeIndex === 1 : expects Deployments to already exists"
         );
       }
       if (oldDeployment.history && oldDeployment.history.length > 0) {
@@ -419,18 +419,18 @@ export function addHelpers(
     } else {
       if (!oldDeployment) {
         throw new Error(
-          `upgradeIndex === ${upgradeIndex} : exepects Deployments to already exists`
+          `upgradeIndex === ${upgradeIndex} : expects Deployments to already exists`
         );
       }
       if (!oldDeployment.history) {
         throw new Error(
-          `upgradeIndex > 1 : exepects Deployments history to exists`
+          `upgradeIndex > 1 : expects Deployments history to exists`
         );
       } else if (oldDeployment.history.length > upgradeIndex - 1) {
         return { ...oldDeployment, newlyDeployed: false };
       } else if (oldDeployment.history.length < upgradeIndex - 1) {
         throw new Error(
-          `upgradeIndex === ${upgradeIndex} : exepects Deployments history length to be at least ${upgradeIndex -
+          `upgradeIndex === ${upgradeIndex} : expects Deployments history length to be at least ${upgradeIndex -
             1}`
         );
       }
@@ -882,6 +882,17 @@ Plus they are only used when the contract is meant to be used as standalone when
     }
   }
 
+  async function diamondAsOwner(
+    name: string,
+    options: TxOptions,
+    methodName: string,
+    ...args: any[]
+  ): Promise<Receipt | null> {
+    await init();
+    const diamantaireName = name + "_Diamantaire";
+    return execute(diamantaireName, options, methodName, ...args);
+  }
+
   async function deploy(
     name: string,
     options: DeployOptions
@@ -897,6 +908,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     name: string,
     options: DiamondOptions
   ): Promise<DeployResult> {
+    await init();
     return _deployViaDiamondProxy(name, options);
   }
 
@@ -1055,7 +1067,6 @@ Plus they are only used when the contract is meant to be used as standalone when
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
       tx = await ethersContract.functions[methodName](...ethersArgs);
     }
-
     tx = await onPendingTx(tx);
 
     if (options.dev_forceMine) {
@@ -1146,7 +1157,10 @@ Plus they are only used when the contract is meant to be used as standalone when
     ...partialExtension,
     fetchIfDifferent,
     deploy,
-    diamond,
+    diamond: {
+      deploy: diamond,
+      executeAsOwner: diamondAsOwner
+    },
     execute,
     batchExecute,
     rawTx,

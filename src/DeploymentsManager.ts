@@ -15,7 +15,10 @@ import fs from "fs-extra";
 import path from "path";
 
 import { BigNumber } from "@ethersproject/bignumber";
-import { parse as parseTransaction } from "@ethersproject/transactions";
+import {
+  parse as parseTransaction,
+  Transaction
+} from "@ethersproject/transactions";
 
 import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
@@ -269,6 +272,20 @@ export class DeploymentsManager {
         name: string;
         deployment?: any;
         rawTx: string;
+        decoded: {
+          from: string;
+          gasPrice: string;
+          gasLimit: string;
+          to: string;
+          value: string;
+          nonce: number;
+          data: string;
+          r: string;
+          s: string;
+          v: number;
+          // creates: tx.creates, // TODO test
+          chainId: number;
+        };
       };
     } = {};
     const chainId = await getChainId(this.env);
@@ -283,13 +300,36 @@ export class DeploymentsManager {
     const txHashes = Object.keys(pendingTxs);
     for (const txHash of txHashes) {
       const txData = pendingTxs[txHash];
-      if (txData.rawTx) {
-        const tx = parseTransaction(txData.rawTx); // TODO fix
-        // if (this.db.gasPrice) {
-        //   if (tx.gasPrice.lt(this.db.gasPrice)) {
-        //     //TODO
-        //   }
-        // }
+      if (txData.rawTx || txData.decoded) {
+        let tx: Transaction;
+        if (txData.rawTx) {
+          tx = parseTransaction(txData.rawTx);
+        } else {
+          function recode(decoded: any): Transaction {
+            return {
+              from: decoded.from,
+              gasPrice: BigNumber.from(decoded.from),
+              gasLimit: BigNumber.from(decoded.gasLimit),
+              to: decoded.to,
+              value: BigNumber.from(decoded.value),
+              nonce: decoded.nonce,
+              data: decoded.data,
+              r: decoded.r,
+              s: decoded.s,
+              v: decoded.v,
+              // creates: tx.creates, // TODO test
+              chainId: decoded.chainId
+            };
+          }
+          tx = recode(txData.decoded);
+        }
+        if (this.db.gasPrice) {
+          if (tx.gasPrice.lt(this.db.gasPrice)) {
+            //TODO
+            console.log("TODO : resubmit tx with higher gas price");
+            console.log(tx);
+          }
+        }
         // alternative add options to deploy task to delete pending tx, combined with --gasprice this would work (except for timing edge case)
       } else {
         console.error(`no access to raw data for tx ${txHash}`);
@@ -330,9 +370,26 @@ export class DeploymentsManager {
       // console.log("tx", tx.hash);
       const pendingTxPath = path.join(deployFolderPath, ".pendingTransactions");
       fs.ensureDirSync(deployFolderPath);
+      const rawTx = tx.raw;
+      const decoded = tx.raw
+        ? undefined
+        : {
+            from: tx.from,
+            gasPrice: tx.from.toString(),
+            gasLimit: tx.gasLimit.toString(),
+            to: tx.to,
+            value: tx.value.toString(),
+            nonce: tx.nonce,
+            data: tx.data,
+            r: tx.r,
+            s: tx.s,
+            v: tx.v,
+            // creates: tx.creates, // TODO test
+            chainId: tx.chainId
+          };
       this.db.pendingTransactions[tx.hash] = name
-        ? { name, deployment, rawTx: tx.raw }
-        : { rawTx: tx.raw };
+        ? { name, deployment, rawTx, decoded }
+        : { rawTx, decoded };
       fs.writeFileSync(
         pendingTxPath,
         JSON.stringify(this.db.pendingTransactions, null, "  ")
@@ -341,6 +398,7 @@ export class DeploymentsManager {
       const wait = tx.wait.bind(tx);
       tx.wait = async () => {
         const receipt = await wait();
+        // console.log("checking pending tx...");
         delete this.db.pendingTransactions[tx.hash];
         if (Object.keys(this.db.pendingTransactions).length === 0) {
           fs.removeSync(pendingTxPath);
