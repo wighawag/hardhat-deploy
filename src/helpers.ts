@@ -520,7 +520,19 @@ Plus they are only used when the contract is meant to be used as standalone when
         proxy = await _deployOne(proxyName, proxyOptions);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
-        const currentOwner = await read(proxyName, "owner");
+        const currentOwner = await read(proxyName, "proxyAdmin");
+
+        // let currentOwner;
+        // try {
+        //   currentOwner = await provider.getStorageAt(
+        //     proxy.address,
+        //     "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6102"
+        //   );
+        //   console.log({ currentOwner });
+        // } catch (e) {
+        //   console.error(e);
+        // }
+
         if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
           throw new Error(
             "To change owner, you need to call `transferOwnership`"

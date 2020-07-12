@@ -82,13 +82,8 @@ export default function() {
       true,
       types.boolean
     )
-    .addOptionalParam(
-      "reset",
-      "whether to delete deployments files first",
-      false,
-      types.boolean
-    )
-    .addOptionalParam("log", "whether to output log", false, types.boolean)
+    .addFlag("reset", "whether to delete deployments files first")
+    .addFlag("log", "whether to output log")
     .addOptionalParam(
       "pendingtx",
       "whether to save pending tx",
@@ -204,13 +199,8 @@ export default function() {
       undefined,
       types.boolean
     )
-    .addOptionalParam(
-      "reset",
-      "whether to delete deployments files first",
-      false,
-      types.boolean
-    )
-    .addOptionalParam("log", "whether to output log", true, types.boolean)
+    .addFlag("reset", "whether to delete deployments files first")
+    .addFlag("log", "whether to output log")
     .addOptionalParam(
       "gasprice",
       "gas price to use for transactions",
@@ -265,13 +255,8 @@ export default function() {
       true,
       types.boolean
     )
-    .addOptionalParam(
-      "reset",
-      "whether to delete deployments files first",
-      true,
-      types.boolean
-    )
-    .addOptionalParam("log", "whether to output log", true, types.boolean)
+    .addFlag("reset", "whether to delete deployments files first")
+    .addFlag("log", "whether to output log")
     .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre, runSuper) => {
       args.pendingtx = !isBuidlerEVM(bre);
