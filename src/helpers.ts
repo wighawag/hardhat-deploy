@@ -438,8 +438,8 @@ export function addHelpers(
 
     if (!ethersSigner) {
       console.error("no signer for " + from);
-      log("Please execute the following as " + from);
-      log(
+      console.log("Please execute the following as " + from);
+      console.log(
         JSON.stringify(
           {
             to: tx.to,
@@ -520,12 +520,12 @@ export function addHelpers(
     if (!ethersSigner) {
       // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
       console.error("no signer for " + from);
-      log("Please execute the following as " + from);
+      console.log("Please execute the following as " + from);
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
       const { data } = await ethersContract.populateTransaction[methodName](
         ...ethersArgs
       );
-      log(
+      console.log(
         JSON.stringify(
           {
             to: deployment.address,
@@ -535,8 +535,8 @@ export function addHelpers(
           "  "
         )
       );
-      log("if you have an interface use the following");
-      log(
+      console.log("if you have an interface use the following");
+      console.log(
         JSON.stringify(
           {
             to: deployment.address,

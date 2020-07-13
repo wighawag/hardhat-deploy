@@ -200,10 +200,12 @@ function transformNamedAccounts(
           }
           break;
       }
-      if (typeof address === "string") {
-        address = getAddress(address);
-      } else {
-        address = address.map(getAddress);
+      if (address) {
+        if (typeof address === "string") {
+          address = getAddress(address);
+        } else if (typeof address === "object" && address.length) {
+          address = address.map(getAddress);
+        }
       }
       return address;
     }
