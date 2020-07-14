@@ -262,6 +262,7 @@ declare module "@nomiclabs/buidler/types" {
       methodName: string;
       args: any[];
     };
+    storageLayout?: any;
   }
 
   export interface Deployment {
@@ -280,5 +281,6 @@ declare module "@nomiclabs/buidler/types" {
     methodIdentifiers?: any;
     diamondCuts?: string[];
     facets?: { address: string; sigs: string[] }[];
+    storageLayout?: any;
   }
 }

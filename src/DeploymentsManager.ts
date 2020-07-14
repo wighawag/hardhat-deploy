@@ -528,7 +528,8 @@ export class DeploymentsManager {
         execute: deployment.execute,
         history: deployment.history,
         devdoc: deployment.devdoc,
-        userdoc: deployment.userdoc
+        userdoc: deployment.userdoc,
+        storageLayout: deployment.storageLayout
       })
     );
     this.db.deployments[name] = obj;
