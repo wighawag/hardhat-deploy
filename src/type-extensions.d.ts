@@ -70,7 +70,7 @@ declare module "@nomiclabs/buidler/types" {
     fieldsToCompare?: string | string[];
     log?: boolean;
     linkedData?: any; // JSONable ?
-    libraries?: {[libraryName: string]: Address}
+    libraries?: { [libraryName: string]: Address };
   }
 
   export interface CallOptions {
@@ -111,12 +111,12 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export type Json =
-  | null
-  | boolean
-  | number
-  | string
-  | Json[]
-  | { [prop: string]: Json };
+    | null
+    | boolean
+    | number
+    | string
+    | Json[]
+    | { [prop: string]: Json };
 
   // from https://github.com/Microsoft/TypeScript/issues/1897#issuecomment-580962081
   type JsonCompatible<T> = {
@@ -129,7 +129,10 @@ declare module "@nomiclabs/buidler/types" {
       : JsonCompatible<T[P]>;
   };
 
-  export type FixtureFunc = (env: BuidlerRuntimeEnvironment, options? : Json) => Promise<any>;
+  export type FixtureFunc = (
+    env: BuidlerRuntimeEnvironment,
+    options?: Json
+  ) => Promise<any>;
 
   export interface DeploymentsExtension {
     deploy(name: string, options: DeployOptions): Promise<DeployResult>;
@@ -210,9 +213,10 @@ declare module "@nomiclabs/buidler/types" {
     solidityMetadata?: string;
     bytecode?: string;
     deployedBytecode?: string;
-    userdoc: any;
-    devdoc: any;
-    methodIdentifiers: any;
+    userdoc?: any;
+    devdoc?: any;
+    storageLayout?: any;
+    methodIdentifiers?: any;
   }
 
   export interface Deployment {
@@ -225,8 +229,9 @@ declare module "@nomiclabs/buidler/types" {
     solidityMetadata?: string;
     bytecode?: string;
     deployedBytecode?: string;
-    userdoc: any;
-    devdoc: any;
-    methodIdentifiers: any;
+    storageLayout?: any;
+    userdoc?: any;
+    devdoc?: any;
+    methodIdentifiers?: any;
   }
 }

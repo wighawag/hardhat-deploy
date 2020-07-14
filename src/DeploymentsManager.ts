@@ -439,7 +439,10 @@ export class DeploymentsManager {
         solidityJson: deployment.solidityJson,
         solidityMetadata: deployment.solidityMetadata,
         bytecode: deployment.bytecode,
-        deployedBytecode: deployment.deployedBytecode
+        deployedBytecode: deployment.deployedBytecode,
+        userdoc: deployment.userdoc,
+        devdoc: deployment.devdoc,
+        storageLayout: deployment.storageLayout
       })
     );
     this.db.deployments[name] = obj;

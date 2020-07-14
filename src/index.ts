@@ -20,8 +20,10 @@ import { BUIDLEREVM_NETWORK_NAME } from "@nomiclabs/buidler/internal/constants";
 import * as types from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 import { ERRORS } from "@nomiclabs/buidler/internal/core/errors-list";
 import chalk from "chalk";
-// import { TASK_NODE } from "./task-names";
-const TASK_NODE = "node";
+import {
+  TASK_NODE,
+  TASK_COMPILE_GET_COMPILER_INPUT
+} from "@nomiclabs/buidler/builtin-tasks/task-names";
 import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
 
@@ -69,6 +71,64 @@ export default function() {
     }
     log("ready");
   });
+
+  function addIfNotPresent(array: string[], value: string) {
+    if (array.indexOf(value) === -1) {
+      array.push(value);
+    }
+  }
+
+  function setupExtraSolcSettings(settings: {
+    metadata: { useLiteralContent: boolean };
+    outputSelection: { "*": { "": string[]; "*": string[] } };
+  }): void {
+    settings.metadata = settings.metadata || {};
+    settings.metadata.useLiteralContent = true;
+
+    if (settings.outputSelection === undefined) {
+      settings.outputSelection = {
+        "*": {
+          "*": [],
+          "": []
+        }
+      };
+    }
+    if (settings.outputSelection["*"] === undefined) {
+      settings.outputSelection["*"] = {
+        "*": [],
+        "": []
+      };
+    }
+    if (settings.outputSelection["*"]["*"] === undefined) {
+      settings.outputSelection["*"]["*"] = [];
+    }
+    if (settings.outputSelection["*"][""] === undefined) {
+      settings.outputSelection["*"][""] = [];
+    }
+
+    addIfNotPresent(settings.outputSelection["*"]["*"], "abi");
+    addIfNotPresent(settings.outputSelection["*"]["*"], "evm.bytecode");
+    addIfNotPresent(settings.outputSelection["*"]["*"], "evm.deployedBytecode");
+    addIfNotPresent(settings.outputSelection["*"]["*"], "metadata");
+    addIfNotPresent(settings.outputSelection["*"]["*"], "devdoc");
+    addIfNotPresent(settings.outputSelection["*"]["*"], "userdoc");
+    addIfNotPresent(settings.outputSelection["*"]["*"], "storageLayout");
+    addIfNotPresent(
+      settings.outputSelection["*"]["*"],
+      "evm.methodIdentifiers"
+    );
+    addIfNotPresent(settings.outputSelection["*"][""], "id");
+    addIfNotPresent(settings.outputSelection["*"][""], "ast");
+  }
+
+  internalTask(TASK_COMPILE_GET_COMPILER_INPUT).setAction(
+    async (_, __, runSuper) => {
+      const input = await runSuper();
+      setupExtraSolcSettings(input.settings);
+
+      return input;
+    }
+  );
 
   internalTask("deploy:run", "deploy ")
     .addOptionalParam("export", "export current network deployments")

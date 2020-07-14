@@ -31,6 +31,8 @@ import {
   Address
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
+import fs from "fs";
+import path from "path";
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -129,7 +131,22 @@ function linkLibraries(
 
   return bytecode;
 }
-
+let solcOutput: {
+  contracts: {
+    [filename: string]: {
+      [contractName: string]: {
+        abi: any[];
+        metadata?: string;
+        devdoc?: any;
+        userdoc?: any;
+        storageLayout?: any;
+        methodIdentifiers?: any;
+        evm?: any; // TODO
+      };
+    };
+  };
+  sources: { [filename: string]: any };
+};
 let provider: Web3Provider;
 const availableAccounts: { [name: string]: boolean } = {};
 export function addHelpers(
@@ -154,6 +171,15 @@ export function addHelpers(
         }
       } catch (e) {}
     }
+
+    // TODO wait for buidler to have the info in artifact
+    try {
+      solcOutput = JSON.parse(
+        fs
+          .readFileSync(path.join(env.config.paths.cache, "solc-output.json"))
+          .toString()
+      );
+    } catch (e) {}
   }
 
   async function setupGasPrice(overrides: any) {
@@ -213,7 +239,8 @@ export function addHelpers(
         throw new Error(`no signer for ${from}`);
       }
     }
-    const artifact = await getArtifact(options.contractName || name);
+    const contractName = options.contractName || name;
+    const artifact = await getArtifact(contractName);
     const abi = artifact.abi;
     const byteCode = linkLibraries(artifact, options.libraries);
     const factory = new ContractFactory(abi, byteCode, ethersSigner);
@@ -242,18 +269,34 @@ export function addHelpers(
         await provider.send("evm_mine", []);
       } catch (e) {}
     }
-    const extendedAtifact = artifact as any; // TODO future version of buidler will hopefully have that info
+    let contractSolcOutput;
+    if (solcOutput) {
+      for (const fileEntry of Object.entries(solcOutput.contracts)) {
+        for (const contractEntry of Object.entries(fileEntry[1])) {
+          if (contractEntry[0] === contractName) {
+            if (
+              artifact.bytecode ===
+              "0x" + contractEntry[1].evm?.bytecode?.object
+            ) {
+              contractSolcOutput = contractEntry[1];
+            }
+          }
+        }
+      }
+    }
+    // const extendedAtifact = artifact as any; // TODO future version of buidler will hopefully have that info
     const preDeployment = {
       abi,
       args,
       linkedData: options.linkedData,
-      solidityJson: extendedAtifact.solidityJson,
-      solidityMetadata: extendedAtifact.solidityMetadata,
+      // solidityJson: extendedAtifact.solidityJson,
+      solidityMetadata: contractSolcOutput?.metadata,
       bytecode: artifact.bytecode,
       deployedBytecode: artifact.deployedBytecode,
-      userdoc: extendedAtifact.userdoc,
-      devdoc: extendedAtifact.devdoc,
-      methodIdentifiers: extendedAtifact.methodIdentifiers
+      userdoc: contractSolcOutput?.userdoc,
+      devdoc: contractSolcOutput?.devdoc,
+      methodIdentifiers: contractSolcOutput?.methodIdentifiers,
+      storageLayout: contractSolcOutput?.storageLayout
     };
     tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait();
@@ -438,16 +481,12 @@ export function addHelpers(
 
     if (!ethersSigner) {
       console.error("no signer for " + from);
-      console.log("Please execute the following as " + from);
+      console.log(`Please execute the following as ${from}`);
       console.log(
-        JSON.stringify(
-          {
-            to: tx.to,
-            data: tx.data
-          },
-          null,
-          "  "
-        )
+        `
+to: ${tx.to}
+data: ${tx.data}
+`
       );
       if (tx.skipUnknownSigner) {
         return null;
@@ -520,32 +559,24 @@ export function addHelpers(
     if (!ethersSigner) {
       // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
       console.error("no signer for " + from);
-      console.log("Please execute the following as " + from);
+      console.log(`Please execute the following on ${name} as ${from}`);
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
       const { data } = await ethersContract.populateTransaction[methodName](
         ...ethersArgs
       );
       console.log(
-        JSON.stringify(
-          {
-            to: deployment.address,
-            data
-          },
-          null,
-          "  "
-        )
+        `
+to: ${deployment.address}
+data: ${data}
+`
       );
       console.log("if you have an interface use the following");
       console.log(
-        JSON.stringify(
-          {
-            to: deployment.address,
-            method: methodName,
-            args
-          },
-          null,
-          "  "
-        )
+        `
+to: ${deployment.address} (${name})
+method: ${methodName}
+args: [${args.join(" , ")}]
+`
       );
       if (options.skipUnknownSigner) {
         return null;
