@@ -28,6 +28,13 @@ usePlugin('buidler-deploy');
 
 You need to add this to your `tsconfig.json`'s `files` array: `"node_modules/buidler-deploy/src/type-extensions.d.ts"`
 
+you also need to set up the `include` field in `tsconfig.json` to set the folder in which your ts files are located.
+
+for example: `include": ["./scripts", "./deploy", "./test"]`
+
+see doc here : https://www.typescriptlang.org/docs/handbook/tsconfig-json.html#details
+
+
 for deploy script (see below) you can write them this way to benefit from typing :
 
 ```
