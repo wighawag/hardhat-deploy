@@ -1,15 +1,37 @@
 [![buidler](https://buidler.dev/buidler-plugin-badge.svg?1)](https://buidler.dev)
 # buidler-deploy
 
-_A Plugin For Deployments_
+_A Plugin For Replicable Deployments And Tests_
 
-[Buidler](http://getbuidler.com) Deployment Plugin. 
+[Buidler](http://getbuidler.com) Deployment And Test Plugin. 
 
 ## What
 
 This [buidler](https://buidler.dev) plugin adds a mechanism to deploy contracts to any network, keeping track of them and replicating the same environment for testing.
 
-On top of that it adds a mechanism to add names to addresses so test and deployment scripts can be reconfigured by simply changing the address a name points to, allowing different configurations per network.
+It also adds a mechanism to associate names to addresses so test and deployment scripts can be reconfigured by simply changing the address a name points to, allowing different configurations per network. This also results in much clearer test and deployment scripts.
+
+It contains more features like 
+- test fixture using `evm_snapshot` to speed up testing
+- ability to create snaphost fixture easily
+- combined with `buidler-ethers-v5` it has the ability to get ethers contract instance by name (like `await ethers.getContract("ContractName")`)
+- chain configuration export, listing deployed contract, their abi and address
+- deployment dependency system (allowing you to only deploy what is needed)
+- deployment as migration so once a deployment is done, it can be set to never be executed again
+- deployment retrying (by saving pending tx)
+- importing previously compiled contract (possibly in different solidity compiler version)
+- ability log in `deploy` mode only (while in test the console remains clean)
+- contains helpers to execute and read on deployed contract referring to them by name.
+- These helpers contains options to auto mine on dev envoronment like ganache (to speed up deployments)
+- save metadata of deployed contract so they can alwasy be fully verified, via [sourcify](https://github.com/ethereum/sourcify) or [etherscan](https://etherscan.io)
+- proxy deployment (WIP)
+- diamond deployment with facets (WIP)
+- watch and deploy (WIP)
+- HCR (Hot Contract Replacement) (WIP)
+
+
+Documentation is in progress...
+
 
 ## Installation
 
