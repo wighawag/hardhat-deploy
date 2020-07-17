@@ -24,6 +24,27 @@ And add the following statement to your `buidler.config.js`:
 usePlugin('buidler-deploy');
 ```
 
+### TypeScript support
+
+You need to add this to your `tsconfig.json`'s `files` array: `"node_modules/buidler-deploy/src/type-extensions.d.ts"`
+
+for deploy script (see below) you can write them this way to benefit from typing :
+
+```
+import {
+  BuidlerRuntimeEnvironment,
+  DeployFunction,
+} from "@nomiclabs/buidler/types";
+
+const func: DeployFunction = async function (bre: BuidlerRuntimeEnvironment) {
+  // code here
+};
+export default func;
+```
+
+See a full example of typescript usage here : https://github.com/wighawag/buidler-deploy-ts-test
+
+
 ## Tasks
 
 This plugin adds the _deploy_ task to Buidler.
