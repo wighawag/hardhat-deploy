@@ -264,7 +264,7 @@ export default function() {
       types.boolean
     )
     .addFlag("reset", "whether to delete deployments files first")
-    .addFlag("log", "whether to output log")
+    .addFlag("silent", "whether to remove log")
     .addOptionalParam(
       "gasprice",
       "gas price to use for transactions",
@@ -273,6 +273,8 @@ export default function() {
     )
     .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre) => {
+      args.log = !args.silent;
+      delete args.silent;
       if (args.write === undefined) {
         args.write = !isBuidlerEVM(bre);
       }
@@ -320,7 +322,7 @@ export default function() {
       types.boolean
     )
     .addFlag("reset", "whether to delete deployments files first")
-    .addFlag("log", "whether to output log")
+    .addFlag("silent", "whether to renove log")
     .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre, runSuper) => {
       args.pendingtx = !isBuidlerEVM(bre);
@@ -334,6 +336,8 @@ export default function() {
       // TODO use localhost config ? // Or post an issue on buidler
       const watch = args.watch;
       args.watch = false;
+      args.log = !args.silent;
+      delete args.silent;
       await bre.run("deploy:run", args);
       const { hostname, port } = args;
       let server;
