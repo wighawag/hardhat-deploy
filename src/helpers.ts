@@ -46,10 +46,30 @@ import { string } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 import fs from "fs";
 import path from "path";
 
-diamondBase.abi = diamondBase.abi
-  .concat(diamondFacet.abi)
-  .concat(diamondLoopeFacet.abi)
-  .concat(ownershipFacet.abi);
+function mergeABIs(...abis: any[][]): any[] {
+  if (abis.length === 0) {
+    return [];
+  }
+  const result = abis[0];
+
+  for (let i = 1; i < abis.length; i++) {
+    const abi = abis[i];
+    for (const fragment of abi) {
+      if (!result.find(v => v.name === fragment.name)) {
+        result.push(fragment);
+      }
+    }
+  }
+
+  return result;
+}
+
+diamondBase.abi = mergeABIs(
+  diamondBase.abi,
+  diamondFacet.abi,
+  diamondLoopeFacet.abi,
+  ownershipFacet.abi
+);
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
