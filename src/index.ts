@@ -320,24 +320,24 @@ export default function() {
     .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre, runSuper) => {
       args.pendingtx = !isBuidlerEVM(bre);
-
       // TODO return runSuper(args); and remove the rest (used for now to remove login privateKeys)
       if (!isBuidlerEVM(bre)) {
         throw new BuidlerError(
           ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
         );
       }
-
-      let server;
+      bre.network.name = "localhost"; // Ensure deployments can be fetched with console
+      // TODO use localhost config ? // Or post an issue on buidler
+      await bre.run("deploy:run", args);
       const { hostname, port } = args;
       try {
         const serverConfig: JsonRpcServerConfig = {
           hostname,
           port,
-          provider: _createBuidlerEVMProvider(bre.config)
+          provider: bre.network.provider
         };
 
-        server = new JsonRpcServer(serverConfig);
+        const server = new JsonRpcServer(serverConfig);
 
         const { port: actualPort, address } = await server.listen();
 
@@ -346,6 +346,8 @@ export default function() {
             `Started HTTP and WebSocket JSON-RPC server at http://${address}:${actualPort}/`
           )
         );
+
+        await server.waitUntilClosed();
       } catch (error) {
         if (BuidlerError.isBuidlerError(error)) {
           throw error;
@@ -359,7 +361,5 @@ export default function() {
           error
         );
       }
-      await bre.run("deploy:run", args);
-      await server.waitUntilClosed();
     });
 }
