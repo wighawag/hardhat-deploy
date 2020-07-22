@@ -2,7 +2,8 @@ import { Signer } from "@ethersproject/abstract-signer";
 import {
   Web3Provider,
   TransactionResponse,
-  TransactionRequest
+  TransactionRequest,
+  JsonRpcSigner
 } from "@ethersproject/providers";
 import {
   Contract,
@@ -832,7 +833,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       ](...options.execute.args);
       data = txData.data || "0x";
     }
-    const diamantaireABI = diamantaire.abi.concat(abi); // TODO merge
+    const diamantaireABI = diamantaire.abi; // .concat(abi); // TODO merge
 
     if (changesDetected) {
       const cuts = facetCuts.map(facetCut => {
@@ -972,8 +973,14 @@ Plus they are only used when the contract is meant to be used as standalone when
     ...args: any[]
   ): Promise<Receipt | null> {
     await init();
+    const deployment = await getDeployment(name);
     const diamantaireName = name + "_Diamantaire";
-    return execute(diamantaireName, options, methodName, ...args);
+    const diamondContract = new Contract(deployment.address, deployment.abi);
+    const txData = await diamondContract.populateTransaction[methodName](
+      ...args
+    );
+    const data = txData.data || "0x";
+    return execute(diamantaireName, options, "execute", data);
   }
 
   async function deploy(

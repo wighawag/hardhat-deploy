@@ -54,43 +54,9 @@ contract Diamantaire is ERC173 {
         }
     }
 
-    // ///////////////////// EXTERNAL ///////////////////////////////////////////////////////////////////////////
-
-    receive() external payable {
-        _fallback();
-    }
-
-    fallback() external payable {
-        _fallback();
-    }
-
-    // ///////////////////////// INTERNALS //////////////////////////////////////////////////////////////////////
-
-    function _fallback() internal {
+    function execute(bytes calldata data) external payable {
         require(msg.sender == _owner, "NOT_AUTHORIZED");
-        address target = address(_diamond);
-        // solhint-disable-next-line security/no-inline-assembly
-        assembly {
-            calldatacopy(0x0, 0x0, calldatasize())
-            let success := call(
-                gas(),
-                target,
-                callvalue(),
-                0x0,
-                calldatasize(),
-                0,
-                0
-            )
-            let retSz := returndatasize()
-            returndatacopy(0, 0, retSz)
-            switch success
-                case 0 {
-                    revert(0, retSz)
-                }
-                default {
-                    return(0, retSz)
-                }
-        }
+        _execute(_diamond, msg.value, data);
     }
 
     function _cut(Diamond diamond, bytes[] memory _diamondCut) internal {
