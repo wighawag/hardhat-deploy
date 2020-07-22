@@ -259,6 +259,7 @@ export default function() {
         );
       }
       bre.network.name = "localhost"; // Ensure deployments can be fetched with console
+      // TODO use localhost config ? // Or post an issue on buidler
       await bre.run("deploy:run", args);
       const { hostname, port } = args;
       try {
