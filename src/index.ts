@@ -157,6 +157,10 @@ export default function() {
       types.string
     )
     .addFlag("watch", "redeploy on every change of contract or deploy script")
+    .addFlag(
+      "watchOnly",
+      "do not actually deploy, just watch and deploy if changes occurs"
+    )
     .setAction(async (args, bre) => {
       async function compileAndDeploy() {
         await bre.run("compile");
@@ -174,8 +178,8 @@ export default function() {
 
       let currentPromise: Promise<{
         [name: string]: Deployment;
-      }> | null = compileAndDeploy();
-      if (args.watch) {
+      }> | null = args.watchOnly ? null : compileAndDeploy();
+      if (args.watch || args.watchOnly) {
         const watcher = chokidar.watch(
           [
             bre.config.paths.sources,
@@ -328,8 +332,11 @@ export default function() {
       }
       bre.network.name = "localhost"; // Ensure deployments can be fetched with console
       // TODO use localhost config ? // Or post an issue on buidler
+      const watch = args.watch;
+      args.watch = false;
       await bre.run("deploy:run", args);
       const { hostname, port } = args;
+      let server;
       try {
         const serverConfig: JsonRpcServerConfig = {
           hostname,
@@ -337,7 +344,7 @@ export default function() {
           provider: bre.network.provider
         };
 
-        const server = new JsonRpcServer(serverConfig);
+        server = new JsonRpcServer(serverConfig);
 
         const { port: actualPort, address } = await server.listen();
 
@@ -346,8 +353,6 @@ export default function() {
             `Started HTTP and WebSocket JSON-RPC server at http://${address}:${actualPort}/`
           )
         );
-
-        await server.waitUntilClosed();
       } catch (error) {
         if (BuidlerError.isBuidlerError(error)) {
           throw error;
@@ -361,5 +366,9 @@ export default function() {
           error
         );
       }
+      if (watch) {
+        await bre.run("deploy:run", { ...args, watchOnly: true });
+      }
+      await server.waitUntilClosed();
     });
 }
