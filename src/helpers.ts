@@ -239,7 +239,7 @@ export function addHelpers(
         throw new Error(`no signer for ${from}`);
       }
     }
-    const contractName = options.contractName || name;
+    const contractName = options.contract || options.contractName || name;
     const artifact = await getArtifact(contractName);
     const abi = artifact.abi;
     const byteCode = linkLibraries(artifact, options.libraries);
@@ -333,7 +333,9 @@ export function addHelpers(
         deployment.receipt.transactionHash
       );
       if (transaction) {
-        const artifact = await getArtifact(options.contractName || name);
+        const artifact = await getArtifact(
+          options.contract || options.contractName || name
+        );
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact, options.libraries);
         const factory = new ContractFactory(
@@ -741,6 +743,7 @@ args: [${args.join(" , ")}]
   ): Promise<DeployResult> => {
     options.fieldsToCompare = fieldsToCompare;
     options.contractName = contractName;
+    options.contract = contractName;
     options.args = args;
     return deploy(name, options);
   };

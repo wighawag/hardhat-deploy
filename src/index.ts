@@ -252,19 +252,20 @@ export default function() {
     .addOptionalParam("log", "whether to output log", true, types.boolean)
     .setAction(async (args, bre, runSuper) => {
       args.pendingtx = !isBuidlerEVM(bre);
-      await bre.run("deploy:run", args);
       // TODO return runSuper(args); and remove the rest (used for now to remove login privateKeys)
       if (!isBuidlerEVM(bre)) {
         throw new BuidlerError(
           ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
         );
       }
+      bre.network.name = "localhost"; // Ensure deployments can be fetched with console
+      await bre.run("deploy:run", args);
       const { hostname, port } = args;
       try {
         const serverConfig: JsonRpcServerConfig = {
           hostname,
           port,
-          provider: _createBuidlerEVMProvider(bre.config)
+          provider: bre.network.provider
         };
 
         const server = new JsonRpcServer(serverConfig);

@@ -66,6 +66,7 @@ declare module "@nomiclabs/buidler/types" {
 
   export interface DeployOptions extends TxOptions {
     contractName?: string;
+    contract?: string;
     args?: any[];
     fieldsToCompare?: string | string[];
     log?: boolean;
