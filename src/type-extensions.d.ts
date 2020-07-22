@@ -24,7 +24,7 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface DeployFunction {
-    (env: BuidlerRuntimeEnvironment): Promise<undefined | boolean>;
+    (env: BuidlerRuntimeEnvironment): Promise<undefined | void | boolean>;
     skip?: (env: BuidlerRuntimeEnvironment) => Promise<boolean>;
     tags?: string[];
     dependencies?: string[];
