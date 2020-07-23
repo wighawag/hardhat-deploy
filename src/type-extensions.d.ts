@@ -24,7 +24,7 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface DeployFunction {
-    (env: BuidlerRuntimeEnvironment): Promise<undefined | void | boolean>;
+    (env: BuidlerRuntimeEnvironment): Promise<void | boolean>;
     skip?: (env: BuidlerRuntimeEnvironment) => Promise<boolean>;
     tags?: string[];
     dependencies?: string[];
@@ -235,11 +235,12 @@ declare module "@nomiclabs/buidler/types" {
 
   export interface Export {
     chainId: string;
+    name: string;
     contracts: { [name: string]: ContractExport };
   }
 
   export type MultiExport = {
-    [chainId: string]: { [networkName: string]: Export };
+    [chainId: string]: { [name: string]: Export };
   };
 
   export interface DeploymentSubmission {

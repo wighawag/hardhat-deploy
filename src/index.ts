@@ -142,8 +142,6 @@ export default function() {
       true,
       types.boolean
     )
-    .addFlag("reset", "whether to delete deployments files first")
-    .addFlag("log", "whether to output log")
     .addOptionalParam(
       "pendingtx",
       "whether to save pending tx",
@@ -156,6 +154,8 @@ export default function() {
       undefined,
       types.string
     )
+    .addFlag("reset", "whether to delete deployments files first")
+    .addFlag("log", "whether to output log")
     .addFlag("watch", "redeploy on every change of contract or deploy script")
     .addFlag(
       "watchOnly",
@@ -263,14 +263,15 @@ export default function() {
       undefined,
       types.boolean
     )
-    .addFlag("reset", "whether to delete deployments files first")
-    .addFlag("silent", "whether to remove log")
+    // TODO pendingtx
     .addOptionalParam(
       "gasprice",
       "gas price to use for transactions",
       undefined,
       types.string
     )
+    .addFlag("reset", "whether to delete deployments files first")
+    .addFlag("silent", "whether to remove log")
     .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre) => {
       args.log = !args.silent;
@@ -320,6 +321,12 @@ export default function() {
       "whether to write deployments to file",
       true,
       types.boolean
+    )
+    .addOptionalParam(
+      "gasprice",
+      "gas price to use for transactions",
+      undefined,
+      types.string
     )
     .addFlag("reset", "whether to delete deployments files first")
     .addFlag("silent", "whether to renove log")

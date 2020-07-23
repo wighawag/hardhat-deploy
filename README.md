@@ -1,9 +1,10 @@
 [![buidler](https://buidler.dev/buidler-plugin-badge.svg?1)](https://buidler.dev)
+
 # buidler-deploy
 
 _A Plugin For Replicable Deployments And Tests_
 
-[Buidler](http://getbuidler.com) Deployment And Test Plugin. 
+[Buidler](http://getbuidler.com) Deployment And Test Plugin.
 
 ## What
 
@@ -11,30 +12,26 @@ This [buidler](https://buidler.dev) plugin adds a mechanism to deploy contracts 
 
 It also adds a mechanism to associate names to addresses so test and deployment scripts can be reconfigured by simply changing the address a name points to, allowing different configurations per network. This also results in much clearer test and deployment scripts.
 
-It contains more features like 
+This plugin contains more features, all geared toward a better developer experience :
+
 - test fixture using `evm_snapshot` to speed up testing
 - ability to create snaphost fixture easily
 - combined with `buidler-ethers-v5` it has the ability to get ethers contract instance by name (like `await ethers.getContract("ContractName")`)
 - chain configuration export, listing deployed contract, their abi and address
 - deployment dependency system (allowing you to only deploy what is needed)
 - deployment as migration so once a deployment is done, it can be set to never be executed again
-- deployment retrying (by saving pending tx)
+- deployment retrying (by saving pending tx): so you can feel confident when making a deployment that you can always recover.
 - importing previously compiled contract (possibly in different solidity compiler version)
 - ability log in `deploy` mode only (while in test the console remains clean)
-- contains helpers to execute and read on deployed contract referring to them by name.
+- contains helpers to read and execute transaction on deployed contract referring to them by name.
 - These helpers contains options to auto mine on dev envoronment like ganache (to speed up deployments)
 - save metadata of deployed contract so they can alwasy be fully verified, via [sourcify](https://github.com/ethereum/sourcify) or [etherscan](https://etherscan.io)
-- proxy deployment (WIP)
-- diamond deployment with facets (WIP)
-- watch and deploy (WIP)
-- HCR (Hot Contract Replacement) (WIP)
-
-
-Documentation is in progress...
-
+- proxy deployment with ability to upgrade them transparently, only if code changes.
+- diamond deployment with facets, allowing you to focus on what the new version will be. It will generate the diamondCuts necessary to reach that state.
+- watch and deploy: buidler-deploy can watch both your deploy script and contract code and redeploy on changes
+- HCR (Hot Contract Replacement): Combine with proxy or diamond, buidler-deploy gives you an experience akin to frontend Hot Module Replacement: Once your contract change, the deployment is executed and your contract retain the same address and same state.
 
 ## Installation
-
 
 ```bash
 npm install buidler-deploy
@@ -43,7 +40,7 @@ npm install buidler-deploy
 And add the following statement to your `buidler.config.js`:
 
 ```js
-usePlugin('buidler-deploy');
+usePlugin("buidler-deploy");
 ```
 
 ### TypeScript support
@@ -56,8 +53,7 @@ for example: `include": ["./scripts", "./deploy", "./test"]`
 
 see doc here : https://www.typescriptlang.org/docs/handbook/tsconfig-json.html#details
 
-
-for deploy script (see below) you can write them this way to benefit from typing :
+for deploy script (see below +++) you can write them this way to benefit from typing :
 
 ```
 import {
@@ -73,20 +69,59 @@ export default func;
 
 See a full example of typescript usage here : https://github.com/wighawag/buidler-deploy-ts-test
 
-
 ## Tasks
+
+### `buidler deploy`
 
 This plugin adds the _deploy_ task to Buidler.
 
-This task will execute the scripts in the `deploy` folder and save contract deployments.
+This task will execute the scripts in the `deploy` folder and save contract deployments. These deployments are supposed to be saved for example in a git repository. This way they can be accessed later.
 
+With the deployemnt saved, it allows you to deploy a contract only if changed were made.
+
+Deploy scripts (also called Deploy functions) can also perform aribtrary logic.
+
+For further details on how to use it and write deploy script, see [usage section](#usage) below
+
+#### Options
+
+`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend.
+
+`--export-all <filepath>`: export one filee that contains all contracts across all saved deployment, regardless of the network being invoked.
+
+`--tags <tags>`: only excute deploy script with the given tags and their dependencies (see more info below about deploy scripts)
+
+`--gasprice <gasprice>`: specify the gasprice to use by default for tx in deploy scripts
+
+`--write <boolean>`: default to true (except for buidlerevm network). If true, write deployments to disk (in deployments path, see config)
+
+#### Flags
+
+`--reset`: This flag reset the deployments from scratch. Previously deployed contract are not considered
+
+`--silent`: This flag remove buidler-deploy log output (see log function and log options +++)
+
+`--watch`: This flag make the task never ending, watching for file changes in the deploy scripts folder or the contract source folder. If any changes happen the contract are recompiled and the deploy script are re-run. Combined with a proxy deployment (see ++) this allow to have HCR (Hot Contract Replacement)
+
+### `buidler node`
+
+This plugin modify the _node_ task so that it also execute the deployment script before exposing the server http RPC interface
+
+It also add the same options as the _deploy_ task with the same functionality
+
+Note that the deployments are saved as if the network name is `localhost`. This is because `buidler node` is expected to be used as localhost: You can for example execute `buidler --network localhost console` after `node` is running. Doing `builder console` would not attach it to anything. It still take the configuration from `buidlerevm` in the buidler.config.js file.
 
 ## Environment extensions
 
-This plugin extends the Buidler Runtime Environment by adding two fields:
-- `namedAccounts`: an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see [Configuration](#configuration)).
-.- `deployments`: contains functions to access past deployments or to save new ones, as well as helpers functions.
+This plugin extends the Buidler Runtime Environment by adding 3 fields:
 
+deployments: DeploymentsExtension;
+
+- `getNamedAccounts: () => Promise<{ [name: string]: Address }>`: a function returning an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see [Configuration](#configuration)).
+
+- `deployments`: contains functions to access past deployments or to save new ones, as well as helpers functions.
+
+- `getChainId(): Promise<string>`: offer an easy way to fetch the current chainId
 
 ## Configuration
 
@@ -103,6 +138,7 @@ This allows you to have meaningful names in your tests while the addresses match
         deployer: {
             default: 0, // here this will by default take the first account as deployer
             4: '0xffffeffffff', // but for rinkeby it will be a specific address
+            "specialnetwork": "0xf34e...", //it can also specify a specific netwotk name (specified in buidler.config.js)
         },
         feeCollector:{
             default: 1, // here this will by default take the second account as feeCollector (so in the test this will be a different account than the deployer)
@@ -113,10 +149,9 @@ This allows you to have meaningful names in your tests while the addresses match
 }
 ```
 
-
 ### `paths`
 
-It also adds fields to  `BuidlerConfig`'s `ProjectPaths` object.
+It also adds fields to `BuidlerConfig`'s `ProjectPaths` object.
 
 Here is an example showing the default values :
 
@@ -124,122 +159,365 @@ Here is an example showing the default values :
 {
     paths: {
         deploy: 'deploy',
-        deployments: 'deployments'
+        deployments: 'deployments',
+        imports: `imports`
     }
 }
 ```
 
+The deploy folder is expected to contains the deploy script that are executed upon invocation of `buidler deploy` or `buidler node`
+
+The deployment folder will contains the resulting deployments (contract addresses along their abi, bytecode, metadata...). One folder per network and one file per contract.
+
+The imports folder is expected to contains artifacts that were pre-compiled. Useful if you want to upgrade to a new solidity version but want to keep using previously compiled contracts. The artifact is the same format as normal buidler artifact, so you can easily copy them over, before switching to a new compiler version.
 
 ## Usage
 
-### deploy
+### deploy task
 
-`buidler deploy --network <networkName>`
+`buidler --network <networkName> deploy [options and flags]`
 
 This is a new task that the plugin adds. As the name suggests it deploys contracts.
 To be exact it will look for files in the folder `deploy` or whatever was configured in `paths.deploy`.
 
 It will scan for files in alphabetical order and execute them in turn.
+
 - it will `require` each of these files and execute the exported function with the BRE as argument
+
+Note that running `buidler deploy` without specifying a network will use the default network. If the default network is an internal ganache or buidlerevm then nothing will happen as a result but this can be used to ensure the deployment is without issues.
+
+### deploy scripts
+
+The deploy script need to be of the following type :
+
+```js
+export interface DeployFunction {
+  (env: BuidlerRuntimeEnvironment): Promise<void | boolean>;
+  skip?: (env: BuidlerRuntimeEnvironment) => Promise<boolean>;
+  tags?: string[];
+  dependencies?: string[];
+  runAtTheEnd?: boolean;
+}
+```
+
+The skip function can be used to skip executing the script under whatever condition. It simply need to resolve a promise to true.
+
+The tags is a list of string that when the _deploy_ task is executed with, the script will be executed (unless it skips). In other word if the deploy task is executed with a tag that does not belong to that script, that script will not be executed unless it is a dependency of a script that does get executed.
+
+The dependencies is a list of tag that will be executed if that script is executed. So if the script is executed, every script whose tag match any of the dependency will be executed first.
+
+The `runAtTheEnd` is a boolean that if set to true, will queue that script to be executed after all other scripts are executed.
+
+These set of fields allow more flexibility to organize the script. You are not limited to alphabetical order.
+
+Finally the function can return true if it wishes to never be executed again. This can be usfeul to emulate migration scripts that are meant to be executed only once. Once such script return true (async), the file name will be saved so to not be executed again.
+In other word, if the file name changes, the script will be executed again, unless that names belonged to an older script that return true before.
+
+In any case, as a general advice every deploy function should be idempotent. This is so they can always recover from failure or pending transaction.
+
+This is why the `bre.deployments.deploy` function will by default only deploy if the contract code has changed, making it easier to write idempotent script.
 
 An example of a deploy script :
 
 ```js
-module.exports = async ({getNamedAccounts, deployments}) => {
-    const {deploy} = deployments;
-    const {deployer} = await getNamedAccounts();
+module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
+  const { deploy } = deployments;
+  const { deployer } = await getNamedAccounts();
 
-    await deploy("GenericMetaTxProcessor",  {from: deployer, gas: 4000000}, args: []});
+  await deploy("GenericMetaTxProcessor", {
+    from: deployer,
+    gas: 4000000,
+    args: []
+  });
+};
+```
+
+As you can see the BRE passed in has 3 new fields :
+
+- `getNamedAccounts` is a function that returns a promise to an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see [`namedAccounts`](#namedaccounts)).
+
+- `deployments`, which contains functions to access past deployments or to save new ones, as well as helpers functions.
+
+- `getChainId` which return a promise for the chainId
+
+The deploynments field contains the `deploy` function taht allow you to deploy contract and save them. It contains a lot more functions though :
+
+### deployments field
+
+The deployments field contains several helpers function to deploy contract but also execute transaction.
+
+```js
+deploy(name: string, options: DeployOptions): Promise<DeployResult>; // deploy a contract
+diamond: { // deploy diamond based contract (see section below)
+  deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
+  executeAsOwner(
+    name: string,
+    options: TxOptions,
+    methodName: string,
+    ...args: any[]
+  ): Promise<Receipt | null>;
+};
+fetchIfDifferent(name: string, options: DeployOptions): Promise<boolean>; // return true if new compiled code is different than deployed contract
+save(name: string, deployment: DeploymentSubmission): Promise<void>; // low level save of deployment
+get(name: string): Promise<Deployment>; // fetch a deployment by name, throw if not existing
+getOrNull(name: string): Promise<Deployment | null>; // fetch deployment by name, return null if not existing
+all(): Promise<{ [name: string]: Deployment }>; // return all deployments
+getArtifact(name: string): Promise<Artifact>; // return an artifact (same as buidler artifact)
+run( // execute deployment scripts
+  tags?: string | string[],
+  options?: {
+    resetMemory?: boolean;
+    deletePreviousDeployments?: boolean;
+    writeDeploymentsToFiles?: boolean;
+    export?: string;
+    exportAll?: string;
+  }
+): Promise<{ [name: string]: Deployment }>;
+fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>; // execute deployment as fixture for test // use evm_snapshot to revert back
+createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // execute a function as fixture using evm_snaphost to revert back each time
+log(...args: any[]): void; // log data only ig log enabled (disabled in test fixture)
+execute( // execute function call on contract
+  name: string,
+  options: TxOptions,
+  methodName: string,
+  ...args: any[]
+): Promise<Receipt | null>;
+batchExecute( // execute a series of tx
+  txs: Execute[],
+  batchOptions: { dev_forceMine: boolean }
+): Promise<(Receipt | null)[]>;
+rawTx(tx: SimpleTx): Promise<Receipt | null>; // execute a simple transaction
+read( // make a read-only call to a contract
+  name: string,
+  options: CallOptions,
+  methodName: string,
+  ...args: any[]
+): Promise<any>;
+read(name: string, methodName: string, ...args: any[]): Promise<any>;
+```
+
+#### deploy function
+
+The deploy function as mentioned allow you to deploy a contract and save it under a specific name.
+
+The deploy function expect 2 parameters: one for the name and one for the options
+
+See below the full list of fields that the option parameter allows and requires:
+
+```js
+from: string; // address (or private key) that will perform the transaction. you can use `getNamedAccounts` to retrived the address you want by name.
+contract?: // this is an optional field. If not specified it defaults to the contract with the same name as the first parameter
+  | string // this field can be either a string for the name of the contract
+  | { // or abi and bytecode
+      abi: ABI;
+      bytecode: string;
+      deployedBytecode?: string;
+    };
+args?: any[]; // the list of argument for the constructor (or the upgrade function in case of proxy)
+skipIfAlreadyDeployed?: boolean; // if set it to true, will not attempt to deploy even if the contract deployed under the same name is different
+log?: boolean; // if true, it will log the result of the deployment (address and gas used)
+linkedData?: any; // This allow to associate any JSON data to the deployment. Useful for merkleize data for example
+libraries?: { [libraryName: string]: Address }; // This let you associate libraries to the deployed contract
+proxy?: boolean | string | ProxyOptions; // This options allow to consider yoru contract as a proxy (see below for more details)
+
+// here some common tx options :
+gasLimit?: string | number | BigNumber;
+gasPrice?: string | BigNumber;
+value?: string | BigNumber;
+nonce?: string | number | BigNumber;
+
+estimatedGasLimit?: string | number | BigNumber; // to speed up the estimation, it is possible to provide an upper gasLimit
+estimateGasExtra?: string | number | BigNumber; // this option allow you to add a gas buffer on top of the estimation
+
+dev_forceMine?: boolean; // this force a evm_mine to be executed. this is usefule to speed deployment on test network that allow to specify a block delay (ganache for example)
+skipUnknownSigner?: boolean; // This options will prevent the call to throw if the signer for the `from` address is unavailbale. It will still display the information necessary to perform the tx. So instead of blocking the whole deployment flow, it will output all operation taht need to be done to finalise the deployment
+
+```
+
+#### Export formats
+
+Apart from deployments saved in the `deployments` folder which contains all information available about the contract (compile time data + deployment data), `buidler-deploy` allows you to export more lightweight file.
+
+These can be used for example to power your frontend with contract.
+
+The first one is exported via the `--export <file>` option and follow the following format :
+
+```js
+export interface Export {
+  chainId: string;
+  name: string;
+  contracts: { [name: string]: ContractExport };
 }
 ```
 
-As you can see the BRE passed in has two new fields :
-- `getNamedAccounts` is a function that returns a promise to an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see [`namedAccounts`](#namedaccounts)).
-- `deployments`, which contains functions to access past deployments or to save new ones, as well as helpers functions.
+where name is the name of the network configuration chosen (see buidler option `--network`)
 
-Note that running `buidler deploy` without specifying a network will use the default network. If the default network is an internal ganache or buidlerevm then nothing will happen as a result but this can be used to ensure the deployment is without issues.
+The second one is exported via the `--export-all <file>` option and follow the following format :
 
-### test
+```js
+export type MultiExport = {
+  [chainId: string]: { [name: string]: Export }
+};
+```
+
+As you see the second format include the previous. While in most case you'll need the single export where your application will support only one network, there are case where your app would want to support multiple network at nonce. This second format allow for that.
+
+Furthermore as buidler support multiple network configuration for the same network (rinkeby, mainnet...), the export-all format will contains each of them grouped by their chainId.
+
+### Proxies
+
+As mentioned above, the deploy function can also deploy a contract through proxy. It can be done without modification of the contract as long as it does not have a constructor (or constructor with zero arguments)
+
+This is done by setting the deploy options to `{..., proxy: true}`
+
+You can also set it to `proxy: "<upgradeMethodName>"` in which case the function `upgradeMethodName` will be executed upon upgrade.
+the `args` field will be then used for that function instead of the contructor. It is also possible to then have a constructor with the same arguments and have thr proxy be disabled. Can be useful if you want to have your contract as upgradeable in a test network but be non-upgradeable on the mainnet. Further documentation need to written for that.
+
+The proxy option can also be an object which can set the specific owner that the proxy is going to be managed by.
+
+### Diamonds and Facets
+
+The deployments field also expose the diamond field: `bre.deployments.diamond` that let you deploy Diamond in an easy way.
+
+Instead of specifying the facets to cut out or cut in, which the diamond contract expect, you specify the facets you want to end up having for the deployed contract.
+
+`diamond.deploy` expect the facet as names. The name represent the compiled contract name that going to be deployed as facet. In future version you ll be able to specify deployed contract as facet or artifact object.
+
+To deploy a contract with 3 facet you can do as follow :
+
+```js
+module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
+  const { diamond } = deployments;
+  const { deployer, diamondAdmin } = await getNamedAccounts();
+  await diamond.deploy("ADiamondContract", {
+    from: deployer,
+    owner: diamondAdmin,
+    facets: ["Facet1", "Facet2", "Facet3"]
+  });
+};
+```
+
+if you then later execute the following script:
+
+```js
+module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
+  const { diamond } = deployments;
+  const { deployer, diamondAdmin } = await getNamedAccounts();
+  await diamond.deploy("ADiamondContract", {
+    from: deployer,
+    owner: diamondAdmin,
+    facets: ["NewFacet", "Facet2", "Facet3"]
+  });
+};
+```
+
+then the NewFactet will be deployed automatically if needed and then the diamondCut will cut Facet1 out and add NewFacet.
+
+Note that The Diamond contract's code is part of buidler-deploy and contains 3 built-in facet that can be remobed manually if desired.
+These facets are used for ownership, diamondCut and diamond loupe, The implementation is based on the reference implementation by Nick Mudge.
+
+Like normal proxies you can also execute a function at the time of an upgrade.
+
+This is done by specifying the execute field in the diamond deploy options :
+
+```js
+diamond.deploy("ADiamondContract", {
+  from: deployer,
+  owner: diamondAdmin,
+  facets: ["NewFacet", "Facet2", "Facet3"],
+  execute: {
+    methodName: "postUpgrade",
+    args: ["one", 2, "0x3"]
+  }
+});
+```
+
+Since the diamond standard has no builtin mechanism to make the execution atomic, the Diamond when deployed is actually deployed along a special contract, the `Diamantaire` that act as a wrapper to the diamond that can only be executed by the specified `owner`,
+The actual owner of the Diamond is this contract.
+
+This contract add the functionality to perform atomic upggrade via method execution.
+
+If you need to execute a function as an owner, you can use the following that make the tx through the `Diamantaire` contract :
+
+```js
+diamond.executeAsOwner(
+  "ADiamondContract",
+  {
+    from: diamondAdmin
+  },
+  "methodToExecute",
+  "arg1",
+  2,
+  "arg3"
+);
+```
+
+### test task
+
+You can continue using the usual test task :
 
 `buidler test`
 
-The test task is like normal except that names are resolved and past deployment are loaded.
-
 Tests can then use the `bre.deployments.fixture` function to run the deployment for the test and snapshot it so that tests don't need to perform all the deploy flow, they simply reuse the snapshot for every test (this leverages `evm_snapshot` and `evm_revert` provided by both `buidlerevm` and `ganache`). You can for example set them in a `beaforeEach`.
-
-You can also specify to run a subset of the deploy scripts by specifying a tag or an array of tags.
-
-A tag is simply a string value, that deploy scripts can advertise (see tags and dependencies).
 
 Here is an example of a test :
 
 ```js
-const { deployments } = require('@nomiclabs/buidler');
+const { deployments } = require("@nomiclabs/buidler");
 
 describe("Token", () => {
-    beforeEach(async () => {
-      await deployments.fixture();
-    })
-    it("testing 1 2 3", async function() {
-      const Token = await deployments.get('Token'); // Token is available because Token is a dependency of the ERC721BidSale deploy script
-      console.log(Token.address);
-      const ERC721BidSale = await deployments.get('ERC721BidSale');
-      console.log({ERC721BidSale});
-    });
+  beforeEach(async () => {
+    await deployments.fixture();
+  });
+  it("testing 1 2 3", async function() {
+    const Token = await deployments.get("Token"); // Token is available because the fixture was executed
+    console.log(Token.address);
+    const ERC721BidSale = await deployments.get("ERC721BidSale");
+    console.log({ ERC721BidSale });
+  });
 });
 ```
 
-### node
+If the deployment scripts are complex, the first test could take while (as the fixture need to execute the deployment) but then from the second test onward, the deployments are never re-executed, instead the fixture will do `evm_revert` and test will run far faster.
+
+### node task
+
+as mentioned above, the node task is slighly modified and augmented with various flag and options
 
 `buidler node`
 
-The node command is updated so that now when the node is serving, all contracts are already deployed.
-
-It also adds an argument `--export` that allows you to specify a destination file where the info about the contracts deployed is written.
+In particulat It adds an argument `--export` that allows you to specify a destination file where the info about the contracts deployed is written.
 Your webapp can then access all contracts information.
 
-### run
+### run task
 
-`buidler run <script>`
+`buidler --network <networkName> run <script>`
 
-The run command is also updated in that now when the script runs it has access to contract deployments and can easily act on them via helper functions.
-
-Here is an example of script that run can support:
+The run task act as before but thanks to the `bre.deployments` field it can access deployed contract :
 
 ```js
-const bre = require('@nomiclabs/buidler');
+const bre = require("@nomiclabs/buidler");
 const { deployments, getNamedAccounts } = bre;
 
-(async() => {
-    console.log(await deployments.all())
-    console.log({namedAccounts: await getNamedAccounts()});
-})()
+(async () => {
+  console.log(await deployments.all());
+  console.log({ namedAccounts: await getNamedAccounts() });
+})();
 ```
+
 You can also run it directly from the command line as usual.
 
-### console 
+`BUIDLER_NETWORK=rinkeby node <script>` is the equivalent except it does not load the buidler environment twice (which the run task does)
+
+### console task
 
 `buidler console`
 
 The same applies to the `console` task.
 
-### compile
-
-`buidler compile`
-
-The compile command is also updated so that you could potentially have the compiler do different things depending on the deployed contract. Like for example you might want to inject the address of a deployed contract in the bytecode for efficiency reasons.
-
-This is not yet enabled in any way though. 
-
 ## deploy scripts tags and dependencies
 
-The following paragraphs were written before the `deployments.fixture` function was implemented and while it is possible to run a subset of the deploy scripts via `run` this is now mostly useful for partial deployments, in scripts for example as tests can now benefit from an even faster method via `deployments.fixture`.
-
-When you run `test`, you want to replicate the same set of contracts that will be deployed without having to copy the deployment procedure.
-That is why the test have access to `bre.deployments.run` function to be able to easily setup the contracts for testing.
-Now though, for efficiency reasons, it would be nice if you could only deploy the necessary contracts for a particular test.
-
-To help doing that, deploy script can setup tags and dependencies.
+It is possible to execute only specific part of the deployments with `buidler deploy --tags <tags>`
 
 Tags represent what the deploy script acts on. In general it will be a single string value, the name of the contract it deploys or modifies.
 
@@ -248,54 +526,59 @@ Then if another deploy script has such tag as a dependency, then when this latte
 Here is an example of two deploy scripts :
 
 ```js
-module.exports = async ({getNamedAccounts, deployments}) => {
-    const {deployIfDifferent, log} = deployments;
-    const namedAccounts = await getNamedAccounts();
-    const {deployer} = namedAccounts;
-    const deployResult = await deploy('Token', {from: deployer, args: ["hello", 100]});
-    if (deployResult.newlyDeployed) {
-        log(`contract Token deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
-    }
-}
-module.exports.tags = ['Token'];
+module.exports = async ({ getNamedAccounts, deployments }) => {
+  const { deployIfDifferent, log } = deployments;
+  const namedAccounts = await getNamedAccounts();
+  const { deployer } = namedAccounts;
+  const deployResult = await deploy("Token", {
+    from: deployer,
+    args: ["hello", 100]
+  });
+  if (deployResult.newlyDeployed) {
+    log(
+      `contract Token deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`
+    );
+  }
+};
+module.exports.tags = ["Token"];
 ```
 
-
 ```js
-module.exports = async function({getNamedAccounts, deployments}) {
-    const {deployIfDifferent, log} = deployments;
-    const namedAccounts = await getNamedAccounts();
-    const {deployer} = namedAccounts;
-    const Token = await deployments.get('Token');
-    const deployResult = await deploy('Sale', {from: deployer, contractName: 'ERC721BidSale', args: [Token.address, 1, 3600]});
-    if (deployResult.newlyDeployed) {
-        log(`contract Sale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
-    }
+module.exports = async function({ getNamedAccounts, deployments }) {
+  const { deployIfDifferent, log } = deployments;
+  const namedAccounts = await getNamedAccounts();
+  const { deployer } = namedAccounts;
+  const Token = await deployments.get("Token");
+  const deployResult = await deploy("Sale", {
+    from: deployer,
+    contractName: "ERC721BidSale",
+    args: [Token.address, 1, 3600]
+  });
+  if (deployResult.newlyDeployed) {
+    log(
+      `contract Sale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`
+    );
+  }
 };
-module.exports.tags = ['Sale'];
-module.exports.dependencies = ['Token'];  // this ensure the TOken script above is executed first, so `deployments.get('Token') succeeds
+module.exports.tags = ["Sale"];
+module.exports.dependencies = ["Token"]; // this ensure the TOken script above is executed first, so `deployments.get('Token') succeeds
 ```
 
 As you can see the second one depends on the first. This is because the second script depends on a tag that the first script registers as using.
 
-With that when `bre.deployments.run` is executed as follow :
-
-```js
-bre.deployments.run(['Sale'])
-```
+With that when `buidler deploy --tags Sale` is executed
 
 then both scripts will be run, ensuring Sale is ready.
-
 
 You can also define the script to run after another script is run by setting `runAtTheEnd` to be true. For example:
 
 ```js
-module.exports = async function({getNamedAccounts, deployments}) {
-    const {deployIfDifferent, execute, log} = deployments;
-    const namedAccounts = await getNamedAccounts();
-    const {deployer, admin} = namedAccounts;
-    await execute("Sale", {from: deployer}, "setAdmin", admin);
+module.exports = async function({ getNamedAccounts, deployments }) {
+  const { deployIfDifferent, execute, log } = deployments;
+  const namedAccounts = await getNamedAccounts();
+  const { deployer, admin } = namedAccounts;
+  await execute("Sale", { from: deployer }, "setAdmin", admin);
 };
-module.exports.tags = ['Sale'];
+module.exports.tags = ["Sale"];
 module.exports.runAtTheEnd = true;
 ```

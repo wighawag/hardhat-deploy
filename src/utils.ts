@@ -73,6 +73,7 @@ export function loadAllDeployments(
         onlyABIAndAddress
       );
       all[chainIdFound][name] = {
+        name,
         chainId: chainIdFound,
         contracts
       };
@@ -183,6 +184,7 @@ function transformNamedAccounts(
             if (spec.type === "object") {
               address = spec;
             } else if (Array.isArray(spec)) {
+              // TODO fix :this will never reach here (Array is of type "object")
               address = [];
               for (const subSpec of spec) {
                 address.push(parseSpec(subSpec));

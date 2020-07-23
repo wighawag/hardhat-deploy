@@ -850,6 +850,7 @@ export class DeploymentsManager {
         delete all[chainId][this.env.network.name];
       }
       all[chainId][this.env.network.name] = {
+        name: this.env.network.name,
         chainId,
         contracts: currentNetworkDeployments
       };
@@ -880,6 +881,7 @@ export class DeploymentsManager {
         throw new Error("chainId is undefined");
       }
       const singleExport: Export = {
+        name: this.env.network.name,
         chainId,
         contracts: currentNetworkDeployments
       };
