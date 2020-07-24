@@ -10,11 +10,10 @@ import { BigNumber } from "@ethersproject/bignumber";
 export const nameToChainId: { [name: string]: string } = {
   mainnet: "1",
   eth: "1",
+  ropsten: "3",
   rinkeby: "4",
-  kovan: "42",
-  xdai: "100",
-  sokol: "77",
-  ropsten: "3"
+  goerli: "5",
+  kovan: "42"
 };
 
 let chainId: string;

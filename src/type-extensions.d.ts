@@ -49,15 +49,15 @@ declare module "@nomiclabs/buidler/types" {
   };
 
   export type Receipt = {
-    to?: Address;
     from: Address;
     transactionHash: string;
     blockHash: string;
     blockNumber: number;
     transactionIndex: number;
-    contractAddress?: string;
     cumulativeGasUsed: BigNumber | string | number;
     gasUsed: BigNumber | string | number;
+    contractAddress?: string;
+    to?: Address;
     logs?: Log[];
     events?: any[];
     logsBloom?: string;
@@ -251,7 +251,7 @@ declare module "@nomiclabs/buidler/types" {
     args?: any[];
     linkedData?: any;
     solidityJson?: any; // TODO solidityJson type
-    solidityMetadata?: string;
+    metadata?: string;
     bytecode?: string;
     deployedBytecode?: string;
     userdoc?: any;
@@ -274,7 +274,7 @@ declare module "@nomiclabs/buidler/types" {
     args?: any[];
     linkedData?: any;
     solidityJson?: any; // TODO solidityJson type
-    solidityMetadata?: string;
+    metadata?: string;
     bytecode?: string;
     deployedBytecode?: string;
     userdoc?: any;

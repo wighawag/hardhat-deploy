@@ -512,15 +512,39 @@ export class DeploymentsManager {
       byzantium: receipt.byzantium
     };
 
+    // from : https://stackoverflow.com/a/14810722/1663971
+    function objectMap(object: any, mapFn: (obj: any) => any) {
+      return Object.keys(object).reduce(function(result: any, key) {
+        result[key] = mapFn(object[key]);
+        return result;
+      }, {});
+    }
+
+    // TODO can cause infinite loop
+    function transform(v: any): any {
+      if (v._isBigNumber) {
+        return v.toString();
+      }
+      if (Array.isArray(v)) {
+        return v.map(transform);
+      }
+      if (typeof v === "object") {
+        return objectMap(v, transform);
+      }
+      return v;
+    }
+
+    const actualArgs = deployment.args?.map(transform);
+
     const obj = JSON.parse(
       JSON.stringify({
         abi: deployment.abi,
         receipt: actualReceipt,
         address: deployment.address || actualReceipt.contractAddress,
-        args: deployment.args,
+        args: actualArgs,
         linkedData: deployment.linkedData,
         solidityJson: deployment.solidityJson,
-        solidityMetadata: deployment.solidityMetadata,
+        metadata: deployment.metadata,
         bytecode: deployment.bytecode,
         deployedBytecode: deployment.deployedBytecode,
         facets: deployment.facets,

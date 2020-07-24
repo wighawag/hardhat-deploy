@@ -278,7 +278,7 @@ export function addHelpers(
     name: string,
     options: DeployOptions
   ): Promise<DeployResult> {
-    const args: any[] = options.args || [];
+    const args: any[] = options.args ? [...options.args] : [];
     await init();
     const { address: from, ethersSigner } = getFrom(options.from);
     if (!ethersSigner) {
@@ -347,7 +347,7 @@ export function addHelpers(
       args,
       linkedData: options.linkedData,
       // solidityJson: extendedAtifact.solidityJson,
-      solidityMetadata: contractSolcOutput?.metadata,
+      metadata: contractSolcOutput?.metadata,
       bytecode: artifact.bytecode,
       deployedBytecode: artifact.deployedBytecode,
       userdoc: contractSolcOutput?.userdoc,
@@ -696,8 +696,6 @@ Plus they are only used when the contract is meant to be used as standalone when
     } else {
       if (availableAccounts[from.toLowerCase()]) {
         ethersSigner = provider.getSigner(from);
-      } else if (!optional) {
-        throw new Error(`no signer for ${from}`);
       }
     }
 
