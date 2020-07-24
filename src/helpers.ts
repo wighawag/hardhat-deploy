@@ -1104,7 +1104,6 @@ data: ${tx.data}
     const { address: from, ethersSigner } = getFrom(options.from);
 
     let tx;
-    let unsignedTx;
     const deployment = await env.deployments.get(name);
     const abi = deployment.abi;
     const overrides = {

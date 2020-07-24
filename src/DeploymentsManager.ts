@@ -325,7 +325,7 @@ export class DeploymentsManager {
         }
         if (this.db.gasPrice) {
           if (tx.gasPrice.lt(this.db.gasPrice)) {
-            //TODO
+            // TODO
             console.log("TODO : resubmit tx with higher gas price");
             console.log(tx);
           }
