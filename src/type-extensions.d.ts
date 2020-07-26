@@ -93,6 +93,12 @@ declare module "@nomiclabs/buidler/types" {
           abi: ABI;
           bytecode: string;
           deployedBytecode?: string;
+          // TODO
+          // metadata?: string;
+          // methodIdentifiers?: any;
+          // storageLayout?: any;
+          // userdoc?: any;
+          // devdoc?: any;
         };
     args?: any[];
     fieldsToCompare?: string | string[];

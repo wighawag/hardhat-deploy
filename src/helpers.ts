@@ -13,7 +13,7 @@ import {
 import { BigNumber } from "@ethersproject/bignumber";
 import { Wallet } from "@ethersproject/wallet";
 import { keccak256 as solidityKeccak256 } from "@ethersproject/solidity";
-import { Interface, FunctionFragment } from "@ethersproject/abi";
+import { Interface, FunctionFragment, Fragment } from "@ethersproject/abi";
 import {
   BuidlerRuntimeEnvironment,
   DeployFunction,
@@ -47,6 +47,27 @@ import fs from "fs";
 import path from "path";
 
 function mergeABIs(...abis: any[][]): any[] {
+  return _mergeABIs(undefined, ...abis);
+}
+
+function mergeAndCheckDiamondAbis(...abis: any[][]): any[] {
+  // TODO remove duplication with builtin facet enumeration
+  return _mergeABIs(
+    [
+      "0x01ffc9a7",
+      "0xadfca15e",
+      "0x7a0ed627",
+      "0xcdffacc6",
+      "0x52ef6b2c",
+      "0x99f5f52e",
+      "0xf2fde38b",
+      "0x8da5cb5b"
+    ],
+    ...abis
+  );
+}
+
+function _mergeABIs(check?: string[], ...abis: any[][]): any[] {
   if (abis.length === 0) {
     return [];
   }
@@ -55,7 +76,57 @@ function mergeABIs(...abis: any[][]): any[] {
   for (let i = 1; i < abis.length; i++) {
     const abi = abis[i];
     for (const fragment of abi) {
-      if (!result.find(v => v.name === fragment.name)) {
+      const newEthersFragment = Fragment.from(fragment);
+      if (check) {
+        if (newEthersFragment && newEthersFragment.type === "function") {
+          if (
+            check.find(
+              v =>
+                v ===
+                Interface.getSighash(newEthersFragment as FunctionFragment)
+            )
+          ) {
+            throw new Error(
+              `Function ${newEthersFragment.name} will shadow Diamond contract base facets`
+            );
+          }
+        }
+      }
+      // TODO constructor special handling ?
+      const foundSameSig = result.find(v => {
+        const existingEthersFragment = Fragment.from(v);
+        if (v.type !== fragment.type) {
+          return false;
+        }
+        if (!existingEthersFragment) {
+          return v.name === fragment.name; // TODO fallback and receive hanlding
+        }
+
+        if (
+          existingEthersFragment.type === "constructor" ||
+          newEthersFragment.type === "constructor"
+        ) {
+          return existingEthersFragment.name === newEthersFragment.name;
+        }
+
+        if (newEthersFragment.type === "function") {
+          return (
+            Interface.getSighash(existingEthersFragment as FunctionFragment) ===
+            Interface.getSighash(newEthersFragment as FunctionFragment)
+          );
+        } else if (newEthersFragment.type === "event") {
+          return existingEthersFragment.format() === newEthersFragment.format();
+        } else {
+          return v.name === fragment.name; // TODO fallback and receive hanlding
+        }
+      });
+      if (foundSameSig) {
+        if (check && fragment.type === "function") {
+          throw new Error(
+            `function "${fragment.name}" will shadow "${foundSameSig.name}". Please update code to avoid conflict.`
+          );
+        }
+      } else {
         result.push(fragment);
       }
     }
@@ -322,8 +393,18 @@ export function addHelpers(
     let contractSolcOutput;
     if (!contractName) {
       log(
-        "without name, it is not possible to get the solc output and metadata"
+        `without name, it is not possible to get the solc output and metadata (${name})`
       );
+      // TODO :
+      // if (typeof options.contract === "object") {
+      //   contractSolcOutput = {
+      //     metadata: options.contract?.metadata,
+      //     methodIdentifiers: options.contract?.methodIdentifiers,
+      //     storageLayout: options.contract?.storageLayout,
+      //     userdoc: options.contract?.userdoc,
+      //     devdoc: options.contract?.devdoc
+      //   };
+      // }
     } else {
       if (solcOutput) {
         for (const fileEntry of Object.entries(solcOutput.contracts)) {
@@ -793,7 +874,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       if (constructor) {
         throw new Error(`Facet must not have a constructor`);
       }
-      abi = mergeABIs(abi, artifact.abi);
+      abi = mergeAndCheckDiamondAbis(abi, artifact.abi);
       // TODO allow facet to be named so multiple version could coexist
       const implementation = await _deployOne(facet, {
         from: options.from,
@@ -851,7 +932,6 @@ Plus they are only used when the contract is meant to be used as standalone when
       ](...options.execute.args);
       data = txData.data || "0x";
     }
-    const diamantaireABI = diamantaire.abi; // .concat(abi); // TODO merge
 
     if (changesDetected) {
       const cuts = facetCuts.map(facetCut => {
@@ -871,12 +951,9 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
         diamantaireDeployment = await _deployOne(diamantaireName, {
           from: options.from,
-          contract: {
-            ...diamantaire,
-            abi: diamantaireABI
-          },
+          contract: diamantaire,
           args: [owner, cuts, data],
-          log: true
+          log: false // TODO ?
         });
 
         const receipt = diamantaireDeployment.receipt;
@@ -963,10 +1040,6 @@ Plus they are only used when the contract is meant to be used as standalone when
           facets: facetSnapshot,
           diamondCuts: cuts,
           execute: options.execute
-        });
-        await env.deployments.save(diamantaireName, {
-          ...diamantaireDeployment,
-          abi: diamantaireABI
         });
       }
 
