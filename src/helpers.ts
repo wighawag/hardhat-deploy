@@ -782,7 +782,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     // console.log({ oldFacets: JSON.stringify(oldFacets, null, "  ") });
 
     let changesDetected = false;
-    const abi: any[] = [];
+    let abi: any[] = [];
     const facetCuts: FacetCut[] = [];
     for (const facet of options.facets) {
       const artifact = await getArtifact(facet); // TODO getArtifactFromOptions( // allowing to pass bytecode / abi
@@ -793,7 +793,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       if (constructor) {
         throw new Error(`Facet must not have a constructor`);
       }
-      abi.splice(abi.length, 0, ...artifact.abi); // TODO check overlap : merge
+      abi = mergeABIs(abi, artifact.abi);
       // TODO allow facet to be named so multiple version could coexist
       const implementation = await _deployOne(facet, {
         from: options.from,
