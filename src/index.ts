@@ -161,6 +161,7 @@ export default function() {
       "watchOnly",
       "do not actually deploy, just watch and deploy if changes occurs"
     )
+    .addFlag("dryRun", "modify files but don't actually deploy")
     .setAction(async (args, bre) => {
       async function compileAndDeploy() {
         await bre.run("compile");
@@ -172,7 +173,8 @@ export default function() {
           export: args.export,
           exportAll: args.exportAll,
           savePendingTx: args.pendingtx,
-          gasPrice: args.gasprice
+          gasPrice: args.gasprice,
+          dryRun: args['dry-run']
         });
       }
 

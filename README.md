@@ -360,6 +360,7 @@ run( // execute deployment scripts
     writeDeploymentsToFiles?: boolean;
     export?: string;
     exportAll?: string;
+    dryRun?: boolean;
   }
 ): Promise<{ [name: string]: Deployment }>;
 fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>; // execute deployment as fixture for test // use evm_snapshot to revert back

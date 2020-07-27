@@ -196,6 +196,7 @@ declare module "@nomiclabs/buidler/types" {
         writeDeploymentsToFiles?: boolean;
         export?: string;
         exportAll?: string;
+        dryRun?: boolean;
       }
     ): Promise<{ [name: string]: Deployment }>;
     fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;

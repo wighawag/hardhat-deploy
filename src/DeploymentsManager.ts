@@ -163,10 +163,12 @@ export class DeploymentsManager {
           writeDeploymentsToFiles?: boolean;
           export?: string;
           exportAll?: string;
+          dryRun?: boolean;
         } = {
           resetMemory: true,
           writeDeploymentsToFiles: false,
-          deletePreviousDeployments: false
+          deletePreviousDeployments: false,
+          dryRun: false
         }
       ) => {
         return this.runDeploy(tags, {
@@ -183,7 +185,9 @@ export class DeploymentsManager {
           export: options.export,
           exportAll: options.exportAll,
           log: false,
-          savePendingTx: false
+          savePendingTx: false,
+          dryRun:
+            options.dryRun === undefined ? false : options.dryRun
         });
       },
       fixture: async (tags?: string | string[]) => {
@@ -214,7 +218,8 @@ export class DeploymentsManager {
           writeDeploymentsToFiles: false,
           deletePreviousDeployments: false,
           log: false,
-          savePendingTx: false
+          savePendingTx: false,
+          dryRun: false
         });
 
         if (fixtureKey !== undefined) {
@@ -612,12 +617,14 @@ export class DeploymentsManager {
       export?: string;
       exportAll?: string;
       gasPrice?: string;
+      dryRun?: boolean;
     } = {
       log: false,
       resetMemory: true,
       deletePreviousDeployments: false,
       writeDeploymentsToFiles: true,
-      savePendingTx: false
+      savePendingTx: false,
+      dryRun: false
     }
   ): Promise<{ [name: string]: Deployment }> {
     log("runDeploy");
