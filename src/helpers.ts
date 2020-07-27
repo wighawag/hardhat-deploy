@@ -1,4 +1,3 @@
-import { deployments } from "@nomiclabs/buidler";
 import { Signer } from "@ethersproject/abstract-signer";
 import {
   Web3Provider,
@@ -1081,9 +1080,9 @@ Plus they are only used when the contract is meant to be used as standalone when
     name: string,
     options: DeployOptions
   ): Promise<DeployResult> {
-    log('fakeNewlyDeployed:', fakeNewlyDeployed, 'fakeNotNewlyDeployed:', fakeNotNewlyDeployed);
+    //log('fakeNewlyDeployed:', fakeNewlyDeployed, 'fakeNotNewlyDeployed:', fakeNotNewlyDeployed);
     if (fakeNewlyDeployed || fakeNotNewlyDeployed) {
-      const deployment = await deployments.get(name);
+      const deployment = await env.deployments.get(name);
       return { newlyDeployed: fakeNewlyDeployed, ...deployment };
     }
     await init();
