@@ -248,6 +248,12 @@ export class DeploymentsManager {
       }
     } as any;
 
+    const print = (msg: string) => {
+      if (this.db.logEnabled) {
+        process.stdout.write(msg);
+      }
+    };
+
     log("adding helpers");
     this.deploymentsExtension = addHelpers(
       env,
@@ -262,7 +268,8 @@ export class DeploymentsManager {
           return undefined;
         }
       },
-      partialExtension.log
+      partialExtension.log,
+      print
     );
   }
 

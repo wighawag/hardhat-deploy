@@ -103,7 +103,6 @@ declare module "@nomiclabs/buidler/types" {
     args?: any[];
     fieldsToCompare?: string | string[];
     skipIfAlreadyDeployed?: boolean;
-    log?: boolean;
     linkedData?: any; // JSONable ?
     libraries?: { [libraryName: string]: Address };
     proxy?: boolean | string | ProxyOptions; // TODO support different type of proxies ?
@@ -121,6 +120,7 @@ declare module "@nomiclabs/buidler/types" {
 
   export interface TxOptions extends CallOptions {
     from: string;
+    log?: boolean;
     dev_forceMine?: boolean;
     skipUnknownSigner?: boolean;
     estimatedGasLimit?: string | number | BigNumber;

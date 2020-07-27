@@ -267,7 +267,8 @@ export function addHelpers(
     data?: any
   ) => Promise<TransactionResponse>,
   getGasPrice: () => Promise<BigNumber | undefined>,
-  log: (...args: any[]) => void
+  log: (...args: any[]) => void,
+  print: (msg: string) => void
 ): DeploymentsExtension {
   async function init() {
     if (!provider) {
@@ -1237,12 +1238,20 @@ args: [${args.join(" , ")}]
     }
     tx = await onPendingTx(tx);
 
+    if (options.log) {
+      print(`executing ${name}.${methodName}... `);
+    }
+
     if (options.dev_forceMine) {
       try {
         await provider.send("evm_mine", []);
       } catch (e) {}
     }
-    return tx.wait();
+    const receipt = await tx.wait();
+    if (options.log) {
+      print(`: performed with ${receipt.gasUsed} gas\n`);
+    }
+    return receipt;
   }
 
   // TODO ?
