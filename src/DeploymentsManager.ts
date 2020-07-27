@@ -67,6 +67,9 @@ export class DeploymentsManager {
   private env: BuidlerRuntimeEnvironment;
   private deploymentsPath: string;
 
+  private fakeNewlyDeployed?: boolean;
+  private fakeNotNewlyDeployed?: boolean;
+
   constructor(env: BuidlerRuntimeEnvironment) {
     log("constructing DeploymentsManager");
     this.db = {
@@ -272,7 +275,9 @@ export class DeploymentsManager {
           return undefined;
         }
       },
-      partialExtension.log
+      partialExtension.log,
+      this.fakeNewlyDeployed === true,
+      this.fakeNotNewlyDeployed === true
     );
   }
 
@@ -635,6 +640,8 @@ export class DeploymentsManager {
     }
   ): Promise<{ [name: string]: Deployment }> {
     log("runDeploy");
+    this.fakeNewlyDeployed = options.fakeNewlyDeployed;
+    this.fakeNotNewlyDeployed = options.fakeNotNewlyDeployed;
     const chainId = await getChainId(this.env);
     await this.loadDeployments();
     const deploymentFolderPath = this.getDeploymentsSubPath(chainId);
