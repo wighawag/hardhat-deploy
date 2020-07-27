@@ -20,7 +20,8 @@ export interface PartialExtension {
       writeDeploymentsToFiles?: boolean;
       export?: string;
       exportAll?: string;
-      dryRun?: boolean;
+      fakeNewlyDeployed?: boolean;
+      fakeNotNewlyDeployed?: boolean;
     }
   ): Promise<{ [name: string]: Deployment }>;
   fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;

@@ -163,12 +163,14 @@ export class DeploymentsManager {
           writeDeploymentsToFiles?: boolean;
           export?: string;
           exportAll?: string;
-          dryRun?: boolean;
+          fakeNewlyDeployed?: boolean;
+          fakeNotNewlyDeployed?: boolean;
         } = {
           resetMemory: true,
           writeDeploymentsToFiles: false,
           deletePreviousDeployments: false,
-          dryRun: false
+          fakeNewlyDeployed: false,
+          fakeNotNewlyDeployed: false
         }
       ) => {
         return this.runDeploy(tags, {
@@ -186,8 +188,10 @@ export class DeploymentsManager {
           exportAll: options.exportAll,
           log: false,
           savePendingTx: false,
-          dryRun:
-            options.dryRun === undefined ? false : options.dryRun
+          fakeNewlyDeployed:
+            options.fakeNewlyDeployed === undefined ? false : options.fakeNewlyDeployed,
+          fakeNotNewlyDeployed:
+            options.fakeNewlyDeployed === undefined ? false : options.fakeNotNewlyDeployed
         });
       },
       fixture: async (tags?: string | string[]) => {
@@ -219,7 +223,8 @@ export class DeploymentsManager {
           deletePreviousDeployments: false,
           log: false,
           savePendingTx: false,
-          dryRun: false
+          fakeNewlyDeployed: false,
+          fakeNotNewlyDeployed: false
         });
 
         if (fixtureKey !== undefined) {
@@ -617,14 +622,16 @@ export class DeploymentsManager {
       export?: string;
       exportAll?: string;
       gasPrice?: string;
-      dryRun?: boolean;
+      fakeNewlyDeployed?: boolean;
+      fakeNotNewlyDeployed?: boolean;
     } = {
       log: false,
       resetMemory: true,
       deletePreviousDeployments: false,
       writeDeploymentsToFiles: true,
       savePendingTx: false,
-      dryRun: false
+      fakeNewlyDeployed: false,
+      fakeNotNewlyDeployed: false
     }
   ): Promise<{ [name: string]: Deployment }> {
     log("runDeploy");

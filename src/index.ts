@@ -161,7 +161,6 @@ export default function() {
       "watchOnly",
       "do not actually deploy, just watch and deploy if changes occurs"
     )
-    .addFlag("dryRun", "modify files but don't actually deploy")
     .setAction(async (args, bre) => {
       async function compileAndDeploy() {
         await bre.run("compile");
@@ -174,7 +173,8 @@ export default function() {
           exportAll: args.exportAll,
           savePendingTx: args.pendingtx,
           gasPrice: args.gasprice,
-          dryRun: args['dry-run']
+          fakeNewlyDeployed: args["fake-newly-deployed"],
+          fakeNotNewlyDeployed: args["fake-not-newly-deployed"]
         });
       }
 
@@ -275,11 +275,17 @@ export default function() {
     .addFlag("reset", "whether to delete deployments files first")
     .addFlag("silent", "whether to remove log")
     .addFlag("watch", "redeploy on every change of contract or deploy script")
+    .addFlag("fakeNewlyDeployed", "modify files but don't actually deploy (newlyDeployed is true)")
+    .addFlag("fakeNotNewlyDeployed", "modify files but don't actually deploy (newlyDeployed is false)")
     .setAction(async (args, bre) => {
       args.log = !args.silent;
       delete args.silent;
       if (args.write === undefined) {
         args.write = !isBuidlerEVM(bre);
+      }
+      if (args.fakeNewlyDeployed && args.fakeNotNewlyDeployed) {
+        throw new Error(
+          "Can't have both --fake-newly-deployed and --fake-not-newly-deployed.");
       }
       args.pendingtx = !isBuidlerEVM(bre);
       await bre.run("deploy:run", args);
