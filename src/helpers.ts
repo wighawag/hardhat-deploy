@@ -356,10 +356,9 @@ export function addHelpers(
     if (!ethersSigner) {
       throw new Error("no signer for " + from);
     }
-    const { artifact, contractName } = await getArtifactFromOptions(
-      name,
-      options
-    );
+    const artifactInfo = await getArtifactFromOptions(name, options);
+    const { artifact } = artifactInfo;
+    let { contractName } = artifactInfo;
     const abi = artifact.abi;
     const byteCode = linkLibraries(artifact, options.libraries);
     const factory = new ContractFactory(abi, byteCode, ethersSigner);
@@ -391,21 +390,23 @@ export function addHelpers(
         await provider.send("evm_mine", []);
       } catch (e) {}
     }
+    let contractFilepath;
     let contractSolcOutput;
     if (!contractName) {
-      log(
-        `without name, it is not possible to get the solc output and metadata (${name})`
-      );
-      // TODO :
-      // if (typeof options.contract === "object") {
-      //   contractSolcOutput = {
-      //     metadata: options.contract?.metadata,
-      //     methodIdentifiers: options.contract?.methodIdentifiers,
-      //     storageLayout: options.contract?.storageLayout,
-      //     userdoc: options.contract?.userdoc,
-      //     devdoc: options.contract?.devdoc
-      //   };
-      // }
+      if (typeof options.contract === "object") {
+        contractSolcOutput = {
+          metadata: options.contract?.metadata,
+          methodIdentifiers: options.contract?.methodIdentifiers,
+          storageLayout: options.contract?.storageLayout,
+          userdoc: options.contract?.userdoc,
+          devdoc: options.contract?.devdoc
+        };
+        contractName = options.contract.contractName;
+        contractFilepath = options.contract.contractFilepath;
+      }
+      if (!contractSolcOutput || !contractSolcOutput.metadata) {
+        log(`no metadata associated with contract deployed as ${name}`);
+      }
     } else {
       if (solcOutput) {
         for (const fileEntry of Object.entries(solcOutput.contracts)) {
@@ -416,10 +417,15 @@ export function addHelpers(
                 "0x" + contractEntry[1].evm?.bytecode?.object
               ) {
                 contractSolcOutput = contractEntry[1];
+                contractFilepath = fileEntry[0];
               }
             }
           }
         }
+      } else {
+        log(
+          `solc-output not found, it is not possible to get the metadata nor the contractFilePath for ${name}`
+        );
       }
     }
 
@@ -430,6 +436,8 @@ export function addHelpers(
       linkedData: options.linkedData,
       // solidityJson: extendedAtifact.solidityJson,
       metadata: contractSolcOutput?.metadata,
+      contractName,
+      contractFilepath,
       bytecode: artifact.bytecode,
       deployedBytecode: artifact.deployedBytecode,
       userdoc: contractSolcOutput?.userdoc,
@@ -994,6 +1002,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           args: [diamantaireDeployment.address],
           bytecode: diamondBase.bytecode,
           deployedBytecode: diamondBase.deployedBytecode // TODO if more fiels are added, we need to add more
+          // TODO metadata + contractName
         };
         await env.deployments.save(proxyName, proxy);
 

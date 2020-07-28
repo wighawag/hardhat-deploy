@@ -30,6 +30,7 @@ const log = debug("buidler:wighawag:buidler-deploy");
 
 import { DeploymentsManager } from "./DeploymentsManager";
 import chokidar from "chokidar";
+import { submitSources } from "./etherscan";
 
 function isBuidlerEVM(bre: BuidlerRuntimeEnvironment): boolean {
   const { network, buidlerArguments, config } = bre;
@@ -119,8 +120,10 @@ export default function() {
       settings.outputSelection["*"]["*"],
       "evm.methodIdentifiers"
     );
-    addIfNotPresent(settings.outputSelection["*"][""], "id");
-    addIfNotPresent(settings.outputSelection["*"][""], "ast");
+    addIfNotPresent(settings.outputSelection["*"]["*"], "evm.gasEstimates");
+    // addIfNotPresent(settings.outputSelection["*"][""], "ir");
+    // addIfNotPresent(settings.outputSelection["*"][""], "irOptimized");
+    // addIfNotPresent(settings.outputSelection["*"][""], "ast");
   }
 
   internalTask(TASK_COMPILE_GET_COMPILER_INPUT).setAction(
@@ -381,5 +384,23 @@ export default function() {
         await bre.run("deploy:run", { ...args, watchOnly: true });
       }
       await server.waitUntilClosed();
+    });
+
+  task("etherscan-verify", "submit contract source code to etherscan")
+    .addOptionalParam("apiKey", "etherscan api key", undefined, types.string)
+    .addOptionalParam(
+      "license",
+      "SPDX license (need to be supported by etherscan",
+      undefined,
+      types.string
+    )
+    .setAction(async (args, bre, runSuper) => {
+      const etherscanApiKey = args.apiKey || process.env.ETHERSCAN_API_KEY;
+      if (!etherscanApiKey) {
+        throw new Error(
+          `No Etherscan API KEY provided. Set it through comand line option or by setting the "ETHERSCAN_API_KEY" env variable`
+        );
+      }
+      await submitSources(bre, etherscanApiKey, args.license);
     });
 }

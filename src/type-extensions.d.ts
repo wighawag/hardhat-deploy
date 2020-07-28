@@ -93,12 +93,13 @@ declare module "@nomiclabs/buidler/types" {
           abi: ABI;
           bytecode: string;
           deployedBytecode?: string;
-          // TODO
-          // metadata?: string;
-          // methodIdentifiers?: any;
-          // storageLayout?: any;
-          // userdoc?: any;
-          // devdoc?: any;
+          contractName?: string;
+          contractFilepath?: string;
+          metadata?: string;
+          methodIdentifiers?: any;
+          storageLayout?: any;
+          userdoc?: any;
+          devdoc?: any;
         };
     args?: any[];
     fieldsToCompare?: string | string[];
@@ -252,6 +253,8 @@ declare module "@nomiclabs/buidler/types" {
   export interface DeploymentSubmission {
     abi: ABI;
     receipt: Receipt;
+    contractFilepath?: string;
+    contractName?: string;
     address?: Address; // used to override receipt.contractAddress (useful for proxies)
     history?: Deployment[];
     args?: any[];
@@ -276,6 +279,8 @@ declare module "@nomiclabs/buidler/types" {
     abi: ABI;
     address: Address;
     receipt: Receipt;
+    contractFilepath?: string;
+    contractName?: string;
     history?: Deployment[];
     args?: any[];
     linkedData?: any;
