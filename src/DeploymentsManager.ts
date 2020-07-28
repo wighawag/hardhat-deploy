@@ -113,6 +113,9 @@ export class DeploymentsManager {
         return this.db.deployments[name];
       },
       all: async () => {
+        if (!this.db.deploymentsLoaded) {
+          await this.loadDeployments();
+        }
         return this.db.deployments; // TODO copy
       },
       getArtifact: async (contractName: string): Promise<any> => {
