@@ -11,3 +11,4 @@
 [] libraries : address should not need to be address, they could be names of deployments or {address}
 [] fix error with proxy constructor, the check use the number of argument given instead of the abi
 [] fix issue with fixture reading deployments in buidlerevm folder: fixture should not read
+[] add configuration field for network based configuration ? or at least expose the chainIfNetworkConfig expansion function
