@@ -103,14 +103,20 @@ contract DiamondBase is ERC173Events, DiamondStorageContract {
         view
         returns (bool)
     {
-        DiamondStorage storage ds = diamondStorage();
+        DiamondStorage storage ds;
+        assembly {
+            ds_slot := 0xc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c131c
+        }
         return ds.supportedInterfaces[_interfaceID];
     }
 
     // Finds facet for function that is called and executes the
     // function if it is found and returns any value.
     fallback() external payable {
-        DiamondStorage storage ds = diamondStorage();
+        DiamondStorage storage ds;
+        assembly {
+            ds_slot := 0xc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c131c
+        }
         address facet = address(bytes20(ds.facets[msg.sig]));
         require(facet != address(0), "Function does not exist.");
         assembly {
