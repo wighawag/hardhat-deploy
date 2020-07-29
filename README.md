@@ -88,7 +88,7 @@ the following : `mainnet` (or `eth`), `ropsten`, `rinkeby`, `goerli`, `kovan`
 
 In these cases, if the network match these, then the folderPath is simply `"deployments/" + networkName`.
 
-Each contract file must follow this type (as defined in [src/type-extensions.d.ts](src\type-extensions.d.ts)) :
+Each contract file must follow this type (as defined in [src/type-extensions.d.ts](src/type-extensions.d.ts)) :
 
 ```ts
 export interface Deployment {
