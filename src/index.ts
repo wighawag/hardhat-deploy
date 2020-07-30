@@ -394,6 +394,12 @@ export default function() {
       undefined,
       types.string
     )
+    .addOptionalParam(
+      "exportFailure",
+      "export the solc input file if failure occurs so manual verification can be performed",
+      undefined,
+      types.string
+    )
     .setAction(async (args, bre, runSuper) => {
       const etherscanApiKey = args.apiKey || process.env.ETHERSCAN_API_KEY;
       if (!etherscanApiKey) {
@@ -401,6 +407,10 @@ export default function() {
           `No Etherscan API KEY provided. Set it through comand line option or by setting the "ETHERSCAN_API_KEY" env variable`
         );
       }
-      await submitSources(bre, etherscanApiKey, args.license);
+      await submitSources(bre, {
+        etherscanApiKey,
+        license: args.license,
+        exportSolcInputOnFailure: args.exportFailure
+      });
     });
 }

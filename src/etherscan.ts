@@ -1,3 +1,4 @@
+import fs from "fs";
 import axios from "axios";
 import qs from "qs";
 import path from "path";
@@ -23,9 +24,16 @@ function logSuccess(...args: any[]) {
 
 export async function submitSources(
   bre: BuidlerRuntimeEnvironment,
-  etherscanApiKey?: string,
-  license?: string
+  config?: {
+    etherscanApiKey?: string;
+    license?: string;
+    exportSolcInputOnFailure?: string;
+  }
 ) {
+  config = config || {};
+  const license = config.license || "None";
+  const etherscanApiKey = config.etherscanApiKey;
+  const exportSolcInputOnFailure = config.exportSolcInputOnFailure;
   const chainId = await bre.getChainId();
   const all = await bre.deployments.all();
   let host: string;
@@ -256,24 +264,33 @@ export async function submitSources(
       logError(
         `Failed to verify contract ${name}: ${statusData.message}, ${statusData.result}`
       );
-      // logInfo(
-      //   JSON.stringify(
-      //     {
-      //       apikey: "XXXXXX",
-      //       module: "contract",
-      //       action: "verifysourcecode",
-      //       contractaddress: address,
-      //       sourceCode: solcInputString,
-      //       codeformat: "solidity-standard-json-input",
-      //       contractname: contractNamePath,
-      //       compilerversion: `v${metadata.compiler.version}`, // see http://etherscan.io/solcversions for list of support versions
-      //       constructorArguements,
-      //       licenseType
-      //     },
-      //     null,
-      //     "  "
-      //   )
-      // );
+      if (exportSolcInputOnFailure) {
+        fs.writeFileSync(
+          path.join(
+            exportSolcInputOnFailure,
+            `${address}_${metadata.compiler.version}.json`
+          ),
+          solcInputString
+        );
+      }
+      logError(
+        JSON.stringify(
+          {
+            apikey: "XXXXXX",
+            module: "contract",
+            action: "verifysourcecode",
+            contractaddress: address,
+            sourceCode: "...",
+            codeformat: "solidity-standard-json-input",
+            contractname: contractNamePath,
+            compilerversion: `v${metadata.compiler.version}`, // see http://etherscan.io/solcversions for list of support versions
+            constructorArguements,
+            licenseType
+          },
+          null,
+          "  "
+        )
+      );
       return "failure";
     }
 
