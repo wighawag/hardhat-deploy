@@ -100,6 +100,7 @@ declare module "@nomiclabs/buidler/types" {
           storageLayout?: any;
           userdoc?: any;
           devdoc?: any;
+          gasEstimates?: any;
         };
     args?: any[];
     fieldsToCompare?: string | string[];
@@ -273,6 +274,7 @@ declare module "@nomiclabs/buidler/types" {
       args: any[];
     };
     storageLayout?: any;
+    gasEstimates?: any;
   }
 
   export interface Deployment {
@@ -294,5 +296,6 @@ declare module "@nomiclabs/buidler/types" {
     diamondCuts?: string[];
     facets?: { address: string; sigs: string[] }[];
     storageLayout?: any;
+    gasEstimates?: any;
   }
 }

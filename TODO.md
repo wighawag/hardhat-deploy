@@ -12,3 +12,4 @@
 [] fix error with proxy constructor, the check use the number of argument given instead of the abi
 [] fix issue with fixture reading deployments in buidlerevm folder: fixture should not read
 [] add configuration field for network based configuration ? or at least expose the chainIfNetworkConfig expansion function
+[] add option to run test with pre-deployed contract (fixture already called) : useful so that test can use tags so when executed in isolation (without that flag they can run faster)

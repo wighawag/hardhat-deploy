@@ -130,7 +130,7 @@ export async function submitSources(
     });
     logInfo(`verifying ${name} (${address}) ...`);
 
-    let contractNamePath;
+    let contractNamePath: string | undefined;
     const contractFilepath = deployment.contractFilepath;
     let contractName = deployment.contractName;
     if (!contractName) {
@@ -165,7 +165,7 @@ export async function submitSources(
       // continue;
     }
 
-    let constructorArguements;
+    let constructorArguements: string | undefined;
     if (deployment.args) {
       const constructor: { inputs: ParamType[] } = deployment.abi.find(
         v => v.type === "constructor"
@@ -177,43 +177,45 @@ export async function submitSources(
       logInfo(`no args found, assuming empty constructor...`);
     }
 
+    const postData = {
+      apikey: etherscanApiKey,
+      module: "contract",
+      action: "verifysourcecode",
+      contractaddress: address,
+      sourceCode: solcInputString,
+      codeformat: "solidity-standard-json-input",
+      contractname: contractNamePath,
+      compilerversion: `v${metadata.compiler.version}`, // see http://etherscan.io/solcversions for list of support versions
+      constructorArguements,
+      licenseType
+      // TODO libraries
+      // libraryname1: $("#libraryname1").val(), //if applicable, a matching pair with libraryaddress1 required
+      // libraryaddress1: $("#libraryaddress1").val(), //if applicable, a matching pair with libraryname1 required
+      // libraryname2: $("#libraryname2").val(), //if applicable, matching pair required
+      // libraryaddress2: $("#libraryaddress2").val(), //if applicable, matching pair required
+      // libraryname3: $("#libraryname3").val(), //if applicable, matching pair required
+      // libraryaddress3: $("#libraryaddress3").val(), //if applicable, matching pair required
+      // libraryname4: $("#libraryname4").val(), //if applicable, matching pair required
+      // libraryaddress4: $("#libraryaddress4").val(), //if applicable, matching pair required
+      // libraryname5: $("#libraryname5").val(), //if applicable, matching pair required
+      // libraryaddress5: $("#libraryaddress5").val(), //if applicable, matching pair required
+      // libraryname6: $("#libraryname6").val(), //if applicable, matching pair required
+      // libraryaddress6: $("#libraryaddress6").val(), //if applicable, matching pair required
+      // libraryname7: $("#libraryname7").val(), //if applicable, matching pair required
+      // libraryaddress7: $("#libraryaddress7").val(), //if applicable, matching pair required
+      // libraryname8: $("#libraryname8").val(), //if applicable, matching pair required
+      // libraryaddress8: $("#libraryaddress8").val(), //if applicable, matching pair required
+      // libraryname9: $("#libraryname9").val(), //if applicable, matching pair required
+      // libraryaddress9: $("#libraryaddress9").val(), //if applicable, matching pair required
+      // libraryname10: $("#libraryname10").val(), //if applicable, matching pair required
+      // libraryaddress10: $("#libraryaddress10").val() //if applicable, matching pair required
+    };
+
     const submissionResponse = await axios.request({
       url: `${host}/api`,
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
-      data: qs.stringify({
-        apikey: etherscanApiKey,
-        module: "contract",
-        action: "verifysourcecode",
-        contractaddress: address,
-        sourceCode: solcInputString,
-        codeformat: "solidity-standard-json-input",
-        contractname: contractNamePath,
-        compilerversion: `v${metadata.compiler.version}`, // see http://etherscan.io/solcversions for list of support versions
-        constructorArguements,
-        licenseType
-        // TODO libraries
-        // libraryname1: $("#libraryname1").val(), //if applicable, a matching pair with libraryaddress1 required
-        // libraryaddress1: $("#libraryaddress1").val(), //if applicable, a matching pair with libraryname1 required
-        // libraryname2: $("#libraryname2").val(), //if applicable, matching pair required
-        // libraryaddress2: $("#libraryaddress2").val(), //if applicable, matching pair required
-        // libraryname3: $("#libraryname3").val(), //if applicable, matching pair required
-        // libraryaddress3: $("#libraryaddress3").val(), //if applicable, matching pair required
-        // libraryname4: $("#libraryname4").val(), //if applicable, matching pair required
-        // libraryaddress4: $("#libraryaddress4").val(), //if applicable, matching pair required
-        // libraryname5: $("#libraryname5").val(), //if applicable, matching pair required
-        // libraryaddress5: $("#libraryaddress5").val(), //if applicable, matching pair required
-        // libraryname6: $("#libraryname6").val(), //if applicable, matching pair required
-        // libraryaddress6: $("#libraryaddress6").val(), //if applicable, matching pair required
-        // libraryname7: $("#libraryname7").val(), //if applicable, matching pair required
-        // libraryaddress7: $("#libraryaddress7").val(), //if applicable, matching pair required
-        // libraryname8: $("#libraryname8").val(), //if applicable, matching pair required
-        // libraryaddress8: $("#libraryaddress8").val(), //if applicable, matching pair required
-        // libraryname9: $("#libraryname9").val(), //if applicable, matching pair required
-        // libraryaddress9: $("#libraryaddress9").val(), //if applicable, matching pair required
-        // libraryname10: $("#libraryname10").val(), //if applicable, matching pair required
-        // libraryaddress10: $("#libraryaddress10").val() //if applicable, matching pair required
-      })
+      data: qs.stringify(postData)
     });
     const { data: submissionData } = submissionResponse;
 
@@ -254,6 +256,24 @@ export async function submitSources(
       logError(
         `Failed to verify contract ${name}: ${statusData.message}, ${statusData.result}`
       );
+      // logInfo(
+      //   JSON.stringify(
+      //     {
+      //       apikey: "XXXXXX",
+      //       module: "contract",
+      //       action: "verifysourcecode",
+      //       contractaddress: address,
+      //       sourceCode: solcInputString,
+      //       codeformat: "solidity-standard-json-input",
+      //       contractname: contractNamePath,
+      //       compilerversion: `v${metadata.compiler.version}`, // see http://etherscan.io/solcversions for list of support versions
+      //       constructorArguements,
+      //       licenseType
+      //     },
+      //     null,
+      //     "  "
+      //   )
+      // );
       return "failure";
     }
 
@@ -267,6 +287,5 @@ export async function submitSources(
     if (result === "success") {
       logSuccess(` => contract ${name} is now verified`);
     }
-    return;
   }
 }

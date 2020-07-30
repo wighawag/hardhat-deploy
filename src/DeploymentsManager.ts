@@ -563,7 +563,11 @@ export class DeploymentsManager {
         history: deployment.history,
         devdoc: deployment.devdoc,
         userdoc: deployment.userdoc,
-        storageLayout: deployment.storageLayout
+        storageLayout: deployment.storageLayout,
+        contractFilepath: deployment.contractFilepath,
+        contractName: deployment.contractName,
+        methodIdentifiers: deployment.methodIdentifiers,
+        gasEstimates: deployment.gasEstimates
       })
     );
     this.db.deployments[name] = obj;

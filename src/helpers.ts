@@ -399,7 +399,10 @@ export function addHelpers(
           methodIdentifiers: options.contract?.methodIdentifiers,
           storageLayout: options.contract?.storageLayout,
           userdoc: options.contract?.userdoc,
-          devdoc: options.contract?.devdoc
+          devdoc: options.contract?.devdoc,
+          evm: {
+            gasEstimates: options.contract?.gasEstimates
+          }
         };
         contractName = options.contract.contractName;
         contractFilepath = options.contract.contractFilepath;
@@ -424,7 +427,7 @@ export function addHelpers(
         }
       } else {
         log(
-          `solc-output not found, it is not possible to get the metadata nor the contractFilePath for ${name}`
+          `solc-output not found, it is not possible to get the metadata nor the contractFilepath for ${name}`
         );
       }
     }
@@ -443,7 +446,8 @@ export function addHelpers(
       userdoc: contractSolcOutput?.userdoc,
       devdoc: contractSolcOutput?.devdoc,
       methodIdentifiers: contractSolcOutput?.methodIdentifiers,
-      storageLayout: contractSolcOutput?.storageLayout
+      storageLayout: contractSolcOutput?.storageLayout,
+      gasEstimates: contractSolcOutput?.evm?.gasEstimates
     };
     tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait();
