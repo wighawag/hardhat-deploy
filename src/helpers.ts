@@ -12,7 +12,10 @@ import {
 } from "@ethersproject/contracts";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Wallet } from "@ethersproject/wallet";
-import { keccak256 as solidityKeccak256 } from "@ethersproject/solidity";
+import {
+  keccak256 as solidityKeccak256,
+  keccak256
+} from "@ethersproject/solidity";
 import { Interface, FunctionFragment, Fragment } from "@ethersproject/abi";
 import {
   BuidlerRuntimeEnvironment,
@@ -33,7 +36,8 @@ import {
   Address,
   ProxyOptions,
   DiamondFacets,
-  DiamondOptions
+  DiamondOptions,
+  LinkReferences
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
 import transparentProxy from "../artifacts/TransparentProxy.json";
@@ -42,7 +46,6 @@ import diamondFacet from "../artifacts/DiamondFacet.json";
 import ownershipFacet from "../artifacts/OwnershipFacet.json";
 import diamondLoopeFacet from "../artifacts/DiamondLoupeFacet.json";
 import diamantaire from "../artifacts/Diamantaire.json";
-import { string } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 import fs from "fs";
 import path from "path";
 
@@ -237,8 +240,12 @@ function linkLibraries(
     }
   }
 
+  // TODO return libraries object with path name <filepath.sol>:<name> for names
+
   return bytecode;
 }
+let solcInput: string;
+let solcInputHash: string;
 let solcOutput: {
   contracts: {
     [filename: string]: {
@@ -279,16 +286,25 @@ export function addHelpers(
           availableAccounts[account.toLowerCase()] = true;
         }
       } catch (e) {}
-    }
+      // TODO wait for buidler to have the info in artifact
+      try {
+        solcOutput = JSON.parse(
+          fs
+            .readFileSync(path.join(env.config.paths.cache, "solc-output.json"))
+            .toString()
+        );
+      } catch (e) {}
 
-    // TODO wait for buidler to have the info in artifact
-    try {
-      solcOutput = JSON.parse(
-        fs
-          .readFileSync(path.join(env.config.paths.cache, "solc-output.json"))
-          .toString()
-      );
-    } catch (e) {}
+      // Necessary for etherscan it seems. using metadata seems insuficient to reconstruct the necessary info for etherscan. Here is a diff of a success vs failure case: https://gist.github.com/wighawag/dfc123ffb7838e5aeb88f58abff505f7
+      try {
+        solcInput = fs
+          .readFileSync(path.join(env.config.paths.cache, "solc-input.json"))
+          .toString();
+      } catch (e) {}
+      if (solcInput) {
+        solcInputHash = keccak256(["string"], [solcInput]);
+      }
+    }
   }
 
   async function setupGasPrice(overrides: any) {
@@ -327,7 +343,13 @@ export function addHelpers(
     name: string,
     options: DeployOptions
   ): Promise<{
-    artifact: { abi: any; bytecode: string; deployedBytecode?: string };
+    artifact: {
+      abi: any;
+      bytecode: string;
+      deployedBytecode?: string;
+      deployedLinkReferences?: LinkReferences;
+      linkReferences?: LinkReferences;
+    };
     contractName?: string;
   }> {
     let artifact: { abi: any; bytecode: string; deployedBytecode?: string };
@@ -437,12 +459,14 @@ export function addHelpers(
       abi,
       args,
       linkedData: options.linkedData,
-      // solidityJson: extendedAtifact.solidityJson,
+      solcInputHash,
+      solcInput,
       metadata: contractSolcOutput?.metadata,
       contractName,
       contractFilepath,
       bytecode: artifact.bytecode,
       deployedBytecode: artifact.deployedBytecode,
+      libraries: options.libraries,
       userdoc: contractSolcOutput?.userdoc,
       devdoc: contractSolcOutput?.devdoc,
       methodIdentifiers: contractSolcOutput?.methodIdentifiers,
@@ -875,7 +899,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     }
     // console.log({ oldFacets: JSON.stringify(oldFacets, null, "  ") });
 
-    let changesDetected = false;
+    let changesDetected = !oldDeployment;
     let abi: any[] = [];
     const facetCuts: FacetCut[] = [];
     for (const facet of options.facets) {
@@ -953,7 +977,6 @@ Plus they are only used when the contract is meant to be used as standalone when
           facetCut.address
         );
       });
-      log(`cutting ${cuts} ...`);
 
       let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
       if (!proxy || !diamantaireDeployment) {
@@ -966,7 +989,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           from: options.from,
           contract: diamantaire,
           args: [owner, cuts, data],
-          log: false // TODO ?
+          log: false
         });
 
         const receipt = diamantaireDeployment.receipt;
@@ -998,15 +1021,22 @@ Plus they are only used when the contract is meant to be used as standalone when
           throw new Error("DiamondCreated Not Emitted");
         }
         const proxyAddress = diamondCreatedEvent.args.diamond;
-        // console.log(`proxy address ${proxyAddress}`);
+        if (options.log) {
+          log(
+            `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address}) cuts: ${cuts} with ${receipt.gasUsed} gas`
+          );
+        }
         proxy = {
           abi: diamondBase.abi,
           address: proxyAddress,
           receipt,
           args: [diamantaireDeployment.address],
           bytecode: diamondBase.bytecode,
-          deployedBytecode: diamondBase.deployedBytecode // TODO if more fiels are added, we need to add more
-          // TODO metadata + contractName
+          deployedBytecode: diamondBase.deployedBytecode,
+          metadata: diamondBase.metadata,
+          contractName: diamondBase.contractName,
+          contractFilepath: diamondBase.contractFilepath
+          // TODO if more fiels are added, we need to add more
         };
         await env.deployments.save(proxyName, proxy);
 
@@ -1018,6 +1048,9 @@ Plus they are only used when the contract is meant to be used as standalone when
           diamondCuts: cuts,
           abi,
           execute: options.execute
+          // metadata: diamondBase.metadata,
+          // contractName: diamondBase.contractName,
+          // contractFilepath: diamondBase.contractFilepath
         });
       } else {
         if (!oldDeployment) {
@@ -1054,6 +1087,9 @@ Plus they are only used when the contract is meant to be used as standalone when
           facets: facetSnapshot,
           diamondCuts: cuts,
           execute: options.execute
+          // metadata: oldDeployment.metadata,
+          // contractName: oldDeployment.contractName,
+          // contractFilepath: oldDeployment.contractFilepath
         });
       }
 

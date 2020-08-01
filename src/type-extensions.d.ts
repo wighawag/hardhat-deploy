@@ -71,7 +71,7 @@ declare module "@nomiclabs/buidler/types" {
     owner?: Address;
     facets: DiamondFacets;
     log?: boolean;
-    libraries?: { [libraryName: string]: Address };
+    libraries?: Libraries;
     linkedData?: any; // JSONable ?
     upgradeIndex?: number;
     execute?: {
@@ -106,7 +106,7 @@ declare module "@nomiclabs/buidler/types" {
     fieldsToCompare?: string | string[];
     skipIfAlreadyDeployed?: boolean;
     linkedData?: any; // JSONable ?
-    libraries?: { [libraryName: string]: Address };
+    libraries?: Libraries;
     proxy?: boolean | string | ProxyOptions; // TODO support different type of proxies ?
   }
 
@@ -251,6 +251,8 @@ declare module "@nomiclabs/buidler/types" {
     [chainId: string]: { [name: string]: Export };
   };
 
+  export type Libraries = { [libraryName: string]: Address };
+
   export interface DeploymentSubmission {
     abi: ABI;
     receipt: Receipt;
@@ -260,7 +262,8 @@ declare module "@nomiclabs/buidler/types" {
     history?: Deployment[];
     args?: any[];
     linkedData?: any;
-    solidityJson?: any; // TODO solidityJson type
+    solcInput?: string;
+    solcInputHash?: string;
     metadata?: string;
     bytecode?: string;
     deployedBytecode?: string;
@@ -274,8 +277,13 @@ declare module "@nomiclabs/buidler/types" {
       args: any[];
     };
     storageLayout?: any;
+    libraries?: Libraries;
     gasEstimates?: any;
   }
+
+  // export type LibraryReferences = {
+  //   [filepath: string]: { [name: string]: { length: number; start: number }[] };
+  // };
 
   export interface Deployment {
     abi: ABI;
@@ -286,10 +294,11 @@ declare module "@nomiclabs/buidler/types" {
     history?: Deployment[];
     args?: any[];
     linkedData?: any;
-    solidityJson?: any; // TODO solidityJson type
+    solcInputHash?: string;
     metadata?: string;
     bytecode?: string;
     deployedBytecode?: string;
+    libraries?: Libraries;
     userdoc?: any;
     devdoc?: any;
     methodIdentifiers?: any;

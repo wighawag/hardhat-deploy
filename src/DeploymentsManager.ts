@@ -94,8 +94,10 @@ export class DeploymentsManager {
     };
 
     const partialExtension: PartialExtension = {
-      save: async (name: string, deployment: Deployment): Promise<boolean> =>
-        this.saveDeployment(name, deployment),
+      save: async (
+        name: string,
+        deployment: DeploymentSubmission
+      ): Promise<boolean> => this.saveDeployment(name, deployment),
       get: async (name: string) => {
         if (!this.db.deploymentsLoaded) {
           await this.loadDeployments();
@@ -467,6 +469,15 @@ export class DeploymentsManager {
     deleteDeployments(this.deploymentsPath, folderPath);
   }
 
+  public async getSolcInputPath() {
+    const chainId = await getChainId(this.env);
+    return path.join(
+      this.deploymentsPath,
+      this.getDeploymentsSubPath(chainId),
+      "solcInputs"
+    );
+  }
+
   public async saveDeployment(
     name: string,
     deployment: DeploymentSubmission
@@ -553,10 +564,11 @@ export class DeploymentsManager {
         address: deployment.address || actualReceipt.contractAddress,
         args: actualArgs,
         linkedData: deployment.linkedData,
-        solidityJson: deployment.solidityJson,
+        solcInputHash: deployment.solcInputHash,
         metadata: deployment.metadata,
         bytecode: deployment.bytecode,
         deployedBytecode: deployment.deployedBytecode,
+        libraries: deployment.libraries,
         facets: deployment.facets,
         diamondCuts: deployment.diamondCuts,
         execute: deployment.execute,
@@ -608,6 +620,24 @@ export class DeploymentsManager {
         );
       } catch (e) {}
       fs.writeFileSync(filepath, JSON.stringify(obj, null, "  "));
+
+      if (deployment.solcInputHash) {
+        const solcInputsFolderpath = path.join(
+          this.deploymentsPath,
+          this.getDeploymentsSubPath(chainId),
+          "solcInputs"
+        );
+        const solcInputFilepath = path.join(
+          solcInputsFolderpath,
+          deployment.solcInputHash + ".json"
+        );
+        if (!fs.existsSync(solcInputFilepath)) {
+          try {
+            fs.mkdirSync(solcInputsFolderpath);
+          } catch (e) {}
+          fs.writeFileSync(solcInputFilepath, deployment.solcInput);
+        }
+      }
     }
 
     // this.spreadEvents();
@@ -849,7 +879,7 @@ export class DeploymentsManager {
                   deploymentFolderPath,
                   ".migrations.json"
                 ),
-                JSON.stringify(this.db.migrations)
+                JSON.stringify(this.db.migrations, null, "  ")
               );
             }
           }

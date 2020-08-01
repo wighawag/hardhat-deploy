@@ -95,7 +95,12 @@ function loadDeployments(
   const deployPath = path.join(deploymentsPath, subPath);
   let filesStats;
   try {
-    filesStats = traverse(deployPath);
+    filesStats = traverse(
+      deployPath,
+      undefined,
+      undefined,
+      name => !name.startsWith(".") && name !== "solcInputs"
+    );
   } catch (e) {
     // console.log('no folder at ' + deployPath);
     return {};

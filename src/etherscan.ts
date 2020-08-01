@@ -24,16 +24,17 @@ function logSuccess(...args: any[]) {
 
 export async function submitSources(
   bre: BuidlerRuntimeEnvironment,
+  solcInputsPath: string,
   config?: {
     etherscanApiKey?: string;
     license?: string;
-    exportSolcInputOnFailure?: string;
+    fallbackOnSolcInput?: boolean;
   }
 ) {
   config = config || {};
+  const fallbackOnSolcInput = config.fallbackOnSolcInput;
   const license = config.license || "None";
   const etherscanApiKey = config.etherscanApiKey;
-  const exportSolcInputOnFailure = config.exportSolcInputOnFailure;
   const chainId = await bre.getChainId();
   const all = await bre.deployments.all();
   let host: string;
@@ -97,12 +98,14 @@ export async function submitSources(
     if (license === "AGPL-3.0") {
       return 13;
     }
+  })();
+  if (!licenseType) {
     return logError(
       `license :"${license}" not supported by etherscan, list of supported license can be found here : https://etherscan.io/contract-license-types . This tool expect the SPDX id, except for "None" and "Unlicense"`
     );
-  })();
+  }
 
-  for (const name of Object.keys(all)) {
+  async function submit(name: string, useSolcInput?: boolean) {
     const deployment = all[name];
     const { address, metadata: metadataString } = deployment;
     const abiResponse = await axios.get(
@@ -115,28 +118,20 @@ export async function submitSources(
         contractABI = JSON.parse(abiData.result);
       } catch (e) {
         logError(e);
-        continue;
+        return;
       }
     }
     if (contractABI && contractABI !== "") {
       log(`already verified: ${name} (${address}), skipping.`);
-      continue;
+      return;
     }
     if (!metadataString) {
       logError(
         `Contract ${name} was deployed without saving metadata. Cannot submit to etherscan, skipping.`
       );
-      continue;
+      return;
     }
     const metadata = JSON.parse(metadataString);
-    const settings = { ...metadata.settings };
-    delete settings.compilationTarget;
-    const solcInputString = JSON.stringify({
-      language: metadata.language,
-      settings,
-      sources: metadata.sources
-    });
-    logInfo(`verifying ${name} (${address}) ...`);
 
     let contractNamePath: string | undefined;
     const contractFilepath = deployment.contractFilepath;
@@ -166,26 +161,73 @@ export async function submitSources(
         logError(
           `\ncannot find contract path in sources for name: ${contractName}`
         );
-        continue;
+        return;
       }
       process.stdout.write(chalk.green(` found\n`));
       // console.error(`contractName is missing for ${name}`);
       // continue;
     }
 
+    let solcInput;
+    if (useSolcInput) {
+      const solcInputHash = deployment.solcInputHash;
+      let solcInputStringFromDeployment: string | undefined;
+      try {
+        solcInputStringFromDeployment = fs
+          .readFileSync(path.join(solcInputsPath, solcInputHash + ".json"))
+          .toString();
+      } catch (e) {}
+      if (!solcInputStringFromDeployment) {
+        logError(
+          `Contract ${name} was deployed without saving solcInput. Cannot submit to etherscan, skipping.`
+        );
+        return;
+      }
+      // TODO read file ?
+      solcInput = JSON.parse(solcInputStringFromDeployment);
+    } else {
+      const settings = { ...metadata.settings };
+      delete settings.compilationTarget;
+      solcInput = {
+        language: metadata.language,
+        settings,
+        sources: metadata.sources
+      };
+    }
+
+    // Adding Libraries ....
+    if (deployment.libraries) {
+      const settings = solcInput.settings;
+      settings.libraries = settings.libraries || {};
+      for (const libraryName of Object.keys(deployment.libraries)) {
+        if (!settings.libraries[contractNamePath]) {
+          settings.libraries[contractNamePath] = {};
+        }
+        settings.libraries[contractNamePath][libraryName] =
+          deployment.libraries[libraryName];
+      }
+    }
+    const solcInputString = JSON.stringify(solcInput);
+
+    logInfo(`verifying ${name} (${address}) ...`);
+
     let constructorArguements: string | undefined;
     if (deployment.args) {
       const constructor: { inputs: ParamType[] } = deployment.abi.find(
         v => v.type === "constructor"
       );
-      constructorArguements = defaultAbiCoder
-        .encode(constructor.inputs, deployment.args)
-        .slice(2);
+      if (constructor) {
+        constructorArguements = defaultAbiCoder
+          .encode(constructor.inputs, deployment.args)
+          .slice(2);
+      }
     } else {
       logInfo(`no args found, assuming empty constructor...`);
     }
 
-    const postData = {
+    const postData: {
+      [fieldName: string]: string | number | void | undefined; // TODO type
+    } = {
       apikey: etherscanApiKey,
       module: "contract",
       action: "verifysourcecode",
@@ -196,28 +238,18 @@ export async function submitSources(
       compilerversion: `v${metadata.compiler.version}`, // see http://etherscan.io/solcversions for list of support versions
       constructorArguements,
       licenseType
-      // TODO libraries
-      // libraryname1: $("#libraryname1").val(), //if applicable, a matching pair with libraryaddress1 required
-      // libraryaddress1: $("#libraryaddress1").val(), //if applicable, a matching pair with libraryname1 required
-      // libraryname2: $("#libraryname2").val(), //if applicable, matching pair required
-      // libraryaddress2: $("#libraryaddress2").val(), //if applicable, matching pair required
-      // libraryname3: $("#libraryname3").val(), //if applicable, matching pair required
-      // libraryaddress3: $("#libraryaddress3").val(), //if applicable, matching pair required
-      // libraryname4: $("#libraryname4").val(), //if applicable, matching pair required
-      // libraryaddress4: $("#libraryaddress4").val(), //if applicable, matching pair required
-      // libraryname5: $("#libraryname5").val(), //if applicable, matching pair required
-      // libraryaddress5: $("#libraryaddress5").val(), //if applicable, matching pair required
-      // libraryname6: $("#libraryname6").val(), //if applicable, matching pair required
-      // libraryaddress6: $("#libraryaddress6").val(), //if applicable, matching pair required
-      // libraryname7: $("#libraryname7").val(), //if applicable, matching pair required
-      // libraryaddress7: $("#libraryaddress7").val(), //if applicable, matching pair required
-      // libraryname8: $("#libraryname8").val(), //if applicable, matching pair required
-      // libraryaddress8: $("#libraryaddress8").val(), //if applicable, matching pair required
-      // libraryname9: $("#libraryname9").val(), //if applicable, matching pair required
-      // libraryaddress9: $("#libraryaddress9").val(), //if applicable, matching pair required
-      // libraryname10: $("#libraryname10").val(), //if applicable, matching pair required
-      // libraryaddress10: $("#libraryaddress10").val() //if applicable, matching pair required
     };
+
+    // Does not seem to work with solc-input ?
+    // if (deployment.libraries) {
+    //   let counter = 1;
+    //   for (const libraryName of Object.keys(deployment.libraries)) {
+    //     postData[`libraryname${counter}`] = libraryName;
+    //     postData[`libraryaddress${counter}`] =
+    //       deployment.libraries[libraryName];
+    //     counter++;
+    //   }
+    // }
 
     const submissionResponse = await axios.request({
       url: `${host}/api`,
@@ -235,11 +267,11 @@ export async function submitSources(
         `contract ${name} failed to submit : "${submissionData.message}"`,
         submissionData
       );
-      continue;
+      return;
     }
     if (!guid) {
       logError(`contract submission for ${name} failed to return a guid`);
-      continue;
+      return;
     }
 
     async function checkStatus(): Promise<string | undefined> {
@@ -264,15 +296,7 @@ export async function submitSources(
       logError(
         `Failed to verify contract ${name}: ${statusData.message}, ${statusData.result}`
       );
-      if (exportSolcInputOnFailure) {
-        fs.writeFileSync(
-          path.join(
-            exportSolcInputOnFailure,
-            `${address}_${metadata.compiler.version}.json`
-          ),
-          solcInputString
-        );
-      }
+
       logError(
         JSON.stringify(
           {
@@ -291,6 +315,8 @@ export async function submitSources(
           "  "
         )
       );
+      // logError(JSON.stringify(postData, null, "  "));
+      // logInfo(postData.sourceCode);
       return "failure";
     }
 
@@ -304,5 +330,22 @@ export async function submitSources(
     if (result === "success") {
       logSuccess(` => contract ${name} is now verified`);
     }
+
+    if (result === "failure") {
+      if (!useSolcInput && fallbackOnSolcInput) {
+        logInfo(
+          "Falling back on solcInput. etherscan seems to sometime require full solc-input with all source files, even though this should not be needed"
+        );
+        await submit(name, true);
+      } else {
+        logInfo(
+          "Etherscan sometime fails to verify when only metadata sources are givem, You can add the option --solc-input to try with full solc-input sources. This will include all contract source in the etherscan result, even the one not relevant to the contract being verified"
+        );
+      }
+    }
+  }
+
+  for (const name of Object.keys(all)) {
+    await submit(name);
   }
 }
