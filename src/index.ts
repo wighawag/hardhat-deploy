@@ -333,6 +333,7 @@ export default function() {
     )
     .addFlag("reset", "whether to delete deployments files first")
     .addFlag("silent", "whether to renove log")
+    .addFlag("noDeploy", "do not deploy")
     .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre, runSuper) => {
       args.pendingtx = !isBuidlerEVM(bre);
@@ -348,7 +349,9 @@ export default function() {
       args.watch = false;
       args.log = !args.silent;
       delete args.silent;
-      await bre.run("deploy:run", args);
+      if (!args.noDeploy) {
+        await bre.run("deploy:run", args);
+      }
       const { hostname, port } = args;
       let server;
       try {
