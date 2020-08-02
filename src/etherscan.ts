@@ -114,7 +114,7 @@ export async function submitSources(
       return;
     }
     const metadata = JSON.parse(metadataString);
-    const compilationTarget = metadata.settings.compilationTarget;
+    const compilationTarget = metadata.settings?.compilationTarget;
 
     let contractFilepath;
     let contractName;
@@ -123,45 +123,11 @@ export async function submitSources(
       contractName = compilationTarget[contractFilepath];
     }
 
-    // /////////////////////////// TODO Remove
     if (!contractFilepath || !contractName) {
-      logInfo(`compilationTarget is missing for ${name}`);
-      contractName = deployment.contractName;
-      if (!contractName) {
-        logInfo(`contractName is missing for ${name}`);
-        logInfo(`falling back on "${name}"`); // TODO remove ?
-        contractName = name;
-        // console.error(`contractName is missing for ${name}`);
-        // continue;
-      }
-
-      contractFilepath = deployment.contractFilepath;
-      if (!contractFilepath) {
-        logInfo(`contractFilepath is missing for ${name}`);
-
-        // TODO remove ?
-        process.stdout.write(
-          chalk.yellow(
-            `falling back on finding the same filename in sources...`
-          )
-        );
-        for (const contractPath of Object.keys(metadata.sources)) {
-          if (path.basename(contractPath, ".sol") === contractName) {
-            contractFilepath = contractPath;
-          }
-        }
-        if (!contractFilepath) {
-          logError(
-            `\ncannot find contract path in sources for name: ${contractName}`
-          );
-          return;
-        }
-        process.stdout.write(chalk.green(` found\n`));
-        // console.error(`contractName is missing for ${name}`);
-        // continue;
-      }
+      return logError(
+        `Failed to extract contract fully qualified name from metadata.settings.compilationTarget for ${name}. Skipping.`
+      );
     }
-    // //////////////////////////////////////
 
     const contractNamePath = `${contractFilepath}:${contractName}`;
 
@@ -187,30 +153,6 @@ export async function submitSources(
         license = sourceLicenseType;
       }
     }
-
-    // const allsourceLicenseTypes:
-    //   | string
-    //   | string[]
-    //   | undefined = extractLicenseFromSources(metadataString);
-
-    // if (sourceLicenseType) {
-    //   if (license && license !== sourceLicenseType) {
-    //     return logError(
-    //       `mismatch for license option (${license}) and the one speccified in the source code for ${name}.\nLicenses found in source : ${sourceLicenseType}\nYou can use option --force-license to force option --license`
-    //     );
-    //   }
-    //   if (typeof sourceLicenseType !== "string") {
-    //     return logError(
-    //       `multiple different licenses found for ${name}:\n${sourceLicenseType}\nuse --license <SPDX> and --force-license to continue`
-    //     );
-    //   }
-    // } else {
-    //   if (!license) {
-    //     return logError(
-    //       `no license speccified in the source code for ${name}, Please use option --license <SPDX>`
-    //     );
-    //   }
-    // }
 
     const licenseType = (() => {
       if (license === "None") {

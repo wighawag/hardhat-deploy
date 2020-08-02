@@ -576,8 +576,6 @@ export class DeploymentsManager {
         devdoc: deployment.devdoc,
         userdoc: deployment.userdoc,
         storageLayout: deployment.storageLayout,
-        contractFilepath: deployment.contractFilepath,
-        contractName: deployment.contractName,
         methodIdentifiers: deployment.methodIdentifiers,
         gasEstimates: deployment.gasEstimates
       })

@@ -380,7 +380,7 @@ export function addHelpers(
     }
     const artifactInfo = await getArtifactFromOptions(name, options);
     const { artifact } = artifactInfo;
-    let { contractName } = artifactInfo;
+    const { contractName } = artifactInfo;
     const abi = artifact.abi;
     const byteCode = linkLibraries(artifact, options.libraries);
     const factory = new ContractFactory(abi, byteCode, ethersSigner);
@@ -412,7 +412,6 @@ export function addHelpers(
         await provider.send("evm_mine", []);
       } catch (e) {}
     }
-    let contractFilepath;
     let contractSolcOutput;
     if (!contractName) {
       if (typeof options.contract === "object") {
@@ -426,8 +425,6 @@ export function addHelpers(
             gasEstimates: options.contract?.gasEstimates
           }
         };
-        contractName = options.contract.contractName;
-        contractFilepath = options.contract.contractFilepath;
       }
       if (!contractSolcOutput || !contractSolcOutput.metadata) {
         log(`no metadata associated with contract deployed as ${name}`);
@@ -442,14 +439,13 @@ export function addHelpers(
                 "0x" + contractEntry[1].evm?.bytecode?.object
               ) {
                 contractSolcOutput = contractEntry[1];
-                contractFilepath = fileEntry[0];
               }
             }
           }
         }
       } else {
         log(
-          `solc-output not found, it is not possible to get the metadata nor the contractFilepath for ${name}`
+          `solc-output not found, it is not possible to get the metadata for ${name}`
         );
       }
     }
@@ -462,8 +458,6 @@ export function addHelpers(
       solcInputHash,
       solcInput,
       metadata: contractSolcOutput?.metadata,
-      contractName,
-      contractFilepath,
       bytecode: artifact.bytecode,
       deployedBytecode: artifact.deployedBytecode,
       libraries: options.libraries,
@@ -1033,9 +1027,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           args: [diamantaireDeployment.address],
           bytecode: diamondBase.bytecode,
           deployedBytecode: diamondBase.deployedBytecode,
-          metadata: diamondBase.metadata,
-          contractName: diamondBase.contractName,
-          contractFilepath: diamondBase.contractFilepath
+          metadata: diamondBase.metadata
           // TODO if more fiels are added, we need to add more
         };
         await env.deployments.save(proxyName, proxy);
@@ -1048,9 +1040,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           diamondCuts: cuts,
           abi,
           execute: options.execute
-          // metadata: diamondBase.metadata,
-          // contractName: diamondBase.contractName,
-          // contractFilepath: diamondBase.contractFilepath
+          // metadata: diamondBase.metadata
         });
       } else {
         if (!oldDeployment) {
@@ -1087,9 +1077,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           facets: facetSnapshot,
           diamondCuts: cuts,
           execute: options.execute
-          // metadata: oldDeployment.metadata,
-          // contractName: oldDeployment.contractName,
-          // contractFilepath: oldDeployment.contractFilepath
+          // metadata: oldDeployment.metadata
         });
       }
 
