@@ -22,6 +22,32 @@ function logSuccess(...args: any[]) {
   console.log(chalk.green(...args));
 }
 
+function extractOneLicenseFromSourceFile(source: string): string | undefined {
+  const licenses = extractLicenseFromSources(source);
+  if (licenses.length === 0) {
+    return undefined;
+  }
+  return licenses[0]; // TODO error out on multiple SPDX ?
+}
+
+function extractLicenseFromSources(metadata: string): string[] {
+  const regex = /\/\/ SPDX-License-Identifier: (.*?)[\s\\]/g;
+  const matches = (metadata as any).matchAll(regex);
+  const licensesFound: { [license: string]: boolean } = {};
+  const licenses = [];
+  if (matches) {
+    for (const match of matches) {
+      if (match[1]) {
+        if (!licensesFound[match[1]]) {
+          licensesFound[match[1]] = true;
+          licenses.push(match[1]);
+        }
+      }
+    }
+  }
+  return licenses;
+}
+
 export async function submitSources(
   bre: BuidlerRuntimeEnvironment,
   solcInputsPath: string,
@@ -29,11 +55,13 @@ export async function submitSources(
     etherscanApiKey?: string;
     license?: string;
     fallbackOnSolcInput?: boolean;
+    forceLicense?: boolean;
   }
 ) {
   config = config || {};
   const fallbackOnSolcInput = config.fallbackOnSolcInput;
-  const license = config.license || "None";
+  let license = config.license;
+  const forceLicense = config.forceLicense;
   const etherscanApiKey = config.etherscanApiKey;
   const chainId = await bre.getChainId();
   const all = await bre.deployments.all();
@@ -58,53 +86,6 @@ export async function submitSources(
       return logError(`Network with chainId: ${chainId} not supported`);
   }
 
-  const licenseType = (() => {
-    if (!license || license === "None") {
-      return 1;
-    }
-    if (license === "Unlicense") {
-      return 2;
-    }
-    if (license === "MIT") {
-      return 3;
-    }
-    if (license === "GPL-2.0") {
-      return 4;
-    }
-    if (license === "GPL-3.0") {
-      return 5;
-    }
-    if (license === "LGPL-2.1") {
-      return 6;
-    }
-    if (license === "LGPL-3.0") {
-      return 7;
-    }
-    if (license === "BSD-2-Clause") {
-      return 8;
-    }
-    if (license === "BSD-3-Clause") {
-      return 9;
-    }
-    if (license === "MPL-2.0") {
-      return 10;
-    }
-    if (license === "OSL-3.0") {
-      return 11;
-    }
-    if (license === "Apache-2.0") {
-      return 12;
-    }
-    if (license === "AGPL-3.0") {
-      return 13;
-    }
-  })();
-  if (!licenseType) {
-    return logError(
-      `license :"${license}" not supported by etherscan, list of supported license can be found here : https://etherscan.io/contract-license-types . This tool expect the SPDX id, except for "None" and "Unlicense"`
-    );
-  }
-
   async function submit(name: string, useSolcInput?: boolean) {
     const deployment = all[name];
     const { address, metadata: metadataString } = deployment;
@@ -125,6 +106,7 @@ export async function submitSources(
       log(`already verified: ${name} (${address}), skipping.`);
       return;
     }
+
     if (!metadataString) {
       logError(
         `Contract ${name} was deployed without saving metadata. Cannot submit to etherscan, skipping.`
@@ -132,40 +114,150 @@ export async function submitSources(
       return;
     }
     const metadata = JSON.parse(metadataString);
+    const compilationTarget = metadata.settings.compilationTarget;
 
-    let contractNamePath: string | undefined;
-    const contractFilepath = deployment.contractFilepath;
-    let contractName = deployment.contractName;
-    if (!contractName) {
-      logInfo(`contractName is missing for ${name}`);
-      logInfo(`falling back on "${name}"`); // TODO remove ?
-      contractName = name;
-      // console.error(`contractName is missing for ${name}`);
-      // continue;
+    let contractFilepath;
+    let contractName;
+    if (compilationTarget) {
+      contractFilepath = Object.keys(compilationTarget)[0];
+      contractName = compilationTarget[contractFilepath];
     }
-    if (contractFilepath) {
-      contractNamePath = `${contractFilepath}:${contractName}`;
-    } else {
-      logInfo(`contractFilepath is missing for ${name}`);
 
-      // TODO remove ?
-      process.stdout.write(
-        chalk.yellow(`falling back on finding the same filename in sources...`)
-      );
-      for (const contractPath of Object.keys(metadata.sources)) {
-        if (path.basename(contractPath, ".sol") === contractName) {
-          contractNamePath = `${contractPath}:${contractName}`;
-        }
+    // /////////////////////////// TODO Remove
+    if (!contractFilepath || !contractName) {
+      logInfo(`compilationTarget is missing for ${name}`);
+      contractName = deployment.contractName;
+      if (!contractName) {
+        logInfo(`contractName is missing for ${name}`);
+        logInfo(`falling back on "${name}"`); // TODO remove ?
+        contractName = name;
+        // console.error(`contractName is missing for ${name}`);
+        // continue;
       }
-      if (!contractNamePath) {
-        logError(
-          `\ncannot find contract path in sources for name: ${contractName}`
+
+      contractFilepath = deployment.contractFilepath;
+      if (!contractFilepath) {
+        logInfo(`contractFilepath is missing for ${name}`);
+
+        // TODO remove ?
+        process.stdout.write(
+          chalk.yellow(
+            `falling back on finding the same filename in sources...`
+          )
         );
-        return;
+        for (const contractPath of Object.keys(metadata.sources)) {
+          if (path.basename(contractPath, ".sol") === contractName) {
+            contractFilepath = contractPath;
+          }
+        }
+        if (!contractFilepath) {
+          logError(
+            `\ncannot find contract path in sources for name: ${contractName}`
+          );
+          return;
+        }
+        process.stdout.write(chalk.green(` found\n`));
+        // console.error(`contractName is missing for ${name}`);
+        // continue;
       }
-      process.stdout.write(chalk.green(` found\n`));
-      // console.error(`contractName is missing for ${name}`);
-      // continue;
+    }
+    // //////////////////////////////////////
+
+    const contractNamePath = `${contractFilepath}:${contractName}`;
+
+    const contractSourceFile = metadata.sources[contractFilepath].content;
+    const sourceLicenseType = extractOneLicenseFromSourceFile(
+      contractSourceFile
+    );
+
+    if (!sourceLicenseType) {
+      if (!license) {
+        return logError(
+          `no license speccified in the source code for ${name} (${contractNamePath}), Please use option --license <SPDX>`
+        );
+      }
+    } else {
+      if (license && license !== sourceLicenseType) {
+        if (!forceLicense) {
+          return logError(
+            `mismatch for --license option (${license}) and the one speccified in the source code for ${name}.\nLicenses found in source : ${sourceLicenseType}\nYou can use option --force-license to force option --license`
+          );
+        }
+      } else {
+        license = sourceLicenseType;
+      }
+    }
+
+    // const allsourceLicenseTypes:
+    //   | string
+    //   | string[]
+    //   | undefined = extractLicenseFromSources(metadataString);
+
+    // if (sourceLicenseType) {
+    //   if (license && license !== sourceLicenseType) {
+    //     return logError(
+    //       `mismatch for license option (${license}) and the one speccified in the source code for ${name}.\nLicenses found in source : ${sourceLicenseType}\nYou can use option --force-license to force option --license`
+    //     );
+    //   }
+    //   if (typeof sourceLicenseType !== "string") {
+    //     return logError(
+    //       `multiple different licenses found for ${name}:\n${sourceLicenseType}\nuse --license <SPDX> and --force-license to continue`
+    //     );
+    //   }
+    // } else {
+    //   if (!license) {
+    //     return logError(
+    //       `no license speccified in the source code for ${name}, Please use option --license <SPDX>`
+    //     );
+    //   }
+    // }
+
+    const licenseType = (() => {
+      if (license === "None") {
+        return 1;
+      }
+      if (license === "UNLICENSED") {
+        return 2;
+      }
+      if (license === "MIT") {
+        return 3;
+      }
+      if (license === "GPL-2.0") {
+        return 4;
+      }
+      if (license === "GPL-3.0") {
+        return 5;
+      }
+      if (license === "LGPL-2.1") {
+        return 6;
+      }
+      if (license === "LGPL-3.0") {
+        return 7;
+      }
+      if (license === "BSD-2-Clause") {
+        return 8;
+      }
+      if (license === "BSD-3-Clause") {
+        return 9;
+      }
+      if (license === "MPL-2.0") {
+        return 10;
+      }
+      if (license === "OSL-3.0") {
+        return 11;
+      }
+      if (license === "Apache-2.0") {
+        return 12;
+      }
+      if (license === "AGPL-3.0") {
+        return 13;
+      }
+    })();
+
+    if (!licenseType) {
+      return logError(
+        `license :"${license}" not supported by etherscan, list of supported license can be found here : https://etherscan.io/contract-license-types . This tool expect the SPDX id, except for "None" and "UNLICENSED"`
+      );
     }
 
     let solcInput;
@@ -183,7 +275,6 @@ export async function submitSources(
         );
         return;
       }
-      // TODO read file ?
       solcInput = JSON.parse(solcInputStringFromDeployment);
     } else {
       const settings = { ...metadata.settings };
@@ -239,17 +330,6 @@ export async function submitSources(
       constructorArguements,
       licenseType
     };
-
-    // Does not seem to work with solc-input ?
-    // if (deployment.libraries) {
-    //   let counter = 1;
-    //   for (const libraryName of Object.keys(deployment.libraries)) {
-    //     postData[`libraryname${counter}`] = libraryName;
-    //     postData[`libraryaddress${counter}`] =
-    //       deployment.libraries[libraryName];
-    //     counter++;
-    //   }
-    // }
 
     const submissionResponse = await axios.request({
       url: `${host}/api`,

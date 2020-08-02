@@ -394,6 +394,10 @@ export default function() {
       undefined,
       types.string
     )
+    .addFlag(
+      "forceLicense",
+      "force the use of the license specified by --license option"
+    )
     .addFlag("solcInput", "fallback on solc-input if saved along deployment")
     .setAction(async (args, bre, runSuper) => {
       const etherscanApiKey = args.apiKey || process.env.ETHERSCAN_API_KEY;
@@ -406,7 +410,8 @@ export default function() {
       await submitSources(bre, solcInputsPath, {
         etherscanApiKey,
         license: args.license,
-        fallbackOnSolcInput: args.solcInput
+        fallbackOnSolcInput: args.solcInput,
+        forceLicense: args.forceLicense
       });
     });
 }
