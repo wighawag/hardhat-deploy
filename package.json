@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "description": "Buidler Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -27,7 +27,7 @@
     "artifacts/*.json"
   ],
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.3.0",
+    "@nomiclabs/buidler": "^1.4.3",
     "@types/chai": "^4.1.7",
     "@types/debug": "^4.1.5",
     "@types/fs-extra": "^5.0.4",

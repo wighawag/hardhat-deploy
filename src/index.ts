@@ -12,7 +12,7 @@ import {
   task,
   internalTask
 } from "@nomiclabs/buidler/config";
-import { BuidlerError } from "@nomiclabs/buidler/internal//core/errors";
+import { BuidlerError } from "@nomiclabs/buidler/internal/core/errors";
 import {
   JsonRpcServer,
   JsonRpcServerConfig
@@ -25,6 +25,9 @@ import {
   TASK_NODE,
   TASK_COMPILE_GET_COMPILER_INPUT
 } from "@nomiclabs/buidler/builtin-tasks/task-names";
+import { watchCompilerOutput } from "@nomiclabs/buidler/builtin-tasks/utils/watch";
+import { Reporter } from "@nomiclabs/buidler/internal/sentry/reporter";
+
 import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
 
@@ -336,22 +339,43 @@ export default function() {
     .addFlag("noDeploy", "do not deploy")
     .addFlag("watch", "redeploy on every change of contract or deploy script")
     .setAction(async (args, bre, runSuper) => {
-      args.pendingtx = !isBuidlerEVM(bre);
-      // TODO return runSuper(args); and remove the rest (used for now to remove login privateKeys)
+      if (args.noDeploy) {
+        await runSuper(args);
+        return;
+      }
+
       if (!isBuidlerEVM(bre)) {
         throw new BuidlerError(
           ERRORS.BUILTIN_TASKS.JSONRPC_UNSUPPORTED_NETWORK
         );
       }
+
+      const { config } = bre;
+
+      // This can be used to ensure logging is enabled
+      // but it is preferrable to only enable after deployments are performed (see below: `provider.__loggingEnabled = true`)
+      // const buidlerEVMConfig = config.networks
+      //   .buidlerevm as BuidlerNetworkConfig;
+      // if (buidlerEVMConfig) {
+      //   buidlerEVMConfig.loggingEnabled = true;
+      // } else {
+      //   config.networks.buidlerevm = { loggingEnabled: true };
+      // }
+
       bre.network.name = "localhost"; // Ensure deployments can be fetched with console
       // TODO use localhost config ? // Or post an issue on buidler
       const watch = args.watch;
       args.watch = false;
       args.log = !args.silent;
       delete args.silent;
-      if (!args.noDeploy) {
-        await bre.run("deploy:run", args);
-      }
+      args.pendingtx = false;
+      await bre.run("deploy:run", args);
+
+      // enable logging
+      const provider = bre.network.provider as any;
+      provider._loggingEnabled = true;
+      provider._ethModule._logger = provider._logger;
+
       const { hostname, port } = args;
       let server;
       try {
@@ -370,6 +394,34 @@ export default function() {
             `Started HTTP and WebSocket JSON-RPC server at http://${address}:${actualPort}/`
           )
         );
+
+        console.log();
+
+        try {
+          await watchCompilerOutput(
+            server.getProvider(),
+            config.solc,
+            config.paths
+          );
+        } catch (error) {
+          console.warn(
+            chalk.yellow(
+              "There was a problem watching the compiler output, changes in the contracts won't be reflected in the Buidler EVM. Run Buidler with --verbose to learn more."
+            )
+          );
+
+          log(
+            "Compilation output can't be watched. Please report this to help us improve Buidler.\n",
+            error
+          );
+
+          Reporter.reportError(error);
+        }
+
+        // const networkConfig = config.networks[
+        //   BUIDLEREVM_NETWORK_NAME
+        // ] as BuidlerNetworkConfig;
+        // logBuidlerEvmAccounts(networkConfig);
       } catch (error) {
         if (BuidlerError.isBuidlerError(error)) {
           throw error;
@@ -393,7 +445,7 @@ export default function() {
     .addOptionalParam("apiKey", "etherscan api key", undefined, types.string)
     .addOptionalParam(
       "license",
-      "SPDX license (need to be supported by etherscan",
+      "SPDX license (useful if SPDX is not listed in the sources), need to be supported by etherscan: https://etherscan.io/contract-license-types",
       undefined,
       types.string
     )
@@ -401,7 +453,10 @@ export default function() {
       "forceLicense",
       "force the use of the license specified by --license option"
     )
-    .addFlag("solcInput", "fallback on solc-input if saved along deployment")
+    .addFlag(
+      "solcInput",
+      "fallback on solc-input (useful when etherscan fails on the minimum sources)"
+    )
     .setAction(async (args, bre, runSuper) => {
       const etherscanApiKey = args.apiKey || process.env.ETHERSCAN_API_KEY;
       if (!etherscanApiKey) {
