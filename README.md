@@ -200,9 +200,34 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 This plugin modify the _node_ task so that it also execute the deployment script before exposing the server http RPC interface
 
-It also add the same options as the _deploy_ task with the same functionality
+It also add the same options as the _deploy_ task with the same functionality. It adds an extra flag:
+
+`--no-deploy` that discard all other options to revert to normal `buidler node` behavior without any deployment being performed.
 
 Note that the deployments are saved as if the network name is `localhost`. This is because `buidler node` is expected to be used as localhost: You can for example execute `buidler --network localhost console` after `node` is running. Doing `builder console` would not attach it to anything. It still take the configuration from `buidlerevm` in the buidler.config.js file.
+
+### `buidler etherscan-verify`
+
+This plugin adds the _etherscan-verify_ task to Buidler.
+
+This task will submit the contract source and other info to all deployed contract to allow etherscan to verify and record the sources.
+
+Instead of using the full solc input, this task will first attempt to send the minimal sources from the metadata.
+But Etherscan sometime fails for some reason (even if it should not). As such this task fallback on full solc input. Note that if your contract was deployed with a previous version of buidler-deploy, it might not contains the full information.
+
+This task will also attempt to automatically find the SPDX license in the source.
+
+#### Options
+
+`--api-key <API_KEY>`: Etherscan API key. Optional as such api key can also be set by setting the environment variable : ETHERSCAN_API_KEY
+
+`--license <SPDX>`: specifiy the license to use (using SPDX id) or can be "UNLICENSED". Note that etherscan have limited support for licenses, see : https://etherscan.io/contract-license-types
+
+#### Flags
+
+`--solcInput`: allow the use of full solc-input as fallback. Note that the whole source folder will be included in the result of the verification on etherscan.
+
+`--force-license`: This flag reset the deployments from scratch. Previously deployed contract are not considered.
 
 ## Environment extensions
 
