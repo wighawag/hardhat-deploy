@@ -217,6 +217,12 @@ But Etherscan sometime fails for some reason (even if it should not). As such th
 
 This task will also attempt to automatically find the SPDX license in the source.
 
+To execute it you need to specifiy the network to run against :
+
+```
+buidler --network mainnet etherscan-verify --api-key <apikey>
+```
+
 #### Options
 
 `--api-key <API_KEY>`: Etherscan API key. Optional as such api key can also be set by setting the environment variable : ETHERSCAN_API_KEY
