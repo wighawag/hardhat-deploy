@@ -15,6 +15,8 @@ It also adds a mechanism to associate names to addresses so test and deployment 
 This plugin contains more features, all geared toward a better developer experience :
 
 - chain configuration export, listing deployed contract, their abi and address, usefull for webapps.
+- library linking at time of deployment
+- ability to submit contract source to etherscan for verification. Because buidler-deploy will save all necessary info, it can be executed at any time.
 - deployment dependency system (allowing you to only deploy what is needed).
 - deployment as migration so once a deployment is done, it can be set to never be executed again.
 - deployment retrying (by saving pending tx): so you can feel confident when making a deployment that you can always recover.
@@ -454,6 +456,42 @@ dev_forceMine?: boolean; // this force a evm_mine to be executed. this is useful
 skipUnknownSigner?: boolean; // This options will prevent the call to throw if the signer for the `from` address is unavailbale. It will still display the information necessary to perform the tx. So instead of blocking the whole deployment flow, it will output all operation taht need to be done to finalise the deployment
 
 ```
+
+## Deploying contracts that have libraries
+
+In the deploy function, one of the `DeployOptions` that can be passed into the function is `libraries`.
+
+First, deploy the library using the `deploy` function, then when we deploy a contract that needs the the linked library, we can pass the deployed library name and address in as an argument to the `libraries` object.
+
+```
+const exampleLibrary = await deploy("ExampleLibary", {
+    from: <deployer>
+    contractName: "ExampleLibrary"
+});
+
+```
+
+ExampleLibrary is now deployed to whatever network is in the context of the environment.
+
+For example, if we are deploying on Rinkeby, this library will get deployed on rinkeby, and the `exampleLibrary` variable will be an deployment object that contains the abi as well as the deployed address for the contract.
+
+Now that the library is deployed, we can link it in our next deployed contract.
+
+```
+const example = await deploy("Example", {
+    from: <deployer>
+    contractName: "Example",
+    args: ["This is an example string argument in the constructor for the 'Example' contract"],
+    libraries: {
+        ["ExampleLibrary"]: exampleLibrary.address
+    }
+});
+
+```
+
+This `libraries` object takes the name as a string of the library, and its deployed address on the network. Multiple libraries can be passed into the `libraries` object.
+
+This works on buidler-deploy version `0.4.10` and above.
 
 ## Exporting Deployments
 
