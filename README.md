@@ -215,7 +215,7 @@ This plugin adds the _etherscan-verify_ task to Buidler.
 This task will submit the contract source and other info to all deployed contract to allow etherscan to verify and record the sources.
 
 Instead of using the full solc input, this task will first attempt to send the minimal sources from the metadata.
-But Etherscan sometime fails for some reason (even if it should not). As such this task fallback on full solc input. Note that if your contract was deployed with a previous version of buidler-deploy, it might not contains the full information.
+But Etherscan sometime fails for some reason (even if it should not). As such this task can fallback on full solc input (see option --solc-input). Note that if your contract was deployed with a previous version of buidler-deploy, it might not contains the full information.
 
 This task will also attempt to automatically find the SPDX license in the source.
 
@@ -235,7 +235,7 @@ buidler --network mainnet etherscan-verify --api-key <apikey>
 
 `--solcInput`: allow the use of full solc-input as fallback. Note that the whole source folder will be included in the result of the verification on etherscan.
 
-`--force-license`: This flag reset the deployments from scratch. Previously deployed contract are not considered.
+`--force-license`: This flag force the use of the license specified by --license (useful if your inline SPDX are not compatible with etherscan list)
 
 ## Environment extensions
 
