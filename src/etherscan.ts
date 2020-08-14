@@ -5,6 +5,7 @@ import path from "path";
 import { defaultAbiCoder, ParamType } from "@ethersproject/abi";
 import { BuidlerRuntimeEnvironment } from "@nomiclabs/buidler/types";
 import chalk from "chalk";
+import matchAll from "match-all";
 
 function log(...args: any[]) {
   console.log(...args);
@@ -32,7 +33,7 @@ function extractOneLicenseFromSourceFile(source: string): string | undefined {
 
 function extractLicenseFromSources(metadata: string): string[] {
   const regex = /\/\/ SPDX-License-Identifier: (.*?)[\s\\]/g;
-  const matches = metadata.matchAll(regex);
+  const matches = matchAll(metadata, regex).toArray();
   const licensesFound: { [license: string]: boolean } = {};
   const licenses = [];
   if (matches) {
