@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 /******************************************************************************\
 * Author: Nick Mudge
-* from https://github.com/mudgen/Diamond/blob/8235e6b63b47aab08a81c6f73bfb7faafda79ca4/contracts/
+* from https://github.com/mudgen/Diamond/blob/ca15562a2858a4a4696526b1f6b18a4adef10617/contracts/
 *
 * Implementation of DiamondLoupe interface.
 /******************************************************************************/
@@ -37,12 +38,9 @@ contract DiamondLoupeFacet is DiamondLoupe, DiamondStorageContract {
     function facets() external override view returns (bytes[] memory) {
         DiamondStorage storage ds = diamondStorage();
         uint256 totalSelectorSlots = ds.selectorSlotsLength;
-        uint256 selectorSlotLength = uint128(totalSelectorSlots >> 128);
-        totalSelectorSlots = uint128(totalSelectorSlots);
-        uint256 totalSelectors = totalSelectorSlots * 8 + selectorSlotLength;
-        if (selectorSlotLength > 0) {
-            totalSelectorSlots++;
-        }
+        uint256 totalSelectors = uint128(totalSelectorSlots) *
+            8 +
+            uint128(totalSelectorSlots >> 128);
 
         // get default size of arrays
         uint256 defaultSize = totalSelectors;
@@ -154,12 +152,9 @@ contract DiamondLoupeFacet is DiamondLoupe, DiamondStorageContract {
     {
         DiamondStorage storage ds = diamondStorage();
         uint256 totalSelectorSlots = ds.selectorSlotsLength;
-        uint256 selectorSlotLength = uint128(totalSelectorSlots >> 128);
-        totalSelectorSlots = uint128(totalSelectorSlots);
-        uint256 totalSelectors = totalSelectorSlots * 8 + selectorSlotLength;
-        if (selectorSlotLength > 0) {
-            totalSelectorSlots++;
-        }
+        uint256 totalSelectors = uint128(totalSelectorSlots) *
+            8 +
+            uint128(totalSelectorSlots >> 128);
 
         uint256 numFacetSelectors;
         bytes4[] memory facetSelectors = new bytes4[](totalSelectors);
@@ -200,12 +195,10 @@ contract DiamondLoupeFacet is DiamondLoupe, DiamondStorageContract {
     function facetAddresses() external override view returns (bytes memory) {
         DiamondStorage storage ds = diamondStorage();
         uint256 totalSelectorSlots = ds.selectorSlotsLength;
-        uint256 selectorSlotLength = uint128(totalSelectorSlots >> 128);
-        totalSelectorSlots = uint128(totalSelectorSlots);
-        uint256 totalSelectors = totalSelectorSlots * 8 + selectorSlotLength;
-        if (selectorSlotLength > 0) {
-            totalSelectorSlots++;
-        }
+        uint256 totalSelectors = uint128(totalSelectorSlots) *
+            8 +
+            uint128(totalSelectorSlots >> 128);
+
         address[] memory facets_ = new address[](totalSelectors);
         uint256 numFacets;
         uint256 selectorCount;

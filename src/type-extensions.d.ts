@@ -4,7 +4,9 @@ import { boolean } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 declare module "@nomiclabs/buidler/types" {
   export interface BuidlerRuntimeEnvironment {
     deployments: DeploymentsExtension;
-    getNamedAccounts: () => Promise<{ [name: string]: Address }>;
+    getNamedAccounts: () => Promise<{
+      [name: string]: Address | Address[] | object;
+    }>;
     getChainId(): Promise<string>;
   }
 

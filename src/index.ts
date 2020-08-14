@@ -25,8 +25,6 @@ import {
   TASK_NODE,
   TASK_COMPILE_GET_COMPILER_INPUT
 } from "@nomiclabs/buidler/builtin-tasks/task-names";
-import { watchCompilerOutput } from "@nomiclabs/buidler/builtin-tasks/utils/watch";
-import { Reporter } from "@nomiclabs/buidler/internal/sentry/reporter";
 
 import debug from "debug";
 const log = debug("buidler:wighawag:buidler-deploy");
@@ -397,25 +395,40 @@ export default function() {
 
         console.log();
 
+        let watchRequired;
         try {
-          await watchCompilerOutput(
-            server.getProvider(),
-            config.solc,
-            config.paths
-          );
-        } catch (error) {
-          console.warn(
-            chalk.yellow(
-              "There was a problem watching the compiler output, changes in the contracts won't be reflected in the Buidler EVM. Run Buidler with --verbose to learn more."
-            )
-          );
+          watchRequired = require("@nomiclabs/buidler/builtin-tasks/utils/watch");
+        } catch (e) {}
 
-          log(
-            "Compilation output can't be watched. Please report this to help us improve Buidler.\n",
-            error
-          );
+        let reporterRequired;
+        try {
+          reporterRequired = require("@nomiclabs/buidler/internal/sentry/reporter");
+        } catch (e) {}
 
-          Reporter.reportError(error);
+        if (watchRequired) {
+          try {
+            const { watchCompilerOutput } = watchRequired;
+            await watchCompilerOutput(
+              server.getProvider(),
+              config.solc,
+              config.paths
+            );
+          } catch (error) {
+            console.warn(
+              chalk.yellow(
+                "There was a problem watching the compiler output, changes in the contracts won't be reflected in the Buidler EVM. Run Buidler with --verbose to learn more."
+              )
+            );
+
+            log(
+              "Compilation output can't be watched. Please report this to help us improve Buidler.\n",
+              error
+            );
+            if (reporterRequired) {
+              const { Reporter } = reporterRequired;
+              Reporter.reportError(error);
+            }
+          }
         }
 
         // const networkConfig = config.networks[

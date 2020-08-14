@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
-// * from https://github.com/mudgen/Diamond/blob/8235e6b63b47aab08a81c6f73bfb7faafda79ca4/contracts/
+// * from https://github.com/mudgen/Diamond/blob/ca15562a2858a4a4696526b1f6b18a4adef10617/contracts/
 
 interface Diamond {
     /// @notice _diamondCut is an array of bytes arrays.

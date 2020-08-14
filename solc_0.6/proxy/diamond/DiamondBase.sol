@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.6.4;
 pragma experimental ABIEncoderV2;
 
 /******************************************************************************\
 * Author: Nick Mudge
-* from https://github.com/mudgen/Diamond/blob/8235e6b63b47aab08a81c6f73bfb7faafda79ca4/contracts/
+* from https://github.com/mudgen/Diamond/blob/ca15562a2858a4a4696526b1f6b18a4adef10617/contracts/
 *
 * slightly modified by Ronan Sandford
 * modifications includes
@@ -135,7 +136,5 @@ contract DiamondBase is ERC173Events, DiamondStorageContract {
         }
     }
 
-    receive() external payable {
-        revert("DATA_EMPTY");
-    }
+    receive() external payable {}
 }

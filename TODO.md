@@ -15,3 +15,6 @@
 [] add option to run test with pre-deployed contract (fixture already called) : useful so that test can use tags so when executed in isolation (without that flag they can run faster)
 [] sourcify-upload (https://verification.komputing.org/server)
 [] ipfs-upload
+[] add ability to specify metadata in `imports` artifacts
+[] deployments.getByAddress(<address>) // getByAddressOrNull(<address>)
+[] hard fail when no metadata : as this indicate the contract is actually no more part of the compilation unit, and should be discarded

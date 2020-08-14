@@ -32,7 +32,7 @@ function extractOneLicenseFromSourceFile(source: string): string | undefined {
 
 function extractLicenseFromSources(metadata: string): string[] {
   const regex = /\/\/ SPDX-License-Identifier: (.*?)[\s\\]/g;
-  const matches = (metadata as any).matchAll(regex);
+  const matches = metadata.matchAll(regex);
   const licensesFound: { [license: string]: boolean } = {};
   const licenses = [];
   if (matches) {

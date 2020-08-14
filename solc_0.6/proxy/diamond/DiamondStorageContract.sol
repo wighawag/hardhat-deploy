@@ -1,22 +1,21 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.6.4;
 
-// * from https://github.com/mudgen/Diamond/blob/8235e6b63b47aab08a81c6f73bfb7faafda79ca4/contracts/
+// * from https://github.com/mudgen/Diamond/blob/ca15562a2858a4a4696526b1f6b18a4adef10617/contracts/
 
-// modified to be an abstract
-
-abstract contract DiamondStorageContract {
+contract DiamondStorageContract {
     struct DiamondStorage {
         // owner of the contract
         address contractOwner;
         // maps function selectors to the facets that execute the functions.
         // and maps the selectors to the slot in the selectorSlots array.
         // and maps the selectors to the position in the slot.
-        // func selector => address facet, uint64 slotsIndex, uint64 slotIndex
+        // func selector => address facet, uint32 slotIndex, uint64 slotsIndex
         mapping(bytes4 => bytes32) facets;
         // array of slots of function selectors.
         // each slot holds 8 function selectors.
         mapping(uint256 => bytes32) selectorSlots;
-        // uint128 numSelectorsInSlot, uint128 selectorSlotsLength
+        // uint32 selectorSlotLength, uint32 selectorSlotsLength
         // selectorSlotsLength is the number of 32-byte slots in selectorSlots.
         // selectorSlotLength is the number of selectors in the last slot of
         // selectorSlots.
