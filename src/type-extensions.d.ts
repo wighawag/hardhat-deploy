@@ -5,8 +5,8 @@ declare module "@nomiclabs/buidler/types" {
   export interface BuidlerRuntimeEnvironment {
     deployments: DeploymentsExtension;
     getNamedAccounts: () => Promise<{
-      [name: string]: Address | Address[] | object;
-    }>;
+      [name: string]: Address;
+    }>; // TODO others, extra accounts ?
     getChainId(): Promise<string>;
   }
 
@@ -226,7 +226,12 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface BuidlerConfig {
-    namedAccounts?: { [name: string]: any };
+    namedAccounts?: {
+      [name: string]:
+        | string
+        | number
+        | { [network: string]: null | number | string };
+    }; // TODO better type ? to ensure it ends with string ?
   }
 
   export interface ProjectPaths {
