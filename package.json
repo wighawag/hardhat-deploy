@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.5.16",
+  "version": "0.5.17",
   "description": "Buidler Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",

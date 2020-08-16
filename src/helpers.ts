@@ -416,43 +416,44 @@ export function addHelpers(
 
     let create2Address;
     if (options.useCreate2) {
-      const create2Salt =
-        typeof options.useCreate2 === "string"
-          ? hexlify(zeroPad(options.useCreate2, 32))
-          : "0x0000000000000000000000000000000000000000000000000000000000000000";
-      const create2DeployerAddress =
-        "0x4e59b44847b379578588920ca78fbf26c0b4956c";
-      create2Address = getCreate2Address(
-        create2DeployerAddress,
-        create2Salt,
-        byteCode
-      );
-      const code = await provider.getCode(create2DeployerAddress);
-      if (code === "0x") {
-        const senderAddress = "0x3fab184622dc19b6109349b94811493bf2a45362";
-        if (options.log) {
-          log(
-            `sending eth to create 2 contract deployer address (${senderAddress})...`
-          );
-        }
-        await ethersSigner.sendTransaction({
-          to: senderAddress,
-          value: BigNumber.from("10000000000000000").toHexString()
-        });
-        // await provider.send("eth_sendTransaction", [{
-        //   from
-        // }]);
-        if (options.log) {
-          log(
-            `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)...`
-          );
-        }
-        await provider.sendTransaction(
-          "0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222"
-        );
-      }
-      unsignedTx.to = create2DeployerAddress;
       if (typeof unsignedTx.data === "string") {
+        const create2Salt =
+          typeof options.useCreate2 === "string"
+            ? hexlify(zeroPad(options.useCreate2, 32))
+            : "0x0000000000000000000000000000000000000000000000000000000000000000";
+        const create2DeployerAddress =
+          "0x4e59b44847b379578588920ca78fbf26c0b4956c";
+        create2Address = getCreate2Address(
+          create2DeployerAddress,
+          create2Salt,
+          unsignedTx.data
+        );
+        const code = await provider.getCode(create2DeployerAddress);
+        if (code === "0x") {
+          const senderAddress = "0x3fab184622dc19b6109349b94811493bf2a45362";
+          if (options.log) {
+            log(
+              `sending eth to create 2 contract deployer address (${senderAddress})...`
+            );
+          }
+          await ethersSigner.sendTransaction({
+            to: senderAddress,
+            value: BigNumber.from("10000000000000000").toHexString()
+          });
+          // await provider.send("eth_sendTransaction", [{
+          //   from
+          // }]);
+          if (options.log) {
+            log(
+              `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)...`
+            );
+          }
+          await provider.sendTransaction(
+            "0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222"
+          );
+        }
+        unsignedTx.to = create2DeployerAddress;
+
         unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
       } else {
         throw new Error("unsigned tx data as bytes not supported");
@@ -559,22 +560,43 @@ export function addHelpers(
     address: Address;
     deploy: () => Promise<DeployResult>;
   }> {
-    await init();
     // TODO refactor to share that code:
+    const args: any[] = options.args ? [...options.args] : [];
+    await init();
+    const { address: from, ethersSigner } = getFrom(options.from);
+    if (!ethersSigner) {
+      throw new Error("no signer for " + from);
+    }
     const artifactInfo = await getArtifactFromOptions(name, options);
     const { artifact } = artifactInfo;
+    const abi = artifact.abi;
     const byteCode = linkLibraries(artifact, options.libraries);
-    return {
-      address: getCreate2Address(
-        "0x4e59b44847b379578588920ca78fbf26c0b4956c",
-        options.salt
-          ? hexlify(zeroPad(options.salt, 32))
-          : "0x0000000000000000000000000000000000000000000000000000000000000000",
-        byteCode
-      ),
-      deploy: () =>
-        _deploy(name, { ...options, useCreate2: options.salt || true })
+    const factory = new ContractFactory(abi, byteCode, ethersSigner);
+
+    const overrides: PayableOverrides = {
+      gasLimit: options.gasLimit,
+      gasPrice: options.gasPrice,
+      value: options.value,
+      nonce: options.nonce
     };
+
+    const unsignedTx = factory.getDeployTransaction(...args, overrides);
+
+    if (typeof unsignedTx.data !== "string") {
+      throw new Error("unsigned tx data as bytes not supported");
+    } else {
+      return {
+        address: getCreate2Address(
+          "0x4e59b44847b379578588920ca78fbf26c0b4956c",
+          options.salt
+            ? hexlify(zeroPad(options.salt, 32))
+            : "0x0000000000000000000000000000000000000000000000000000000000000000",
+          unsignedTx.data
+        ),
+        deploy: () =>
+          _deploy(name, { ...options, useCreate2: options.salt || true })
+      };
+    }
   }
 
   function getDeployment(name: string): Promise<Deployment> {
