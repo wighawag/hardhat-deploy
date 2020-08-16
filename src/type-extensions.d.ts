@@ -6,7 +6,8 @@ declare module "@nomiclabs/buidler/types" {
     deployments: DeploymentsExtension;
     getNamedAccounts: () => Promise<{
       [name: string]: Address;
-    }>; // TODO others, extra accounts ?
+    }>;
+    // TODO getUnnamedAccounts: () => Promise<Address[]>; // useful for testing
     getChainId(): Promise<string>;
   }
 

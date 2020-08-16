@@ -38,15 +38,58 @@ function extractLicenseFromSources(metadata: string): string[] {
   const licenses = [];
   if (matches) {
     for (const match of matches) {
-      if (match[1]) {
-        if (!licensesFound[match[1]]) {
-          licensesFound[match[1]] = true;
-          licenses.push(match[1]);
-        }
+      if (!licensesFound[match]) {
+        licensesFound[match] = true;
+        licenses.push(match);
       }
     }
   }
   return licenses;
+}
+
+function getLicenseType(license: string): undefined | number {
+  const licenseType = (() => {
+    if (license === "None") {
+      return 1;
+    }
+    if (license === "UNLICENSED") {
+      return 2;
+    }
+    if (license === "MIT") {
+      return 3;
+    }
+    if (license === "GPL-2.0") {
+      return 4;
+    }
+    if (license === "GPL-3.0") {
+      return 5;
+    }
+    if (license === "LGPL-2.1") {
+      return 6;
+    }
+    if (license === "LGPL-3.0") {
+      return 7;
+    }
+    if (license === "BSD-2-Clause") {
+      return 8;
+    }
+    if (license === "BSD-3-Clause") {
+      return 9;
+    }
+    if (license === "MPL-2.0") {
+      return 10;
+    }
+    if (license === "OSL-3.0") {
+      return 11;
+    }
+    if (license === "Apache-2.0") {
+      return 12;
+    }
+    if (license === "AGPL-3.0") {
+      return 13;
+    }
+  })();
+  return licenseType;
 }
 
 export async function submitSources(
@@ -61,7 +104,7 @@ export async function submitSources(
 ) {
   config = config || {};
   const fallbackOnSolcInput = config.fallbackOnSolcInput;
-  let license = config.license;
+  const licenseOption = config.license;
   const forceLicense = config.forceLicense;
   const etherscanApiKey = config.etherscanApiKey;
   const chainId = await bre.getChainId();
@@ -105,7 +148,7 @@ export async function submitSources(
     }
     if (contractABI && contractABI !== "") {
       log(`already verified: ${name} (${address}), skipping.`);
-      return;
+      // return;
     }
 
     if (!metadataString) {
@@ -137,6 +180,7 @@ export async function submitSources(
       contractSourceFile
     );
 
+    let license = licenseOption;
     if (!sourceLicenseType) {
       if (!license) {
         return logError(
@@ -147,55 +191,20 @@ export async function submitSources(
       if (license && license !== sourceLicenseType) {
         if (!forceLicense) {
           return logError(
-            `mismatch for --license option (${license}) and the one speccified in the source code for ${name}.\nLicenses found in source : ${sourceLicenseType}\nYou can use option --force-license to force option --license`
+            `mismatch for --license option (${licenseOption}) and the one speccified in the source code for ${name}.\nLicenses found in source : ${sourceLicenseType}\nYou can use option --force-license to force option --license`
           );
         }
       } else {
         license = sourceLicenseType;
+        if (!getLicenseType(license)) {
+          return logError(
+            `license :"${license}" found in source code for ${name} (${contractNamePath}) but this license is not supported by etherscan, list of supported license can be found here : https://etherscan.io/contract-license-types . This tool expect the SPDX id, except for "None" and "UNLICENSED"`
+          );
+        }
       }
     }
 
-    const licenseType = (() => {
-      if (license === "None") {
-        return 1;
-      }
-      if (license === "UNLICENSED") {
-        return 2;
-      }
-      if (license === "MIT") {
-        return 3;
-      }
-      if (license === "GPL-2.0") {
-        return 4;
-      }
-      if (license === "GPL-3.0") {
-        return 5;
-      }
-      if (license === "LGPL-2.1") {
-        return 6;
-      }
-      if (license === "LGPL-3.0") {
-        return 7;
-      }
-      if (license === "BSD-2-Clause") {
-        return 8;
-      }
-      if (license === "BSD-3-Clause") {
-        return 9;
-      }
-      if (license === "MPL-2.0") {
-        return 10;
-      }
-      if (license === "OSL-3.0") {
-        return 11;
-      }
-      if (license === "Apache-2.0") {
-        return 12;
-      }
-      if (license === "AGPL-3.0") {
-        return 13;
-      }
-    })();
+    const licenseType = getLicenseType(license);
 
     if (!licenseType) {
       return logError(
