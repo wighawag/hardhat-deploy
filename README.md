@@ -16,6 +16,7 @@ This plugin contains more features, all geared toward a better developer experie
 
 - chain configuration export, listing deployed contract, their abi and address, usefull for webapps.
 - library linking at time of deployment
+- create2 deterministic deployment
 - ability to submit contract source to etherscan for verification. Because buidler-deploy will save all necessary info, it can be executed at any time.
 - deployment dependency system (allowing you to only deploy what is needed).
 - deployment as migration so once a deployment is done, it can be set to never be executed again.
@@ -380,6 +381,13 @@ diamond: { // deploy diamond based contract (see section below)
     ...args: any[]
   ): Promise<Receipt | null>;
 };
+create2( // return the determinsitic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
+      name: string,
+      options: Create2DeployOptions
+    ): Promise<{
+      address: Address;
+      deploy(): Promise<DeployResult>;
+    }>;
 fetchIfDifferent(name: string, options: DeployOptions): Promise<boolean>; // return true if new compiled code is different than deployed contract
 save(name: string, deployment: DeploymentSubmission): Promise<void>; // low level save of deployment
 get(name: string): Promise<Deployment>; // fetch a deployment by name, throw if not existing
@@ -454,7 +462,7 @@ estimateGasExtra?: string | number | BigNumber; // this option allow you to add 
 
 dev_forceMine?: boolean; // this force a evm_mine to be executed. this is usefule to speed deployment on test network that allow to specify a block delay (ganache for example)
 skipUnknownSigner?: boolean; // This options will prevent the call to throw if the signer for the `from` address is unavailbale. It will still display the information necessary to perform the tx. So instead of blocking the whole deployment flow, it will output all operation taht need to be done to finalise the deployment
-
+useCreate2? boolean | string; // if true use the create2 deployment with 0x000.. salt. If it is a string, the string will be used as the salt.
 ```
 
 ## Deploying contracts that have libraries

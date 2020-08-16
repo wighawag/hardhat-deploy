@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.5.15",
+  "version": "0.5.16",
   "description": "Buidler Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -52,6 +52,7 @@
     "@ethersproject/abstract-signer": "^5.0.2",
     "@ethersproject/address": "^5.0.2",
     "@ethersproject/bignumber": "^5.0.5",
+    "@ethersproject/bytes": "^5.0.2",
     "@ethersproject/contracts": "^5.0.2",
     "@ethersproject/providers": "^5.0.5",
     "@ethersproject/solidity": "^5.0.2",

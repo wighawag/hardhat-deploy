@@ -89,7 +89,7 @@ declare module "@nomiclabs/buidler/types" {
     methodName?: string;
   }
 
-  export interface DeployOptions extends TxOptions {
+  export interface DeployOptionsBase extends TxOptions {
     contract?:
       | string
       | {
@@ -109,6 +109,14 @@ declare module "@nomiclabs/buidler/types" {
     linkedData?: any; // JSONable ?
     libraries?: Libraries;
     proxy?: boolean | string | ProxyOptions; // TODO support different type of proxies ?
+  }
+
+  export interface DeployOptions extends DeployOptionsBase {
+    useCreate2?: boolean | string;
+  }
+
+  export interface Create2DeployOptions extends DeployOptionsBase {
+    salt?: string;
   }
 
   export interface CallOptions {
@@ -184,6 +192,13 @@ declare module "@nomiclabs/buidler/types" {
         ...args: any[]
       ): Promise<Receipt | null>;
     };
+    create2(
+      name: string,
+      options: Create2DeployOptions
+    ): Promise<{
+      address: Address;
+      deploy(): Promise<DeployResult>;
+    }>;
     fetchIfDifferent(name: string, options: DeployOptions): Promise<boolean>;
     save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;

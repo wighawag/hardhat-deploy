@@ -16,6 +16,7 @@ import {
   keccak256 as solidityKeccak256,
   keccak256
 } from "@ethersproject/solidity";
+import { zeroPad, hexlify } from "@ethersproject/bytes";
 import { Interface, FunctionFragment, Fragment } from "@ethersproject/abi";
 import {
   BuidlerRuntimeEnvironment,
@@ -37,7 +38,8 @@ import {
   ProxyOptions,
   DiamondFacets,
   DiamondOptions,
-  LinkReferences
+  LinkReferences,
+  Create2DeployOptions
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
 import transparentProxy from "../artifacts/TransparentProxy.json";
@@ -339,6 +341,24 @@ export function addHelpers(
     }
   }
 
+  function getCreate2Address(
+    create2DeployerAddress: Address,
+    salt: string,
+    bytecode: string
+  ): Address {
+    return (
+      "0x" +
+      solidityKeccak256(
+        ["bytes"],
+        [
+          `0xff${create2DeployerAddress.slice(2)}${salt.slice(
+            2
+          )}${solidityKeccak256(["bytes"], [bytecode]).slice(2)}`
+        ]
+      ).slice(-40)
+    );
+  }
+
   async function getArtifactFromOptions(
     name: string,
     options: DeployOptions
@@ -393,6 +413,52 @@ export function addHelpers(
     };
 
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
+
+    let create2Address;
+    if (options.useCreate2) {
+      const create2Salt =
+        typeof options.useCreate2 === "string"
+          ? hexlify(zeroPad(options.useCreate2, 32))
+          : "0x0000000000000000000000000000000000000000000000000000000000000000";
+      const create2DeployerAddress =
+        "0x4e59b44847b379578588920ca78fbf26c0b4956c";
+      create2Address = getCreate2Address(
+        create2DeployerAddress,
+        create2Salt,
+        byteCode
+      );
+      const code = await provider.getCode(create2DeployerAddress);
+      if (code === "0x") {
+        const senderAddress = "0x3fab184622dc19b6109349b94811493bf2a45362";
+        if (options.log) {
+          log(
+            `sending eth to create 2 contract deployer address (${senderAddress})...`
+          );
+        }
+        await ethersSigner.sendTransaction({
+          to: senderAddress,
+          value: BigNumber.from("10000000000000000").toHexString()
+        });
+        // await provider.send("eth_sendTransaction", [{
+        //   from
+        // }]);
+        if (options.log) {
+          log(
+            `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)...`
+          );
+        }
+        await provider.sendTransaction(
+          "0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222"
+        );
+      }
+      unsignedTx.to = create2DeployerAddress;
+      if (typeof unsignedTx.data === "string") {
+        unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
+      } else {
+        throw new Error("unsigned tx data as bytes not supported");
+      }
+    }
+
     await overrideGasLimit(unsignedTx, options, newOverrides =>
       ethersSigner.estimateGas(newOverrides)
     );
@@ -469,9 +535,13 @@ export function addHelpers(
     };
     tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait();
-    const address = receipt.contractAddress;
+    const address =
+      options.useCreate2 && create2Address
+        ? create2Address
+        : receipt.contractAddress;
     const deployment = {
       ...preDeployment,
+      address,
       receipt
     };
     await env.deployments.save(name, deployment);
@@ -479,6 +549,31 @@ export function addHelpers(
       ...deployment,
       address,
       newlyDeployed: true
+    };
+  }
+
+  async function create2(
+    name: string,
+    options: Create2DeployOptions
+  ): Promise<{
+    address: Address;
+    deploy: () => Promise<DeployResult>;
+  }> {
+    await init();
+    // TODO refactor to share that code:
+    const artifactInfo = await getArtifactFromOptions(name, options);
+    const { artifact } = artifactInfo;
+    const byteCode = linkLibraries(artifact, options.libraries);
+    return {
+      address: getCreate2Address(
+        "0x4e59b44847b379578588920ca78fbf26c0b4956c",
+        options.salt
+          ? hexlify(zeroPad(options.salt, 32))
+          : "0x0000000000000000000000000000000000000000000000000000000000000000",
+        byteCode
+      ),
+      deploy: () =>
+        _deploy(name, { ...options, useCreate2: options.salt || true })
     };
   }
 
@@ -1378,7 +1473,8 @@ args: [${args.join(" , ")}]
     execute,
     batchExecute,
     rawTx,
-    read
+    read,
+    create2
   };
 
   // ////////// Backward compatible for transition: //////////////////
