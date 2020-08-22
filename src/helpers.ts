@@ -594,7 +594,7 @@ export function addHelpers(
           unsignedTx.data
         ),
         deploy: () =>
-          _deploy(name, { ...options, useCreate2: options.salt || true })
+          deploy(name, { ...options, useCreate2: options.salt || true })
       };
     }
   }

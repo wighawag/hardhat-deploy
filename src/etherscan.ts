@@ -191,7 +191,7 @@ export async function submitSources(
       if (license && license !== sourceLicenseType) {
         if (!forceLicense) {
           return logError(
-            `mismatch for --license option (${licenseOption}) and the one speccified in the source code for ${name}.\nLicenses found in source : ${sourceLicenseType}\nYou can use option --force-license to force option --license`
+            `mismatch for --license option (${licenseOption}) and the one specified in the source code for ${name}.\nLicenses found in source : ${sourceLicenseType}\nYou can use option --force-license to force option --license`
           );
         }
       } else {
