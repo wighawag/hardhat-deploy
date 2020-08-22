@@ -613,6 +613,46 @@ export function addHelpers(
   ): Promise<boolean> {
     const argArray = options.args ? [...options.args] : [];
     await init();
+
+    if (options.useCreate2) {
+      // TODO remove duplication:
+      const { address: from, ethersSigner } = getFrom(options.from);
+      if (!ethersSigner) {
+        throw new Error("no signer for " + from);
+      }
+      const artifactInfo = await getArtifactFromOptions(name, options);
+      const { artifact } = artifactInfo;
+      const { contractName } = artifactInfo;
+      const abi = artifact.abi;
+      const byteCode = linkLibraries(artifact, options.libraries);
+      const factory = new ContractFactory(abi, byteCode, ethersSigner);
+
+      const overrides: PayableOverrides = {
+        gasLimit: options.gasLimit,
+        gasPrice: options.gasPrice,
+        value: options.value,
+        nonce: options.nonce
+      };
+
+      const unsignedTx = factory.getDeployTransaction(...argArray, overrides);
+      if (typeof unsignedTx.data === "string") {
+        const create2Salt =
+          typeof options.useCreate2 === "string"
+            ? hexlify(zeroPad(options.useCreate2, 32))
+            : "0x0000000000000000000000000000000000000000000000000000000000000000";
+        const create2DeployerAddress =
+          "0x4e59b44847b379578588920ca78fbf26c0b4956c";
+        const create2Address = getCreate2Address(
+          create2DeployerAddress,
+          create2Salt,
+          unsignedTx.data
+        );
+        const code = await provider.getCode(create2Address);
+        return code === "0x";
+      } else {
+        throw new Error("unsigned tx data as bytes not supported");
+      }
+    }
     const fieldsToCompareArray =
       typeof options.fieldsToCompare === "string"
         ? [options.fieldsToCompare]
