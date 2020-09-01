@@ -287,15 +287,16 @@ export default function() {
       await bre.run("deploy:run", args);
     });
 
-  // TODO
-  // task(
-  //   "export",
-  //   "export contract deployment of the specified network into one file"
-  // )
-  //   .addOptionalParam("all", "export all deployments into one file")
-  //   .setAction(async (args, bre) => {
-
-  //   });
+  task(
+    "export",
+    "export contract deployment of the specified network into one file"
+  )
+    .addOptionalParam("export", "export current network deployments")
+    .addOptionalParam("exportAll", "export all deployments into one file")
+    .setAction(async (args, bre) => {
+      await deploymentsManager.loadDeployments();
+      await deploymentsManager.export(args);
+    });
 
   function _createBuidlerEVMProvider(
     config: ResolvedBuidlerConfig

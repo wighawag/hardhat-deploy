@@ -7,15 +7,6 @@ import {
 } from "@nomiclabs/buidler/types";
 import { BigNumber } from "@ethersproject/bignumber";
 
-export const nameToChainId: { [name: string]: string } = {
-  mainnet: "1",
-  eth: "1",
-  ropsten: "3",
-  rinkeby: "4",
-  goerli: "5",
-  kovan: "42"
-};
-
 let chainId: string;
 export async function getChainId(bre: BuidlerRuntimeEnvironment) {
   if (chainId) {
@@ -46,23 +37,20 @@ export function loadAllDeployments(
     let name = fileName;
     if (stats.isDirectory()) {
       let chainIdFound: string;
-      const _index = fileName.lastIndexOf("_");
-      if (_index === -1) {
-        chainIdFound = nameToChainId[fileName];
-        if (chainIdFound === undefined) {
-          const num = parseInt(fileName, 10);
-          if (typeof num === "number" && !isNaN(num)) {
-            chainIdFound = fileName;
-          } else {
-            throw new Error(
-              `invalid chainId on deployments folder name: ${fileName}`
-            );
-          }
-        }
+      const chainIdFilepath = path.join(fPath, ".chainId");
+      if (fs.existsSync(chainIdFilepath)) {
+        chainIdFound = fs
+          .readFileSync(chainIdFilepath)
+          .toString()
+          .trim();
+        name = fileName;
       } else {
-        chainIdFound = fileName.substr(_index + 1);
-        name = fileName.substr(0, _index);
+        throw new Error(
+          `with buidler-deploy >= 0.6 you need to rename network folder without appended chainId
+          You also need to create a '.chainId' file in the folder with the chainId`
+        );
       }
+
       if (!all[chainIdFound]) {
         all[chainIdFound] = {};
       }
@@ -89,10 +77,31 @@ export function deleteDeployments(deploymentsPath: string, subPath: string) {
 function loadDeployments(
   deploymentsPath: string,
   subPath: string,
-  onlyABIAndAddress?: boolean
+  onlyABIAndAddress?: boolean,
+  expectedChainId?: string
 ) {
   const deploymentsFound: { [name: string]: any } = {};
   const deployPath = path.join(deploymentsPath, subPath);
+
+  if (expectedChainId) {
+    const chainIdFilepath = path.join(deployPath, ".chainId");
+    if (fs.existsSync(chainIdFilepath)) {
+      const chainIdFound = fs
+        .readFileSync(chainIdFilepath)
+        .toString()
+        .trim();
+      if (expectedChainId !== chainId) {
+        throw new Error(
+          `Loading deployment in folder '${deployPath}' (with chainId: ${chainIdFound}) for a different chainId (${expectedChainId})`
+        );
+      }
+    } else {
+      console.warn(
+        `with buidler-deploy >= 0.6 you are expected to create a '.chainId' file in the deployment folder`
+      );
+    }
+  }
+
   let filesStats;
   try {
     filesStats = traverse(
@@ -140,9 +149,15 @@ function loadDeployments(
 export function addDeployments(
   db: any,
   deploymentsPath: string,
-  subPath: string
+  subPath: string,
+  expectedChainId?: string
 ) {
-  const contracts = loadDeployments(deploymentsPath, subPath);
+  const contracts = loadDeployments(
+    deploymentsPath,
+    subPath,
+    false,
+    expectedChainId
+  );
   for (const key of Object.keys(contracts)) {
     db.deployments[key] = contracts[key];
   }

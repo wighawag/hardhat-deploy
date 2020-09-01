@@ -29,7 +29,6 @@ import {
   getChainId,
   loadAllDeployments,
   traverse,
-  nameToChainId,
   deleteDeployments
 } from "./utils";
 import { addHelpers, waitForTx } from "./helpers";
@@ -303,7 +302,7 @@ export class DeploymentsManager {
     const chainId = await getChainId(this.env);
     const pendingTxPath = path.join(
       this.deploymentsPath,
-      this.getDeploymentsSubPath(chainId),
+      this.env.network.name,
       ".pendingTransactions"
     );
     try {
@@ -377,7 +376,7 @@ export class DeploymentsManager {
       const chainId = await getChainId(this.env);
       const deployFolderPath = path.join(
         this.deploymentsPath,
-        this.getDeploymentsSubPath(chainId)
+        this.env.network.name
       );
       // console.log("tx", tx.hash);
       const pendingTxPath = path.join(deployFolderPath, ".pendingTransactions");
@@ -439,7 +438,7 @@ export class DeploymentsManager {
   public async loadDeployments(): Promise<{ [name: string]: Deployment }> {
     const chainId = await getChainId(this.env);
     // this.env.deployments.chainId = chainId;
-    const folderPath = this.getDeploymentsSubPath(chainId);
+    const folderPath = this.env.network.name;
     let migrations = {};
     try {
       log("loading migrations");
@@ -453,14 +452,14 @@ export class DeploymentsManager {
     } catch (e) {}
     this.db.migrations = migrations;
     // console.log({ migrations: this.db.migrations });
-    addDeployments(this.db, this.deploymentsPath, folderPath);
+    addDeployments(this.db, this.deploymentsPath, folderPath, chainId);
     this.db.deploymentsLoaded = true;
     return this.db.deployments;
   }
 
   public async deletePreviousDeployments(): Promise<void> {
     const chainId = await getChainId(this.env);
-    const folderPath = this.getDeploymentsSubPath(chainId);
+    const folderPath = this.env.network.name;
     try {
       fs.removeSync(
         path.join(this.deploymentsPath, folderPath, ".migrations.json")
@@ -471,11 +470,7 @@ export class DeploymentsManager {
 
   public async getSolcInputPath() {
     const chainId = await getChainId(this.env);
-    return path.join(
-      this.deploymentsPath,
-      this.getDeploymentsSubPath(chainId),
-      "solcInputs"
-    );
+    return path.join(this.deploymentsPath, this.env.network.name, "solcInputs");
   }
 
   public async saveDeployment(
@@ -504,7 +499,7 @@ export class DeploymentsManager {
 
     const filepath = path.join(
       this.deploymentsPath,
-      this.getDeploymentsSubPath(chainId),
+      this.env.network.name,
       name + ".json"
     );
 
@@ -613,16 +608,22 @@ export class DeploymentsManager {
         fs.mkdirSync(this.deploymentsPath);
       } catch (e) {}
       try {
-        fs.mkdirSync(
-          path.join(this.deploymentsPath, this.getDeploymentsSubPath(chainId))
+        const deployFolderpath = path.join(
+          this.deploymentsPath,
+          this.env.network.name
         );
+        fs.mkdirSync(deployFolderpath);
+        const chainIdFilepath = path.join(deployFolderpath, ".chainId");
+        if (!fs.existsSync(chainIdFilepath)) {
+          fs.writeFileSync(chainIdFilepath, chainId);
+        }
       } catch (e) {}
       fs.writeFileSync(filepath, JSON.stringify(obj, null, "  "));
 
       if (deployment.solcInputHash) {
         const solcInputsFolderpath = path.join(
           this.deploymentsPath,
-          this.getDeploymentsSubPath(chainId),
+          this.env.network.name,
           "solcInputs"
         );
         const solcInputFilepath = path.join(
@@ -665,7 +666,7 @@ export class DeploymentsManager {
     log("runDeploy");
     const chainId = await getChainId(this.env);
     await this.loadDeployments();
-    const deploymentFolderPath = this.getDeploymentsSubPath(chainId);
+    const deploymentFolderPath = this.env.network.name;
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
     this.db.writeDeploymentsToFiles = options.writeDeploymentsToFiles;
     this.db.savePendingTx = options.savePendingTx;
@@ -890,6 +891,16 @@ export class DeploymentsManager {
     this.db.writeDeploymentsToFiles = wasWrittingToFiles;
     log("deploy scripts complete");
 
+    await this.export(options);
+
+    return this.db.deployments;
+  }
+
+  public async export(options: {
+    exportAll?: string;
+    export?: string;
+  }): Promise<void> {
+    const chainId = await getChainId(this.env);
     if (options.exportAll !== undefined) {
       log("load all deployments for export-all");
       const all = loadAllDeployments(this.deploymentsPath, true);
@@ -957,7 +968,6 @@ export class DeploymentsManager {
       ); // TODO remove bytecode ?
       log("single export complete");
     }
-    return this.db.deployments;
   }
 
   private async saveSnapshot(key: string, data?: any) {
@@ -989,38 +999,4 @@ export class DeploymentsManager {
     saved.snapshot = await this.env.ethereum.send("evm_snapshot", []); // it is necessary to re-snapshot it
     this.db.deployments = { ...saved.deployments };
   }
-
-  private getDeploymentsSubPath(chainId: string): string {
-    const name = this.env.network.name;
-    const num = parseInt(name, 10);
-    let expectedChainId: string;
-    if (typeof num === "number" && !isNaN(num)) {
-      expectedChainId = name;
-    } else {
-      expectedChainId = nameToChainId[name];
-    }
-    if (expectedChainId !== undefined) {
-      if (expectedChainId !== BigNumber.from(chainId).toString()) {
-        throw new Error(
-          `Network name ("${name}") is confusing, chainId is ${chainId}. Was expecting ${expectedChainId}`
-        );
-      }
-      return name;
-    }
-    return name + "_" + BigNumber.from(chainId).toString();
-  }
-
-  // TODO ?
-  // private spreadEvents() {
-  //   const allEvents [];
-  //   const allEventsNames
-  //   for (const contractName of Object.keys(this.db.deployments)) {
-  //     const deployment = this.db.deployments[contractName];
-  //     replaceEvents(deployment, allEvents);
-  //   }
-  //   for (const contractName of Object.keys(this.db.deployments)) {
-  //     const deployment = this.db.deployments[contractName];
-  //     replaceEvents(deployment, allEvents);
-  //   }
-  // }
 }
