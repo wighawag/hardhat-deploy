@@ -199,7 +199,10 @@ declare module "@nomiclabs/buidler/types" {
       address: Address;
       deploy(): Promise<DeployResult>;
     }>;
-    fetchIfDifferent(name: string, options: DeployOptions): Promise<boolean>;
+    fetchIfDifferent(
+      name: string,
+      options: DeployOptions
+    ): Promise<{ differences: boolean; address?: string }>;
     save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;
     getOrNull(name: string): Promise<Deployment | null>;
@@ -276,8 +279,8 @@ declare module "@nomiclabs/buidler/types" {
 
   export interface DeploymentSubmission {
     abi: ABI;
-    receipt: Receipt;
-    address?: Address; // used to override receipt.contractAddress (useful for proxies)
+    address: Address; // used to override receipt.contractAddress (useful for proxies)
+    receipt?: Receipt;
     history?: Deployment[];
     args?: any[];
     linkedData?: any;
@@ -307,7 +310,7 @@ declare module "@nomiclabs/buidler/types" {
   export interface Deployment {
     abi: ABI;
     address: Address;
-    receipt: Receipt;
+    receipt?: Receipt;
     history?: Deployment[];
     args?: any[];
     linkedData?: any;

@@ -353,6 +353,74 @@ export function addHelpers(
     return { artifact, contractName };
   }
 
+  async function getArtifactInfo(
+    name: string,
+    options: DeployOptions
+  ): Promise<{
+    abi: any[];
+    byteCode: string;
+    contractSolcOutput?: {
+      metadata?: string;
+      methodIdentifiers?: any;
+      storageLayout?: any;
+      userdoc?: any;
+      devdoc?: any;
+      evm?: any;
+    };
+    artifact: {
+      abi: any;
+      bytecode: string;
+      deployedBytecode?: string;
+      deployedLinkReferences?: LinkReferences;
+      linkReferences?: LinkReferences;
+    };
+  }> {
+    const artifactInfo = await getArtifactFromOptions(name, options);
+    const { artifact } = artifactInfo;
+    const { contractName } = artifactInfo;
+    const abi = artifact.abi;
+    const byteCode = linkLibraries(artifact, options.libraries);
+
+    let contractSolcOutput;
+    if (!contractName) {
+      if (typeof options.contract === "object") {
+        contractSolcOutput = {
+          metadata: options.contract?.metadata,
+          methodIdentifiers: options.contract?.methodIdentifiers,
+          storageLayout: options.contract?.storageLayout,
+          userdoc: options.contract?.userdoc,
+          devdoc: options.contract?.devdoc,
+          evm: {
+            gasEstimates: options.contract?.gasEstimates
+          }
+        };
+      }
+      if (!contractSolcOutput || !contractSolcOutput.metadata) {
+        log(`no metadata associated with contract deployed as ${name}`);
+      }
+    } else {
+      if (solcOutput) {
+        for (const fileEntry of Object.entries(solcOutput.contracts)) {
+          for (const contractEntry of Object.entries(fileEntry[1])) {
+            if (contractEntry[0] === contractName) {
+              if (
+                artifact.bytecode ===
+                "0x" + contractEntry[1].evm?.bytecode?.object
+              ) {
+                contractSolcOutput = contractEntry[1];
+              }
+            }
+          }
+        }
+      } else {
+        log(
+          `solc-output not found, it is not possible to get the metadata for ${name}`
+        );
+      }
+    }
+    return { abi, contractSolcOutput, byteCode, artifact };
+  }
+
   async function _deploy(
     name: string,
     options: DeployOptions
@@ -363,12 +431,13 @@ export function addHelpers(
     if (!ethersSigner) {
       throw new Error("no signer for " + from);
     }
-    const artifactInfo = await getArtifactFromOptions(name, options);
-    const { artifact } = artifactInfo;
-    const { contractName } = artifactInfo;
-    const abi = artifact.abi;
-    const byteCode = linkLibraries(artifact, options.libraries);
-    const factory = new ContractFactory(abi, byteCode, ethersSigner);
+
+    const {
+      abi,
+      contractSolcOutput,
+      byteCode,
+      artifact
+    } = await getArtifactInfo(name, options);
 
     const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
@@ -377,6 +446,7 @@ export function addHelpers(
       nonce: options.nonce
     };
 
+    const factory = new ContractFactory(abi, byteCode, ethersSigner);
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
 
     let create2Address;
@@ -444,43 +514,6 @@ export function addHelpers(
       try {
         await provider.send("evm_mine", []);
       } catch (e) {}
-    }
-    let contractSolcOutput;
-    if (!contractName) {
-      if (typeof options.contract === "object") {
-        contractSolcOutput = {
-          metadata: options.contract?.metadata,
-          methodIdentifiers: options.contract?.methodIdentifiers,
-          storageLayout: options.contract?.storageLayout,
-          userdoc: options.contract?.userdoc,
-          devdoc: options.contract?.devdoc,
-          evm: {
-            gasEstimates: options.contract?.gasEstimates
-          }
-        };
-      }
-      if (!contractSolcOutput || !contractSolcOutput.metadata) {
-        log(`no metadata associated with contract deployed as ${name}`);
-      }
-    } else {
-      if (solcOutput) {
-        for (const fileEntry of Object.entries(solcOutput.contracts)) {
-          for (const contractEntry of Object.entries(fileEntry[1])) {
-            if (contractEntry[0] === contractName) {
-              if (
-                artifact.bytecode ===
-                "0x" + contractEntry[1].evm?.bytecode?.object
-              ) {
-                contractSolcOutput = contractEntry[1];
-              }
-            }
-          }
-        }
-      } else {
-        log(
-          `solc-output not found, it is not possible to get the metadata for ${name}`
-        );
-      }
     }
 
     // const extendedAtifact = artifact as any; // TODO future version of buidler will hopefully have that info
@@ -576,7 +609,7 @@ export function addHelpers(
   async function fetchIfDifferent(
     name: string,
     options: DeployOptions
-  ): Promise<boolean> {
+  ): Promise<{ differences: boolean; address?: string }> {
     const argArray = options.args ? [...options.args] : [];
     await init();
 
@@ -614,7 +647,11 @@ export function addHelpers(
           unsignedTx.data
         );
         const code = await provider.getCode(create2Address);
-        return code === "0x";
+        if (code === "0x") {
+          return { differences: true, address: undefined };
+        } else {
+          return { differences: false, address: create2Address };
+        }
       } else {
         throw new Error("unsigned tx data as bytes not supported");
       }
@@ -626,12 +663,16 @@ export function addHelpers(
     const deployment = await env.deployments.getOrNull(name);
     if (deployment) {
       if (options.skipIfAlreadyDeployed) {
-        return false; // TODO check receipt, see below
+        return { differences: false, address: undefined }; // TODO check receipt, see below
       }
       // TODO transactionReceipt + check for status
-      const transaction = await provider.getTransaction(
-        deployment.receipt.transactionHash
-      );
+      let transaction;
+      if (deployment.receipt) {
+        transaction = await provider.getTransaction(
+          deployment.receipt.transactionHash
+        );
+      }
+
       if (transaction) {
         const { artifact } = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
@@ -667,13 +708,13 @@ export function addHelpers(
             );
           }
           if ((transaction as any)[field] !== (newTransaction as any)[field]) {
-            return true;
+            return { differences: true, address: deployment.address };
           }
         }
-        return false;
+        return { differences: false, address: deployment.address };
       }
     }
-    return true;
+    return { differences: true, address: undefined };
   }
 
   async function _deployOne(
@@ -687,11 +728,48 @@ export function addHelpers(
     }
     let result: DeployResult;
     if (options.fieldsToCompare) {
-      const differences = await fetchIfDifferent(name, options);
-      if (differences) {
+      const diffResult = await fetchIfDifferent(name, options);
+      if (diffResult.differences) {
         result = await _deploy(name, options);
       } else {
-        result = ((await getDeployment(name)) as unknown) as DeployResult;
+        const deployment = await getDeploymentOrNUll(name);
+        if (deployment) {
+          result = deployment as DeployResult;
+        } else {
+          if (!diffResult.address) {
+            throw new Error(
+              "no differences found but no address, this should be impossible"
+            );
+          }
+
+          const { abi, contractSolcOutput, artifact } = await getArtifactInfo(
+            name,
+            options
+          );
+
+          // receipt missing
+          const newDeployment = {
+            abi,
+            address: diffResult.address,
+            linkedData: options.linkedData,
+            solcInputHash,
+            solcInput,
+            metadata: contractSolcOutput?.metadata,
+            bytecode: artifact.bytecode,
+            deployedBytecode: artifact.deployedBytecode,
+            libraries: options.libraries,
+            userdoc: contractSolcOutput?.userdoc,
+            devdoc: contractSolcOutput?.devdoc,
+            methodIdentifiers: contractSolcOutput?.methodIdentifiers,
+            storageLayout: contractSolcOutput?.storageLayout,
+            gasEstimates: contractSolcOutput?.evm?.gasEstimates
+          };
+          await env.deployments.save(name, newDeployment);
+          result = {
+            ...newDeployment,
+            newlyDeployed: false
+          };
+        }
       }
     } else {
       result = await _deploy(name, options);
@@ -699,7 +777,7 @@ export function addHelpers(
     if (options.log) {
       if (result.newlyDeployed) {
         log(
-          `"${name}" deployed at ${result.address} with ${result.receipt.gasUsed} gas`
+          `"${name}" deployed at ${result.address} with ${result.receipt?.gasUsed} gas`
         );
       } else {
         log(`reusing "${name}" at ${result.address}`);

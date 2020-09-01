@@ -482,7 +482,7 @@ export class DeploymentsManager {
     }
     if (
       typeof deployment.address === undefined &&
-      typeof deployment.receipt.contractAddress === undefined
+      !deployment.receipt?.contractAddress
     ) {
       throw new Error(
         "deployment need a receipt with contractAddress or an address"
@@ -505,28 +505,30 @@ export class DeploymentsManager {
 
     // handle ethers receipt :
     const receipt = deployment.receipt;
-    const actualReceipt = {
-      to: receipt.to,
-      from: receipt.from,
-      contractAddress: receipt.contractAddress,
-      transactionIndex: receipt.transactionIndex,
-      gasUsed:
-        receipt.gasUsed && receipt.gasUsed._isBigNumber
-          ? receipt.gasUsed.toString()
-          : receipt.gasUsed,
-      logsBloom: receipt.logsBloom,
-      blockHash: receipt.blockHash,
-      transactionHash: receipt.transactionHash,
-      logs: receipt.logs,
-      events: receipt.events,
-      blockNumber: receipt.blockNumber,
-      cumulativeGasUsed:
-        receipt.cumulativeGasUsed && receipt.cumulativeGasUsed._isBigNumber
-          ? receipt.cumulativeGasUsed.toString()
-          : receipt.cumulativeGasUsed,
-      status: receipt.status,
-      byzantium: receipt.byzantium
-    };
+    const actualReceipt = receipt
+      ? {
+          to: receipt.to,
+          from: receipt.from,
+          contractAddress: receipt.contractAddress,
+          transactionIndex: receipt.transactionIndex,
+          gasUsed:
+            receipt.gasUsed && receipt.gasUsed._isBigNumber
+              ? receipt.gasUsed.toString()
+              : receipt.gasUsed,
+          logsBloom: receipt.logsBloom,
+          blockHash: receipt.blockHash,
+          transactionHash: receipt.transactionHash,
+          logs: receipt.logs,
+          events: receipt.events,
+          blockNumber: receipt.blockNumber,
+          cumulativeGasUsed:
+            receipt.cumulativeGasUsed && receipt.cumulativeGasUsed._isBigNumber
+              ? receipt.cumulativeGasUsed.toString()
+              : receipt.cumulativeGasUsed,
+          status: receipt.status,
+          byzantium: receipt.byzantium
+        }
+      : undefined;
 
     // from : https://stackoverflow.com/a/14810722/1663971
     function objectMap(object: any, mapFn: (obj: any) => any) {
@@ -556,7 +558,7 @@ export class DeploymentsManager {
       JSON.stringify({
         abi: deployment.abi,
         receipt: actualReceipt,
-        address: deployment.address || actualReceipt.contractAddress,
+        address: deployment.address || actualReceipt?.contractAddress,
         args: actualArgs,
         linkedData: deployment.linkedData,
         solcInputHash: deployment.solcInputHash,
