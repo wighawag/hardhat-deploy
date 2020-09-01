@@ -236,6 +236,18 @@ buidler --network mainnet etherscan-verify --api-key <apikey>
 
 `--force-license`: This flag force the use of the license specified by --license (useful if your inline SPDX are not compatible with etherscan list)
 
+### `buidler export`
+
+This plugin adds the _export_ task to Buidler.
+
+This task will export the contract deployed (saved in `deployments` folder) to a simple format containing only contract addresses and abi, useful for web apps.
+
+#### Options
+
+`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend.
+
+`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
+
 ## Environment extensions
 
 This plugin extends the Buidler Runtime Environment by adding 3 fields:
