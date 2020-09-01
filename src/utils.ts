@@ -104,7 +104,7 @@ function loadDeployments(
           .readFileSync(chainIdFilepath)
           .toString()
           .trim();
-        if (expectedChainId !== chainId) {
+        if (expectedChainId !== chainIdFound) {
           throw new Error(
             `Loading deployment in folder '${deployPath}' (with chainId: ${chainIdFound}) for a different chainId (${expectedChainId})`
           );
