@@ -173,7 +173,7 @@ This plugin adds the _deploy_ task to Buidler.
 
 This task will execute the scripts in the `deploy` folder and save the contract deployments to disk. These deployments are supposed to be saved for example in a git repository. This way they can be accessed later.
 
-With the deployemnt saved, it allows you to deploy a contract only if changed were made.
+With the deployment saved, it allows you to deploy a contract only if changed were made.
 
 Deploy scripts (also called Deploy functions) can also perform aribtrary logic.
 
