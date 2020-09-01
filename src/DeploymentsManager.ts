@@ -607,17 +607,18 @@ export class DeploymentsManager {
       try {
         fs.mkdirSync(this.deploymentsPath);
       } catch (e) {}
+      const deployFolderpath = path.join(
+        this.deploymentsPath,
+        this.env.network.name
+      );
       try {
-        const deployFolderpath = path.join(
-          this.deploymentsPath,
-          this.env.network.name
-        );
         fs.mkdirSync(deployFolderpath);
-        const chainIdFilepath = path.join(deployFolderpath, ".chainId");
-        if (!fs.existsSync(chainIdFilepath)) {
-          fs.writeFileSync(chainIdFilepath, chainId);
-        }
       } catch (e) {}
+      const chainIdFilepath = path.join(deployFolderpath, ".chainId");
+      if (!fs.existsSync(chainIdFilepath)) {
+        fs.writeFileSync(chainIdFilepath, chainId);
+      }
+
       fs.writeFileSync(filepath, JSON.stringify(obj, null, "  "));
 
       if (deployment.solcInputHash) {
