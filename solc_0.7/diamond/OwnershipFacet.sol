@@ -1,9 +1,10 @@
-pragma solidity ^0.6.4;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.7.0;
 
 import "./DiamondStorageContract.sol";
-import "./ERC173.sol";
+import "./DiamondHeaders.sol";
 
-contract OwnershipFacet is ERC173, DiamondStorageContract {
+contract OwnershipFacet is IERC173, DiamondStorageContract {
     function transferOwnership(address newOwner) external override {
         DiamondStorage storage ds = diamondStorage();
         address currentOwner = ds.contractOwner;

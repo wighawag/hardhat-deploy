@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 import "./Proxy.sol";
 
@@ -10,7 +10,7 @@ contract TransparentProxy is Proxy {
         address implementationAddress,
         bytes memory data,
         address adminAddress
-    ) public {
+    ) {
         _setImplementation(implementationAddress, data);
         _setAdmin(adminAddress);
     }

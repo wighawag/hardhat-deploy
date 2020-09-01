@@ -1,4 +1,5 @@
 {
+  "bracketSpacing": true,
   "overrides": [
     {
       "files": "*.sol",

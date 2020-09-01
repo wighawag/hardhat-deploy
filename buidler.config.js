@@ -96,13 +96,13 @@ task(TASK_COMPILE).setAction(async (args, __, runSuper) => {
 
 module.exports = {
   solc: {
-    version: "0.6.5",
+    version: "0.7.0",
     optimizer: {
       enabled: true,
       runs: 2000
     }
   },
   paths: {
-    sources: "solc_0.6"
+    sources: "solc_0.7"
   }
 };

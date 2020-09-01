@@ -43,7 +43,7 @@ import {
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
 import transparentProxy from "../artifacts/TransparentProxy.json";
-import diamondBase from "../artifacts/DiamondBase.json";
+import diamondBase from "../artifacts/Diamond.json";
 import diamondFacet from "../artifacts/DiamondFacet.json";
 import ownershipFacet from "../artifacts/OwnershipFacet.json";
 import diamondLoopeFacet from "../artifacts/DiamondLoupeFacet.json";
@@ -1026,7 +1026,6 @@ Plus they are only used when the contract is meant to be used as standalone when
     const { address: owner, ethersSigner: ownerSigner } = getProxyOwner(
       options
     );
-    const diamantaireName = name + "_Diamantaire";
     const facetSnapshot: FacetCut[] = [];
     const oldFacets: FacetCut[] = [];
     if (oldDeployment) {
@@ -1129,36 +1128,37 @@ Plus they are only used when the contract is meant to be used as standalone when
         );
       });
 
+      // ensure a Diamantaire exists on the network :
+      const diamantaireName = "Diamantaire";
       let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
-      if (!proxy || !diamantaireDeployment) {
-        if (proxy || diamantaireDeployment) {
-          throw new Error(
-            "proxy and Diamantaire should go together, something is wrong with your saved deployments"
-          );
-        }
-        diamantaireDeployment = await _deployOne(diamantaireName, {
-          from: options.from,
-          contract: diamantaire,
-          args: [owner, cuts, data],
-          log: false
-        });
+      diamantaireDeployment = await _deployOne(diamantaireName, {
+        from: options.from,
+        useCreate2: true
+      });
+      const diamantaireContract = new Contract(
+        diamantaireDeployment.address,
+        diamantaire.abi,
+        provider
+      );
+      // the diamantaire allow the execution of data at diamond construction time
 
-        const receipt = diamantaireDeployment.receipt;
-        // console.log(JSON.stringify(receipt, null, "  "));
-
-        // const diamondCreatedEvent =
-        //   receipt.events &&
-        //   receipt.events.find(event => event.event === "DiamondCreated");
-
-        const diamantaireContract = new Contract(
-          diamantaireDeployment.address,
-          diamantaire.abi,
-          provider
+      if (!proxy) {
+        const createReceipt = await execute(
+          diamantaireName,
+          options,
+          "createDiamond",
+          owner,
+          cuts,
+          data
         );
 
+        if (!createReceipt) {
+          throw new Error(`failed to get receipt from diamond creation`);
+        }
+
         const events = [];
-        if (receipt.logs) {
-          for (const l of receipt.logs) {
+        if (createReceipt.logs) {
+          for (const l of createReceipt.logs) {
             try {
               events.push(diamantaireContract.interface.parseLog(l));
             } catch (e) {}
@@ -1174,14 +1174,14 @@ Plus they are only used when the contract is meant to be used as standalone when
         const proxyAddress = diamondCreatedEvent.args.diamond;
         if (options.log) {
           log(
-            `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address}) cuts: ${cuts} with ${receipt.gasUsed} gas`
+            `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address}) cuts: ${cuts} with ${createReceipt.gasUsed} gas`
           );
         }
         proxy = {
           abi: diamondBase.abi,
           address: proxyAddress,
-          receipt,
-          args: [diamantaireDeployment.address],
+          receipt: createReceipt,
+          args: [owner],
           bytecode: diamondBase.bytecode,
           deployedBytecode: diamondBase.deployedBytecode,
           metadata: diamondBase.metadata
@@ -1204,20 +1204,16 @@ Plus they are only used when the contract is meant to be used as standalone when
           throw new Error(`Cannot find Deployment for ${name}`);
         }
         const currentOwner = await read(proxyName, "owner");
-        if (
-          currentOwner.toLowerCase() !==
-          diamantaireDeployment.address.toLowerCase()
-        ) {
-          throw new Error(
-            `The Diamond owner is not the Diamantaire Contract anymore. Cannot proceed.`
-          );
+        if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
+          throw new Error(`The Diamond owner is not ${owner}`);
         }
 
         const executeReceipt = await execute(
-          diamantaireName,
+          name,
           options,
-          "cutAndExecute",
+          "diamondCut",
           cuts,
+          "0x0000000000000000000000000000000000000000",
           data
         );
         if (!executeReceipt) {

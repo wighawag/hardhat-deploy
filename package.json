@@ -1,6 +1,6 @@
 {
   "name": "buidler-deploy",
-  "version": "0.5.18",
+  "version": "0.5.19",
   "description": "Buidler Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/buidler-deploy",
   "author": "wighawag",
@@ -36,7 +36,8 @@
     "chai": "^4.2.0",
     "dotenv": "^6.2.0",
     "mocha": "^5.2.0",
-    "prettier": "^1.17.0",
+    "prettier": "^1.19.1",
+    "prettier-plugin-solidity": "^1.0.0-alpha.56",
     "source-map-support": "^0.5.12",
     "ts-node": "^8.1.0",
     "tslint": "^5.16.0",
