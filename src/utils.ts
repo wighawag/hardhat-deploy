@@ -1,5 +1,6 @@
 import * as fs from "fs-extra";
 import * as path from "path";
+import chalk from "chalk";
 import { getAddress } from "@ethersproject/address";
 import {
   BuidlerRuntimeEnvironment,
@@ -110,7 +111,9 @@ function loadDeployments(
         }
       } else {
         console.warn(
-          `with buidler-deploy >= 0.6 you are expected to create a '.chainId' file in the deployment folder`
+          chalk.yellow(
+            `with buidler-deploy >= 0.6 you are expected to create a '.chainId' file in the deployment folder`
+          )
         );
       }
     }

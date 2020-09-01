@@ -1132,6 +1132,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       const diamantaireName = "Diamantaire";
       let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
       diamantaireDeployment = await _deployOne(diamantaireName, {
+        contract: diamantaire,
         from: options.from,
         useCreate2: true
       });
