@@ -398,9 +398,10 @@ export function addHelpers(
           const senderAddress = "0x3fab184622dc19b6109349b94811493bf2a45362";
           if (options.log) {
             log(
-              `sending eth to create 2 contract deployer address (${senderAddress})...`
+              `sending eth to create2 contract deployer address (${senderAddress})...`
             );
           }
+          // TODO gasPrice override
           await ethersSigner.sendTransaction({
             to: senderAddress,
             value: BigNumber.from("10000000000000000").toHexString()

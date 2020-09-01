@@ -110,10 +110,8 @@ function loadDeployments(
           );
         }
       } else {
-        console.warn(
-          chalk.yellow(
-            `with buidler-deploy >= 0.6 you are expected to create a '.chainId' file in the deployment folder`
-          )
+        throw new Error(
+          `with buidler-deploy >= 0.6 you are expected to create a '.chainId' file in the deployment folder`
         );
       }
     }
