@@ -64,7 +64,7 @@ function mergeAndCheckDiamondAbis(...abis: any[][]): any[] {
       "0x7a0ed627",
       "0xcdffacc6",
       "0x52ef6b2c",
-      "0x99f5f52e",
+      "0x7c696fea",
       "0xf2fde38b",
       "0x8da5cb5b"
     ],
@@ -1040,7 +1040,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         if (
           sigsBytes === "01ffc9a7" || // ERC165
           sigsBytes === "adfca15e7a0ed627cdffacc652ef6b2c" || // Loupe
-          sigsBytes === "99f5f52e" || // DiamoncCut
+          sigsBytes === "7c696fea" || // DiamoncCut
           sigsBytes === "f2fde38b8da5cb5b" // ERC173
         ) {
           facetSnapshot.push(extractFacetInfo(facetBytes));
