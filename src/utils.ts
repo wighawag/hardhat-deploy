@@ -83,25 +83,6 @@ function loadDeployments(
   const deploymentsFound: { [name: string]: any } = {};
   const deployPath = path.join(deploymentsPath, subPath);
 
-  if (expectedChainId) {
-    const chainIdFilepath = path.join(deployPath, ".chainId");
-    if (fs.existsSync(chainIdFilepath)) {
-      const chainIdFound = fs
-        .readFileSync(chainIdFilepath)
-        .toString()
-        .trim();
-      if (expectedChainId !== chainId) {
-        throw new Error(
-          `Loading deployment in folder '${deployPath}' (with chainId: ${chainIdFound}) for a different chainId (${expectedChainId})`
-        );
-      }
-    } else {
-      console.warn(
-        `with buidler-deploy >= 0.6 you are expected to create a '.chainId' file in the deployment folder`
-      );
-    }
-  }
-
   let filesStats;
   try {
     filesStats = traverse(
@@ -113,6 +94,26 @@ function loadDeployments(
   } catch (e) {
     // console.log('no folder at ' + deployPath);
     return {};
+  }
+  if (filesStats.length > 0) {
+    if (expectedChainId) {
+      const chainIdFilepath = path.join(deployPath, ".chainId");
+      if (fs.existsSync(chainIdFilepath)) {
+        const chainIdFound = fs
+          .readFileSync(chainIdFilepath)
+          .toString()
+          .trim();
+        if (expectedChainId !== chainId) {
+          throw new Error(
+            `Loading deployment in folder '${deployPath}' (with chainId: ${chainIdFound}) for a different chainId (${expectedChainId})`
+          );
+        }
+      } else {
+        console.warn(
+          `with buidler-deploy >= 0.6 you are expected to create a '.chainId' file in the deployment folder`
+        );
+      }
+    }
   }
   let fileNames = filesStats.map(a => a.relativePath);
   fileNames = fileNames.sort((a, b) => {
