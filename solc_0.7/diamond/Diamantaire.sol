@@ -18,6 +18,20 @@ contract Diamantaire {
         );
         emit DiamondCreated(diamond);
 
-        diamond.diamondCut(_diamondCut, address(0), data);
+        (bool success, ) = address(diamond).delegatecall(
+            abi.encodeWithSelector(
+                IDiamond.diamondCut.selector,
+                _diamondCut,
+                address(0),
+                data
+            )
+        );
+        if (!success) {
+            assembly {
+                let returnDataSize := returndatasize()
+                returndatacopy(0, 0, returnDataSize)
+                revert(0, returnDataSize)
+            }
+        }
     }
 }

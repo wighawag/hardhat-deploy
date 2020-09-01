@@ -108,7 +108,7 @@ contract Diamond is IERC173Events, IERC165, DiamondStorageContract, DiamondFacet
     receive() external payable {}
 
     // Non-standard internal function version of diamondCut 
-    // This code is exaclty the same as externalCut, except it is using
+    // This code is exaclty the same as externalCut in DiamondFacet, except it allows anyone to call it (internally) and is using
     // 'bytes[] memory _diamondCut' instead of 'bytes[] calldata _diamondCut'
     // The code is duplicated to prevent copying calldata to memory which
     // causes an error for an array of bytes arrays.
