@@ -14,24 +14,11 @@ contract Diamantaire {
         bytes calldata data
     ) external payable {
         IDiamond diamond = IDiamond(
-            address(new Diamond{value: msg.value}(owner))
+            address(new Diamond{value: msg.value}(address(this)))
         );
         emit DiamondCreated(diamond);
 
-        (bool success, ) = address(diamond).delegatecall(
-            abi.encodeWithSelector(
-                IDiamond.diamondCut.selector,
-                _diamondCut,
-                address(0),
-                data
-            )
-        );
-        if (!success) {
-            assembly {
-                let returnDataSize := returndatasize()
-                returndatacopy(0, 0, returnDataSize)
-                revert(0, returnDataSize)
-            }
-        }
+        diamond.diamondCut(_diamondCut, address(0), data);
+        IERC173(diamond).transferOwnership(owner);
     }
 }
