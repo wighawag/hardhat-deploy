@@ -51,28 +51,7 @@ import diamantaire from "../artifacts/Diamantaire.json";
 import fs from "fs";
 import path from "path";
 
-function mergeABIs(...abis: any[][]): any[] {
-  return _mergeABIs(undefined, ...abis);
-}
-
-function mergeAndCheckDiamondAbis(...abis: any[][]): any[] {
-  // TODO remove duplication with builtin facet enumeration
-  return _mergeABIs(
-    [
-      "0x01ffc9a7",
-      "0xadfca15e",
-      "0x7a0ed627",
-      "0xcdffacc6",
-      "0x52ef6b2c",
-      "0x7c696fea",
-      "0xf2fde38b",
-      "0x8da5cb5b"
-    ],
-    ...abis
-  );
-}
-
-function _mergeABIs(check?: string[], ...abis: any[][]): any[] {
+function mergeABIs(check: boolean, ...abis: any[][]): any[] {
   if (abis.length === 0) {
     return [];
   }
@@ -82,21 +61,6 @@ function _mergeABIs(check?: string[], ...abis: any[][]): any[] {
     const abi = abis[i];
     for (const fragment of abi) {
       const newEthersFragment = Fragment.from(fragment);
-      if (check) {
-        if (newEthersFragment && newEthersFragment.type === "function") {
-          if (
-            check.find(
-              v =>
-                v ===
-                Interface.getSighash(newEthersFragment as FunctionFragment)
-            )
-          ) {
-            throw new Error(
-              `Function ${newEthersFragment.name} will shadow Diamond contract base facets`
-            );
-          }
-        }
-      }
       // TODO constructor special handling ?
       const foundSameSig = result.find(v => {
         const existingEthersFragment = Fragment.from(v);
@@ -141,6 +105,7 @@ function _mergeABIs(check?: string[], ...abis: any[][]): any[] {
 }
 
 diamondBase.abi = mergeABIs(
+  false,
   diamondBase.abi,
   diamondFacet.abi,
   diamondLoopeFacet.abi,
@@ -1050,7 +1015,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     // console.log({ oldFacets: JSON.stringify(oldFacets, null, "  ") });
 
     let changesDetected = !oldDeployment;
-    let abi: any[] = [];
+    let abi: any[] = diamondBase.abi.concat([]);
     const facetCuts: FacetCut[] = [];
     for (const facet of options.facets) {
       const artifact = await getArtifact(facet); // TODO getArtifactFromOptions( // allowing to pass bytecode / abi
@@ -1061,7 +1026,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       if (constructor) {
         throw new Error(`Facet must not have a constructor`);
       }
-      abi = mergeAndCheckDiamondAbis(abi, artifact.abi);
+      abi = mergeABIs(true, abi, artifact.abi);
       // TODO allow facet to be named so multiple version could coexist
       const implementation = await _deployOne(facet, {
         from: options.from,
