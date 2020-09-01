@@ -19,6 +19,6 @@ contract Diamantaire {
         emit DiamondCreated(diamond);
 
         diamond.diamondCut(_diamondCut, address(0), data);
-        IERC173(diamond).transferOwnership(owner);
+        IERC173(address(diamond)).transferOwnership(owner);
     }
 }
