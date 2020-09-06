@@ -542,7 +542,8 @@ export function addHelpers(
     const deployment = {
       ...preDeployment,
       address,
-      receipt
+      receipt,
+      transactionHash: receipt.transactionHash
     };
     await env.deployments.save(name, deployment);
     return {
@@ -671,6 +672,8 @@ export function addHelpers(
         transaction = await provider.getTransaction(
           deployment.receipt.transactionHash
         );
+      } else if (deployment.transactionHash) {
+        transaction = await provider.getTransaction(deployment.transactionHash);
       }
 
       if (transaction) {
@@ -1226,6 +1229,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           abi: diamondBase.abi,
           address: proxyAddress,
           receipt: createReceipt,
+          transactionHash: createReceipt.transactionHash,
           args: [owner],
           bytecode: diamondBase.bytecode,
           deployedBytecode: diamondBase.deployedBytecode,
@@ -1237,6 +1241,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         await env.deployments.save(name, {
           address: proxy.address,
           receipt: proxy.receipt,
+          transactionHash: proxy.transactionHash,
           linkedData: options.linkedData,
           facets: facetSnapshot,
           diamondCuts: cuts,
@@ -1266,6 +1271,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
         await env.deployments.save(name, {
           receipt: executeReceipt,
+          transactionHash: executeReceipt.transactionHash,
           history: oldDeployment.history
             ? oldDeployment.history.concat(oldDeployment)
             : [oldDeployment],

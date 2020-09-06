@@ -28,8 +28,10 @@ export async function getChainId(bre: BuidlerRuntimeEnvironment) {
 }
 
 export function loadAllDeployments(
+  bre: BuidlerRuntimeEnvironment,
   deploymentsPath: string,
-  onlyABIAndAddress?: boolean
+  onlyABIAndAddress?: boolean,
+  externalDeployments?: { [networkName: string]: string[] }
 ) {
   const all: MultiExport = {}; // TODO any is chainConfig
   fs.readdirSync(deploymentsPath).forEach(fileName => {
@@ -67,6 +69,33 @@ export function loadAllDeployments(
       };
     }
   });
+
+  if (externalDeployments) {
+    for (const networkName of Object.keys(externalDeployments)) {
+      for (const folderPath of externalDeployments[networkName]) {
+        const networkConfig = bre.config.networks[networkName];
+        if (networkConfig && networkConfig.chainId) {
+          const networkChainId = networkConfig.chainId.toString();
+          const contracts = loadDeployments(
+            folderPath,
+            "",
+            onlyABIAndAddress,
+            undefined,
+            networkChainId
+          );
+          all[chainId][networkName] = {
+            name: networkName,
+            chainId: networkChainId,
+            contracts
+          };
+        } else {
+          console.warn(
+            `export-all limitation: attempting to load external deployments from ${folderPath} without chainId info. Please set the chainId in the network config for ${networkName}`
+          );
+        }
+      }
+    }
+  }
   return all;
 }
 
@@ -79,7 +108,8 @@ function loadDeployments(
   deploymentsPath: string,
   subPath: string,
   onlyABIAndAddress?: boolean,
-  expectedChainId?: string
+  expectedChainId?: string,
+  truffleChainId?: string
 ) {
   const deploymentsFound: { [name: string]: any } = {};
   const deployPath = path.join(deploymentsPath, subPath);
@@ -133,6 +163,16 @@ function loadDeployments(
       let deployment = JSON.parse(
         fs.readFileSync(deploymentFileName).toString()
       );
+      if (!deployment.address && deployment.networks) {
+        if (truffleChainId && deployment.networks[truffleChainId]) {
+          // TRUFFLE support
+          const truffleDeployment = deployment as any; // TruffleDeployment;
+          deployment.address =
+            truffleDeployment.networks[truffleChainId].address;
+          deployment.transactionHash =
+            truffleDeployment.networks[truffleChainId].transactionHash;
+        }
+      }
       if (onlyABIAndAddress) {
         deployment = {
           address: deployment.address,
@@ -142,6 +182,7 @@ function loadDeployments(
       }
       const name = fileName.slice(0, fileName.length - 5);
       // console.log('fetching ' + deploymentFileName + '  for ' + name);
+
       deploymentsFound[name] = deployment;
     }
   }
@@ -152,13 +193,15 @@ export function addDeployments(
   db: any,
   deploymentsPath: string,
   subPath: string,
-  expectedChainId?: string
+  expectedChainId?: string,
+  truffleChainId?: string
 ) {
   const contracts = loadDeployments(
     deploymentsPath,
     subPath,
     false,
-    expectedChainId
+    expectedChainId,
+    truffleChainId
   );
   for (const key of Object.keys(contracts)) {
     db.deployments[key] = contracts[key];

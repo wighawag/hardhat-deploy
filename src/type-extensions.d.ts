@@ -251,6 +251,12 @@ declare module "@nomiclabs/buidler/types" {
         | number
         | { [network: string]: null | number | string };
     }; // TODO better type ? to ensure it ends with string ?
+    external: {
+      deployments?: {
+        [networkName: string]: string[];
+      };
+      imports?: string[];
+    };
   }
 
   export interface ProjectPaths {
@@ -281,6 +287,7 @@ declare module "@nomiclabs/buidler/types" {
     abi: ABI;
     address: Address; // used to override receipt.contractAddress (useful for proxies)
     receipt?: Receipt;
+    transactionHash?: string;
     history?: Deployment[];
     args?: any[];
     linkedData?: any;
@@ -311,6 +318,7 @@ declare module "@nomiclabs/buidler/types" {
     abi: ABI;
     address: Address;
     receipt?: Receipt;
+    transactionHash?: string;
     history?: Deployment[];
     args?: any[];
     linkedData?: any;

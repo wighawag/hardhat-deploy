@@ -121,41 +121,59 @@ export class DeploymentsManager {
       },
       getArtifact: async (contractName: string): Promise<any> => {
         let artifact;
+        let lastError: any;
         try {
           artifact = await readArtifact(
             this.env.config.paths.artifacts,
             contractName
           );
         } catch (e) {
-          try {
-            artifact = await readArtifact(
-              this.env.config.paths.imports ||
-                path.join(this.env.config.paths.root, "imports"),
-              contractName
-            );
-          } catch (ee) {
-            throw e;
+          lastError = e;
+          const importPaths = this.getImportPaths();
+          for (const importPath of importPaths) {
+            try {
+              artifact = await readArtifact(importPath, contractName);
+              if (artifact) {
+                return artifact;
+              }
+            } catch (ee) {
+              lastError = new Error(
+                `cannot get artifact ${contractName} at ${importPath}`
+              );
+            }
           }
+        }
+        if (!artifact) {
+          throw lastError;
         }
         return artifact;
       },
       getArtifactSync: (contractName: string): any => {
         let artifact;
+        let lastError: any;
         try {
           artifact = readArtifactSync(
             this.env.config.paths.artifacts,
             contractName
           );
         } catch (e) {
-          try {
-            artifact = readArtifactSync(
-              this.env.config.paths.imports ||
-                path.join(this.env.config.paths.root, "imports"),
-              contractName
-            );
-          } catch (ee) {
-            throw e;
+          lastError = e;
+          const importPaths = this.getImportPaths();
+          for (const importPath of importPaths) {
+            try {
+              artifact = readArtifactSync(importPath, contractName);
+              if (artifact) {
+                return artifact;
+              }
+            } catch (ee) {
+              lastError = new Error(
+                `cannot get artifact ${contractName} at ${importPath}`
+              );
+            }
           }
+        }
+        if (!artifact) {
+          throw lastError;
         }
         return artifact;
       },
@@ -438,21 +456,31 @@ export class DeploymentsManager {
   public async loadDeployments(): Promise<{ [name: string]: Deployment }> {
     const chainId = await getChainId(this.env);
     // this.env.deployments.chainId = chainId;
-    const folderPath = this.env.network.name;
+    const networkName = this.env.network.name;
     let migrations = {};
     try {
       log("loading migrations");
       migrations = JSON.parse(
         fs
           .readFileSync(
-            path.join(this.deploymentsPath, folderPath, ".migrations.json")
+            path.join(this.deploymentsPath, networkName, ".migrations.json")
           )
           .toString()
       );
     } catch (e) {}
     this.db.migrations = migrations;
     // console.log({ migrations: this.db.migrations });
-    addDeployments(this.db, this.deploymentsPath, folderPath, chainId);
+    addDeployments(this.db, this.deploymentsPath, networkName, chainId);
+    const extraDeploymentPaths =
+      this.env.config.external &&
+      this.env.config.external.deployments &&
+      this.env.config.external.deployments[networkName];
+    if (extraDeploymentPaths) {
+      for (const deploymentFolderPath of extraDeploymentPaths) {
+        addDeployments(this.db, deploymentFolderPath, "", undefined, chainId);
+      }
+    }
+
     this.db.deploymentsLoaded = true;
     return this.db.deployments;
   }
@@ -906,7 +934,12 @@ export class DeploymentsManager {
     const chainId = await getChainId(this.env);
     if (options.exportAll !== undefined) {
       log("load all deployments for export-all");
-      const all = loadAllDeployments(this.deploymentsPath, true);
+      const all = loadAllDeployments(
+        this.env,
+        this.deploymentsPath,
+        true,
+        this.env.config.external && this.env.config.external.deployments
+      );
       const currentNetworkDeployments: {
         [contractName: string]: {
           address: string;
@@ -971,6 +1004,26 @@ export class DeploymentsManager {
       ); // TODO remove bytecode ?
       log("single export complete");
     }
+  }
+
+  private getImportPaths() {
+    let importPaths: string[] = ["imports"];
+    if (this.env.config.paths.imports) {
+      importPaths = [this.env.config.paths.imports];
+    }
+    const externalImports = this.env.config.external.imports;
+    if (externalImports) {
+      if (typeof externalImports === "string") {
+        importPaths.push(
+          path.join(this.env.config.paths.root, externalImports)
+        );
+      } else {
+        importPaths = importPaths.concat(
+          externalImports.map(v => path.join(this.env.config.paths.root, v))
+        );
+      }
+    }
+    return importPaths;
   }
 
   private async saveSnapshot(key: string, data?: any) {
