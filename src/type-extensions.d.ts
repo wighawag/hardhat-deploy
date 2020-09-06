@@ -255,7 +255,7 @@ declare module "@nomiclabs/buidler/types" {
       deployments?: {
         [networkName: string]: string[];
       };
-      imports?: string[];
+      artifacts?: string[];
     };
   }
 
