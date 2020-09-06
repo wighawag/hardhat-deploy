@@ -25,6 +25,8 @@ This plugin contains more features, all geared toward a better developer experie
 - ability to create test fixture that automatically benefit from `evm_snapshot` to speed up these fixture.
 - combined with `buidler-ethers-v5` it has the ability to get ethers contract instance by name (like `await ethers.getContract("ContractName")`).
 - importing previously compiled contract (possibly in different solidity compiler version).
+- importing artifact from external sources (like npm packages)
+- importing deployments from external sources (like npm packages)
 - ability to log information in `deploy` mode only (while in test the console remains clean).
 - contains helpers to read and execute transaction on deployed contract referring to them by name.
 - These helpers contains options to auto mine on dev envoronment like ganache (to speed up deployments).
@@ -95,7 +97,8 @@ Each contract file must follow this type (as defined in [src/type-extensions.d.t
 export interface Deployment {
   abi: any[];
   address: string;
-  receipt: Receipt;
+  receipt?: Receipt;
+  transactionHash?: string;
   contractFilepath?: string;
   contractName?: string;
   history?: Deployment[];
@@ -150,18 +153,22 @@ You would get the following folder structure:
 ```
 deployments/
   mainnet/
+    .chainId
     Greeter.json
   rinkeby/
+    .chainId
     Greeter.json
     Registry.json
-  rinkeby2_4/
+  rinkeby2/
+    .chainId
     Greeter.json
     Registry.json
 ```
 
-Note that because rinkeby2 is not one of the recognized network, it has the chainId `4` for rinkeby appended to it.
+The reason why buidler-deploy save chainId in the `.chainId` fie is both for
 
-The reason why buidler-deploy append the chainId in that case is safety. So that if you were to change the network to point to a different chain, it would not attempt to read the wrong folder and assume that a contract has been deployed while it has not.
+- safety: so that if you were to change the network to point to a different chain, it would not attempt to read the wrong folder and assume that a contract has been deployed while it has not.
+- ability to know the chainId without requring to be connected to a node (and so not dependent on buidler.config.js settings)
 
 ## Tasks
 
@@ -242,11 +249,14 @@ This plugin adds the _export_ task to Buidler.
 
 This task will export the contract deployed (saved in `deployments` folder) to a simple format containing only contract addresses and abi, useful for web apps.
 
+One of the following options need to be set for this task to have any effects :
+
 #### Options
 
 `--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend.
 
 `--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
+This last option has some limitations, when combined with the use of external deployments (see [Configuration](#configuration)). If such external deployments were using older version of buidler-deploy or truffle, the chainId might be missing. In order for these to be exported, the buidler network config need to explicity state the chainId.
 
 ## Environment extensions
 
@@ -305,6 +315,29 @@ The deploy folder is expected to contains the deploy script that are executed up
 The deployment folder will contains the resulting deployments (contract addresses along their abi, bytecode, metadata...). One folder per network and one file per contract.
 
 The imports folder is expected to contains artifacts that were pre-compiled. Useful if you want to upgrade to a new solidity version but want to keep using previously compiled contracts. The artifact is the same format as normal buidler artifact, so you can easily copy them over, before switching to a new compiler version.
+
+### `external`
+
+It also add the `external` field to `BuidlerConfig`
+
+Such fiels allows to specify paths for external artifacts or deployments. The use of the `paths` field was not possible as of writing buidler, expect all paths field to be string. It does not accept arrays or objects
+
+The external object has 2 fields:
+
+```js
+{
+    external: {
+        artifacts: ["node_modules/@cartesi/arbitration/build/contracts"],
+        deployments: {
+          rinkeby: ["node_modules/@cartesi/arbitration/build/contracts"],
+        }
+    }
+}
+```
+
+The artifacts fields specify an array of path to look for artifact. it support both buidler and truffle artifacts.
+
+The deployments fields specify an object whose field name are the buidler network and the value is an array of path to look for deployments. It supports both buidler-deploy and truffle formats.
 
 ## Deploying Contracts
 
