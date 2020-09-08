@@ -1011,7 +1011,8 @@ export class DeploymentsManager {
     if (this.env.config.paths.imports) {
       importPaths = [this.env.config.paths.imports];
     }
-    const externalImports = this.env.config.external.artifacts;
+    const externalImports =
+      this.env.config.external && this.env.config.external.artifacts;
     if (externalImports) {
       if (typeof externalImports === "string") {
         importPaths.push(
