@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.0;
+pragma solidity ^0.7.1;
 pragma experimental ABIEncoderV2;
 
-import "./DiamondHeaders.sol";
+import "./interfaces/IDiamondCut.sol";
 import "./Diamond.sol";
 
 contract Diamantaire {
-    event DiamondCreated(IDiamond diamond);
+    event DiamondCreated(Diamond diamond);
 
     function createDiamond(
         address owner,
         bytes[] calldata _diamondCut,
         bytes calldata data
     ) external payable {
-        IDiamond diamond = IDiamond(
-            address(new Diamond{value: msg.value}(address(this)))
-        );
+        Diamond diamond = new Diamond{value: msg.value}(address(this));
         emit DiamondCreated(diamond);
 
-        diamond.diamondCut(_diamondCut, address(0), data);
+        IDiamondCut(address(diamond)).diamondCut(_diamondCut, address(0), data);
         IERC173(address(diamond)).transferOwnership(owner);
     }
 }

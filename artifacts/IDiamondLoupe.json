@@ -13,7 +13,7 @@
       "outputs": [
         {
           "internalType": "address",
-          "name": "",
+          "name": "facetAddress_",
           "type": "address"
         }
       ],
@@ -25,9 +25,9 @@
       "name": "facetAddresses",
       "outputs": [
         {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
+          "internalType": "address[]",
+          "name": "facetAddresses_",
+          "type": "address[]"
         }
       ],
       "stateMutability": "view",
@@ -44,9 +44,9 @@
       "name": "facetFunctionSelectors",
       "outputs": [
         {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
+          "internalType": "bytes4[]",
+          "name": "facetFunctionSelectors_",
+          "type": "bytes4[]"
         }
       ],
       "stateMutability": "view",
@@ -57,9 +57,21 @@
       "name": "facets",
       "outputs": [
         {
-          "internalType": "bytes[]",
-          "name": "",
-          "type": "bytes[]"
+          "components": [
+            {
+              "internalType": "address",
+              "name": "facetAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes4[]",
+              "name": "functionSelectors",
+              "type": "bytes4[]"
+            }
+          ],
+          "internalType": "struct IDiamondLoupe.Facet[]",
+          "name": "facets_",
+          "type": "tuple[]"
         }
       ],
       "stateMutability": "view",
@@ -70,6 +82,6 @@
   "deployedBytecode": "0x",
   "linkReferences": {},
   "deployedLinkReferences": {},
-  "metadata": "{\"compiler\":{\"version\":\"0.7.0+commit.9e61f92b\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"_functionSelector\",\"type\":\"bytes4\"}],\"name\":\"facetAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"facetAddresses\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_facet\",\"type\":\"address\"}],\"name\":\"facetFunctionSelectors\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"facets\",\"outputs\":[{\"internalType\":\"bytes[]\",\"name\":\"\",\"type\":\"bytes[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"facetAddress(bytes4)\":{\"details\":\"If facet is not found return address(0).\",\"params\":{\"_functionSelector\":\"The function selector.\"},\"returns\":{\"_0\":\"The facet address.\"}},\"facetAddresses()\":{\"returns\":{\"_0\":\"A byte array of tightly packed facet addresses. Example return value: return abi.encodePacked(facet1, facet2, facet3, ...)\"}},\"facetFunctionSelectors(address)\":{\"params\":{\"_facet\":\"The facet address.\"},\"returns\":{\"_0\":\"A byte array of function selectors. The return value is tightly packed. Here is an example: return abi.encodePacked(selector1, selector2, selector3, ...)\"}},\"facets()\":{\"returns\":{\"_0\":\"An array of bytes arrays containing each facet         and each facet's selectors. The return value is tightly packed. Here is the structure of the return value: returnValue = [     abi.encodePacked(facet, sel1, sel2, sel3, ...),     abi.encodePacked(facet, sel1, sel2, sel3, ...),     ... ] facet is the address of a facet. sel1, sel2, sel3 etc. are four-byte function selectors.\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"facetAddress(bytes4)\":{\"notice\":\"Gets the facet that supports the given selector.\"},\"facetAddresses()\":{\"notice\":\"Get all the facet addresses used by a diamond.\"},\"facetFunctionSelectors(address)\":{\"notice\":\"Gets all the function selectors supported by a specific facet.\"},\"facets()\":{\"notice\":\"Gets all facets and their selectors.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"solc_0.7/diamond/DiamondHeaders.sol\":\"IDiamondLoupe\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":2000},\"remappings\":[]},\"sources\":{\"solc_0.7/diamond/DiamondHeaders.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.7.0;\\npragma experimental ABIEncoderV2;\\n\\ninterface IDiamond {\\n    /// @notice Add/replace/remove any number of functions and optionally execute\\n    ///         a function with delegatecall\\n    /// @param _diamondCut Contains the facet addresses and function selectors\\n    /// This argument is tightly packed for gas efficiency    \\n    /// That means no padding with zeros.\\n    /// Here is the structure of _diamondCut:\\n    /// _diamondCut = [\\n    ///     abi.encodePacked(facet, sel1, sel2, sel3, ...),\\n    ///     abi.encodePacked(facet, sel1, sel2, sel4, ...),\\n    ///     ...\\n    /// ]\\n    /// facet is the address of a facet\\n    /// sel1, sel2, sel3 etc. are four-byte function selectors.\\n    /// @param _init The address of the contract or facet to execute _calldata\\n    /// @param _calldata A function call, including function selector and arguments\\n    ///                  _calldata is executed with delegatecall on _init\\n    function diamondCut(bytes[] calldata _diamondCut, address _init, bytes calldata _calldata) external;\\n    event DiamondCut(bytes[] _diamondCut, address _init, bytes _calldata);\\n}\\n\\n\\n// A loupe is a small magnifying glass used to look at diamonds.\\n// These functions look at diamonds\\ninterface IDiamondLoupe {\\n    /// These functions are expected to be called frequently\\n    /// by tools. Therefore the return values are tightly\\n    /// packed for efficiency. That means no padding with zeros.\\n\\n    /// @notice Gets all facets and their selectors.\\n    /// @return An array of bytes arrays containing each facet\\n    ///         and each facet's selectors.\\n    /// The return value is tightly packed.\\n    /// Here is the structure of the return value:\\n    /// returnValue = [\\n    ///     abi.encodePacked(facet, sel1, sel2, sel3, ...),\\n    ///     abi.encodePacked(facet, sel1, sel2, sel3, ...),\\n    ///     ...\\n    /// ]\\n    /// facet is the address of a facet.\\n    /// sel1, sel2, sel3 etc. are four-byte function selectors.\\n    function facets() external view returns(bytes[] memory);\\n\\n    /// @notice Gets all the function selectors supported by a specific facet.\\n    /// @param _facet The facet address.\\n    /// @return A byte array of function selectors.\\n    /// The return value is tightly packed. Here is an example:\\n    /// return abi.encodePacked(selector1, selector2, selector3, ...)\\n    function facetFunctionSelectors(address _facet) external view returns(bytes memory);\\n\\n    /// @notice Get all the facet addresses used by a diamond.\\n    /// @return A byte array of tightly packed facet addresses.\\n    /// Example return value:\\n    /// return abi.encodePacked(facet1, facet2, facet3, ...)\\n    function facetAddresses() external view returns(bytes memory);\\n\\n    /// @notice Gets the facet that supports the given selector.\\n    /// @dev If facet is not found return address(0).\\n    /// @param _functionSelector The function selector.\\n    /// @return The facet address.\\n    function facetAddress(bytes4 _functionSelector) external view returns(address);\\n}\\n\\ninterface IERC165 {\\n    /// @notice Query if a contract implements an interface\\n    /// @param interfaceID The interface identifier, as specified in ERC-165\\n    /// @dev Interface identification is specified in ERC-165. This function\\n    ///  uses less than 30,000 gas.\\n    /// @return `true` if the contract implements `interfaceID` and\\n    ///  `interfaceID` is not 0xffffffff, `false` otherwise\\n    function supportsInterface(bytes4 interfaceID) external view returns (bool);\\n}\\n\\ninterface IERC173Events {\\n    event OwnershipTransferred(\\n        address indexed previousOwner,\\n        address indexed newOwner\\n    );\\n}\\n\\ninterface IERC173 is IERC173Events {\\n    function transferOwnership(address newOwner) external;\\n\\n    function owner() external view returns (address);\\n}\\n\",\"keccak256\":\"0x331a6b7d4e1a101eff1dfd4d7c1a69ef6c6165c81ff674e63ec0cbfe7c5f42a7\",\"license\":\"MIT\"}},\"version\":1}",
-  "contractFilepath": "solc_0.7/diamond/DiamondHeaders.sol"
+  "metadata": "{\"compiler\":{\"version\":\"0.7.1+commit.f4a555be\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"_functionSelector\",\"type\":\"bytes4\"}],\"name\":\"facetAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"facetAddress_\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"facetAddresses\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"facetAddresses_\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_facet\",\"type\":\"address\"}],\"name\":\"facetFunctionSelectors\",\"outputs\":[{\"internalType\":\"bytes4[]\",\"name\":\"facetFunctionSelectors_\",\"type\":\"bytes4[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"facets\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"facetAddress\",\"type\":\"address\"},{\"internalType\":\"bytes4[]\",\"name\":\"functionSelectors\",\"type\":\"bytes4[]\"}],\"internalType\":\"struct IDiamondLoupe.Facet[]\",\"name\":\"facets_\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"facetAddress(bytes4)\":{\"details\":\"If facet is not found return address(0).\",\"params\":{\"_functionSelector\":\"The function selector.\"},\"returns\":{\"facetAddress_\":\"The facet address.\"}},\"facetAddresses()\":{\"returns\":{\"facetAddresses_\":\"facetAddresses_\"}},\"facetFunctionSelectors(address)\":{\"params\":{\"_facet\":\"The facet address.\"},\"returns\":{\"facetFunctionSelectors_\":\"facetFunctionSelectors_\"}},\"facets()\":{\"returns\":{\"facets_\":\"Facet\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"facetAddress(bytes4)\":{\"notice\":\"Gets the facet that supports the given selector.\"},\"facetAddresses()\":{\"notice\":\"Get all the facet addresses used by a diamond.\"},\"facetFunctionSelectors(address)\":{\"notice\":\"Gets all the function selectors supported by a specific facet.\"},\"facets()\":{\"notice\":\"Gets all facet addresses and their four byte function selectors.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"solc_0.7/diamond/interfaces/IDiamondLoupe.sol\":\"IDiamondLoupe\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":2000},\"remappings\":[]},\"sources\":{\"solc_0.7/diamond/interfaces/IDiamondLoupe.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.7.1;\\npragma experimental ABIEncoderV2;\\n\\n// A loupe is a small magnifying glass used to look at diamonds.\\n// These functions look at diamonds\\ninterface IDiamondLoupe {\\n    /// These functions are expected to be called frequently\\n    /// by tools.\\n\\n    struct Facet {\\n        address facetAddress;\\n        bytes4[] functionSelectors;\\n    }\\n\\n    /// @notice Gets all facet addresses and their four byte function selectors.\\n    /// @return facets_ Facet\\n    function facets() external view returns (Facet[] memory facets_);\\n\\n    /// @notice Gets all the function selectors supported by a specific facet.\\n    /// @param _facet The facet address.\\n    /// @return facetFunctionSelectors_\\n    function facetFunctionSelectors(address _facet)\\n        external\\n        view\\n        returns (bytes4[] memory facetFunctionSelectors_);\\n\\n    /// @notice Get all the facet addresses used by a diamond.\\n    /// @return facetAddresses_\\n    function facetAddresses()\\n        external\\n        view\\n        returns (address[] memory facetAddresses_);\\n\\n    /// @notice Gets the facet that supports the given selector.\\n    /// @dev If facet is not found return address(0).\\n    /// @param _functionSelector The function selector.\\n    /// @return facetAddress_ The facet address.\\n    function facetAddress(bytes4 _functionSelector)\\n        external\\n        view\\n        returns (address facetAddress_);\\n}\\n\",\"keccak256\":\"0xd91792e8c4bf262da13d50f55d9f40d99051da210e58b1f91f99a6cef12b492f\",\"license\":\"MIT\"}},\"version\":1}",
+  "contractFilepath": "solc_0.7/diamond/interfaces/IDiamondLoupe.sol"
 }
