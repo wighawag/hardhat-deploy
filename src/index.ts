@@ -294,7 +294,7 @@ export default function() {
     .addOptionalParam("export", "export current network deployments")
     .addOptionalParam("exportAll", "export all deployments into one file")
     .setAction(async (args, bre) => {
-      await deploymentsManager.loadDeployments();
+      await deploymentsManager.loadDeployments(false);
       await deploymentsManager.export(args);
     });
 

@@ -453,8 +453,13 @@ export class DeploymentsManager {
     return this.db.namedAccounts;
   }
 
-  public async loadDeployments(): Promise<{ [name: string]: Deployment }> {
-    const chainId = await getChainId(this.env);
+  public async loadDeployments(
+    chainIdExpected: boolean = true
+  ): Promise<{ [name: string]: Deployment }> {
+    let chainId: string | undefined;
+    if (chainIdExpected) {
+      chainId = await getChainId(this.env);
+    }
     // this.env.deployments.chainId = chainId;
     const networkName = this.env.network.name;
     let migrations = {};
