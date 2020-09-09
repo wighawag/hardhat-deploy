@@ -456,12 +456,13 @@ export class DeploymentsManager {
   public async loadDeployments(
     chainIdExpected: boolean = true
   ): Promise<{ [name: string]: Deployment }> {
+    const networkName = this.env.network.name;
+
     let chainId: string | undefined;
     if (chainIdExpected) {
       chainId = await getChainId(this.env);
     }
-    // this.env.deployments.chainId = chainId;
-    const networkName = this.env.network.name;
+
     let migrations = {};
     try {
       log("loading migrations");
@@ -936,7 +937,18 @@ export class DeploymentsManager {
     exportAll?: string;
     export?: string;
   }): Promise<void> {
-    const chainId = await getChainId(this.env);
+    let chainId: string | undefined;
+    try {
+      chainId = fs
+        .readFileSync(
+          path.join(this.deploymentsPath, this.env.network.name, ".chainId")
+        )
+        .toString();
+    } catch (e) {}
+    if (!chainId) {
+      chainId = await getChainId(this.env);
+    }
+
     if (options.exportAll !== undefined) {
       log("load all deployments for export-all");
       const all = loadAllDeployments(
