@@ -260,9 +260,11 @@ This last option has some limitations, when combined with the use of external de
 
 ## Environment extensions
 
-This plugin extends the Buidler Runtime Environment by adding 3 fields:
+This plugin extends the Buidler Runtime Environment by adding 4 fields:
 
-- `getNamedAccounts: () => Promise<{ [name: string]: Address }>`: a function returning an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see [Configuration](#configuration)).
+- `getNamedAccounts: () => Promise<{ [name: string]: string }>`: a function returning an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see [Configuration](#configuration)).
+
+- `getUnamedAccounts: () => Promise<string[]}>`: accounts which has no names, useful for test where you want to be sure that the account is not one of the predefined one
 
 - `deployments`: contains functions to access past deployments or to save new ones, as well as helpers functions.
 
@@ -399,9 +401,11 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 };
 ```
 
-As you can see the BRE passed in has 3 new fields :
+As you can see the BRE passed in has 4 new fields :
 
 - `getNamedAccounts` is a function that returns a promise to an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see [`namedAccounts`](#namedaccounts)).
+
+- `getUnamedAccounts`: function that return a promise to an array of accounts (which were notused in `getNamedAccounts`), useful for test where you want to be sure that the account is not one of the predefined one
 
 - `deployments`, which contains functions to access past deployments or to save new ones, as well as helpers functions.
 
