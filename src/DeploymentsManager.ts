@@ -43,6 +43,7 @@ export class DeploymentsManager {
   private db: {
     accountsLoaded: boolean;
     namedAccounts: { [name: string]: string };
+    unnamedAccounts: string[];
     deploymentsLoaded: boolean;
     deployments: any;
     writeDeploymentsToFiles: boolean;
@@ -71,6 +72,7 @@ export class DeploymentsManager {
     this.db = {
       accountsLoaded: false,
       namedAccounts: {},
+      unnamedAccounts: [],
       deploymentsLoaded: false,
       deployments: {},
       migrations: {},
@@ -443,14 +445,36 @@ export class DeploymentsManager {
     return tx;
   }
 
-  public async getNamedAccounts(): Promise<{ [name: string]: string }> {
+  private async setupAccounts(): Promise<{
+    namedAccounts: { [name: string]: string };
+    unnamedAccounts: string[];
+  }> {
     if (!this.db.accountsLoaded) {
       const chainId = await getChainId(this.env);
       const accounts = await this.env.ethereum.send("eth_accounts");
-      this.db.namedAccounts = processNamedAccounts(this.env, accounts, chainId);
+      const { namedAccounts, unnamedAccounts } = processNamedAccounts(
+        this.env,
+        accounts,
+        chainId
+      );
+      this.db.namedAccounts = namedAccounts;
+      this.db.unnamedAccounts = unnamedAccounts;
       this.db.accountsLoaded = true;
     }
+    return {
+      namedAccounts: this.db.namedAccounts,
+      unnamedAccounts: this.db.unnamedAccounts
+    };
+  }
+
+  public async getNamedAccounts(): Promise<{ [name: string]: string }> {
+    await this.setupAccounts();
     return this.db.namedAccounts;
+  }
+
+  public async getUnnamedAccounts(): Promise<string[]> {
+    await this.setupAccounts();
+    return this.db.unnamedAccounts;
   }
 
   public async loadDeployments(

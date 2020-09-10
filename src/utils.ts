@@ -213,24 +213,17 @@ function transformNamedAccounts(
   chainIdGiven: string | number,
   accounts: string[],
   networkConfigName: string
-) {
+): { namedAccounts: { [name: string]: string }; unnamedAccounts: string[] } {
   const namedAccounts: { [name: string]: string } = {};
+  const usedAccounts: { [address: string]: boolean } = {};
   // TODO transform into checksum  address
   if (configNamedAccounts) {
     const accountNames = Object.keys(configNamedAccounts);
-    function parseSpec(spec: any): string {
-      let address;
+    function parseSpec(spec: any): string | undefined {
+      let address: string | undefined;
       switch (typeof spec) {
         case "string":
-          if (spec.slice(0, 5) === "from:") {
-            const from = parseInt(spec.substr(5), 10);
-            address = [];
-            if (accounts) {
-              for (let j = from; j < accounts.length; j++) {
-                address.push(accounts[j]);
-              }
-            }
-          } else if (spec.slice(0, 2).toLowerCase() === "0x") {
+          if (spec.slice(0, 2).toLowerCase() === "0x") {
             address = spec;
           } else {
             address = parseSpec(configNamedAccounts[spec]);
@@ -247,12 +240,6 @@ function transformNamedAccounts(
           if (spec) {
             if (spec.type === "object") {
               address = spec;
-            } else if (Array.isArray(spec)) {
-              // TODO fix :this will never reach here (Array is of type "object")
-              address = [];
-              for (const subSpec of spec) {
-                address.push(parseSpec(subSpec));
-              }
             } else {
               const newSpec = chainConfig(
                 spec,
@@ -269,8 +256,6 @@ function transformNamedAccounts(
       if (address) {
         if (typeof address === "string") {
           address = getAddress(address);
-        } else if (typeof address === "object" && address.length) {
-          address = address.map(getAddress);
         }
       }
       return address;
@@ -278,10 +263,20 @@ function transformNamedAccounts(
 
     for (const accountName of accountNames) {
       const spec = configNamedAccounts[accountName];
-      namedAccounts[accountName] = parseSpec(spec);
+      const address = parseSpec(spec);
+      if (address) {
+        namedAccounts[accountName] = address;
+        usedAccounts[address] = true;
+      }
     }
   }
-  return namedAccounts;
+  const unnamedAccounts = [];
+  for (const address of accounts) {
+    if (!usedAccounts[address]) {
+      unnamedAccounts.push(address);
+    }
+  }
+  return { namedAccounts, unnamedAccounts };
 }
 
 function chainConfig(
@@ -315,7 +310,7 @@ export function processNamedAccounts(
   bre: BuidlerRuntimeEnvironment,
   accounts: string[],
   chainIdGiven: string
-) {
+): { namedAccounts: { [name: string]: string }; unnamedAccounts: string[] } {
   if (bre.config.namedAccounts) {
     return transformNamedAccounts(
       bre.config.namedAccounts,
@@ -324,7 +319,7 @@ export function processNamedAccounts(
       bre.network.name
     );
   } else {
-    return {};
+    return { namedAccounts: {}, unnamedAccounts: [] };
   }
 }
 
