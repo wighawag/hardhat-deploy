@@ -273,7 +273,7 @@ function transformNamedAccounts(
   const unnamedAccounts = [];
   for (const address of accounts) {
     if (!usedAccounts[address]) {
-      unnamedAccounts.push(address);
+      unnamedAccounts.push(getAddress(address));
     }
   }
   return { namedAccounts, unnamedAccounts };
