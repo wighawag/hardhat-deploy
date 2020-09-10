@@ -72,6 +72,9 @@ export default function() {
       env.getNamedAccounts = deploymentsManager.getNamedAccounts.bind(
         deploymentsManager
       );
+      env.getUnnamedAccounts = deploymentsManager.getUnnamedAccounts.bind(
+        deploymentsManager
+      );
     }
     log("ready");
   });
