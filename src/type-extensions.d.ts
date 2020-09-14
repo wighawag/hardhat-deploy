@@ -113,7 +113,7 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface DeployOptions extends DeployOptionsBase {
-    useCreate2?: boolean | string;
+    deterministicAddress?: boolean | string;
   }
 
   export interface Create2DeployOptions extends DeployOptionsBase {
@@ -186,14 +186,8 @@ declare module "@nomiclabs/buidler/types" {
     deploy(name: string, options: DeployOptions): Promise<DeployResult>;
     diamond: {
       deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
-      executeAsOwner(
-        name: string,
-        options: TxOptions,
-        methodName: string,
-        ...args: any[]
-      ): Promise<Receipt | null>;
     };
-    create2(
+    deterministic(
       name: string,
       options: Create2DeployOptions
     ): Promise<{
@@ -207,6 +201,7 @@ declare module "@nomiclabs/buidler/types" {
     save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;
     getOrNull(name: string): Promise<Deployment | null>;
+    // TODO getABIFromAddress(address: string): Promise<ABI | null>;
     all(): Promise<{ [name: string]: Deployment }>;
     // getArtifactSync(name: string): Artifact; // TODO remove ?
     getArtifact(name: string): Promise<Artifact>;

@@ -16,21 +16,21 @@ This plugin contains more features, all geared toward a better developer experie
 
 - chain configuration export, listing deployed contract, their abi and address, usefull for webapps.
 - library linking at time of deployment
-- create2 deterministic deployment
+- deterministic deployment across networks
 - ability to submit contract source to etherscan for verification. Because buidler-deploy will save all necessary info, it can be executed at any time.
 - deployment dependency system (allowing you to only deploy what is needed).
 - deployment as migration so once a deployment is done, it can be set to never be executed again.
 - deployment retrying (by saving pending tx): so you can feel confident when making a deployment that you can always recover.
-- test fixture using `evm_snapshot` to speed up testing.
-- ability to create test fixture that automatically benefit from `evm_snapshot` to speed up these fixture.
+- deployments as test fixture using `evm_snapshot` to speed up testing.
+- ability to create your own test fixture that automatically benefit from `evm_snapshot` to speed up these fixture.
 - combined with `buidler-ethers-v5` it has the ability to get ethers contract instance by name (like `await ethers.getContract("ContractName")`).
 - importing previously compiled contract (possibly in different solidity compiler version).
-- importing artifact from external sources (like npm packages)
-- importing deployments from external sources (like npm packages)
+- importing artifact from external sources (like npm packages), including truffle support
+- importing deployments from external sources (like npm packages), including truffle support
 - ability to log information in `deploy` mode only (while in test the console remains clean).
 - contains helpers to read and execute transaction on deployed contract referring to them by name.
-- These helpers contains options to auto mine on dev envoronment like ganache (to speed up deployments).
-- save metadata of deployed contract so they can alwasy be fully verified, via [sourcify](https://github.com/ethereum/sourcify) or [etherscan](https://etherscan.io).
+- These helpers contains options to auto mine on dev environment like ganache (to speed up deployments).
+- save metadata of deployed contract so they can always be fully verified, via [sourcify](https://github.com/ethereum/sourcify) or [etherscan](https://etherscan.io).
 - proxy deployment with ability to upgrade them transparently, only if code changes.
 - diamond deployment with facets, allowing you to focus on what the new version will be. It will generate the diamondCuts necessary to reach that state.
 - watch and deploy: buidler-deploy can watch both your deploy script and contract code and redeploy on changes.
@@ -78,7 +78,7 @@ See a full example of typescript usage here : https://github.com/wighawag/buidle
 
 You might want to switch your current deployment process to use buidler-deploy. In that case you probably have some deployment saved elsewhere.
 
-In order to port them to buidler-deploy, you'll need to create one `.json` file per contract in the `deployments/<network>` folder.
+In order to port them to buidler-deploy, you'll need to create one `.json` file per contract in the `deployments/<network>` folder (configurable via [paths config](#paths)).
 
 The network folder is simply the buidler network name (as configured in buidler.config.js) (accessible at runtime via `bre.network.name`).
 Such folder need to have a file named `.chainId` containing the chainId as decimal
@@ -116,7 +116,7 @@ export interface Deployment {
 }
 ```
 
-As you can see, only abi, address and receipt are mandatory.
+As you can see, only abi and address are mandatory. But havingthe other fields allow more feature. For example, metadata and args allow you to benefit from contract code verification.
 
 For Receipt, the following type is expected:
 
@@ -168,7 +168,7 @@ deployments/
 The reason why buidler-deploy save chainId in the `.chainId` fie is both for
 
 - safety: so that if you were to change the network to point to a different chain, it would not attempt to read the wrong folder and assume that a contract has been deployed while it has not.
-- ability to know the chainId without requring to be connected to a node (and so not dependent on buidler.config.js settings)
+- ability to know the chainId without requring to be connected to a node (and so not dependent on buidler.config.js settings). Useful for `export` task.
 
 ## Tasks
 
@@ -221,11 +221,11 @@ This plugin adds the _etherscan-verify_ task to Buidler.
 This task will submit the contract source and other info to all deployed contract to allow etherscan to verify and record the sources.
 
 Instead of using the full solc input, this task will first attempt to send the minimal sources from the metadata.
-But Etherscan sometime fails for some reason (even if it should not). As such this task can fallback on full solc input (see option --solc-input). Note that if your contract was deployed with a previous version of buidler-deploy, it might not contains the full information.
+But Etherscan sometime fails due to a bug in solidity compiler (https://github.com/ethereum/solidity/issues/9573). As such this task can fallback on full solc input (see option --solc-input). Note that if your contract was deployed with a previous version of buidler-deploy, it might not contains the full information.
 
 This task will also attempt to automatically find the SPDX license in the source.
 
-To execute it you need to specifiy the network to run against :
+To execute that task, you need to specifiy the network to run against :
 
 ```
 buidler --network mainnet etherscan-verify --api-key <apikey>
@@ -296,7 +296,7 @@ This allows you to have meaningful names in your tests while the addresses match
 }
 ```
 
-### `paths`
+### paths
 
 It also adds fields to `BuidlerConfig`'s `ProjectPaths` object.
 
@@ -322,7 +322,7 @@ The imports folder is expected to contains artifacts that were pre-compiled. Use
 
 It also add the `external` field to `BuidlerConfig`
 
-Such fiels allows to specify paths for external artifacts or deployments. The use of the `paths` field was not possible as of writing buidler, expect all paths field to be string. It does not accept arrays or objects
+Such fiels allows to specify paths for external artifacts or deployments. The use of the `paths` field is not possible because buidler expects all paths field to be string. It does not accept arrays or objects, see https://github.com/nomiclabs/buidler/issues/776.
 
 The external object has 2 fields:
 
@@ -421,14 +421,8 @@ The deployments field contains several helpers function to deploy contract but a
 deploy(name: string, options: DeployOptions): Promise<DeployResult>; // deploy a contract
 diamond: { // deploy diamond based contract (see section below)
   deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
-  executeAsOwner(
-    name: string,
-    options: TxOptions,
-    methodName: string,
-    ...args: any[]
-  ): Promise<Receipt | null>;
 };
-create2( // return the determinsitic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
+deterministic( // return the determinsitic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
       name: string,
       options: Create2DeployOptions
     ): Promise<{
@@ -509,7 +503,7 @@ estimateGasExtra?: string | number | BigNumber; // this option allow you to add 
 
 dev_forceMine?: boolean; // this force a evm_mine to be executed. this is usefule to speed deployment on test network that allow to specify a block delay (ganache for example)
 skipUnknownSigner?: boolean; // This options will prevent the call to throw if the signer for the `from` address is unavailbale. It will still display the information necessary to perform the tx. So instead of blocking the whole deployment flow, it will output all operation taht need to be done to finalise the deployment
-useCreate2? boolean | string; // if true use the create2 deployment with 0x000.. salt. If it is a string, the string will be used as the salt.
+deterministicAddress? boolean | string; // if true, it will deploy the contract at a deterministic address based on bytecode and constuctor arguments. The address will be the same across all network. It use create2 opcode for that, if it is a string, the string will be used as the salt.
 ```
 
 ## Deploying contracts that have libraries
@@ -586,7 +580,7 @@ As mentioned above, the deploy function can also deploy a contract through a pro
 
 The Proxy is ERC-1967 Compliant, based on the [Transparent Proxy concept by open zeppelin](https://blog.openzeppelin.com/the-transparent-proxy-pattern/).
 
-Code can be found [here](solc_0.6/proxy/TransparentProxy.sol)
+Code can be found [here](solc_0.7/proxy/TransparentProxy.sol)
 
 To perform such proxy deployment, you just need to invoke the deploy function with the following options : `{..., proxy: true}`
 
@@ -686,7 +680,7 @@ Note that if the code for Facet2 and Facet3 changes, they will also be redeploye
 Note that The Diamond contract's code is part of buidler-deploy and contains 3 built-in facet that can be removed manually if desired.
 These facets are used for ownership, diamondCut and diamond loupe.
 
-The implementation is based on the [reference implementation by Nick Mudge](https://github.com/mudgen/Diamond) with some small modification to allow ownership change, see code [here](solc_0.6/proxy/diamond)
+The implementation is the [reference implementation by Nick Mudge](https://github.com/mudgen/Diamond)
 
 Like normal proxies you can also execute a function at the time of an upgrade.
 
@@ -704,25 +698,7 @@ diamond.deploy("ADiamondContract", {
 });
 ```
 
-Since the diamond standard has no builtin mechanism to make the execution atomic, the Diamond when deployed is actually deployed along a special contract, the `Diamantaire` (see code [here](solc_0.6/proxy/diamond/Diamantaire.sol)) that act as a wrapper to the diamond that can only be executed by the specified `owner`,
-The actual owner of the Diamond is this contract and not the address specified in the option. The latter is the owner of the Diamantaire contract instead.
-
-This contract add the functionality to perform atomic upggrade with method execution.
-
-If you need to execute a function as an owner, you can use the following that make the transaction go through the `Diamantaire` contract :
-
-```js
-diamond.executeAsOwner(
-  "ADiamondContract",
-  {
-    from: diamondAdmin
-  },
-  "methodToExecute",
-  "arg1",
-  2,
-  "arg3"
-);
-```
+Since the diamond standard has no builtin mechanism to make the deployment of Diamond with function execution, the Diamond when deployed is actually deployed through a special contract, the `Diamantaire` (see code [here](solc_0.7/proxy/diamond/Diamantaire.sol)) that act as factory to built Diamond. It uses deterministic deployment for that so, it is transparently managed by buidler-deploy.
 
 ## Tests
 

@@ -205,6 +205,11 @@ export function addDeployments(
   );
   for (const key of Object.keys(contracts)) {
     db.deployments[key] = contracts[key];
+    // TODO ABIS
+    // db.abis[contracts[key].address] = mergeABI(
+    //   db.abis[contracts[key].address],
+    //   contracts[key].abi
+    // );
   }
 }
 

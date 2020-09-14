@@ -115,6 +115,12 @@ export class DeploymentsManager {
         }
         return this.db.deployments[name];
       },
+      getABIFromAddress: async (address: string) => {
+        if (!this.db.deploymentsLoaded) {
+          await this.loadDeployments();
+        }
+        return this.db.abis[address];
+      },
       all: async () => {
         if (!this.db.deploymentsLoaded) {
           await this.loadDeployments();
@@ -660,6 +666,8 @@ export class DeploymentsManager {
     }
 
     this.db.deployments[name] = obj;
+    // TODO ABIS
+    // this.db.abis[obj.address] = mergeABI(this.db.abis[obj.address], obj.abi);
 
     // console.log({chainId, typeOfChainId: typeof chainId});
     if (toSave) {
