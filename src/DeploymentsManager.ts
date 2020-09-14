@@ -43,6 +43,7 @@ export class DeploymentsManager {
   private db: {
     accountsLoaded: boolean;
     namedAccounts: { [name: string]: string };
+    unnamedAccounts: string[];
     deploymentsLoaded: boolean;
     deployments: any;
     writeDeploymentsToFiles: boolean;
@@ -71,6 +72,7 @@ export class DeploymentsManager {
     this.db = {
       accountsLoaded: false,
       namedAccounts: {},
+      unnamedAccounts: [],
       deploymentsLoaded: false,
       deployments: {},
       migrations: {},
@@ -112,6 +114,12 @@ export class DeploymentsManager {
           await this.loadDeployments();
         }
         return this.db.deployments[name];
+      },
+      getABIFromAddress: async (address: string) => {
+        if (!this.db.deploymentsLoaded) {
+          await this.loadDeployments();
+        }
+        return this.db.abis[address];
       },
       all: async () => {
         if (!this.db.deploymentsLoaded) {
@@ -443,20 +451,48 @@ export class DeploymentsManager {
     return tx;
   }
 
-  public async getNamedAccounts(): Promise<{ [name: string]: string }> {
+  private async setupAccounts(): Promise<{
+    namedAccounts: { [name: string]: string };
+    unnamedAccounts: string[];
+  }> {
     if (!this.db.accountsLoaded) {
       const chainId = await getChainId(this.env);
       const accounts = await this.env.ethereum.send("eth_accounts");
-      this.db.namedAccounts = processNamedAccounts(this.env, accounts, chainId);
+      const { namedAccounts, unnamedAccounts } = processNamedAccounts(
+        this.env,
+        accounts,
+        chainId
+      );
+      this.db.namedAccounts = namedAccounts;
+      this.db.unnamedAccounts = unnamedAccounts;
       this.db.accountsLoaded = true;
     }
+    return {
+      namedAccounts: this.db.namedAccounts,
+      unnamedAccounts: this.db.unnamedAccounts
+    };
+  }
+
+  public async getNamedAccounts(): Promise<{ [name: string]: string }> {
+    await this.setupAccounts();
     return this.db.namedAccounts;
   }
 
-  public async loadDeployments(): Promise<{ [name: string]: Deployment }> {
-    const chainId = await getChainId(this.env);
-    // this.env.deployments.chainId = chainId;
+  public async getUnnamedAccounts(): Promise<string[]> {
+    await this.setupAccounts();
+    return this.db.unnamedAccounts;
+  }
+
+  public async loadDeployments(
+    chainIdExpected: boolean = true
+  ): Promise<{ [name: string]: Deployment }> {
     const networkName = this.env.network.name;
+
+    let chainId: string | undefined;
+    if (chainIdExpected) {
+      chainId = await getChainId(this.env);
+    }
+
     let migrations = {};
     try {
       log("loading migrations");
@@ -630,6 +666,8 @@ export class DeploymentsManager {
     }
 
     this.db.deployments[name] = obj;
+    // TODO ABIS
+    // this.db.abis[obj.address] = mergeABI(this.db.abis[obj.address], obj.abi);
 
     // console.log({chainId, typeOfChainId: typeof chainId});
     if (toSave) {
@@ -931,7 +969,18 @@ export class DeploymentsManager {
     exportAll?: string;
     export?: string;
   }): Promise<void> {
-    const chainId = await getChainId(this.env);
+    let chainId: string | undefined;
+    try {
+      chainId = fs
+        .readFileSync(
+          path.join(this.deploymentsPath, this.env.network.name, ".chainId")
+        )
+        .toString();
+    } catch (e) {}
+    if (!chainId) {
+      chainId = await getChainId(this.env);
+    }
+
     if (options.exportAll !== undefined) {
       log("load all deployments for export-all");
       const all = loadAllDeployments(

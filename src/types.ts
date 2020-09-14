@@ -2,13 +2,15 @@ import {
   Deployment,
   FixtureFunc,
   DeploymentSubmission,
-  Artifact
+  Artifact,
+  ABI
 } from "@nomiclabs/buidler/types";
 
 export interface PartialExtension {
   save(name: string, deployment: DeploymentSubmission): Promise<void>;
   get(name: string): Promise<Deployment>;
   getOrNull(name: string): Promise<Deployment | null>;
+  // TODO getABIFromAddress(address: string): Promise<ABI | null>;
   all(): Promise<{ [name: string]: Deployment }>;
   // getArtifactSync(name: string): Artifact; // TODO remove ?
   getArtifact(name: string): Promise<Artifact>;

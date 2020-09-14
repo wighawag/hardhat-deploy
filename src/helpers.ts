@@ -450,11 +450,11 @@ export function addHelpers(
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
 
     let create2Address;
-    if (options.useCreate2) {
+    if (options.deterministicAddress) {
       if (typeof unsignedTx.data === "string") {
         const create2Salt =
-          typeof options.useCreate2 === "string"
-            ? hexlify(zeroPad(options.useCreate2, 32))
+          typeof options.deterministicAddress === "string"
+            ? hexlify(zeroPad(options.deterministicAddress, 32))
             : "0x0000000000000000000000000000000000000000000000000000000000000000";
         const create2DeployerAddress =
           "0x4e59b44847b379578588920ca78fbf26c0b4956c";
@@ -536,7 +536,7 @@ export function addHelpers(
     tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait();
     const address =
-      options.useCreate2 && create2Address
+      options.deterministicAddress && create2Address
         ? create2Address
         : receipt.contractAddress;
     const deployment = {
@@ -553,7 +553,7 @@ export function addHelpers(
     };
   }
 
-  async function create2(
+  async function deterministic(
     name: string,
     options: Create2DeployOptions
   ): Promise<{
@@ -594,7 +594,10 @@ export function addHelpers(
           unsignedTx.data
         ),
         deploy: () =>
-          deploy(name, { ...options, useCreate2: options.salt || true })
+          deploy(name, {
+            ...options,
+            deterministicAddress: options.salt || true
+          })
       };
     }
   }
@@ -614,7 +617,7 @@ export function addHelpers(
     const argArray = options.args ? [...options.args] : [];
     await init();
 
-    if (options.useCreate2) {
+    if (options.deterministicAddress) {
       // TODO remove duplication:
       const { address: from, ethersSigner } = getFrom(options.from);
       if (!ethersSigner) {
@@ -637,8 +640,8 @@ export function addHelpers(
       const unsignedTx = factory.getDeployTransaction(...argArray, overrides);
       if (typeof unsignedTx.data === "string") {
         const create2Salt =
-          typeof options.useCreate2 === "string"
-            ? hexlify(zeroPad(options.useCreate2, 32))
+          typeof options.deterministicAddress === "string"
+            ? hexlify(zeroPad(options.deterministicAddress, 32))
             : "0x0000000000000000000000000000000000000000000000000000000000000000";
         const create2DeployerAddress =
           "0x4e59b44847b379578588920ca78fbf26c0b4956c";
@@ -1181,7 +1184,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       diamantaireDeployment = await _deployOne(diamantaireName, {
         contract: diamantaire,
         from: options.from,
-        useCreate2: true
+        deterministicAddress: true
       });
       const diamantaireContract = new Contract(
         diamantaireDeployment.address,
@@ -1297,23 +1300,6 @@ Plus they are only used when the contract is meant to be used as standalone when
         newlyDeployed: false
       };
     }
-  }
-
-  async function diamondAsOwner(
-    name: string,
-    options: TxOptions,
-    methodName: string,
-    ...args: any[]
-  ): Promise<Receipt | null> {
-    await init();
-    const deployment = await getDeployment(name);
-    const diamantaireName = name + "_Diamantaire";
-    const diamondContract = new Contract(deployment.address, deployment.abi);
-    const txData = await diamondContract.populateTransaction[methodName](
-      ...args
-    );
-    const data = txData.data || "0x";
-    return execute(diamantaireName, options, "execute", data);
   }
 
   async function deploy(
@@ -1576,14 +1562,13 @@ args: [${args.join(" , ")}]
     fetchIfDifferent,
     deploy,
     diamond: {
-      deploy: diamond,
-      executeAsOwner: diamondAsOwner
+      deploy: diamond
     },
     execute,
     batchExecute,
     rawTx,
     read,
-    create2
+    deterministic
   };
 
   // ////////// Backward compatible for transition: //////////////////
