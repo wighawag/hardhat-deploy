@@ -89,6 +89,11 @@ task(TASK_COMPILE).setAction(async (args, __, runSuper) => {
     if (contractSolcOutput) {
       artifact.metadata = contractSolcOutput.metadata;
       artifact.contractFilepath = contractFilepath;
+      artifact.methodIdentifiers = contractSolcOutput.evm.methodIdentifiers;
+      artifact.gasEstimates = contractSolcOutput.evm.gasEstimates;
+      artifact.storageLayout = contractSolcOutput.storageLayout;
+      artifact.userdoc = contractSolcOutput.userdoc;
+      artifact.devdoc = contractSolcOutput.devdoc;
     }
     fs.writeFileSync(artifactFilepath, JSON.stringify(artifact, null, "  "));
   }

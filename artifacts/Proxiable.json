@@ -90,5 +90,41 @@
   "linkReferences": {},
   "deployedLinkReferences": {},
   "metadata": "{\"compiler\":{\"version\":\"0.7.1+commit.f4a555be\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"adminAddress\",\"type\":\"address\"}],\"name\":\"ProxyAdmin\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"implementationContractAddress\",\"type\":\"address\"}],\"name\":\"ProxyImplementation\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"admin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAdmin\",\"type\":\"address\"}],\"name\":\"changeAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"changeImplementation\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"solc_0.7/proxy/Proxiable.sol\":\"Proxiable\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":2000},\"remappings\":[]},\"sources\":{\"solc_0.7/proxy/Proxiable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.7.0;\\n\\ncontract Proxiable {\\n    // ////////////////////////// EVENTS ///////////////////////////////////////////////////////////////////////\\n\\n    event ProxyAdmin(address adminAddress);\\n    event ProxyImplementation(address implementationContractAddress);\\n\\n    // ///////////////////////////// EXTERNAL //////////////////////////////////////////////////////////\\n\\n    function changeImplementation(\\n        address newImplementation,\\n        bytes calldata data\\n    ) external {\\n        require(_admin() == msg.sender, \\\"not admin\\\");\\n        require(\\n            bytes32(\\n                0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc\\n            ) == Proxiable(newImplementation).proxiableUUID(),\\n            \\\"Not compatible\\\"\\n        );\\n\\n        // solhint-disable-next-line security/no-inline-assembly\\n        assembly {\\n            sstore(\\n                0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc,\\n                newImplementation\\n            )\\n        }\\n\\n        (bool success, ) = newImplementation.delegatecall(data);\\n        require(success, \\\"Upgrade failed\\\");\\n        emit ProxyImplementation(newImplementation);\\n    }\\n\\n    function changeAdmin(address newAdmin) external {\\n        require(_admin() == msg.sender, \\\"not admin\\\");\\n        // solhint-disable-next-line security/no-inline-assembly\\n        assembly {\\n            sstore(\\n                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103,\\n                newAdmin\\n            )\\n        }\\n        emit ProxyAdmin(newAdmin);\\n    }\\n\\n    function proxiableUUID() external pure returns (bytes32) {\\n        return\\n            0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;\\n    }\\n\\n    function admin() external view returns (address) {\\n        return _admin();\\n    }\\n\\n    // /////////////////////////////// INTERNAL //////////////////////////////////////////////////////////\\n\\n    function _admin() internal view returns (address adminAddress) {\\n        // solhint-disable-next-line security/no-inline-assembly\\n        assembly {\\n            adminAddress := sload(\\n                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103\\n            )\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x51d6d98a0d32376fe7033e5a9305e17e70844a8c2a78fce089346c26f661b5a1\",\"license\":\"MIT\"}},\"version\":1}",
-  "contractFilepath": "solc_0.7/proxy/Proxiable.sol"
+  "contractFilepath": "solc_0.7/proxy/Proxiable.sol",
+  "methodIdentifiers": {
+    "admin()": "f851a440",
+    "changeAdmin(address)": "8f283970",
+    "changeImplementation(address,bytes)": "31124171",
+    "proxiableUUID()": "52d1902d"
+  },
+  "gasEstimates": {
+    "creation": {
+      "codeDepositCost": "274000",
+      "executionCost": "312",
+      "totalCost": "274312"
+    },
+    "external": {
+      "admin()": "1086",
+      "changeAdmin(address)": "22146",
+      "changeImplementation(address,bytes)": "infinite",
+      "proxiableUUID()": "198"
+    },
+    "internal": {
+      "_admin()": "815"
+    }
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  }
 }

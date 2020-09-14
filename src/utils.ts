@@ -2,6 +2,7 @@ import * as fs from "fs-extra";
 import * as path from "path";
 import chalk from "chalk";
 import { getAddress } from "@ethersproject/address";
+import { Interface, FunctionFragment, Fragment } from "@ethersproject/abi";
 import {
   BuidlerRuntimeEnvironment,
   MultiExport
@@ -354,3 +355,58 @@ export const traverse = function(
   });
   return result;
 };
+
+export function mergeABIs(check: boolean, ...abis: any[][]): any[] {
+  if (abis.length === 0) {
+    return [];
+  }
+  const result = abis[0];
+
+  for (let i = 1; i < abis.length; i++) {
+    const abi = abis[i];
+    for (const fragment of abi) {
+      const newEthersFragment = Fragment.from(fragment);
+      // TODO constructor special handling ?
+      const foundSameSig = result.find(v => {
+        const existingEthersFragment = Fragment.from(v);
+        if (v.type !== fragment.type) {
+          return false;
+        }
+        if (!existingEthersFragment) {
+          return v.name === fragment.name; // TODO fallback and receive hanlding
+        }
+
+        if (
+          existingEthersFragment.type === "constructor" ||
+          newEthersFragment.type === "constructor"
+        ) {
+          return existingEthersFragment.name === newEthersFragment.name;
+        }
+
+        if (newEthersFragment.type === "function") {
+          return (
+            Interface.getSighash(existingEthersFragment as FunctionFragment) ===
+            Interface.getSighash(newEthersFragment as FunctionFragment)
+          );
+        } else if (newEthersFragment.type === "event") {
+          return existingEthersFragment.format() === newEthersFragment.format();
+        } else {
+          return v.name === fragment.name; // TODO fallback and receive hanlding
+        }
+      });
+      if (foundSameSig) {
+        if (check) {
+          if (fragment.type === "function") {
+            throw new Error(
+              `function "${fragment.name}" will shadow "${foundSameSig.name}". Please update code to avoid conflict.`
+            );
+          }
+        }
+      } else {
+        result.push(fragment);
+      }
+    }
+  }
+
+  return result;
+}

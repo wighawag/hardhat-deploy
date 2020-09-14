@@ -1,10 +1,5 @@
 import { Signer } from "@ethersproject/abstract-signer";
-import {
-  Web3Provider,
-  TransactionResponse,
-  TransactionRequest,
-  JsonRpcSigner
-} from "@ethersproject/providers";
+import { Web3Provider, TransactionResponse } from "@ethersproject/providers";
 import {
   Contract,
   ContractFactory,
@@ -17,15 +12,12 @@ import {
   keccak256
 } from "@ethersproject/solidity";
 import { zeroPad, hexlify } from "@ethersproject/bytes";
-import { Interface, FunctionFragment, Fragment } from "@ethersproject/abi";
+import { Interface, FunctionFragment } from "@ethersproject/abi";
 import {
   BuidlerRuntimeEnvironment,
-  DeployFunction,
   Deployment,
   DeployResult,
   DeploymentsExtension,
-  FixtureFunc,
-  DeploymentSubmission,
   Artifact,
   DeployOptions,
   EthereumProvider,
@@ -35,80 +27,27 @@ import {
   Receipt,
   Execute,
   Address,
-  ProxyOptions,
-  DiamondFacets,
   DiamondOptions,
   LinkReferences,
-  Create2DeployOptions
+  Create2DeployOptions,
+  FacetCut
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
+import { mergeABIs } from "./utils";
 import transparentProxy from "../artifacts/TransparentProxy.json";
 import diamondBase from "../artifacts/Diamond.json";
-import diamondFacet from "../artifacts/DiamondFacet.json";
+import diamondCutFacet from "../artifacts/DiamondCutFacet.json";
+import diamondLoupeFacet from "../artifacts/DiamondLoupeFacet.json";
 import ownershipFacet from "../artifacts/OwnershipFacet.json";
-import diamondLoopeFacet from "../artifacts/DiamondLoupeFacet.json";
 import diamantaire from "../artifacts/Diamantaire.json";
 import fs from "fs";
 import path from "path";
 
-function mergeABIs(check: boolean, ...abis: any[][]): any[] {
-  if (abis.length === 0) {
-    return [];
-  }
-  const result = abis[0];
-
-  for (let i = 1; i < abis.length; i++) {
-    const abi = abis[i];
-    for (const fragment of abi) {
-      const newEthersFragment = Fragment.from(fragment);
-      // TODO constructor special handling ?
-      const foundSameSig = result.find(v => {
-        const existingEthersFragment = Fragment.from(v);
-        if (v.type !== fragment.type) {
-          return false;
-        }
-        if (!existingEthersFragment) {
-          return v.name === fragment.name; // TODO fallback and receive hanlding
-        }
-
-        if (
-          existingEthersFragment.type === "constructor" ||
-          newEthersFragment.type === "constructor"
-        ) {
-          return existingEthersFragment.name === newEthersFragment.name;
-        }
-
-        if (newEthersFragment.type === "function") {
-          return (
-            Interface.getSighash(existingEthersFragment as FunctionFragment) ===
-            Interface.getSighash(newEthersFragment as FunctionFragment)
-          );
-        } else if (newEthersFragment.type === "event") {
-          return existingEthersFragment.format() === newEthersFragment.format();
-        } else {
-          return v.name === fragment.name; // TODO fallback and receive hanlding
-        }
-      });
-      if (foundSameSig) {
-        if (check && fragment.type === "function") {
-          throw new Error(
-            `function "${fragment.name}" will shadow "${foundSameSig.name}". Please update code to avoid conflict.`
-          );
-        }
-      } else {
-        result.push(fragment);
-      }
-    }
-  }
-
-  return result;
-}
-
 diamondBase.abi = mergeABIs(
   false,
   diamondBase.abi,
-  diamondFacet.abi,
-  diamondLoopeFacet.abi,
+  diamondCutFacet.abi,
+  diamondLoupeFacet.abi,
   ownershipFacet.abi
 );
 
@@ -133,6 +72,15 @@ function fixProvider(providerGiven: any): any {
     };
   }
   return providerGiven;
+}
+
+function findAll(toFind: string[], array: string[]): boolean {
+  for (const f of toFind) {
+    if (array.indexOf(f) === -1) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function linkRawLibrary(
@@ -1032,24 +980,6 @@ Plus they are only used when the contract is meant to be used as standalone when
     return events;
   }
 
-  interface FacetCut {
-    address: string;
-    sigs: string[];
-  }
-
-  function extractFacetInfo(facetBytes: string): FacetCut {
-    const address = facetBytes.slice(0, 42);
-    const rest = facetBytes.slice(42);
-    const sigs = [];
-    for (let i = 0; i < rest.length; i += 8) {
-      sigs.push("0x" + rest.slice(i, i + 8));
-    }
-    return {
-      address,
-      sigs
-    };
-  }
-
   function sigsFromABI(abi: any[]): string[] {
     return abi
       .filter((fragment: any) => fragment.type === "function")
@@ -1082,18 +1012,26 @@ Plus they are only used when the contract is meant to be used as standalone when
       proxy = await getDeployment(proxyName);
       const diamondProxy = new Contract(proxy.address, proxy.abi, provider);
 
-      const facetsBytes = await diamondProxy.facets();
-      for (const facetBytes of facetsBytes) {
-        oldFacets.push(extractFacetInfo(facetBytes));
-        // ensure EIP165, LoupeFacet, DiamondOwnershipFacet and DiamondFacet are kept // TODO options to delete cut them out?
-        const sigsBytes = facetBytes.slice(42);
+      const currentFacetCuts: FacetCut[] = await diamondProxy.facets();
+      for (const currentFacetCut of currentFacetCuts) {
+        oldFacets.push(currentFacetCut);
+
+        // ensure DiamondLoupeFacet, OwnershipFacet and DiamondCutFacet are kept // TODO options to delete cut them out?
         if (
-          sigsBytes === "01ffc9a7" || // ERC165
-          sigsBytes === "adfca15e7a0ed627cdffacc652ef6b2c" || // Loupe
-          sigsBytes === "7c696fea" || // DiamoncCut
-          sigsBytes === "f2fde38b8da5cb5b" // ERC173
+          findAll(
+            [
+              "0xcdffacc6",
+              "0x52ef6b2c",
+              "0xadfca15e",
+              "0x7a0ed627",
+              "0x01ffc9a7"
+            ],
+            currentFacetCut.sigs
+          ) || // Loupe
+          currentFacetCut.sigs[0] === "e712b4e1" || // DiamoncCut
+          findAll(["0xf2fde38b", "0x8da5cb5b"], currentFacetCut.sigs) // ERC173
         ) {
-          facetSnapshot.push(extractFacetInfo(facetBytes));
+          facetSnapshot.push(currentFacetCut);
         }
       }
     }
@@ -1171,13 +1109,6 @@ Plus they are only used when the contract is meant to be used as standalone when
     }
 
     if (changesDetected) {
-      const cuts = facetCuts.map(facetCut => {
-        return facetCut.sigs.reduce(
-          (prev, curr) => (prev += curr.slice(2)),
-          facetCut.address
-        );
-      });
-
       // ensure a Diamantaire exists on the network :
       const diamantaireName = "Diamantaire";
       let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
@@ -1199,7 +1130,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           options,
           "createDiamond",
           owner,
-          cuts,
+          facetCuts,
           data
         );
 
@@ -1225,7 +1156,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         const proxyAddress = diamondCreatedEvent.args.diamond;
         if (options.log) {
           log(
-            `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address}) cuts: ${cuts} with ${createReceipt.gasUsed} gas`
+            `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address}) cuts: ${facetCuts} with ${createReceipt.gasUsed} gas`
           );
         }
         proxy = {
@@ -1247,7 +1178,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           transactionHash: proxy.transactionHash,
           linkedData: options.linkedData,
           facets: facetSnapshot,
-          diamondCuts: cuts,
+          diamondCuts: facetCuts,
           abi,
           execute: options.execute
           // metadata: diamondBase.metadata
@@ -1265,8 +1196,10 @@ Plus they are only used when the contract is meant to be used as standalone when
           name,
           options,
           "diamondCut",
-          cuts,
-          "0x0000000000000000000000000000000000000000",
+          facetCuts,
+          data === "0x"
+            ? "0x0000000000000000000000000000000000000000"
+            : proxy.address,
           data
         );
         if (!executeReceipt) {
@@ -1282,7 +1215,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           address: proxy.address,
           abi,
           facets: facetSnapshot,
-          diamondCuts: cuts,
+          diamondCuts: facetCuts,
           execute: options.execute
           // metadata: oldDeployment.metadata
         });

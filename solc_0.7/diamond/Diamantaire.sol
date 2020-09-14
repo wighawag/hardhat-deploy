@@ -10,13 +10,17 @@ contract Diamantaire {
 
     function createDiamond(
         address owner,
-        bytes[] calldata _diamondCut,
+        IDiamondCut.Facet[] calldata _diamondCut,
         bytes calldata data
     ) external payable {
         Diamond diamond = new Diamond{value: msg.value}(address(this));
         emit DiamondCreated(diamond);
 
-        IDiamondCut(address(diamond)).diamondCut(_diamondCut, address(0), data);
+        IDiamondCut(address(diamond)).diamondCut(
+            _diamondCut,
+            address(diamond),
+            data
+        );
         IERC173(address(diamond)).transferOwnership(owner);
     }
 }

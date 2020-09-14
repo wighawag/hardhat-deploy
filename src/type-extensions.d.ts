@@ -279,6 +279,11 @@ declare module "@nomiclabs/buidler/types" {
 
   export type Libraries = { [libraryName: string]: Address };
 
+  export interface FacetCut {
+    address: string;
+    sigs: string[];
+  }
+
   export interface DeploymentSubmission {
     abi: ABI;
     address: Address; // used to override receipt.contractAddress (useful for proxies)
@@ -295,7 +300,7 @@ declare module "@nomiclabs/buidler/types" {
     userdoc?: any;
     devdoc?: any;
     methodIdentifiers?: any;
-    diamondCuts?: string[];
+    diamondCuts?: FacetCut[];
     facets?: { address: string; sigs: string[] }[];
     execute?: {
       methodName: string;
@@ -326,7 +331,7 @@ declare module "@nomiclabs/buidler/types" {
     userdoc?: any;
     devdoc?: any;
     methodIdentifiers?: any;
-    diamondCuts?: string[];
+    diamondCuts?: FacetCut[];
     facets?: { address: string; sigs: string[] }[];
     storageLayout?: any;
     gasEstimates?: any;
