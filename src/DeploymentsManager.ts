@@ -116,10 +116,11 @@ export class DeploymentsManager {
         return this.db.deployments[name];
       },
       getABIFromAddress: async (address: string) => {
+        // TODO
         if (!this.db.deploymentsLoaded) {
           await this.loadDeployments();
         }
-        return this.db.abis[address];
+        // return this.db.abis[address];
       },
       all: async () => {
         if (!this.db.deploymentsLoaded) {

@@ -280,8 +280,8 @@ declare module "@nomiclabs/buidler/types" {
   export type Libraries = { [libraryName: string]: Address };
 
   export interface FacetCut {
-    address: string;
-    sigs: string[];
+    facetAddress: string;
+    functionSelectors: string[];
   }
 
   export interface DeploymentSubmission {
@@ -301,7 +301,7 @@ declare module "@nomiclabs/buidler/types" {
     devdoc?: any;
     methodIdentifiers?: any;
     diamondCuts?: FacetCut[];
-    facets?: { address: string; sigs: string[] }[];
+    facets?: FacetCut[];
     execute?: {
       methodName: string;
       args: any[];
@@ -332,7 +332,7 @@ declare module "@nomiclabs/buidler/types" {
     devdoc?: any;
     methodIdentifiers?: any;
     diamondCuts?: FacetCut[];
-    facets?: { address: string; sigs: string[] }[];
+    facets?: FacetCut[];
     storageLayout?: any;
     gasEstimates?: any;
   }

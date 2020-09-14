@@ -1026,10 +1026,13 @@ Plus they are only used when the contract is meant to be used as standalone when
               "0x7a0ed627",
               "0x01ffc9a7"
             ],
-            currentFacetCut.sigs
+            currentFacetCut.functionSelectors
           ) || // Loupe
-          currentFacetCut.sigs[0] === "e712b4e1" || // DiamoncCut
-          findAll(["0xf2fde38b", "0x8da5cb5b"], currentFacetCut.sigs) // ERC173
+          currentFacetCut.functionSelectors[0] === "e712b4e1" || // DiamoncCut
+          findAll(
+            ["0xf2fde38b", "0x8da5cb5b"],
+            currentFacetCut.functionSelectors
+          ) // ERC173
         ) {
           facetSnapshot.push(currentFacetCut);
         }
@@ -1060,21 +1063,21 @@ Plus they are only used when the contract is meant to be used as standalone when
         // console.log(`facet ${facet} deployed at ${implementation.address}`);
         changesDetected = true;
         const facetCut = {
-          address: implementation.address,
-          sigs: sigsFromABI(implementation.abi)
+          facetAddress: implementation.address,
+          functionSelectors: sigsFromABI(implementation.abi)
         };
         facetCuts.push(facetCut);
         facetSnapshot.push(facetCut);
       } else {
         const oldImpl = await getDeployment(facet);
         const facetCut = {
-          address: oldImpl.address,
-          sigs: sigsFromABI(oldImpl.abi)
+          facetAddress: oldImpl.address,
+          functionSelectors: sigsFromABI(oldImpl.abi)
         };
         facetSnapshot.push(facetCut);
         if (
           !oldFacets.find(
-            f => f.address.toLowerCase() === oldImpl.address.toLowerCase()
+            f => f.facetAddress.toLowerCase() === oldImpl.address.toLowerCase()
           )
         ) {
           facetCuts.push(facetCut);
@@ -1085,13 +1088,14 @@ Plus they are only used when the contract is meant to be used as standalone when
     for (const oldFacet of oldFacets) {
       if (
         !facetSnapshot.find(
-          f => f.address.toLowerCase() === oldFacet.address.toLowerCase()
+          f =>
+            f.facetAddress.toLowerCase() === oldFacet.facetAddress.toLowerCase()
         )
       ) {
         changesDetected = true;
         facetCuts.unshift({
-          address: "0x0000000000000000000000000000000000000000",
-          sigs: oldFacet.sigs
+          facetAddress: "0x0000000000000000000000000000000000000000",
+          functionSelectors: oldFacet.functionSelectors
         });
       }
     }
