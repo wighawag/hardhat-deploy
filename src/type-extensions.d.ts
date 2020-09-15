@@ -82,6 +82,7 @@ declare module "@nomiclabs/buidler/types" {
       methodName: string;
       args: any[];
     };
+    deterministicSalt?: string;
   }
 
   export interface ProxyOptions {
@@ -113,7 +114,7 @@ declare module "@nomiclabs/buidler/types" {
   }
 
   export interface DeployOptions extends DeployOptionsBase {
-    deterministicAddress?: boolean | string;
+    deterministicDeployment?: boolean | string;
   }
 
   export interface Create2DeployOptions extends DeployOptionsBase {

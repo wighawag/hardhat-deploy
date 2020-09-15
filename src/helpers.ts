@@ -1,5 +1,6 @@
 import { Signer } from "@ethersproject/abstract-signer";
 import { Web3Provider, TransactionResponse } from "@ethersproject/providers";
+import { getAddress } from "@ethersproject/address";
 import {
   Contract,
   ContractFactory,
@@ -259,17 +260,54 @@ export function addHelpers(
     salt: string,
     bytecode: string
   ): Address {
-    return (
+    return getAddress(
       "0x" +
-      solidityKeccak256(
-        ["bytes"],
-        [
-          `0xff${create2DeployerAddress.slice(2)}${salt.slice(
-            2
-          )}${solidityKeccak256(["bytes"], [bytecode]).slice(2)}`
-        ]
-      ).slice(-40)
+        solidityKeccak256(
+          ["bytes"],
+          [
+            `0xff${create2DeployerAddress.slice(2)}${salt.slice(
+              2
+            )}${solidityKeccak256(["bytes"], [bytecode]).slice(2)}`
+          ]
+        ).slice(-40)
     );
+  }
+
+  async function ensureCreate2DeployerReady(options: {
+    from: string;
+    log?: boolean;
+  }): Promise<string> {
+    const { address: from, ethersSigner } = getFrom(options.from);
+    if (!ethersSigner) {
+      throw new Error("no signer for " + from);
+    }
+    const create2DeployerAddress = "0x4e59b44847b379578588920ca78fbf26c0b4956c";
+    const code = await provider.getCode(create2DeployerAddress);
+    if (code === "0x") {
+      const senderAddress = "0x3fab184622dc19b6109349b94811493bf2a45362";
+      if (options.log) {
+        log(
+          `sending eth to create2 contract deployer address (${senderAddress})...`
+        );
+      }
+      // TODO gasPrice override
+      await ethersSigner.sendTransaction({
+        to: senderAddress,
+        value: BigNumber.from("10000000000000000").toHexString()
+      });
+      // await provider.send("eth_sendTransaction", [{
+      //   from
+      // }]);
+      if (options.log) {
+        log(
+          `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)...`
+        );
+      }
+      await provider.sendTransaction(
+        "0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222"
+      );
+    }
+    return create2DeployerAddress;
   }
 
   async function getArtifactFromOptions(
@@ -398,44 +436,20 @@ export function addHelpers(
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
 
     let create2Address;
-    if (options.deterministicAddress) {
+    if (options.deterministicDeployment) {
       if (typeof unsignedTx.data === "string") {
+        const create2DeployerAddress = await ensureCreate2DeployerReady(
+          options
+        );
         const create2Salt =
-          typeof options.deterministicAddress === "string"
-            ? hexlify(zeroPad(options.deterministicAddress, 32))
+          typeof options.deterministicDeployment === "string"
+            ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : "0x0000000000000000000000000000000000000000000000000000000000000000";
-        const create2DeployerAddress =
-          "0x4e59b44847b379578588920ca78fbf26c0b4956c";
         create2Address = getCreate2Address(
           create2DeployerAddress,
           create2Salt,
           unsignedTx.data
         );
-        const code = await provider.getCode(create2DeployerAddress);
-        if (code === "0x") {
-          const senderAddress = "0x3fab184622dc19b6109349b94811493bf2a45362";
-          if (options.log) {
-            log(
-              `sending eth to create2 contract deployer address (${senderAddress})...`
-            );
-          }
-          // TODO gasPrice override
-          await ethersSigner.sendTransaction({
-            to: senderAddress,
-            value: BigNumber.from("10000000000000000").toHexString()
-          });
-          // await provider.send("eth_sendTransaction", [{
-          //   from
-          // }]);
-          if (options.log) {
-            log(
-              `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)...`
-            );
-          }
-          await provider.sendTransaction(
-            "0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222"
-          );
-        }
         unsignedTx.to = create2DeployerAddress;
 
         unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
@@ -484,7 +498,7 @@ export function addHelpers(
     tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait();
     const address =
-      options.deterministicAddress && create2Address
+      options.deterministicDeployment && create2Address
         ? create2Address
         : receipt.contractAddress;
     const deployment = {
@@ -544,7 +558,7 @@ export function addHelpers(
         deploy: () =>
           deploy(name, {
             ...options,
-            deterministicAddress: options.salt || true
+            deterministicDeployment: options.salt || true
           })
       };
     }
@@ -565,7 +579,7 @@ export function addHelpers(
     const argArray = options.args ? [...options.args] : [];
     await init();
 
-    if (options.deterministicAddress) {
+    if (options.deterministicDeployment) {
       // TODO remove duplication:
       const { address: from, ethersSigner } = getFrom(options.from);
       if (!ethersSigner) {
@@ -588,8 +602,8 @@ export function addHelpers(
       const unsignedTx = factory.getDeployTransaction(...argArray, overrides);
       if (typeof unsignedTx.data === "string") {
         const create2Salt =
-          typeof options.deterministicAddress === "string"
-            ? hexlify(zeroPad(options.deterministicAddress, 32))
+          typeof options.deterministicDeployment === "string"
+            ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : "0x0000000000000000000000000000000000000000000000000000000000000000";
         const create2DeployerAddress =
           "0x4e59b44847b379578588920ca78fbf26c0b4956c";
@@ -1113,29 +1127,52 @@ Plus they are only used when the contract is meant to be used as standalone when
     }
 
     if (changesDetected) {
-      // ensure a Diamantaire exists on the network :
-      const diamantaireName = "Diamantaire";
-      let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
-      diamantaireDeployment = await _deployOne(diamantaireName, {
-        contract: diamantaire,
-        from: options.from,
-        deterministicAddress: true
-      });
-      const diamantaireContract = new Contract(
-        diamantaireDeployment.address,
-        diamantaire.abi,
-        provider
-      );
-      // the diamantaire allow the execution of data at diamond construction time
-
       if (!proxy) {
+        // ensure a Diamantaire exists on the network :
+        const diamantaireName = "Diamantaire";
+        let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
+        diamantaireDeployment = await _deployOne(diamantaireName, {
+          contract: diamantaire,
+          from: options.from,
+          deterministicDeployment: true
+        });
+        const diamantaireContract = new Contract(
+          diamantaireDeployment.address,
+          diamantaire.abi,
+          provider
+        );
+        // the diamantaire allow the execution of data at diamond construction time
+
+        let salt =
+          "0x0000000000000000000000000000000000000000000000000000000000000000";
+        if (typeof options.deterministicSalt !== "undefined") {
+          if (typeof options.deterministicSalt === "string") {
+            if (options.deterministicSalt === salt) {
+              throw new Error(
+                `deterministicSalt cannot be 0x000..., it needs to be a non-zero bytes32 salt. This is to ensure you are explicitly specyfying different addresses for multiple diamonds`
+              );
+            } else {
+              if (options.deterministicSalt.length !== 66) {
+                throw new Error(
+                  `deterministicSalt needs to be a string of 66 hexadecimal characters (including the 0x prefix)`
+                );
+              }
+              salt = options.deterministicSalt;
+            }
+          } else {
+            throw new Error(
+              `deterministicSalt need to be a string, an non-zero bytes32 salt`
+            );
+          }
+        }
         const createReceipt = await execute(
           diamantaireName,
           options,
           "createDiamond",
           owner,
           facetCuts,
-          data
+          data,
+          salt
         );
 
         if (!createReceipt) {
@@ -1163,6 +1200,25 @@ Plus they are only used when the contract is meant to be used as standalone when
             `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address}) cuts: ${facetCuts} with ${createReceipt.gasUsed} gas`
           );
         }
+
+        if (
+          salt !==
+          "0x0000000000000000000000000000000000000000000000000000000000000000"
+        ) {
+          const expectedAddress = getCreate2Address(
+            diamantaireContract.address,
+            solidityKeccak256(["bytes32", "address"], [salt, owner]),
+            diamondBase.bytecode +
+              "000000000000000000000000" +
+              diamantaireContract.address.slice(2)
+          );
+          if (expectedAddress !== proxyAddress) {
+            throw new Error(
+              `unexpected address ${proxyAddress} VS ${expectedAddress}`
+            );
+          }
+        }
+
         proxy = {
           abi: diamondBase.abi,
           address: proxyAddress,

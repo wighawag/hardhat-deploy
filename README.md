@@ -503,7 +503,7 @@ estimateGasExtra?: string | number | BigNumber; // this option allow you to add 
 
 dev_forceMine?: boolean; // this force a evm_mine to be executed. this is usefule to speed deployment on test network that allow to specify a block delay (ganache for example)
 skipUnknownSigner?: boolean; // This options will prevent the call to throw if the signer for the `from` address is unavailbale. It will still display the information necessary to perform the tx. So instead of blocking the whole deployment flow, it will output all operation taht need to be done to finalise the deployment
-deterministicAddress? boolean | string; // if true, it will deploy the contract at a deterministic address based on bytecode and constuctor arguments. The address will be the same across all network. It use create2 opcode for that, if it is a string, the string will be used as the salt.
+deterministicDeployment? boolean | string; // if true, it will deploy the contract at a deterministic address based on bytecode and constuctor arguments. The address will be the same across all network. It use create2 opcode for that, if it is a string, the string will be used as the salt.
 ```
 
 ## Deploying contracts that have libraries
