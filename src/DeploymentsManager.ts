@@ -452,28 +452,6 @@ export class DeploymentsManager {
     return tx;
   }
 
-  private async setupAccounts(): Promise<{
-    namedAccounts: { [name: string]: string };
-    unnamedAccounts: string[];
-  }> {
-    if (!this.db.accountsLoaded) {
-      const chainId = await getChainId(this.env);
-      const accounts = await this.env.ethereum.send("eth_accounts");
-      const { namedAccounts, unnamedAccounts } = processNamedAccounts(
-        this.env,
-        accounts,
-        chainId
-      );
-      this.db.namedAccounts = namedAccounts;
-      this.db.unnamedAccounts = unnamedAccounts;
-      this.db.accountsLoaded = true;
-    }
-    return {
-      namedAccounts: this.db.namedAccounts,
-      unnamedAccounts: this.db.unnamedAccounts
-    };
-  }
-
   public async getNamedAccounts(): Promise<{ [name: string]: string }> {
     await this.setupAccounts();
     return this.db.namedAccounts;
@@ -1105,5 +1083,27 @@ export class DeploymentsManager {
     await this.env.ethereum.send("evm_revert", [saved.snapshot]);
     saved.snapshot = await this.env.ethereum.send("evm_snapshot", []); // it is necessary to re-snapshot it
     this.db.deployments = { ...saved.deployments };
+  }
+
+  private async setupAccounts(): Promise<{
+    namedAccounts: { [name: string]: string };
+    unnamedAccounts: string[];
+  }> {
+    if (!this.db.accountsLoaded) {
+      const chainId = await getChainId(this.env);
+      const accounts = await this.env.ethereum.send("eth_accounts");
+      const { namedAccounts, unnamedAccounts } = processNamedAccounts(
+        this.env,
+        accounts,
+        chainId
+      );
+      this.db.namedAccounts = namedAccounts;
+      this.db.unnamedAccounts = unnamedAccounts;
+      this.db.accountsLoaded = true;
+    }
+    return {
+      namedAccounts: this.db.namedAccounts,
+      unnamedAccounts: this.db.unnamedAccounts
+    };
   }
 }
