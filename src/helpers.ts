@@ -1238,7 +1238,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           transactionHash: proxy.transactionHash,
           linkedData: options.linkedData,
           facets: facetSnapshot,
-          diamondCuts: facetCuts,
+          diamondCut: facetCuts,
           abi,
           execute: options.execute
           // metadata: diamondBase.metadata
@@ -1275,7 +1275,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           address: proxy.address,
           abi,
           facets: facetSnapshot,
-          diamondCuts: facetCuts,
+          diamondCut: facetCuts,
           execute: options.execute
           // metadata: oldDeployment.metadata
         });

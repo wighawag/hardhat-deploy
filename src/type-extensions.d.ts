@@ -311,7 +311,7 @@ declare module "@nomiclabs/buidler/types" {
     userdoc?: any;
     devdoc?: any;
     methodIdentifiers?: any;
-    diamondCuts?: FacetCut[];
+    diamondCut?: FacetCut[];
     facets?: FacetCut[];
     execute?: {
       methodName: string;
@@ -342,7 +342,7 @@ declare module "@nomiclabs/buidler/types" {
     userdoc?: any;
     devdoc?: any;
     methodIdentifiers?: any;
-    diamondCuts?: FacetCut[];
+    diamondCut?: FacetCut[];
     facets?: FacetCut[];
     storageLayout?: any;
     gasEstimates?: any;
