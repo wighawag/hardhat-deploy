@@ -1,12 +1,49 @@
 [![buidler](https://buidler.dev/buidler-plugin-badge.svg?1)](https://buidler.dev)
 
-# buidler-deploy
+<h1> buidler-deploy</h1>
 
 _A Plugin For Replicable Deployments And Tests_
 
 [Buidler](http://getbuidler.com) Deployment And Test Plugin.
 
-## What
+- [What is it for ?](#what-is-it-for-)
+- [Installation](#installation)
+  - [npm install buidler-deploy](#npm-install-buidler-deploy)
+  - [TypeScript support](#typescript-support)
+  - [Migrating existing deployment to buidler-deploy](#migrating-existing-deployment-to-buidler-deploy)
+- [Buidler Tasks Availabled/Updated](#buidler-tasks-availabledupdated)
+  - [buidler deploy](#buidler-deploy)
+    - [Options](#options)
+    - [Flags](#flags)
+  - [buidler node](#buidler-node)
+  - [buidler etherscan-verify](#buidler-etherscan-verify)
+    - [Options](#options-1)
+    - [Flags](#flags-1)
+  - [buidler export](#buidler-export)
+    - [Options](#options-2)
+- [Buidler Environment Extensions](#buidler-environment-extensions)
+- [Configuration](#configuration)
+  - [namedAccounts (ability to name addresses)](#namedaccounts-ability-to-name-addresses)
+  - [extra network's config](#extra-networks-config)
+  - [extra paths config](#extra-paths-config)
+  - [Importing deployment from other projects (truffle support too)](#importing-deployment-from-other-projects-truffle-support-too)
+- [How to Deploy Contracts](#how-to-deploy-contracts)
+  - [The `deploy` Task](#the-deploy-task)
+  - [Deploy Scripts](#deploy-scripts)
+  - [The `deployments` field](#the-deployments-field)
+    - [`deployments.deploy`](#deploymentsdeploy)
+- [Handling contract using libraries](#handling-contract-using-libraries)
+- [Exporting Deployments](#exporting-deployments)
+- [Deploying and Upgrading Proxies](#deploying-and-upgrading-proxies)
+- [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535)
+- [Testing Deployed Contracts](#testing-deployed-contracts)
+- [More Information On Buidler Tasks](#more-information-on-buidler-tasks)
+  - [node task](#node-task)
+  - [run task](#run-task)
+  - [console task](#console-task)
+- [Deploy Scripts: Tags And Dependencies](#deploy-scripts-tags-and-dependencies)
+
+## What is it for ?
 
 This [buidler](https://buidler.dev) plugin adds a mechanism to deploy contracts to any network, keeping track of them and replicating the same environment for testing.
 
@@ -37,6 +74,8 @@ This plugin contains more features, all geared toward a better developer experie
 - HCR (Hot Contract Replacement): the watch feature combined with proxy or diamond, gives you an experience akin to frontend Hot Module Replacement: Once your contract change, the deployment is executed and your contract retain the same address and same state.
 
 ## Installation
+
+### npm install buidler-deploy
 
 ```bash
 npm install buidler-deploy
@@ -170,9 +209,9 @@ The reason why buidler-deploy save chainId in the `.chainId` fie is both for
 - safety: so that if you were to change the network to point to a different chain, it would not attempt to read the wrong folder and assume that a contract has been deployed while it has not.
 - ability to know the chainId without requring to be connected to a node (and so not dependent on buidler.config.js settings). Useful for `export` task.
 
-## Tasks
+## Buidler Tasks Availabled/Updated
 
-### `buidler deploy`
+### buidler deploy
 
 This plugin adds the _deploy_ task to Buidler.
 
@@ -204,7 +243,7 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 `--watch`: This flag make the task never ending, watching for file changes in the deploy scripts folder or the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#proxies) or [Diamond](#diamonds-and-facets)) this allow to have HCR (Hot Contract Replacement).
 
-### `buidler node`
+### buidler node
 
 This plugin modify the _node_ task so that it also execute the deployment script before exposing the server http RPC interface
 
@@ -214,7 +253,7 @@ It also add the same options as the _deploy_ task with the same functionality. I
 
 Note that the deployments are saved as if the network name is `localhost`. This is because `buidler node` is expected to be used as localhost: You can for example execute `buidler --network localhost console` after `node` is running. Doing `builder console` would not attach it to anything. It still take the configuration from `buidlerevm` in the buidler.config.js file.
 
-### `buidler etherscan-verify`
+### buidler etherscan-verify
 
 This plugin adds the _etherscan-verify_ task to Buidler.
 
@@ -243,7 +282,7 @@ buidler --network mainnet etherscan-verify --api-key <apikey>
 
 `--force-license`: This flag force the use of the license specified by --license (useful if your inline SPDX are not compatible with etherscan list)
 
-### `buidler export`
+### buidler export
 
 This plugin adds the _export_ task to Buidler.
 
@@ -258,7 +297,7 @@ One of the following options need to be set for this task to have any effects :
 `--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
 This last option has some limitations, when combined with the use of external deployments (see [Configuration](#configuration)). If such external deployments were using older version of buidler-deploy or truffle, the chainId might be missing. In order for these to be exported, the buidler network config need to explicity state the chainId.
 
-## Environment extensions
+## Buidler Environment Extensions
 
 This plugin extends the Buidler Runtime Environment by adding 4 fields:
 
@@ -272,7 +311,7 @@ This plugin extends the Buidler Runtime Environment by adding 4 fields:
 
 ## Configuration
 
-### `namedAccounts`
+### namedAccounts (ability to name addresses)
 
 This plugin extends the `BuidlerConfig`'s object with an optional `namedAccounts` field.
 
@@ -296,7 +335,36 @@ This allows you to have meaningful names in your tests while the addresses match
 }
 ```
 
-### paths
+### extra network's config
+
+buidler-deploy add 2 new field to `networks` configuration
+
+`live` : this is not used internally but is useful to perform action on a network whether it is a live network (rinkeby, mainnet, etc) or a temporary one (localhost, buidlerevm). The default is true (except for localhost and buidlerevm)
+
+`saveDeployment`: this tell whether buidler-deploy should save the deployments to disk or not. Default to true
+
+Example:
+
+```js
+{
+  networks: {
+    localhost: {
+      live: false,
+      saveDeployment: true
+    },
+    buidlerevm: {
+      live: false,
+      saveDeployment: true
+    },
+    rinkeby: {
+      live: true,
+      saveDeployment: true
+    }
+  }
+}
+```
+
+### extra paths config
 
 It also adds fields to `BuidlerConfig`'s `ProjectPaths` object.
 
@@ -318,7 +386,7 @@ The deployment folder will contains the resulting deployments (contract addresse
 
 The imports folder is expected to contains artifacts that were pre-compiled. Useful if you want to upgrade to a new solidity version but want to keep using previously compiled contracts. The artifact is the same format as normal buidler artifact, so you can easily copy them over, before switching to a new compiler version.
 
-### `external`
+### Importing deployment from other projects (truffle support too)
 
 It also add the `external` field to `BuidlerConfig`
 
@@ -341,7 +409,9 @@ The artifacts fields specify an array of path to look for artifact. it support b
 
 The deployments fields specify an object whose field name are the buidler network and the value is an array of path to look for deployments. It supports both buidler-deploy and truffle formats.
 
-## Deploying Contracts
+## How to Deploy Contracts
+
+### The `deploy` Task
 
 `buidler --network <networkName> deploy [options and flags]`
 
@@ -354,7 +424,7 @@ It will scan for files in alphabetical order and execute them in turn.
 
 Note that running `buidler deploy` without specifying a network will use the default network. If the default network is an internal ganache or buidlerevm then nothing will happen as a result but this can be used to ensure the deployment is without issues.
 
-### deploy scripts
+### Deploy Scripts
 
 The deploy script need to be of the following type :
 
@@ -413,7 +483,7 @@ As you can see the BRE passed in has 4 new fields :
 
 The deploynments field contains the `deploy` function taht allow you to deploy contract and save them. It contains a lot more functions though :
 
-### deployments field
+### The `deployments` field
 
 The deployments field contains several helpers function to deploy contract but also execute transaction.
 
@@ -468,7 +538,7 @@ read( // make a read-only call to a contract
 read(name: string, methodName: string, ...args: any[]): Promise<any>;
 ```
 
-#### deploy function
+#### `deployments.deploy`
 
 The deploy function as mentioned allow you to deploy a contract and save it under a specific name.
 
@@ -506,7 +576,7 @@ skipUnknownSigner?: boolean; // This options will prevent the call to throw if t
 deterministicDeployment? boolean | string; // if true, it will deploy the contract at a deterministic address based on bytecode and constuctor arguments. The address will be the same across all network. It use create2 opcode for that, if it is a string, the string will be used as the salt.
 ```
 
-## Deploying contracts that have libraries
+## Handling contract using libraries
 
 In the deploy function, one of the `DeployOptions` that can be passed into the function is `libraries`.
 
@@ -574,7 +644,7 @@ As you see the second format include the previous. While in most case you'll nee
 
 Furthermore as buidler support multiple network configuration for the same network (rinkeby, mainnet...), the export-all format will contains each of them grouped by their chainId.
 
-## Proxies
+## Deploying and Upgrading Proxies
 
 As mentioned above, the deploy function can also deploy a contract through a proxy. It can be done without modification of the contract as long as it does not have a constructor (or constructor with zero arguments).
 
@@ -637,7 +707,7 @@ Note that for the second invokation, this deployment will fails to upgrade the p
 
 As part of the error that will be throw, the tx data necessary for the upgrade will be emitted, allowing you to execute as the owner, maybe in a special interface if the owner is a multi sig, etc...
 
-## Diamonds and Facets
+## Builtin-In Support For Diamonds (EIP2535)
 
 The deployments field also expose the diamond field: `bre.deployments.diamond` that let you deploy [Diamonds](https://eips.ethereum.org/EIPS/eip-2535) in an easy way.
 
@@ -700,7 +770,7 @@ diamond.deploy("ADiamondContract", {
 
 Since the diamond standard has no builtin mechanism to make the deployment of Diamond with function execution, the Diamond when deployed is actually deployed through a special contract, the `Diamantaire` (see code [here](solc_0.7/proxy/diamond/Diamantaire.sol)) that act as factory to built Diamond. It uses deterministic deployment for that so, it is transparently managed by buidler-deploy.
 
-## Tests
+## Testing Deployed Contracts
 
 You can continue using the usual test task :
 
@@ -772,7 +842,7 @@ describe("Token", () => {
 
 While this example is trivial, some fixture can requires several transaction and the ability to snapshot them automatically speed up the tests greatly.
 
-## Buidler Task Informations
+## More Information On Buidler Tasks
 
 ### node task
 
@@ -809,7 +879,7 @@ You can also run it directly from the command line as usual.
 
 The same applies to the `console` task.
 
-## deploy scripts tags and dependencies
+## Deploy Scripts: Tags And Dependencies
 
 It is possible to execute only specific part of the deployments with `buidler deploy --tags <tags>`
 

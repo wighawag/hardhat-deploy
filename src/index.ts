@@ -61,7 +61,7 @@ export default function() {
     env.network.live = live;
 
     if (env.network.config.saveDeployments === undefined) {
-      env.network.saveDeployments = true; // always save (unless fixture or test? env.network.live;
+      env.network.saveDeployments = true;
     } else {
       env.network.saveDeployments = env.network.config.saveDeployments;
     }
@@ -173,7 +173,7 @@ export default function() {
         await bre.run("compile");
         return deploymentsManager.runDeploy(args.tags, {
           log: args.log,
-          resetMemory: false, // this is memory reset, TODO rename it
+          resetMemory: false,
           deletePreviousDeployments: args.reset,
           writeDeploymentsToFiles: args.write,
           export: args.export,

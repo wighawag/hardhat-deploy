@@ -2,14 +2,23 @@ import "@nomiclabs/buidler/types";
 import { boolean } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
 
 declare module "@nomiclabs/buidler/types" {
-  export interface BuidlerRuntimeEnvironment {
-    deployments: DeploymentsExtension;
-    getNamedAccounts: () => Promise<{
-      [name: string]: Address;
-    }>;
-    getUnnamedAccounts: () => Promise<string[]>;
-    // TODO getUnnamedAccounts: () => Promise<Address[]>; // useful for testing
-    getChainId(): Promise<string>;
+  // ---------------------------------------------
+  // CONFIGURATION EXTENSIONS
+  // ---------------------------------------------
+
+  export interface BuidlerConfig {
+    namedAccounts?: {
+      [name: string]:
+        | string
+        | number
+        | { [network: string]: null | number | string };
+    }; // TODO better type ? to ensure it ends with string ?
+    external?: {
+      deployments?: {
+        [networkName: string]: string[];
+      };
+      artifacts?: string[];
+    };
   }
 
   export interface BuidlerNetworkConfig {
@@ -22,9 +31,31 @@ declare module "@nomiclabs/buidler/types" {
     saveDeployments?: boolean;
   }
 
+  export interface ProjectPaths {
+    deploy?: string;
+    deployments?: string;
+    imports?: string;
+  }
+
+  // ---------------------------------------------
+  // BUIDLER RUNTIME EXTENSIONS
+  // ---------------------------------------------
+  export interface BuidlerRuntimeEnvironment {
+    deployments: DeploymentsExtension;
+    getNamedAccounts: () => Promise<{
+      [name: string]: Address;
+    }>;
+    getUnnamedAccounts: () => Promise<string[]>;
+    getChainId(): Promise<string>;
+  }
+
+  // ---------------------------------------------
+  // TYPES
+  // ---------------------------------------------
+
   export interface Network {
-    live: boolean;
-    saveDeployments: boolean;
+    live?: boolean;
+    saveDeployments?: boolean;
   }
 
   export interface DeployFunction {
@@ -239,27 +270,6 @@ declare module "@nomiclabs/buidler/types" {
     ): Promise<any>;
     read(name: string, methodName: string, ...args: any[]): Promise<any>;
     // rawCall(to: Address, data: string): Promise<any>; // TODO ?
-  }
-
-  export interface BuidlerConfig {
-    namedAccounts?: {
-      [name: string]:
-        | string
-        | number
-        | { [network: string]: null | number | string };
-    }; // TODO better type ? to ensure it ends with string ?
-    external?: {
-      deployments?: {
-        [networkName: string]: string[];
-      };
-      artifacts?: string[];
-    };
-  }
-
-  export interface ProjectPaths {
-    deploy?: string;
-    deployments?: string;
-    imports?: string;
   }
 
   export interface ContractExport {
