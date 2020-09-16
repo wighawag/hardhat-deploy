@@ -221,21 +221,12 @@ export class DeploymentsManager {
         if (typeof tags === "string") {
           tags = [tags];
         }
-        const globalKey = "::global";
-        let fixtureKey;
+        let fixtureKey = "::global";
         if (tags !== undefined) {
           fixtureKey = "::" + tags.join(".");
         }
 
-        const global = this.db.pastFixtures[globalKey];
-        if (global) {
-          await this.revertSnapshot(globalKey, global);
-          return this.db.deployments;
-        } else if (
-          tags !== undefined &&
-          fixtureKey !== undefined &&
-          this.db.pastFixtures[fixtureKey]
-        ) {
+        if (this.db.pastFixtures[fixtureKey]) {
           const pastFixture = this.db.pastFixtures[fixtureKey];
           await this.revertSnapshot(fixtureKey, pastFixture);
           return this.db.deployments;
@@ -248,11 +239,7 @@ export class DeploymentsManager {
           savePendingTx: false
         });
 
-        if (fixtureKey !== undefined) {
-          await this.saveSnapshot(fixtureKey);
-        } else {
-          await this.saveSnapshot(globalKey);
-        }
+        await this.saveSnapshot(fixtureKey);
         return this.db.deployments;
       },
       createFixture: (func: FixtureFunc) => {
