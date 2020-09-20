@@ -24,7 +24,7 @@ contract TransparentProxy is Proxy {
         _setImplementation(newImplementation, data);
     }
 
-    function proxyAdmin() external ifAdmin returns (address) {
+    function proxyAdmin() external view ifAdmin returns (address) {
         return _admin();
     }
 
