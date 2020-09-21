@@ -2,7 +2,7 @@
 pragma solidity ^0.6.0;
 
 abstract contract Proxied {
-    modifier initializer() {
+    modifier proxied() {
         address adminAddress = _admin();
         if (adminAddress == address(0)) {
             // ensure can not be called twice when used outside of proxy : no admin
