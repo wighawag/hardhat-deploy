@@ -22,9 +22,8 @@ library LibDiamondStorage {
     struct DiamondStorage {
         // owner of the contract
         address contractOwner;
-        // maps function selector to the facet address and
-        // the position of the facet address in the facetAddresses array
-        // and the position of the selector in the facetSelectors.selectors array
+        // maps function selector to the facet address and        
+        // the position of the selector in the facetFunctionSelectors.selectors array
         mapping(bytes4 => FacetAddressAndPosition) selectorToFacetAndPosition;
         // maps facet addresses to function selectors
         mapping(address => FacetFunctionSelectors) facetFunctionSelectors;

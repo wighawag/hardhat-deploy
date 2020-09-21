@@ -878,7 +878,11 @@ Plus they are only used when the contract is meant to be used as standalone when
         proxy = await _deployOne(proxyName, proxyOptions);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
-        const currentOwner = await read(proxyName, "proxyAdmin");
+        const currentOwner = await read(
+          proxyName,
+          { ...options },
+          "proxyAdmin"
+        );
 
         // let currentOwner;
         // try {
