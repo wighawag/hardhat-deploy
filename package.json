@@ -74,6 +74,7 @@
     "test": "mocha --timeout 20000 --exit",
     "build": "tsc",
     "watch": "tsc -w",
+    "prepare": "npm run build",
     "publish:next": "npm publish --tag next",
     "publish:release": "npm publish",
     "prepublishOnly": "npm run build"
