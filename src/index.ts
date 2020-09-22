@@ -23,7 +23,7 @@ import { ERRORS } from "@nomiclabs/buidler/internal/core/errors-list";
 import chalk from "chalk";
 import {
   TASK_NODE,
-  TASK_COMPILE_GET_COMPILER_INPUT
+  TASK_COMPILE_SOLIDITY_GET_COMPILER_INPUT
 } from "@nomiclabs/buidler/builtin-tasks/task-names";
 
 import debug from "debug";
@@ -127,7 +127,7 @@ export default function() {
     // addIfNotPresent(settings.outputSelection["*"][""], "ast");
   }
 
-  internalTask(TASK_COMPILE_GET_COMPILER_INPUT).setAction(
+  internalTask(TASK_COMPILE_SOLIDITY_GET_COMPILER_INPUT).setAction(
     async (_, __, runSuper) => {
       const input = await runSuper();
       setupExtraSolcSettings(input.settings);
@@ -310,7 +310,6 @@ export default function() {
       return createProvider(
         networkName,
         { loggingEnabled: true, ...networkConfig },
-        config.solc.version,
         config.paths
       );
     });
@@ -370,9 +369,9 @@ export default function() {
       await bre.run("deploy:run", args);
 
       // enable logging
-      const provider = bre.network.provider as any;
-      provider._loggingEnabled = true;
-      provider._ethModule._logger = provider._logger;
+      // const provider = bre.network.provider as any;
+      // provider._loggingEnabled = true;
+      // provider._ethModule._logger = provider._logger;
 
       const { hostname, port } = args;
       let server;
@@ -408,11 +407,7 @@ export default function() {
         if (watchRequired) {
           try {
             const { watchCompilerOutput } = watchRequired;
-            await watchCompilerOutput(
-              server.getProvider(),
-              config.solc,
-              config.paths
-            );
+            await watchCompilerOutput(server.getProvider(), config.paths);
           } catch (error) {
             console.warn(
               chalk.yellow(

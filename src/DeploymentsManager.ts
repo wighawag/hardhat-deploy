@@ -1,4 +1,4 @@
-import { readArtifactSync, readArtifact } from "@nomiclabs/buidler/plugins";
+import { Artifacts } from "@nomiclabs/buidler/plugins";
 import {
   BuidlerRuntimeEnvironment,
   DeployFunction,
@@ -121,19 +121,17 @@ export class DeploymentsManager {
         return this.db.deployments; // TODO copy
       },
       getArtifact: async (contractName: string): Promise<any> => {
+        const artifacts = new Artifacts(this.env.config.paths.artifacts);
         let artifact;
         try {
-          artifact = await readArtifact(
-            this.env.config.paths.artifacts,
-            contractName
-          );
+          artifact = await artifacts.readArtifact(contractName);
         } catch (e) {
           try {
-            artifact = await readArtifact(
+            const importsArtifacts = new Artifacts(
               this.env.config.paths.imports ||
-                path.join(this.env.config.paths.root, "imports"),
-              contractName
+                path.join(this.env.config.paths.root, "imports")
             );
+            artifact = await importsArtifacts.readArtifact(contractName);
           } catch (ee) {
             throw e;
           }
@@ -141,19 +139,17 @@ export class DeploymentsManager {
         return artifact;
       },
       getArtifactSync: (contractName: string): any => {
+        const artifacts = new Artifacts(this.env.config.paths.artifacts);
         let artifact;
         try {
-          artifact = readArtifactSync(
-            this.env.config.paths.artifacts,
-            contractName
-          );
+          artifact = artifacts.readArtifactSync(contractName);
         } catch (e) {
           try {
-            artifact = readArtifactSync(
+            const importsArtifacts = new Artifacts(
               this.env.config.paths.imports ||
-                path.join(this.env.config.paths.root, "imports"),
-              contractName
+                path.join(this.env.config.paths.root, "imports")
             );
+            artifact = importsArtifacts.readArtifactSync(contractName);
           } catch (ee) {
             throw e;
           }
