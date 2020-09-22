@@ -710,7 +710,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 Note that for the second invokation, this deployment will fails to upgrade the proxy as the `from` which is `deployer` is not the same as the proxy's owner : `greeterOwner`
 
-As part of the error that will be throw, the tx data necessary for the upgrade will be emitted, allowing you to execute as the owner, maybe in a special interface if the owner is a multi sig, etc...
+To make it work, you have to create a new script that have for `from` field: `greeterOwner`. If such value is a a multi sig or an address not registered as part of buidler signers, the tx will not be executed but instead an error will be throw, mentionning the tx data necessary to perform the upgrade.
 
 ## Builtin-In Support For Diamonds (EIP2535)
 
