@@ -371,12 +371,21 @@ export default function() {
       // enable logging
       // TODO fix this when there's a proper mechanism for doing this
       let provider = bre.network.provider as any;
+      let i = 0;
       while (provider._loggingEnabled === undefined) {
         if (provider._provider !== undefined) {
           provider = provider._provider;
         } else if (provider._wrappedProvider !== undefined) {
           provider = provider._wrappedProvider;
         } else {
+          throw new Error("should not happen");
+        }
+
+        // a BuidlerEVMProvider should eventually be found, but
+        // just in case we add a max number of iterations here
+        // to avoid and endless loop
+        i++;
+        if (i > 100) {
           throw new Error("should not happen");
         }
       }
