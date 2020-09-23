@@ -369,9 +369,19 @@ export default function() {
       await bre.run("deploy:run", args);
 
       // enable logging
-      // const provider = bre.network.provider as any;
-      // provider._loggingEnabled = true;
-      // provider._ethModule._logger = provider._logger;
+      // TODO fix this when there's a proper mechanism for doing this
+      let provider = bre.network.provider as any;
+      while (provider._loggingEnabled === undefined) {
+        if (provider._provider !== undefined) {
+          provider = provider._provider;
+        } else if (provider._wrappedProvider !== undefined) {
+          provider = provider._wrappedProvider;
+        } else {
+          throw new Error("should not happen");
+        }
+      }
+      provider._loggingEnabled = true;
+      provider._ethModule._logger = provider._logger;
 
       const { hostname, port } = args;
       let server;
