@@ -792,7 +792,7 @@ diamond.deploy("ADiamondContract", {
 });
 ```
 
-Since the diamond standard has no builtin mechanism to make the deployment of Diamond with function execution, the Diamond when deployed is actually deployed through a special contract, the `Diamantaire` (see code [here](solc_0.7/proxy/diamond/Diamantaire.sol)) that act as factory to build Diamond. It uses deterministic deployment for that so, it is transparently managed by buidler-deploy.
+Since the diamond standard has no builtin mechanism to make the deployment of Diamond with function execution, the Diamond when deployed is actually deployed through a special contract, the `Diamantaire` (see code [here](solc_0.7/diamond/Diamantaire.sol)) that act as factory to build Diamond. It uses deterministic deployment for that so, it is transparently managed by buidler-deploy.
 
 The Diamantaire also support the deterministic deployment of Diamond.
 An extra field can be passed to the Diamond deployment options : `deterministicSalt`. It has to be a non-zero 32bytes string (in hex format).
