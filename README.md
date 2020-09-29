@@ -27,6 +27,7 @@ _A Buidler Plugin For Replicable Deployments And Tests_
   - [extra network's config](#extra-networks-config)
   - [extra paths config](#extra-paths-config)
   - [Importing deployment from other projects (truffle support too)](#importing-deployment-from-other-projects-truffle-support-too)
+  - [Access to Artifacts (non-deployed contract code and abi)](#access-to-artifacts-non-deployed-contract-code-and-abi)
 - [How to Deploy Contracts](#how-to-deploy-contracts)
   - [The `deploy` Task](#the-deploy-task)
   - [Deploy Scripts](#deploy-scripts)
@@ -409,6 +410,24 @@ The external object has 2 fields:
 The artifacts fields specify an array of path to look for artifact. it support both buidler and truffle artifacts.
 
 The deployments fields specify an object whose field name are the buidler network and the value is an array of path to look for deployments. It supports both buidler-deploy and truffle formats.
+
+### Access to Artifacts (non-deployed contract code and abi)
+
+you can access contract artifact via `getArtifact` function :
+
+```js
+const { deployments } = require("@nomiclabs/buidler");
+const artifact = await deployments.getArtifact(artifactName);
+```
+
+With the `buidler-ethers-v5` plugin you can get your ethers contract via :
+
+```js
+const { deployments, ethers } = require("@nomiclabs/buidler");
+const factory = await ethers.getContractFactory(artifactName);
+```
+
+Note that the artifact file need to be either in `artifacts` folder that buidler generate on compilation or in the `imports` folder where you can store contracts compiled elsewhere.
 
 ## How to Deploy Contracts
 
