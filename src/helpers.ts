@@ -36,7 +36,7 @@ import {
 import { PartialExtension } from "./types";
 import { UnknownSignerError } from "./errors";
 import { mergeABIs } from "./utils";
-import transparentProxy from "../artifacts/TransparentProxy.json";
+import eip173Proxy from "../artifacts/EIP173Proxy.json";
 import diamondBase from "../artifacts/Diamond.json";
 import diamondCutFacet from "../artifacts/DiamondCutFacet.json";
 import diamondLoupeFacet from "../artifacts/DiamondLoupeFacet.json";
@@ -865,7 +865,7 @@ export function addHelpers(
     );
 
     // ensure no clash
-    mergeABIs(true, transparentProxy.abi, artifact.abi);
+    mergeABIs(true, eip173Proxy.abi, artifact.abi);
 
     const constructor = artifact.abi.find(
       (fragment: { type: string; inputs: any[] }) =>
@@ -913,7 +913,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       if (!proxy) {
         const proxyOptions = { ...options };
         delete proxyOptions.proxy;
-        proxyOptions.contract = transparentProxy;
+        proxyOptions.contract = eip173Proxy;
         proxyOptions.args = [implementation.address, data, owner];
         proxy = await _deployOne(proxyName, proxyOptions);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
@@ -926,7 +926,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           const ownerStorage = await provider.getStorageAt(
             // fallback on old proxy // TODO test
             proxy.address,
-            "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6102"
+            "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103"
           );
           currentOwner = BigNumber.from(ownerStorage).toHexString();
         }
