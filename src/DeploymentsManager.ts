@@ -221,8 +221,8 @@ export class DeploymentsManager {
         if (typeof tags === "string") {
           tags = [tags];
         }
-        let globalKey = "::global";
-        let globalFixture = this.db.pastFixtures[globalKey];
+        const globalKey = "::global";
+        const globalFixture = this.db.pastFixtures[globalKey];
 
         let fixtureKey = globalKey;
         if (tags !== undefined) {
@@ -453,16 +453,6 @@ export class DeploymentsManager {
   public async getUnnamedAccounts(): Promise<string[]> {
     await this.setupAccounts();
     return this.db.unnamedAccounts;
-  }
-
-  async setup() {
-    if (!this.db.deploymentsLoaded) {
-      if (process.env.BUIDLER_DEPLOY_ALL) {
-        await this.env.run("deploy");
-      } else {
-        await this.loadDeployments();
-      }
-    }
   }
 
   public async loadDeployments(
@@ -1061,6 +1051,16 @@ export class DeploymentsManager {
       }
     }
     return importPaths;
+  }
+
+  private async setup() {
+    if (!this.db.deploymentsLoaded) {
+      if (process.env.BUIDLER_DEPLOY_ALL) {
+        await this.env.run("deploy");
+      } else {
+        await this.loadDeployments();
+      }
+    }
   }
 
   private async saveSnapshot(key: string, data?: any) {
