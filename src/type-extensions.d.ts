@@ -1,5 +1,6 @@
 import "@nomiclabs/buidler/types";
 import { boolean } from "@nomiclabs/buidler/internal/core/params/argumentTypes";
+import { BigNumber } from "@ethersproject/bignumber";
 
 declare module "@nomiclabs/buidler/types" {
   // ---------------------------------------------
@@ -24,11 +25,13 @@ declare module "@nomiclabs/buidler/types" {
   export interface BuidlerNetworkConfig {
     live?: boolean;
     saveDeployments?: boolean;
+    tags?: string[];
   }
 
   export interface HttpNetworkConfig {
     live?: boolean;
     saveDeployments?: boolean;
+    tags?: string[];
   }
 
   export interface ProjectPaths {
@@ -54,8 +57,9 @@ declare module "@nomiclabs/buidler/types" {
   // ---------------------------------------------
 
   export interface Network {
-    live?: boolean;
+    live: boolean;
     saveDeployments?: boolean;
+    tags: Record<string, boolean>;
   }
 
   export interface DeployFunction {
@@ -64,9 +68,9 @@ declare module "@nomiclabs/buidler/types" {
     tags?: string[];
     dependencies?: string[];
     runAtTheEnd?: boolean;
+    id?: string;
   }
 
-  export type BigNumber = any; // TODO bignumber form ethers
   export type Address = string;
 
   export type ABI = any[]; // TODO abi
@@ -166,7 +170,6 @@ declare module "@nomiclabs/buidler/types" {
     from: string;
     log?: boolean;
     dev_forceMine?: boolean;
-    skipUnknownSigner?: boolean;
     estimatedGasLimit?: string | number | BigNumber;
     estimateGasExtra?: string | number | BigNumber;
   }
@@ -233,7 +236,7 @@ declare module "@nomiclabs/buidler/types" {
     save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;
     getOrNull(name: string): Promise<Deployment | null>;
-    // TODO getABIFromAddress(address: string): Promise<ABI | null>;
+    getDeploymentsFromAddress(address: string): Promise<Deployment[]>;
     all(): Promise<{ [name: string]: Deployment }>;
     // getArtifactSync(name: string): Artifact; // TODO remove ?
     getArtifact(name: string): Promise<Artifact>;
@@ -247,7 +250,10 @@ declare module "@nomiclabs/buidler/types" {
         exportAll?: string;
       }
     ): Promise<{ [name: string]: Deployment }>;
-    fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
+    fixture(
+      tags?: string | string[],
+      options?: { fallbackToGlobal: boolean }
+    ): Promise<{ [name: string]: Deployment }>;
     createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
     log(...args: any[]): void;
 
@@ -256,12 +262,11 @@ declare module "@nomiclabs/buidler/types" {
       options: TxOptions,
       methodName: string,
       ...args: any[]
-    ): Promise<Receipt | null>;
-    batchExecute(
-      txs: Execute[],
-      batchOptions: { dev_forceMine: boolean }
-    ): Promise<(Receipt | null)[]>;
-    rawTx(tx: SimpleTx): Promise<Receipt | null>;
+    ): Promise<Receipt>;
+    rawTx(tx: SimpleTx): Promise<Receipt>;
+    catchUnknownSigner(
+      action: Promise<any> | (() => Promise<any>)
+    ): Promise<void>;
     read(
       name: string,
       options: CallOptions,

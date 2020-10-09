@@ -34,6 +34,7 @@ import {
   FacetCut
 } from "@nomiclabs/buidler/types";
 import { PartialExtension } from "./types";
+import { UnknownSignerError } from "./errors";
 import { mergeABIs } from "./utils";
 import transparentProxy from "../artifacts/TransparentProxy.json";
 import diamondBase from "../artifacts/Diamond.json";
@@ -382,9 +383,24 @@ export function addHelpers(
         };
       }
       if (!contractSolcOutput || !contractSolcOutput.metadata) {
-        log(`no metadata associated with contract deployed as ${name}`);
+        log(
+          `no metadata associated with contract deployed as ${name}, the contract object should include a metadata field`
+        );
       }
     } else {
+      // TODO wait for buidler v2 // then we can hard fails on missing metadata
+      // if (artifact.metadata) {
+      //   contractSolcOutput = {
+      //     metadata: artifact.metadata,
+      //     methodIdentifiers: artifact.methodIdentifiers,
+      //     storageLayout: artifact.storageLayout,
+      //     userdoc: artifact.userdoc,
+      //     devdoc: artifact.devdoc,
+      //     evm: {
+      //       gasEstimates: artifact.gasEstimates
+      //     }
+      //   };
+      // } else
       if (solcOutput) {
         for (const fileEntry of Object.entries(solcOutput.contracts)) {
           for (const contractEntry of Object.entries(fileEntry[1])) {
@@ -400,7 +416,7 @@ export function addHelpers(
         }
       } else {
         log(
-          `solc-output not found, it is not possible to get the metadata for ${name}`
+          `solc-output not found, it is not possible to get the metadata for ${name}. Check if the contract code exists (or if the artifacts belong to older contracts)`
         );
       }
     }
@@ -433,6 +449,12 @@ export function addHelpers(
     };
 
     const factory = new ContractFactory(abi, byteCode, ethersSigner);
+    const numArguments = factory.interface.deploy.inputs.length;
+    if (args.length !== numArguments) {
+      throw new Error(
+        `expected ${numArguments} constructor arguments, got ${args.length}`
+      );
+    }
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
 
     let create2Address;
@@ -535,6 +557,13 @@ export function addHelpers(
     const byteCode = linkLibraries(artifact, options.libraries);
     const factory = new ContractFactory(abi, byteCode, ethersSigner);
 
+    const numArguments = factory.interface.deploy.inputs.length;
+    if (args.length !== numArguments) {
+      throw new Error(
+        `expected ${numArguments} constructor arguments, got ${args.length}`
+      );
+    }
+
     const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
       gasPrice: options.gasPrice,
@@ -591,6 +620,13 @@ export function addHelpers(
       const abi = artifact.abi;
       const byteCode = linkLibraries(artifact, options.libraries);
       const factory = new ContractFactory(abi, byteCode, ethersSigner);
+
+      const numArguments = factory.interface.deploy.inputs.length;
+      if (argArray.length !== numArguments) {
+        throw new Error(
+          `expected ${numArguments} constructor arguments, got ${argArray.length}`
+        );
+      }
 
       const overrides: PayableOverrides = {
         gasLimit: options.gasLimit,
@@ -812,22 +848,25 @@ export function addHelpers(
     if (deployResult) {
       return deployResult;
     }
-    const implementationName = name + "_Implementation";
     const proxyName = name + "_Proxy";
-
+    const { address: owner } = getProxyOwner(options);
     const argsArray = options.args ? [...options.args] : [];
+
+    // --- Implementation Deployment ---
+    const implementationName = name + "_Implementation";
     const implementationOptions = { ...options };
     delete implementationOptions.proxy;
     if (!implementationOptions.contract) {
       implementationOptions.contract = name;
     }
-
-    const { address: owner } = getProxyOwner(options);
-
     const { artifact } = await getArtifactFromOptions(
       implementationName,
       implementationOptions
     );
+
+    // ensure no clash
+    mergeABIs(true, transparentProxy.abi, artifact.abi);
+
     const constructor = artifact.abi.find(
       (fragment: { type: string; inputs: any[] }) =>
         fragment.type === "constructor"
@@ -844,11 +883,12 @@ Plus they are only used when the contract is meant to be used as standalone when
         );
       }
     }
-
     const implementation = await _deployOne(
       implementationName,
       implementationOptions
     );
+    // --- --------------------------- ---
+
     if (implementation.newlyDeployed) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
       const implementationContract = new Contract(
@@ -1318,60 +1358,16 @@ Plus they are only used when the contract is meant to be used as standalone when
     return _deployViaDiamondProxy(name, options);
   }
 
-  async function batchExecute(
-    txs: Execute[],
-    batchOptions: { dev_forceMine: boolean }
-  ): Promise<Array<Receipt | null>> {
-    await init();
-    const promises = [];
-    const currentNonces: {
-      [address: string]: number | string | BigNumber;
-    } = {};
-    const savedTxs: Execute[] = [];
-    for (const tx of txs) {
-      const newTx = { ...tx };
-      if (tx.args) {
-        newTx.args = [...tx.args];
-      } else {
-        newTx.args = [];
-      }
-      savedTxs.push();
-    }
-    for (const tx of savedTxs) {
-      const { address: from, ethersSigner } = getFrom(tx.from);
-      const nonce =
-        tx.nonce ||
-        currentNonces[from] ||
-        (await provider.getTransactionCount(from));
-      tx.nonce = nonce;
-      currentNonces[from] = nonce + 1;
-      const args = tx.args || [];
-      promises.push(execute(tx.name, tx, tx.methodName, ...args));
-    }
-    if (batchOptions.dev_forceMine) {
-      try {
-        await provider.send("evm_mine", []);
-      } catch (e) {}
-    }
-    return Promise.all(promises);
-  }
-
-  async function rawTx(tx: SimpleTx): Promise<Receipt | null> {
+  async function rawTx(tx: SimpleTx): Promise<Receipt> {
     await init();
     const { address: from, ethersSigner } = getFrom(tx.from);
     if (!ethersSigner) {
-      console.error("no signer for " + from);
-      console.log(`Please execute the following as ${from}`);
-      console.log(
-        `
-to: ${tx.to}
-data: ${tx.data}
-`
-      );
-      if (tx.skipUnknownSigner) {
-        return null;
-      }
-      throw new Error("ABORT, ACTION REQUIRED, see above");
+      throw new UnknownSignerError({
+        from,
+        to: tx.to,
+        data: tx.data,
+        value: tx.value
+      });
     } else {
       const transactionData = {
         to: tx.to,
@@ -1392,12 +1388,62 @@ data: ${tx.data}
     }
   }
 
+  async function catchUnknownSigner(
+    action: Promise<any> | (() => Promise<any>)
+  ): Promise<void> {
+    try {
+      if (action instanceof Promise) {
+        await action;
+      } else {
+        await action();
+      }
+    } catch (e) {
+      if (e instanceof UnknownSignerError) {
+        const { from, to, data, value, contract } = e.data;
+        console.error("no signer for " + from);
+        if (contract) {
+          console.log(`Please execute the following on ${contract.name}`);
+          console.log(
+            `
+from: ${from}
+to: ${to}
+value: ${value ? (typeof value === "string" ? value : value.toString()) : "0"}
+data: ${data}
+`
+          );
+          console.log("if you have an interface use the following");
+          console.log(
+            `
+from: ${from}
+to: ${to} (${contract.name})
+value: ${value}
+method: ${contract.method}
+args: [${contract.args.join(",")}]
+`
+          );
+        } else {
+          console.log(`Please execute the following`);
+          console.log(
+            `
+from: ${from}
+to: ${to}
+value: ${value ? (typeof value === "string" ? value : value.toString()) : "0"}
+data: ${data}
+`
+          );
+        }
+      } else {
+        throw e;
+      }
+    }
+  }
+
   async function execute(
     name: string,
     options: TxOptions,
     methodName: string,
     ...args: any[]
-  ): Promise<Receipt | null> {
+  ): Promise<Receipt> {
     await init();
     const { address: from, ethersSigner } = getFrom(options.from);
 
@@ -1421,32 +1467,31 @@ data: ${tx.data}
         `No method named "${methodName}" on contract deployed as "${name}"`
       );
     }
+
+    const numArguments = ethersContract.interface.getFunction(methodName).inputs
+      .length;
+    if (args.length !== numArguments) {
+      throw new Error(
+        `expected ${numArguments} arguments for method "${methodName}", got ${args.length}`
+      );
+    }
+
     if (!ethersSigner) {
-      // ethers.js : would be nice to be able to estimate even if not access to signer (see below)
-      console.error("no signer for " + from);
-      console.log(`Please execute the following on ${name} as ${from}`);
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
       const { data } = await ethersContract.populateTransaction[methodName](
         ...ethersArgs
       );
-      console.log(
-        `
-to: ${deployment.address}
-data: ${data}
-`
-      );
-      console.log("if you have an interface use the following");
-      console.log(
-        `
-to: ${deployment.address} (${name})
-method: ${methodName}
-args: [${args.join(" , ")}]
-`
-      );
-      if (options.skipUnknownSigner) {
-        return null;
-      }
-      throw new Error("ABORT, ACTION REQUIRED, see above");
+      throw new UnknownSignerError({
+        from,
+        to: deployment.address,
+        data,
+        value: options.value,
+        contract: {
+          name,
+          method: methodName,
+          args
+        }
+      });
     } else {
       await overrideGasLimit(overrides, options, newOverrides => {
         const ethersArgsWithGasLimit = args
@@ -1561,8 +1606,8 @@ args: [${args.join(" , ")}]
     diamond: {
       deploy: diamond
     },
+    catchUnknownSigner,
     execute,
-    batchExecute,
     rawTx,
     read,
     deterministic

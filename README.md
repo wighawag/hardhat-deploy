@@ -16,6 +16,7 @@ _A Buidler Plugin For Replicable Deployments And Tests_
     - [Options](#options)
     - [Flags](#flags)
   - [buidler node](#buidler-node)
+  - [buidler test](#buidler-test)
   - [buidler etherscan-verify](#buidler-etherscan-verify)
     - [Options](#options-1)
     - [Flags](#flags-1)
@@ -40,6 +41,7 @@ _A Buidler Plugin For Replicable Deployments And Tests_
 - [Testing Deployed Contracts](#testing-deployed-contracts)
 - [More Information On Buidler Tasks](#more-information-on-buidler-tasks)
   - [node task](#node-task)
+  - [test task](#test-task)
   - [run task](#run-task)
   - [console task](#console-task)
 - [Deploy Scripts: Tags And Dependencies](#deploy-scripts-tags-and-dependencies)
@@ -254,6 +256,10 @@ It also add the same options as the _deploy_ task with the same functionality. I
 
 Note that the deployments are saved as if the network name is `localhost`. This is because `buidler node` is expected to be used as localhost: You can for example execute `buidler --network localhost console` after `node` is running. Doing `builder --network buidlerevm console` would indeed not do anythong useful. It still take the configuration from `buidlerevm` in the buidler.config.js file though.
 
+### buidler test
+
+This plugin add the _test_ task an flag argument `--deploy` that run the deployments before the test and snapshot it.
+
 ### buidler etherscan-verify
 
 This plugin adds the _etherscan-verify_ task to Buidler.
@@ -345,6 +351,10 @@ buidler-deploy add 2 new fields to `networks` configuration
 
 `saveDeployment`: this tell whether buidler-deploy should save the deployments to disk or not. Default to true.
 
+`tags`: network can have tags to represent them. The config is an array and at runtime the bre.network.tags is an object whose fields (the tags) are set to true.
+
+This is useful to conidtionaly operate on network based on their use case.
+
 Example:
 
 ```js
@@ -352,15 +362,18 @@ Example:
   networks: {
     localhost: {
       live: false,
-      saveDeployment: true
+      saveDeployment: true,
+      tags: ["local"]
     },
     buidlerevm: {
       live: false,
-      saveDeployment: true
+      saveDeployment: true,
+      tags: ["test", "local"]
     },
     rinkeby: {
       live: true,
-      saveDeployment: true
+      saveDeployment: true,
+      tags: ["staging"]
     }
   }
 }
@@ -427,7 +440,7 @@ const { deployments, ethers } = require("@nomiclabs/buidler");
 const factory = await ethers.getContractFactory(artifactName);
 ```
 
-Note that the artifact file need to be either in `artifacts` folder that buidler generate on compilation or in the `imports` folder where you can store contracts compiled elsewhere.
+Note that the artifact file need to be either in `artifacts` folder that buidler generate on compilation or in the `imports` folder where you can store contracts compiled elsewhere. They can also be present in the folder specified in `external.artifacts` see [Importing deployment from other projects](#importing-deployment-from-other-projects-truffle-support-too)
 
 ## How to Deploy Contracts
 
@@ -457,6 +470,7 @@ export interface DeployFunction {
   tags?: string[];
   dependencies?: string[];
   runAtTheEnd?: boolean;
+  id?: string;
 }
 ```
 
@@ -470,8 +484,7 @@ The `runAtTheEnd` is a boolean that if set to true, will queue that script to be
 
 These set of fields allow more flexibility to organize the script. You are not limited to alphabetical order.
 
-Finally the function can return true if it wishes to never be executed again. This can be usfeul to emulate migration scripts that are meant to be executed only once. Once such script return true (async), the file name will be saved so to not be executed again.
-In other word, if the file name changes, the script will be executed again, unless that names belonged to an older script that returned true before.
+Finally the function can return true if it wishes to never be executed again. This can be usfeul to emulate migration scripts that are meant to be executed only once. Once such script return true (async), the `id` field is used so to track execution and if that field is not present when the script return true, it will fails.
 
 In any case, as a general advice every deploy function should be idempotent. This is so they can always recover from failure or pending transaction.
 
@@ -550,12 +563,8 @@ execute( // execute function call on contract
   options: TxOptions,
   methodName: string,
   ...args: any[]
-): Promise<Receipt | null>;
-batchExecute( // execute a series of tx
-  txs: Execute[],
-  batchOptions: { dev_forceMine: boolean }
-): Promise<(Receipt | null)[]>;
-rawTx(tx: SimpleTx): Promise<Receipt | null>; // execute a simple transaction
+): Promise<Receipt>;
+rawTx(tx: SimpleTx): Promise<Receipt>; // execute a simple transaction
 read( // make a read-only call to a contract
   name: string,
   options: CallOptions,
@@ -767,7 +776,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 };
 ```
 
-Then the NewFactet will be deployed automatically if needed and then the diamondCut will cut Facet1 out and add NewFacet.
+Then the NewFacet will be deployed automatically if needed and then the diamondCut will cut Facet1 out and add NewFacet.
 
 Note that if the code for Facet2 and Facet3 changes, they will also be redeployed automatically and the diamondCuts will replace the existing facets with these new ones.
 
@@ -880,6 +889,22 @@ as mentioned above, the node task is slighly modified and augmented with various
 
 In particulat It adds an argument `--export` that allows you to specify a destination file where the info about the contracts deployed is written.
 Your webapp can then access all contracts information.
+
+### test task
+
+`buidler test --deploy`
+
+the test task is augmented with one flag argument `--deploy` that allow to run all deployments in a fixture snapshot before executing the tests. This can speed up tests that use specific tags as the global fixture take precedence (unless specified).
+
+In other word tests can use `deployments.fixture(<specific tag>)` where specific tag only deploy the minimal contracts under tests, while still benefiting from global deployment snapshot if used.
+
+If a test need the deployments to only include the specific deployment specified by the tag, it can use the following :
+
+```js
+deployments.fixture("<specific tag>", { fallbackToGlobal: false });
+```
+
+Due to how snapshot/revert works in buidler, this means that these test will not be able to benefit from the global fixture snapshot and will have to deploy their contract as part of the fixture call.
 
 ### run task
 

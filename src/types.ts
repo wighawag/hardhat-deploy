@@ -10,9 +10,8 @@ export interface PartialExtension {
   save(name: string, deployment: DeploymentSubmission): Promise<void>;
   get(name: string): Promise<Deployment>;
   getOrNull(name: string): Promise<Deployment | null>;
-  // TODO getABIFromAddress(address: string): Promise<ABI | null>;
+  getDeploymentsFromAddress(address: string): Promise<Deployment[]>;
   all(): Promise<{ [name: string]: Deployment }>;
-  // getArtifactSync(name: string): Artifact; // TODO remove ?
   getArtifact(name: string): Promise<Artifact>;
   run(
     tags?: string | string[],

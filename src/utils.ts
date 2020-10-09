@@ -333,7 +333,13 @@ export const traverse = function(
   result: any[] = [],
   topDir?: string,
   filter?: (name: string, stats: any) => boolean // TODO any is Stats
-): any[] {
+): {
+  name: string;
+  path: string;
+  relativePath: string;
+  mtimeMs: number;
+  directory: boolean;
+}[] {
   fs.readdirSync(dir).forEach(name => {
     const fPath = path.resolve(dir, name);
     const stats = fs.statSync(fPath);

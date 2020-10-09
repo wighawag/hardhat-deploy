@@ -45,7 +45,7 @@ export class DeploymentsManager {
     namedAccounts: { [name: string]: string };
     unnamedAccounts: string[];
     deploymentsLoaded: boolean;
-    deployments: any;
+    deployments: Record<string, Deployment>;
     writeDeploymentsToFiles: boolean;
     fixtureCounter: number;
     snapshotCounter: number;
@@ -61,7 +61,7 @@ export class DeploymentsManager {
     pendingTransactions: { [hash: string]: any };
     savePendingTx: boolean;
     gasPrice?: string;
-    migrations: { [filename: string]: number };
+    migrations: { [id: string]: number };
   };
 
   private env: BuidlerRuntimeEnvironment;
@@ -100,9 +100,7 @@ export class DeploymentsManager {
         deployment: DeploymentSubmission
       ): Promise<boolean> => this.saveDeployment(name, deployment),
       get: async (name: string) => {
-        if (!this.db.deploymentsLoaded) {
-          await this.loadDeployments();
-        }
+        await this.setup();
         const deployment = this.db.deployments[name];
         if (deployment === undefined) {
           throw new Error(`No deployment found for: ${name}`);
@@ -110,23 +108,26 @@ export class DeploymentsManager {
         return deployment;
       },
       getOrNull: async (name: string) => {
-        if (!this.db.deploymentsLoaded) {
-          await this.loadDeployments();
-        }
+        await this.setup();
         return this.db.deployments[name];
+      },
+      getDeploymentsFromAddress: async (address: string) => {
+        const deployments = [];
+        for (const deployment of Object.values(this.db.deployments)) {
+          if (deployment.address === address) {
+            deployments.push(deployment);
+          }
+        }
+        return deployments;
       },
       // TODO
       // getABIFromAddress: async (address: string) => {
       //   // TODO
-      //   if (!this.db.deploymentsLoaded) {
-      //     await this.loadDeployments();
-      //   }
+      //   await this.setup();
       //   // return this.db.abis[address];
       // },
       all: async () => {
-        if (!this.db.deploymentsLoaded) {
-          await this.loadDeployments();
-        }
+        await this.setup();
         return this.db.deployments; // TODO copy
       },
       getArtifact: async (contractName: string): Promise<any> => {
@@ -218,18 +219,28 @@ export class DeploymentsManager {
           savePendingTx: false
         });
       },
-      fixture: async (tags?: string | string[]) => {
+      fixture: async (
+        tags?: string | string[],
+        options?: { fallbackToGlobal: boolean }
+      ) => {
+        options = { fallbackToGlobal: true, ...options };
         if (typeof tags === "string") {
           tags = [tags];
         }
-        let fixtureKey = "::global";
+        let globalKey = "::global";
+        let globalFixture = this.db.pastFixtures[globalKey];
+
+        let fixtureKey = globalKey;
         if (tags !== undefined) {
           fixtureKey = "::" + tags.join(".");
         }
 
         if (this.db.pastFixtures[fixtureKey]) {
           const pastFixture = this.db.pastFixtures[fixtureKey];
-          await this.revertSnapshot(fixtureKey, pastFixture);
+          await this.revertSnapshot(pastFixture);
+          return this.db.deployments;
+        } else if (globalFixture && options.fallbackToGlobal) {
+          await this.revertSnapshot(globalFixture);
           return this.db.deployments;
         }
         await this.runDeploy(tags, {
@@ -252,7 +263,7 @@ export class DeploymentsManager {
           }
           const saved = this.db.pastFixtures[id];
           if (saved) {
-            await this.revertSnapshot(id, saved);
+            await this.revertSnapshot(saved);
             return saved.data;
           }
           const data = await func(this.env, options);
@@ -450,6 +461,16 @@ export class DeploymentsManager {
     return this.db.unnamedAccounts;
   }
 
+  async setup() {
+    if (!this.db.deploymentsLoaded) {
+      if (process.env.BUIDLER_DEPLOY_ALL) {
+        await this.env.run("deploy");
+      } else {
+        await this.loadDeployments();
+      }
+    }
+  }
+
   public async loadDeployments(
     chainIdExpected: boolean = true
   ): Promise<{ [name: string]: Deployment }> {
@@ -508,9 +529,6 @@ export class DeploymentsManager {
     name: string,
     deployment: DeploymentSubmission
   ): Promise<boolean> {
-    if (typeof deployment.receipt === undefined) {
-      throw new Error("deployment need a receipt");
-    }
     if (
       typeof deployment.address === undefined &&
       !deployment.receipt?.contractAddress
@@ -543,7 +561,7 @@ export class DeploymentsManager {
           contractAddress: receipt.contractAddress,
           transactionIndex: receipt.transactionIndex,
           gasUsed:
-            receipt.gasUsed && receipt.gasUsed._isBigNumber
+            receipt.gasUsed && (receipt.gasUsed as BigNumber)._isBigNumber
               ? receipt.gasUsed.toString()
               : receipt.gasUsed,
           logsBloom: receipt.logsBloom,
@@ -553,7 +571,8 @@ export class DeploymentsManager {
           events: receipt.events,
           blockNumber: receipt.blockNumber,
           cumulativeGasUsed:
-            receipt.cumulativeGasUsed && receipt.cumulativeGasUsed._isBigNumber
+            receipt.cumulativeGasUsed &&
+            (receipt.cumulativeGasUsed as BigNumber)._isBigNumber
               ? receipt.cumulativeGasUsed.toString()
               : receipt.cumulativeGasUsed,
           status: receipt.status,
@@ -587,9 +606,11 @@ export class DeploymentsManager {
 
     const obj = JSON.parse(
       JSON.stringify({
-        abi: deployment.abi,
-        receipt: actualReceipt,
         address: deployment.address || actualReceipt?.contractAddress,
+        abi: deployment.abi,
+        transactionHash:
+          deployment.transactionHash || actualReceipt?.transactionHash,
+        receipt: actualReceipt,
         args: actualArgs,
         linkedData: deployment.linkedData,
         solcInputHash: deployment.solcInputHash,
@@ -633,9 +654,6 @@ export class DeploymentsManager {
     }
 
     this.db.deployments[name] = obj;
-    // TODO ABIS
-    // this.db.abis[obj.address] = mergeABI(this.db.abis[obj.address], obj.abi);
-
     // console.log({chainId, typeOfChainId: typeof chainId});
     if (toSave) {
       // console.log("writing " + filepath); // TODO remove
@@ -736,6 +754,7 @@ export class DeploymentsManager {
       // console.log('no folder at ' + deployPath);
       return {};
     }
+    filesStats = filesStats.filter(v => !v.directory);
     let fileNames = filesStats.map(
       (a: { relativePath: string }) => a.relativePath
     );
@@ -856,7 +875,7 @@ export class DeploymentsManager {
     try {
       for (const deployScript of scriptsToRun.concat(scriptsToRunAtTheEnd)) {
         const filename = path.basename(deployScript.filePath);
-        if (this.db.migrations[filename]) {
+        if (deployScript.func.id && this.db.migrations[deployScript.func.id]) {
           log(
             `skipping ${filename} as migrations already executed and complete`
           );
@@ -894,7 +913,14 @@ export class DeploymentsManager {
           }
           log(`executing ${deployScript.filePath} complete`);
           if (result && typeof result === "boolean") {
-            this.db.migrations[filename] = Math.floor(Date.now() / 1000);
+            if (!deployScript.func.id) {
+              throw new Error(
+                `${deployScript.filePath} return true to not be eecuted again, but does not provide an id. the script function need to have the field "id" to be set`
+              );
+            }
+            this.db.migrations[deployScript.func.id] = Math.floor(
+              Date.now() / 1000
+            );
             // TODO refactor to extract this whole path and folder existence stuff
             const toSave =
               this.db.writeDeploymentsToFiles &&
@@ -1053,14 +1079,11 @@ export class DeploymentsManager {
     };
   }
 
-  private async revertSnapshot(
-    key: string,
-    saved: {
-      index: number;
-      snapshot: any;
-      deployments: any;
-    }
-  ) {
+  private async revertSnapshot(saved: {
+    index: number;
+    snapshot: any;
+    deployments: any;
+  }) {
     const snapshotToRevertIndex = saved.index;
     for (const fixtureKey of Object.keys(this.db.pastFixtures)) {
       const snapshotIndex = this.db.pastFixtures[fixtureKey].index;

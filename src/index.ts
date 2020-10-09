@@ -23,7 +23,8 @@ import { ERRORS } from "@nomiclabs/buidler/internal/core/errors-list";
 import chalk from "chalk";
 import {
   TASK_NODE,
-  TASK_COMPILE_GET_COMPILER_INPUT
+  TASK_COMPILE_GET_COMPILER_INPUT,
+  TASK_TEST
 } from "@nomiclabs/buidler/builtin-tasks/task-names";
 
 import debug from "debug";
@@ -59,6 +60,13 @@ export default function() {
       live = env.network.config.live;
     }
     env.network.live = live;
+
+    // associate tags to current network as object
+    env.network.tags = {};
+    const tags = env.network.config.tags || [];
+    for (const tag of tags) {
+      env.network.tags[tag] = true;
+    }
 
     if (env.network.config.saveDeployments === undefined) {
       env.network.saveDeployments = true;
@@ -161,6 +169,7 @@ export default function() {
       undefined,
       types.string
     )
+    .addFlag("noCompile", "disable pre compilation")
     .addFlag("reset", "whether to delete deployments files first")
     .addFlag("log", "whether to output log")
     .addFlag("watch", "redeploy on every change of contract or deploy script")
@@ -170,7 +179,9 @@ export default function() {
     )
     .setAction(async (args, bre) => {
       async function compileAndDeploy() {
-        await bre.run("compile");
+        if (!args.noCompile) {
+          await bre.run("compile");
+        }
         return deploymentsManager.runDeploy(args.tags, {
           log: args.log,
           resetMemory: false,
@@ -260,6 +271,17 @@ export default function() {
       }
     });
 
+  task(TASK_TEST, "Runs mocha tests")
+    .addFlag("deploy", "run all deployments before tests")
+    .setAction(async (args, bre, runSuper) => {
+      if (args.deploy || process.env.BUIDLER_DEPLOY_ALL) {
+        await bre.run("deploy", { noCompile: args.noCompile });
+        return runSuper({ ...args, noCompile: true });
+      } else {
+        return runSuper(args);
+      }
+    });
+
   task("deploy", "Deploy contracts")
     .addOptionalParam("export", "export current network deployments")
     .addOptionalParam("exportAll", "export all deployments into one file")
@@ -277,6 +299,7 @@ export default function() {
       undefined,
       types.string
     )
+    .addFlag("noCompile", "disable pre compilation")
     .addFlag("reset", "whether to delete deployments files first")
     .addFlag("silent", "whether to remove log")
     .addFlag("watch", "redeploy on every change of contract or deploy script")

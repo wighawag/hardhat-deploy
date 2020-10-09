@@ -1,20 +1,27 @@
-[] test (--dry-run) option to have deployments.run without effect + allow access to existing deployment : useful for populating data
-[] ganache fork when running test against live network
-[] helpers tx : check num of argument (deploy)
-[] support test batteries
-[] support generator from (like templates for --export ?)
-[] --pendingtx : wait | reset | false | interactive
-[] non-used namedAccounts from `eth_accounts` automaitclly added to special "others" (check index but also addresses)
-[] add --deploy option to run task ?
-[] library name vs <path>:<name> and error out if ambiguity (when using only name)
-[] tags for network config => can be used in namedAccounts too
-[] libraries : address should not need to be address, they could be names of deployments or {address}
-[] fix error with proxy constructor, the check use the number of argument given instead of the abi
-[] fix issue with fixture reading deployments in buidlerevm folder: fixture should not read
-[] add configuration field for network based configuration ? or at least expose the chainIfNetworkConfig expansion function
-[] add option to run test with pre-deployed contract (fixture already called) : useful so that test can use tags so when executed in isolation (without that flag they can run faster)
-[] sourcify-upload (https://verification.komputing.org/server)
-[] ipfs-upload
-[] add ability to specify metadata in `imports` artifacts
-[] deployments.getByAddress(<address>) // getByAddressOrNull(<address>)
-[] hard fail when no metadata : as this indicate the contract is actually no more part of the compilation unit, and should be discarded
+- [ ] test (--dry-run) option to have deployments.run without effect + allow access to existing deployment : useful for populating data
+- [ ] ganache fork when running test against live network
+- [x] helpers tx : check num of argument (deploy)
+- [ ] support test batteries
+- [ ] support generator from (like templates for --export ?)
+- [ ] --pendingtx : wait | reset | false | interactive
+- [ ] add --deploy option to run task ?
+- [ ] library name vs <path>:<name> and error out if ambiguity (when using only name)
+- [ ] libraries : address should not need to be address, they could be names of deployments or {address}
+- [ ] fix error with proxy constructor, the check use the number of argument given instead of the abi
+- [ ] fix issue with fixture reading deployments in buidlerevm folder: fixture should not read
+- [ ] add configuration field for network based configuration ? or at least expose the chainIfNetworkConfig expansion function
+- [ ] sourcify-upload (https://verification.komputing.org/server)
+- [ ] ipfs-upload
+- [ ] add ability to specify metadata in `imports` artifacts
+- [x] deployments.getByAddress(<address>) // getByAddressOrNull(<address>)
+- [ ] hard fail when no metadata : as this indicate the contract is actually no more part of the compilation unit, and should be discarded
+- [x] ensure recursive folder for `deploy` folder (up to user to use `test` tags or the folder act as tag ?)
+- [ ] exclude tag options
+- [x] tests should use tags (by default, it reuse global tag (if present), but option to not reuse global tag)
+- [x] builder test option to first run global tag (or use a env variable, ckeck what buidler does with buidler test)
+- [x] executeOrDisplay vs execute({skipUnknownSigner})
+- [x] use script.id for migrations (throw if return true and no id provided)
+- [x] tags for network config =>
+      ~~- [ ] network tags can be used in namedAccounts too--~~
+- [ ] check clash on proxy
+- [ ] rename SemiTransparentProxy and TransparentProxy
