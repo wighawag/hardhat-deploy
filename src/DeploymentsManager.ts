@@ -120,12 +120,6 @@ export class DeploymentsManager {
         }
         return deployments;
       },
-      // TODO
-      // getABIFromAddress: async (address: string) => {
-      //   // TODO
-      //   await this.setup();
-      //   // return this.db.abis[address];
-      // },
       all: async () => {
         await this.setup();
         return this.db.deployments; // TODO copy

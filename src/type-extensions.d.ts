@@ -13,7 +13,7 @@ declare module "@nomiclabs/buidler/types" {
         | string
         | number
         | { [network: string]: null | number | string };
-    }; // TODO better type ? to ensure it ends with string ?
+    };
     external?: {
       deployments?: {
         [networkName: string]: string[];
