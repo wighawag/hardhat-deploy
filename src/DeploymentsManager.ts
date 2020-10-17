@@ -217,6 +217,7 @@ export class DeploymentsManager {
         tags?: string | string[],
         options?: { fallbackToGlobal: boolean }
       ) => {
+        await this.setup();
         options = { fallbackToGlobal: true, ...options };
         if (typeof tags === "string") {
           tags = [tags];
@@ -1055,9 +1056,19 @@ export class DeploymentsManager {
 
   private async setup() {
     if (!this.db.deploymentsLoaded) {
-      if (process.env.BUIDLER_DEPLOY_ALL) {
-        await this.env.run("deploy");
+      if (process.env.BUIDLER_DEPLOY_FIXTURE) {
+        if (!process.env.BUIDLER_DEPLOY_NO_COMPILE) {
+          // console.log("compiling...");
+          await this.env.run("compile");
+        }
+        this.db.deploymentsLoaded = true;
+        // console.log("running global fixture....");
+        await this.env.deployments.fixture();
       } else {
+        if (process.env.BUIDLER_DEPLOY_COMPILE) {
+          // console.log("compiling...");
+          await this.env.run("compile");
+        }
         await this.loadDeployments();
       }
     }

@@ -272,10 +272,13 @@ export default function() {
     });
 
   task(TASK_TEST, "Runs mocha tests")
-    .addFlag("deploy", "run all deployments before tests")
+    .addFlag("fixture", "run the global fixture before tests")
     .setAction(async (args, bre, runSuper) => {
-      if (args.deploy || process.env.BUIDLER_DEPLOY_ALL) {
-        await bre.run("deploy", { noCompile: args.noCompile });
+      if (args.fixture || process.env.BUIDLER_DEPLOY_FIXTURE) {
+        if (!args.noCompile && !process.env.BUIDLER_DEPLOY_NO_COMPILE) {
+          await bre.run("compile");
+        }
+        await bre.deployments.fixture();
         return runSuper({ ...args, noCompile: true });
       } else {
         return runSuper(args);
