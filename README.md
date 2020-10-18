@@ -258,7 +258,7 @@ Note that the deployments are saved as if the network name is `localhost`. This 
 
 ### buidler test
 
-This plugin add the _test_ task an flag argument `--deploy` that run the deployments before the test and snapshot it.
+This plugin add to the _test_ task a flag argument `--deploy-fixture` that run the global deployments fixture before the tests and snapshot it.
 
 ### buidler etherscan-verify
 
@@ -892,9 +892,9 @@ Your webapp can then access all contracts information.
 
 ### test task
 
-`buidler test --deploy`
+`buidler test`
 
-the test task is augmented with one flag argument `--deploy` that allow to run all deployments in a fixture snapshot before executing the tests. This can speed up tests that use specific tags as the global fixture take precedence (unless specified).
+the test task is augmented with one flag argument `--deploy-fixture` that allow to run all deployments in a fixture snapshot before executing the tests. This can speed up tests that use specific tags as the global fixture take precedence (unless specified).
 
 In other word tests can use `deployments.fixture(<specific tag>)` where specific tag only deploy the minimal contracts under tests, while still benefiting from global deployment snapshot if used.
 
@@ -904,7 +904,7 @@ If a test need the deployments to only include the specific deployment specified
 deployments.fixture("<specific tag>", { fallbackToGlobal: false });
 ```
 
-Due to how snapshot/revert works in buidler, this means that these test will not be able to benefit from the global fixture snapshot and will have to deploy their contract as part of the fixture call.
+Due to how snapshot/revert works in buidler, this means that these test will not be able to benefit from the global fixture snapshot and will have to deploy their contract as part of the fixture call. This is automatix but means that these tests will run slower.
 
 ### run task
 
