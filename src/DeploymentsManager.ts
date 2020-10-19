@@ -393,7 +393,11 @@ export class DeploymentsManager {
     name?: string,
     deployment?: any
   ): Promise<TransactionResponse> {
-    if (this.db.writeDeploymentsToFiles && this.db.savePendingTx) {
+    if (
+      this.db.writeDeploymentsToFiles &&
+      this.env.network.saveDeployments &&
+      this.db.savePendingTx
+    ) {
       const chainId = await getChainId(this.env);
       const deployFolderPath = path.join(
         this.deploymentsPath,

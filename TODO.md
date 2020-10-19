@@ -25,3 +25,4 @@
       ~~- [ ] network tags can be used in namedAccounts too--~~
 - [ ] check clash on proxy
 - [ ] rename SemiTransparentProxy and TransparentProxy
+- [ ] bre.run("deploy:before-deploy") in the runDeploy for deploymentManager

@@ -349,7 +349,7 @@ buidler-deploy add 2 new fields to `networks` configuration
 
 `live` : this is not used internally but is useful to perform action on a network whether it is a live network (rinkeby, mainnet, etc) or a temporary one (localhost, buidlerevm). The default is true (except for localhost and buidlerevm where the default is false).
 
-`saveDeployment`: this tell whether buidler-deploy should save the deployments to disk or not. Default to true.
+`saveDeployments`: this tell whether buidler-deploy should save the deployments to disk or not. Default to true.
 
 `tags`: network can have tags to represent them. The config is an array and at runtime the bre.network.tags is an object whose fields (the tags) are set to true.
 
@@ -362,17 +362,17 @@ Example:
   networks: {
     localhost: {
       live: false,
-      saveDeployment: true,
+      saveDeployments: true,
       tags: ["local"]
     },
     buidlerevm: {
       live: false,
-      saveDeployment: true,
+      saveDeployments: true,
       tags: ["test", "local"]
     },
     rinkeby: {
       live: true,
-      saveDeployment: true,
+      saveDeployments: true,
       tags: ["staging"]
     }
   }
