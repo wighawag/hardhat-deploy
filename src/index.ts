@@ -147,7 +147,44 @@ export default function() {
     }
   );
 
-  internalTask("deploy:run", "deploy ")
+  internalTask("deploy:runDeploy")
+    .addOptionalParam("export", "export current network deployments")
+    .addOptionalParam("exportAll", "export all deployments into one file")
+    .addOptionalParam("tags", "dependencies to run")
+    .addOptionalParam(
+      "write",
+      "whether to write deployments to file",
+      true,
+      types.boolean
+    )
+    .addOptionalParam(
+      "pendingtx",
+      "whether to save pending tx",
+      false,
+      types.boolean
+    )
+    .addOptionalParam(
+      "gasprice",
+      "gas price to use for transactions",
+      undefined,
+      types.string
+    )
+    .addFlag("reset", "whether to delete deployments files first")
+    .addFlag("log", "whether to output log")
+    .setAction(async args => {
+      return deploymentsManager.runDeploy(args.tags, {
+        log: args.log,
+        resetMemory: false,
+        deletePreviousDeployments: args.reset,
+        writeDeploymentsToFiles: args.write,
+        export: args.export,
+        exportAll: args.exportAll,
+        savePendingTx: args.pendingtx,
+        gasPrice: args.gasprice
+      });
+    });
+
+  internalTask("deploy:main", "deploy ")
     .addOptionalParam("export", "export current network deployments")
     .addOptionalParam("exportAll", "export all deployments into one file")
     .addOptionalParam("tags", "dependencies to run")
@@ -181,17 +218,8 @@ export default function() {
       async function compileAndDeploy() {
         if (!args.noCompile) {
           await bre.run("compile");
+          return bre.run("deploy:runDeploy", args);
         }
-        return deploymentsManager.runDeploy(args.tags, {
-          log: args.log,
-          resetMemory: false,
-          deletePreviousDeployments: args.reset,
-          writeDeploymentsToFiles: args.write,
-          export: args.export,
-          exportAll: args.exportAll,
-          savePendingTx: args.pendingtx,
-          gasPrice: args.gasprice
-        });
       }
 
       let currentPromise: Promise<{
@@ -313,7 +341,7 @@ export default function() {
         args.write = !isBuidlerEVM(bre);
       }
       args.pendingtx = !isBuidlerEVM(bre);
-      await bre.run("deploy:run", args);
+      await bre.run("deploy:main", args);
     });
 
   task(
@@ -322,7 +350,7 @@ export default function() {
   )
     .addOptionalParam("export", "export current network deployments")
     .addOptionalParam("exportAll", "export all deployments into one file")
-    .setAction(async (args, bre) => {
+    .setAction(async args => {
       await deploymentsManager.loadDeployments(false);
       await deploymentsManager.export(args);
     });
@@ -397,7 +425,7 @@ export default function() {
       args.log = !args.silent;
       delete args.silent;
       args.pendingtx = false;
-      await bre.run("deploy:run", args);
+      await bre.run("deploy:main", args);
 
       // enable logging
       const provider = bre.network.provider as any;
@@ -479,7 +507,7 @@ export default function() {
         );
       }
       if (watch) {
-        await bre.run("deploy:run", { ...args, watchOnly: true });
+        await bre.run("deploy:main", { ...args, watchOnly: true });
       }
       await server.waitUntilClosed();
     });
