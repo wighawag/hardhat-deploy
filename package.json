@@ -1,8 +1,8 @@
 {
-  "name": "buidler-deploy",
-  "version": "0.6.0-beta.36",
-  "description": "Buidler Plugin For Replicable Deployments And Tests",
-  "repository": "github:wighawag/buidler-deploy",
+  "name": "hardhat-deploy",
+  "version": "0.7.0-beta.4",
+  "description": "Hardhat Plugin For Replicable Deployments And Tests",
+  "repository": "github:wighawag/hardhat-deploy",
   "author": "wighawag",
   "license": "MIT",
   "main": "dist/src/index.js",
@@ -14,8 +14,9 @@
     "test",
     "testing",
     "tool",
-    "buidler",
-    "buidler-plugin"
+    "hardhat",
+    "hardhat-deploy",
+    "hardhat-plugin"
   ],
   "files": [
     "dist/src/",
@@ -28,7 +29,6 @@
     "artifacts/*.json"
   ],
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.4.3",
     "@types/chai": "^4.1.7",
     "@types/debug": "^4.1.5",
     "@types/fs-extra": "^5.0.4",
@@ -36,6 +36,7 @@
     "@types/node": "^8.10.38",
     "chai": "^4.2.0",
     "dotenv": "^6.2.0",
+    "hardhat": "^2.0.0-rc.0",
     "mocha": "^5.2.0",
     "prettier": "^1.19.1",
     "prettier-plugin-solidity": "^1.0.0-alpha.56",
@@ -47,7 +48,7 @@
     "typescript": "^3.4.5"
   },
   "peerDependencies": {
-    "@nomiclabs/buidler": "^1.3.0"
+    "hardhat": "^2.0.0-rc.0"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.0.2",
@@ -70,7 +71,7 @@
     "qs": "^6.9.4"
   },
   "scripts": {
-    "compile": "buidler compile",
+    "compile": "hardhat compile",
     "lint:fix": "prettier --write src/**/*.{js,ts} test/**/*.{js,ts} && tslint --fix --config tslint.json --project tsconfig.json",
     "lint": "tslint --config tslint.json --project tsconfig.json",
     "test": "mocha --timeout 20000 --exit",

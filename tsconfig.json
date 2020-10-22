@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "lib": ["es2020.string"]
   },
-  // "files": [], // Any Buidler plugin's main .d.ts has to be added here
+  // "files": [], // Any Hardhat plugin's main .d.ts has to be added here
   "exclude": ["dist", "node_modules"],
   "include": ["./test", "./src"]
 }

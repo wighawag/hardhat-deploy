@@ -3,8 +3,24 @@ import {
   FixtureFunc,
   DeploymentSubmission,
   Artifact,
-  ABI
-} from "@nomiclabs/buidler/types";
+  LinkReferences
+} from "hardhat/types";
+
+export type ExtendedArtifact = {
+  abi: any[];
+  bytecode: string; // "0x"-prefixed hex string
+  deployedBytecode?: string; // "0x"-prefixed hex string
+  metadata?: string;
+  linkReferences?: LinkReferences;
+  deployedLinkReferences?: LinkReferences;
+  solcInput?: string;
+  solcInputHash?: string;
+  userdoc?: any;
+  devdoc?: any;
+  methodIdentifiers?: any;
+  storageLayout?: any;
+  evm?: any;
+};
 
 export interface PartialExtension {
   save(name: string, deployment: DeploymentSubmission): Promise<void>;
@@ -12,7 +28,7 @@ export interface PartialExtension {
   getOrNull(name: string): Promise<Deployment | null>;
   getDeploymentsFromAddress(address: string): Promise<Deployment[]>;
   all(): Promise<{ [name: string]: Deployment }>;
-  getArtifact(name: string): Promise<Artifact>;
+  getArtifact(name: string): Promise<ExtendedArtifact>;
   run(
     tags?: string | string[],
     options?: {

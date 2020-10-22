@@ -3,7 +3,7 @@ import axios from "axios";
 import qs from "qs";
 import path from "path";
 import { defaultAbiCoder, ParamType } from "@ethersproject/abi";
-import { BuidlerRuntimeEnvironment } from "@nomiclabs/buidler/types";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 import chalk from "chalk";
 import matchAll from "match-all";
 
@@ -93,7 +93,7 @@ function getLicenseType(license: string): undefined | number {
 }
 
 export async function submitSources(
-  bre: BuidlerRuntimeEnvironment,
+  hre: HardhatRuntimeEnvironment,
   solcInputsPath: string,
   config?: {
     etherscanApiKey?: string;
@@ -107,8 +107,8 @@ export async function submitSources(
   const licenseOption = config.license;
   const forceLicense = config.forceLicense;
   const etherscanApiKey = config.etherscanApiKey;
-  const chainId = await bre.getChainId();
-  const all = await bre.deployments.all();
+  const chainId = await hre.getChainId();
+  const all = await hre.deployments.all();
   let host: string;
   switch (chainId) {
     case "1":
@@ -377,12 +377,12 @@ export async function submitSources(
     if (result === "failure") {
       if (!useSolcInput && fallbackOnSolcInput) {
         logInfo(
-          "Falling back on solcInput. etherscan seems to sometime require full solc-input with all source files, even though this should not be needed"
+          "Falling back on solcInput. etherscan seems to sometime require full solc-input with all source files, even though this should not be needed. See https://github.com/ethereum/solidity/issues/9573"
         );
         await submit(name, true);
       } else {
         logInfo(
-          "Etherscan sometime fails to verify when only metadata sources are givem, You can add the option --solc-input to try with full solc-input sources. This will include all contract source in the etherscan result, even the one not relevant to the contract being verified"
+          "Etherscan sometime fails to verify when only metadata sources are given. See https://github.com/ethereum/solidity/issues/9573. You can add the option --solc-input to try with full solc-input sources. This will include all contract source in the etherscan result, even the one not relevant to the contract being verified"
         );
       }
     }

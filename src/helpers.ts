@@ -15,7 +15,7 @@ import {
 import { zeroPad, hexlify } from "@ethersproject/bytes";
 import { Interface, FunctionFragment } from "@ethersproject/abi";
 import {
-  BuidlerRuntimeEnvironment,
+  HardhatRuntimeEnvironment,
   Deployment,
   DeployResult,
   DeploymentsExtension,
@@ -26,24 +26,41 @@ import {
   CallOptions,
   SimpleTx,
   Receipt,
-  Execute,
   Address,
   DiamondOptions,
   LinkReferences,
   Create2DeployOptions,
   FacetCut
-} from "@nomiclabs/buidler/types";
-import { PartialExtension } from "./types";
+} from "hardhat/types";
+import { ExtendedArtifact, PartialExtension } from "./types";
 import { UnknownSignerError } from "./errors";
-import { mergeABIs } from "./utils";
-import eip173Proxy from "../artifacts/EIP173Proxy.json";
-import diamondBase from "../artifacts/Diamond.json";
-import diamondCutFacet from "../artifacts/DiamondCutFacet.json";
-import diamondLoupeFacet from "../artifacts/DiamondLoupeFacet.json";
-import ownershipFacet from "../artifacts/OwnershipFacet.json";
-import diamantaire from "../artifacts/Diamantaire.json";
+import { mergeABIs, getArtifactFromFolderSync } from "./utils";
 import fs from "fs";
 import path from "path";
+
+function artifactFromFolderSync(
+  name: string,
+  folderPath: string
+): ExtendedArtifact {
+  return getArtifactFromFolderSync(name, folderPath) as ExtendedArtifact;
+}
+
+const artifactsFolder = path.join(__dirname, "../artifacts");
+const eip173Proxy = artifactFromFolderSync("EIP173Proxy", artifactsFolder);
+const diamondBase = artifactFromFolderSync("Diamond", artifactsFolder);
+const diamondCutFacet = artifactFromFolderSync(
+  "DiamondCutFacet",
+  artifactsFolder
+);
+const diamondLoupeFacet = artifactFromFolderSync(
+  "DiamondLoupeFacet",
+  artifactsFolder
+);
+const ownershipFacet = artifactFromFolderSync(
+  "OwnershipFacet",
+  artifactsFolder
+);
+const diamantaire = artifactFromFolderSync("Diamantaire", artifactsFolder);
 
 diamondBase.abi = mergeABIs(
   false,
@@ -161,30 +178,12 @@ function linkLibraries(
 
   return bytecode;
 }
-let solcInput: string;
-let solcInputHash: string;
-let solcOutput: {
-  contracts: {
-    [filename: string]: {
-      [contractName: string]: {
-        abi: any[];
-        metadata?: string;
-        devdoc?: any;
-        userdoc?: any;
-        storageLayout?: any;
-        methodIdentifiers?: any;
-        evm?: any; // TODO
-      };
-    };
-  };
-  sources: { [filename: string]: any };
-};
 let provider: Web3Provider;
 const availableAccounts: { [name: string]: boolean } = {};
 export function addHelpers(
-  env: BuidlerRuntimeEnvironment,
+  env: HardhatRuntimeEnvironment,
   partialExtension: PartialExtension, // TODO
-  getArtifact: (name: string) => Promise<Artifact>,
+  getArtifact: (name: string) => Promise<ExtendedArtifact>,
   onPendingTx: (
     txResponse: TransactionResponse,
     name?: string,
@@ -196,31 +195,13 @@ export function addHelpers(
 ): DeploymentsExtension {
   async function init() {
     if (!provider) {
-      provider = new Web3Provider(fixProvider(env.ethereum));
+      provider = new Web3Provider(fixProvider(env.network.provider));
       try {
         const accounts = await provider.send("eth_accounts", []);
         for (const account of accounts) {
           availableAccounts[account.toLowerCase()] = true;
         }
       } catch (e) {}
-      // TODO wait for buidler to have the info in artifact
-      try {
-        solcOutput = JSON.parse(
-          fs
-            .readFileSync(path.join(env.config.paths.cache, "solc-output.json"))
-            .toString()
-        );
-      } catch (e) {}
-
-      // Necessary for etherscan it seems. using metadata seems insuficient to reconstruct the necessary info for etherscan. Here is a diff of a success vs failure case: https://gist.github.com/wighawag/dfc123ffb7838e5aeb88f58abff505f7
-      try {
-        solcInput = fs
-          .readFileSync(path.join(env.config.paths.cache, "solc-input.json"))
-          .toString();
-      } catch (e) {}
-      if (solcInput) {
-        solcInputHash = keccak256(["string"], [solcInput]);
-      }
     }
   }
 
@@ -315,16 +296,10 @@ export function addHelpers(
     name: string,
     options: DeployOptions
   ): Promise<{
-    artifact: {
-      abi: any;
-      bytecode: string;
-      deployedBytecode?: string;
-      deployedLinkReferences?: LinkReferences;
-      linkReferences?: LinkReferences;
-    };
+    artifact: ExtendedArtifact;
     contractName?: string;
   }> {
-    let artifact: { abi: any; bytecode: string; deployedBytecode?: string };
+    let artifact: ExtendedArtifact;
     let contractName: string | undefined;
     if (options.contract) {
       if (typeof options.contract === "string") {
@@ -340,87 +315,14 @@ export function addHelpers(
     return { artifact, contractName };
   }
 
-  async function getArtifactInfo(
+  async function getLinkedArtifact( // TODO get linked artifact
     name: string,
     options: DeployOptions
-  ): Promise<{
-    abi: any[];
-    byteCode: string;
-    contractSolcOutput?: {
-      metadata?: string;
-      methodIdentifiers?: any;
-      storageLayout?: any;
-      userdoc?: any;
-      devdoc?: any;
-      evm?: any;
-    };
-    artifact: {
-      abi: any;
-      bytecode: string;
-      deployedBytecode?: string;
-      deployedLinkReferences?: LinkReferences;
-      linkReferences?: LinkReferences;
-    };
-  }> {
+  ): Promise<ExtendedArtifact> {
     const artifactInfo = await getArtifactFromOptions(name, options);
     const { artifact } = artifactInfo;
-    const { contractName } = artifactInfo;
-    const abi = artifact.abi;
     const byteCode = linkLibraries(artifact, options.libraries);
-
-    let contractSolcOutput;
-    if (!contractName) {
-      if (typeof options.contract === "object") {
-        contractSolcOutput = {
-          metadata: options.contract?.metadata,
-          methodIdentifiers: options.contract?.methodIdentifiers,
-          storageLayout: options.contract?.storageLayout,
-          userdoc: options.contract?.userdoc,
-          devdoc: options.contract?.devdoc,
-          evm: {
-            gasEstimates: options.contract?.gasEstimates
-          }
-        };
-      }
-      if (!contractSolcOutput || !contractSolcOutput.metadata) {
-        log(
-          `no metadata associated with contract deployed as ${name}, the contract object should include a metadata field`
-        );
-      }
-    } else {
-      // TODO wait for buidler v2 // then we can hard fails on missing metadata
-      // if (artifact.metadata) {
-      //   contractSolcOutput = {
-      //     metadata: artifact.metadata,
-      //     methodIdentifiers: artifact.methodIdentifiers,
-      //     storageLayout: artifact.storageLayout,
-      //     userdoc: artifact.userdoc,
-      //     devdoc: artifact.devdoc,
-      //     evm: {
-      //       gasEstimates: artifact.gasEstimates
-      //     }
-      //   };
-      // } else
-      if (solcOutput) {
-        for (const fileEntry of Object.entries(solcOutput.contracts)) {
-          for (const contractEntry of Object.entries(fileEntry[1])) {
-            if (contractEntry[0] === contractName) {
-              if (
-                artifact.bytecode ===
-                "0x" + contractEntry[1].evm?.bytecode?.object
-              ) {
-                contractSolcOutput = contractEntry[1];
-              }
-            }
-          }
-        }
-      } else {
-        log(
-          `solc-output not found, it is not possible to get the metadata for ${name}. Check if the contract code exists (or if the artifacts belong to older contracts)`
-        );
-      }
-    }
-    return { abi, contractSolcOutput, byteCode, artifact };
+    return { ...artifact, bytecode: byteCode };
   }
 
   async function _deploy(
@@ -434,12 +336,7 @@ export function addHelpers(
       throw new Error("no signer for " + from);
     }
 
-    const {
-      abi,
-      contractSolcOutput,
-      byteCode,
-      artifact
-    } = await getArtifactInfo(name, options);
+    const linkedArtifact = await getLinkedArtifact(name, options);
 
     const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
@@ -448,7 +345,11 @@ export function addHelpers(
       nonce: options.nonce
     };
 
-    const factory = new ContractFactory(abi, byteCode, ethersSigner);
+    const factory = new ContractFactory(
+      linkedArtifact.abi,
+      linkedArtifact.bytecode,
+      ethersSigner
+    );
     const numArguments = factory.interface.deploy.inputs.length;
     if (args.length !== numArguments) {
       throw new Error(
@@ -500,22 +401,22 @@ export function addHelpers(
       } catch (e) {}
     }
 
-    // const extendedAtifact = artifact as any; // TODO future version of buidler will hopefully have that info
+    // const extendedAtifact = artifact as any; // TODO future version of hardhat will hopefully have that info
     const preDeployment = {
-      abi,
+      abi: linkedArtifact.abi,
       args,
       linkedData: options.linkedData,
-      solcInputHash,
-      solcInput,
-      metadata: contractSolcOutput?.metadata,
-      bytecode: artifact.bytecode,
-      deployedBytecode: artifact.deployedBytecode,
+      solcInputHash: linkedArtifact.solcInputHash,
+      solcInput: linkedArtifact.solcInput,
+      metadata: linkedArtifact.metadata,
+      bytecode: linkedArtifact.bytecode,
+      deployedBytecode: linkedArtifact.deployedBytecode,
       libraries: options.libraries,
-      userdoc: contractSolcOutput?.userdoc,
-      devdoc: contractSolcOutput?.devdoc,
-      methodIdentifiers: contractSolcOutput?.methodIdentifiers,
-      storageLayout: contractSolcOutput?.storageLayout,
-      gasEstimates: contractSolcOutput?.evm?.gasEstimates
+      userdoc: linkedArtifact.userdoc,
+      devdoc: linkedArtifact.devdoc,
+      methodIdentifiers: linkedArtifact.methodIdentifiers,
+      storageLayout: linkedArtifact.storageLayout,
+      gasEstimates: linkedArtifact.evm?.gasEstimates
     };
     tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait();
@@ -746,27 +647,24 @@ export function addHelpers(
             );
           }
 
-          const { abi, contractSolcOutput, artifact } = await getArtifactInfo(
-            name,
-            options
-          );
+          const linkedArtifact = await getLinkedArtifact(name, options);
 
           // receipt missing
           const newDeployment = {
-            abi,
+            abi: linkedArtifact.abi,
             address: diffResult.address,
             linkedData: options.linkedData,
-            solcInputHash,
-            solcInput,
-            metadata: contractSolcOutput?.metadata,
-            bytecode: artifact.bytecode,
-            deployedBytecode: artifact.deployedBytecode,
+            solcInputHash: linkedArtifact.solcInputHash,
+            solcInput: linkedArtifact.solcInput,
+            metadata: linkedArtifact.metadata,
+            bytecode: linkedArtifact.bytecode,
+            deployedBytecode: linkedArtifact.deployedBytecode,
             libraries: options.libraries,
-            userdoc: contractSolcOutput?.userdoc,
-            devdoc: contractSolcOutput?.devdoc,
-            methodIdentifiers: contractSolcOutput?.methodIdentifiers,
-            storageLayout: contractSolcOutput?.storageLayout,
-            gasEstimates: contractSolcOutput?.evm?.gasEstimates
+            userdoc: linkedArtifact.userdoc,
+            devdoc: linkedArtifact.devdoc,
+            methodIdentifiers: linkedArtifact.methodIdentifiers,
+            storageLayout: linkedArtifact.storageLayout,
+            gasEstimates: linkedArtifact.evm?.gasEstimates
           };
           await env.deployments.save(name, newDeployment);
           result = {

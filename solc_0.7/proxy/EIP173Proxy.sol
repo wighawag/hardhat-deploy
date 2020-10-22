@@ -7,6 +7,7 @@ interface ERC165 {
     function supportsInterface(bytes4 id) external view returns (bool);
 }
 
+///@notice Proxy implementing EIP173 for ownership management
 contract EIP173Proxy is Proxy {
     // ////////////////////////// EVENTS ///////////////////////////////////////////////////////////////////////
 

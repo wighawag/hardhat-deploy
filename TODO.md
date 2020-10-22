@@ -8,7 +8,7 @@
 - [ ] library name vs <path>:<name> and error out if ambiguity (when using only name)
 - [ ] libraries : address should not need to be address, they could be names of deployments or {address}
 - [ ] fix error with proxy constructor, the check use the number of argument given instead of the abi
-- [ ] fix issue with fixture reading deployments in buidlerevm folder: fixture should not read
+- [ ] fix issue with fixture reading deployments in hardhat folder: fixture should not read
 - [ ] add configuration field for network based configuration ? or at least expose the chainIfNetworkConfig expansion function
 - [ ] sourcify-upload (https://verification.komputing.org/server)
 - [ ] ipfs-upload
@@ -18,11 +18,12 @@
 - [x] ensure recursive folder for `deploy` folder (up to user to use `test` tags or the folder act as tag ?)
 - [ ] exclude tag options
 - [x] tests should use tags (by default, it reuse global tag (if present), but option to not reuse global tag)
-- [x] builder test option to first run global tag (or use a env variable, ckeck what buidler does with buidler test)
+- [x] hardhat test option to first run global tag (or use a env variable, ckeck what hardhat does with hardhat test)
 - [x] executeOrDisplay vs execute({skipUnknownSigner})
 - [x] use script.id for migrations (throw if return true and no id provided)
 - [x] tags for network config =>
       ~~- [ ] network tags can be used in namedAccounts too--~~
 - [ ] check clash on proxy
 - [ ] rename SemiTransparentProxy and TransparentProxy
-- [ ] bre.run("deploy:before-deploy") in the runDeploy for deploymentManager
+- [ ] hre.run("deploy:before-deploy") in the runDeploy for deploymentManager
+- [ ] test --tags one,two,three

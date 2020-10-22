@@ -5,7 +5,7 @@ extension:
   - js
 recursive: true
 reporter: spec
-require: "@nomiclabs/buidler/register"
+require: "hardhat/register"
 slow: 75
 spec: test/**/test*.js # the positional arguments!
 timeout: 20000

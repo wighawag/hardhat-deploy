@@ -1,6 +1,5 @@
-import { readArtifactSync, readArtifact } from "@nomiclabs/buidler/plugins";
 import {
-  BuidlerRuntimeEnvironment,
+  HardhatRuntimeEnvironment,
   DeployFunction,
   Deployment,
   DeploymentsExtension,
@@ -8,8 +7,9 @@ import {
   DeploymentSubmission,
   Export,
   MultiExport
-} from "@nomiclabs/buidler/types";
-import { PartialExtension } from "./types";
+} from "hardhat/types";
+import { Artifacts } from "hardhat/internal/artifacts";
+import { ExtendedArtifact, PartialExtension } from "./types";
 
 import fs from "fs-extra";
 import path from "path";
@@ -21,7 +21,7 @@ import {
 } from "@ethersproject/transactions";
 
 import debug from "debug";
-const log = debug("buidler:wighawag:buidler-deploy");
+const log = debug("hardhat:wighawag:hardhat-deploy");
 
 import {
   addDeployments,
@@ -29,7 +29,8 @@ import {
   getChainId,
   loadAllDeployments,
   traverse,
-  deleteDeployments
+  deleteDeployments,
+  getArtifactFromFolder
 } from "./utils";
 import { addHelpers, waitForTx } from "./helpers";
 import {
@@ -64,10 +65,10 @@ export class DeploymentsManager {
     migrations: { [id: string]: number };
   };
 
-  private env: BuidlerRuntimeEnvironment;
+  private env: HardhatRuntimeEnvironment;
   private deploymentsPath: string;
 
-  constructor(env: BuidlerRuntimeEnvironment) {
+  constructor(env: HardhatRuntimeEnvironment) {
     log("constructing DeploymentsManager");
     this.db = {
       accountsLoaded: false,
@@ -86,9 +87,7 @@ export class DeploymentsManager {
       gasPrice: undefined
     };
     this.env = env;
-    this.deploymentsPath =
-      env.config.paths.deployments ||
-      path.join(env.config.paths.root, "/deployments");
+    this.deploymentsPath = env.config.paths.deployments;
 
     this.env.getChainId = () => {
       return getChainId(this.env);
@@ -124,61 +123,26 @@ export class DeploymentsManager {
         await this.setup();
         return this.db.deployments; // TODO copy
       },
-      getArtifact: async (contractName: string): Promise<any> => {
-        let artifact;
-        let lastError: any;
-        try {
-          artifact = await readArtifact(
-            this.env.config.paths.artifacts,
-            contractName
-          );
-        } catch (e) {
-          lastError = e;
-          const importPaths = this.getImportPaths();
-          for (const importPath of importPaths) {
-            try {
-              artifact = await readArtifact(importPath, contractName);
-              if (artifact) {
-                return artifact;
-              }
-            } catch (ee) {
-              lastError = new Error(
-                `cannot get artifact ${contractName} at ${importPath}`
-              );
-            }
+      getArtifact: async (contractName: string): Promise<ExtendedArtifact> => {
+        let artifact:
+          | ExtendedArtifact
+          | undefined = await getArtifactFromFolder(
+          contractName,
+          this.env.config.paths.artifacts
+        );
+        if (artifact) {
+          return artifact;
+        }
+        const importPaths = this.getImportPaths();
+        for (const importPath of importPaths) {
+          artifact = await getArtifactFromFolder(contractName, importPath);
+          if (artifact) {
+            return artifact;
           }
         }
+
         if (!artifact) {
-          throw lastError;
-        }
-        return artifact;
-      },
-      getArtifactSync: (contractName: string): any => {
-        let artifact;
-        let lastError: any;
-        try {
-          artifact = readArtifactSync(
-            this.env.config.paths.artifacts,
-            contractName
-          );
-        } catch (e) {
-          lastError = e;
-          const importPaths = this.getImportPaths();
-          for (const importPath of importPaths) {
-            try {
-              artifact = readArtifactSync(importPath, contractName);
-              if (artifact) {
-                return artifact;
-              }
-            } catch (ee) {
-              lastError = new Error(
-                `cannot get artifact ${contractName} at ${importPath}`
-              );
-            }
-          }
-        }
-        if (!artifact) {
-          throw lastError;
+          throw new Error(`cannot find artifact "${contractName}"`);
         }
         return artifact;
       },
@@ -372,7 +336,7 @@ export class DeploymentsManager {
             (txData.name ? ` for ${txData.name} Deployment` : "")
         );
       }
-      const receipt = await waitForTx(this.env.ethereum, txHash, false);
+      const receipt = await waitForTx(this.env.network.provider, txHash, false);
       if (receipt.contractAddress && txData.name) {
         await this.saveDeployment(txData.name, {
           ...txData.deployment,
@@ -623,7 +587,7 @@ export class DeploymentsManager {
       let receiptFetched;
       try {
         receiptFetched = await waitForTx(
-          this.env.ethereum,
+          this.env.network.provider,
           obj.transactionHash,
           true
         );
@@ -733,9 +697,7 @@ export class DeploymentsManager {
     if (tags !== undefined && typeof tags === "string") {
       tags = [tags];
     }
-    const deployPath =
-      this.env.config.paths.deploy ||
-      path.join(this.env.config.paths.root, "/deploy"); // TODO extendConfig ?
+    const deployPath = this.env.config.paths.deploy;
     let filesStats;
     try {
       filesStats = traverse(deployPath);
@@ -1038,10 +1000,7 @@ export class DeploymentsManager {
   }
 
   private getImportPaths() {
-    let importPaths: string[] = ["imports"];
-    if (this.env.config.paths.imports) {
-      importPaths = [this.env.config.paths.imports];
-    }
+    let importPaths = [this.env.config.paths.imports];
     const externalImports =
       this.env.config.external && this.env.config.external.artifacts;
     if (externalImports) {
@@ -1060,8 +1019,8 @@ export class DeploymentsManager {
 
   private async setup() {
     if (!this.db.deploymentsLoaded) {
-      if (process.env.BUIDLER_DEPLOY_FIXTURE) {
-        if (!process.env.BUIDLER_DEPLOY_NO_COMPILE) {
+      if (process.env.HARDHAT_DEPLOY_FIXTURE) {
+        if (!process.env.HARDHAT_DEPLOY_NO_COMPILE) {
           // console.log("compiling...");
           await this.env.run("compile");
         }
@@ -1069,7 +1028,7 @@ export class DeploymentsManager {
         // console.log("running global fixture....");
         await this.env.deployments.fixture();
       } else {
-        if (process.env.BUIDLER_DEPLOY_COMPILE) {
+        if (process.env.HARDHAT_DEPLOY_COMPILE) {
           // console.log("compiling...");
           await this.env.run("compile");
         }
@@ -1079,7 +1038,7 @@ export class DeploymentsManager {
   }
 
   private async saveSnapshot(key: string, data?: any) {
-    const snapshot = await this.env.ethereum.send("evm_snapshot", []);
+    const snapshot = await this.env.network.provider.send("evm_snapshot", []);
     this.db.pastFixtures[key] = {
       index: ++this.db.snapshotCounter,
       snapshot,
@@ -1100,8 +1059,8 @@ export class DeploymentsManager {
         delete this.db.pastFixtures[fixtureKey];
       }
     }
-    await this.env.ethereum.send("evm_revert", [saved.snapshot]);
-    saved.snapshot = await this.env.ethereum.send("evm_snapshot", []); // it is necessary to re-snapshot it
+    await this.env.network.provider.send("evm_revert", [saved.snapshot]);
+    saved.snapshot = await this.env.network.provider.send("evm_snapshot", []); // it is necessary to re-snapshot it
     this.db.deployments = { ...saved.deployments };
   }
 
@@ -1111,7 +1070,7 @@ export class DeploymentsManager {
   }> {
     if (!this.db.accountsLoaded) {
       const chainId = await getChainId(this.env);
-      const accounts = await this.env.ethereum.send("eth_accounts");
+      const accounts = await this.env.network.provider.send("eth_accounts");
       const { namedAccounts, unnamedAccounts } = processNamedAccounts(
         this.env,
         accounts,

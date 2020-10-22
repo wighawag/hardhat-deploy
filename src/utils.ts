@@ -2,22 +2,21 @@ import * as fs from "fs-extra";
 import * as path from "path";
 import { getAddress } from "@ethersproject/address";
 import { Interface, FunctionFragment, Fragment } from "@ethersproject/abi";
-import {
-  BuidlerRuntimeEnvironment,
-  MultiExport
-} from "@nomiclabs/buidler/types";
+import { HardhatRuntimeEnvironment, MultiExport } from "hardhat/types";
 import { BigNumber } from "@ethersproject/bignumber";
+import { ExtendedArtifact } from "./types";
+import { Artifacts } from "hardhat/internal/artifacts";
 
 let chainId: string;
-export async function getChainId(bre: BuidlerRuntimeEnvironment) {
+export async function getChainId(hre: HardhatRuntimeEnvironment) {
   if (chainId) {
     return chainId;
   }
   try {
-    chainId = await bre.ethereum.send("eth_chainId");
+    chainId = await hre.network.provider.send("eth_chainId");
   } catch (e) {
     console.log("failed to get chainId, falling back on net_version...");
-    chainId = await bre.ethereum.send("net_version");
+    chainId = await hre.network.provider.send("net_version");
   }
 
   if (chainId.startsWith("0x")) {
@@ -27,8 +26,74 @@ export async function getChainId(bre: BuidlerRuntimeEnvironment) {
   return chainId;
 }
 
+export function getArtifactFromFolderSync(
+  name: string,
+  folderPath: string
+): ExtendedArtifact | undefined {
+  const artifacts = new Artifacts(folderPath);
+  let artifact;
+  try {
+    artifact = JSON.parse(
+      fs.readFileSync(path.join(folderPath, name + ".json")).toString()
+    );
+  } catch (e) {}
+  if (!artifact) {
+    try {
+      artifact = artifacts.readArtifactSync(name);
+      if (artifact._format === "hh-sol-artifact-1") {
+        const debugFilePath = path.join(
+          folderPath,
+          artifact.sourceName,
+          name + ".dbg.json"
+        );
+        // console.log(`getting debug file ${debugFilePath}`);
+        let debugJson;
+        try {
+          debugJson = JSON.parse(fs.readFileSync(debugFilePath).toString());
+        } catch (e) {
+          console.error(e);
+        }
+        if (debugJson) {
+          const buildInfoFilePath = path.join(
+            path.dirname(debugFilePath),
+            debugJson.buildInfo
+          );
+          // console.log(`getting buildInfo file ${buildInfoFilePath}`);
+          let buildInfo;
+          try {
+            buildInfo = JSON.parse(
+              fs.readFileSync(buildInfoFilePath).toString()
+            );
+          } catch (e) {
+            console.error(e);
+          }
+
+          if (buildInfo) {
+            artifact = {
+              ...artifact,
+              ...buildInfo.output.contracts[artifact.sourceName][name],
+              solcInput: JSON.stringify(buildInfo.input, null, "  "),
+              solcInputHash: path.basename(buildInfoFilePath, ".json")
+            };
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  return artifact;
+}
+
+export async function getArtifactFromFolder(
+  name: string,
+  folderPath: string
+): Promise<ExtendedArtifact | undefined> {
+  return getArtifactFromFolderSync(name, folderPath);
+}
+
 export function loadAllDeployments(
-  bre: BuidlerRuntimeEnvironment,
+  hre: HardhatRuntimeEnvironment,
   deploymentsPath: string,
   onlyABIAndAddress?: boolean,
   externalDeployments?: { [networkName: string]: string[] }
@@ -49,7 +114,7 @@ export function loadAllDeployments(
         name = fileName;
       } else {
         throw new Error(
-          `with buidler-deploy >= 0.6 you need to rename network folder without appended chainId
+          `with hardhat-deploy >= 0.6 you need to rename network folder without appended chainId
           You also need to create a '.chainId' file in the folder with the chainId`
         );
       }
@@ -73,7 +138,7 @@ export function loadAllDeployments(
   if (externalDeployments) {
     for (const networkName of Object.keys(externalDeployments)) {
       for (const folderPath of externalDeployments[networkName]) {
-        const networkConfig = bre.config.networks[networkName];
+        const networkConfig = hre.config.networks[networkName];
         if (networkConfig && networkConfig.chainId) {
           const networkChainId = networkConfig.chainId.toString();
           const contracts = loadDeployments(
@@ -141,7 +206,7 @@ function loadDeployments(
         }
       } else {
         throw new Error(
-          `with buidler-deploy >= 0.6 you are expected to create a '.chainId' file in the deployment folder`
+          `with hardhat-deploy >= 0.6 you are expected to create a '.chainId' file in the deployment folder`
         );
       }
     }
@@ -312,16 +377,16 @@ function chainConfig(
 }
 
 export function processNamedAccounts(
-  bre: BuidlerRuntimeEnvironment,
+  hre: HardhatRuntimeEnvironment,
   accounts: string[],
   chainIdGiven: string
 ): { namedAccounts: { [name: string]: string }; unnamedAccounts: string[] } {
-  if (bre.config.namedAccounts) {
+  if (hre.config.namedAccounts) {
     return transformNamedAccounts(
-      bre.config.namedAccounts,
+      hre.config.namedAccounts,
       chainIdGiven,
       accounts,
-      bre.network.name
+      hre.network.name
     );
   } else {
     return { namedAccounts: {}, unnamedAccounts: [] };
