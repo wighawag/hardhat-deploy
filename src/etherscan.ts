@@ -212,7 +212,11 @@ export async function submitSources(
       );
     }
 
-    let solcInput;
+    let solcInput: {
+      language: string;
+      settings: any;
+      sources: Record<string, { content: string }>;
+    };
     if (useSolcInput) {
       const solcInputHash = deployment.solcInputHash;
       let solcInputStringFromDeployment: string | undefined;
@@ -234,8 +238,15 @@ export async function submitSources(
       solcInput = {
         language: metadata.language,
         settings,
-        sources: metadata.sources
+        sources: {}
       };
+      for (const sourcePath of Object.keys(metadata.sources)) {
+        const source = metadata.sources[sourcePath];
+        // only content as this fails otherwise
+        solcInput.sources[sourcePath] = {
+          content: source.content
+        };
+      }
     }
 
     // Adding Libraries ....
