@@ -63,7 +63,7 @@ This plugin contains a lot more features too, all geared toward a better develop
 - deployment retrying (by saving pending tx): so you can feel confident when making a deployment that you can always recover.
 - deployments as test fixture using `evm_snapshot` to speed up testing.
 - ability to create your own test fixture that automatically benefit from `evm_snapshot` to speed up tests using it.
-- TODO: update : combined with `hardhat-deploy-ethers` it has the ability to get ethers contract instance by name (like `await ethers.getContract("ContractName")`).
+- combined with [hardhat-deploy-ethers](https://github.com/wighawag/hardhat-deploy-ethers) it has the ability to get ethers contract instance by name (like `await ethers.getContract("ContractName")`).
 - importing previously compiled contract (possibly in different solidity compiler version).
 - importing artifact from external sources (like npm packages), including truffle support
 - importing deployments from external sources (like npm packages), including truffle support
