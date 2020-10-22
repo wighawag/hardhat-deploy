@@ -148,7 +148,7 @@ export async function submitSources(
     }
     if (contractABI && contractABI !== "") {
       log(`already verified: ${name} (${address}), skipping.`);
-      // return;
+      return;
     }
 
     if (!metadataString) {
