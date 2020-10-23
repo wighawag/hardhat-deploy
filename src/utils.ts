@@ -457,7 +457,7 @@ export function mergeABIs(check: boolean, ...abis: any[][]): any[] {
   if (abis.length === 0) {
     return [];
   }
-  const result = abis[0];
+  const result: any[] = JSON.parse(JSON.stringify(abis[0]));
 
   for (let i = 1; i < abis.length; i++) {
     const abi = abis[i];
