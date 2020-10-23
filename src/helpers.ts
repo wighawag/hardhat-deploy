@@ -34,7 +34,11 @@ import {
 } from "hardhat/types";
 import { ExtendedArtifact, PartialExtension } from "./types";
 import { UnknownSignerError } from "./errors";
-import { mergeABIs, getArtifactFromFolderSync } from "./utils";
+import {
+  mergeABIs,
+  getArtifactFromFolderSync,
+  getExtendedArtifactFromFolderSync
+} from "./utils";
 import fs from "fs";
 import path from "path";
 
@@ -42,7 +46,10 @@ function artifactFromFolderSync(
   name: string,
   folderPath: string
 ): ExtendedArtifact {
-  return getArtifactFromFolderSync(name, folderPath) as ExtendedArtifact;
+  return getExtendedArtifactFromFolderSync(
+    name,
+    folderPath
+  ) as ExtendedArtifact;
 }
 
 const artifactsFolder = path.join(__dirname, "../artifacts");

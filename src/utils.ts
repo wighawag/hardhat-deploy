@@ -2,10 +2,15 @@ import * as fs from "fs-extra";
 import * as path from "path";
 import { getAddress } from "@ethersproject/address";
 import { Interface, FunctionFragment, Fragment } from "@ethersproject/abi";
-import { HardhatRuntimeEnvironment, MultiExport } from "hardhat/types";
+import {
+  Artifact,
+  HardhatRuntimeEnvironment,
+  MultiExport
+} from "hardhat/types";
 import { BigNumber } from "@ethersproject/bignumber";
 import { ExtendedArtifact } from "./types";
 import { Artifacts } from "hardhat/internal/artifacts";
+import { artifacts } from "hardhat";
 
 let chainId: string;
 export async function getChainId(hre: HardhatRuntimeEnvironment) {
@@ -29,6 +34,32 @@ export async function getChainId(hre: HardhatRuntimeEnvironment) {
 export function getArtifactFromFolderSync(
   name: string,
   folderPath: string
+): Artifact | undefined {
+  const artifacts = new Artifacts(folderPath);
+  let artifact;
+  try {
+    artifact = JSON.parse(
+      fs.readFileSync(path.join(folderPath, name + ".json")).toString()
+    );
+  } catch (e) {}
+  if (!artifact) {
+    try {
+      artifact = artifacts.readArtifactSync(name);
+    } catch (e) {}
+  }
+  return artifact;
+}
+
+export async function getArtifactFromFolder(
+  name: string,
+  folderPath: string
+): Promise<Artifact | undefined> {
+  return getArtifactFromFolderSync(name, folderPath);
+}
+
+export function getExtendedArtifactFromFolderSync(
+  name: string,
+  folderPath: string
 ): ExtendedArtifact | undefined {
   const artifacts = new Artifacts(folderPath);
   let artifact;
@@ -40,56 +71,52 @@ export function getArtifactFromFolderSync(
   if (!artifact) {
     try {
       artifact = artifacts.readArtifactSync(name);
-      if (artifact._format === "hh-sol-artifact-1") {
-        const debugFilePath = path.join(
-          folderPath,
-          artifact.sourceName,
-          name + ".dbg.json"
+    } catch (e) {}
+    if (artifact && artifact._format === "hh-sol-artifact-1") {
+      const debugFilePath = path.join(
+        folderPath,
+        artifact.sourceName,
+        name + ".dbg.json"
+      );
+      // console.log(`getting debug file ${debugFilePath}`);
+      let debugJson;
+      try {
+        debugJson = JSON.parse(fs.readFileSync(debugFilePath).toString());
+      } catch (e) {
+        console.error(e);
+      }
+      if (debugJson) {
+        const buildInfoFilePath = path.join(
+          path.dirname(debugFilePath),
+          debugJson.buildInfo
         );
-        // console.log(`getting debug file ${debugFilePath}`);
-        let debugJson;
+        // console.log(`getting buildInfo file ${buildInfoFilePath}`);
+        let buildInfo;
         try {
-          debugJson = JSON.parse(fs.readFileSync(debugFilePath).toString());
+          buildInfo = JSON.parse(fs.readFileSync(buildInfoFilePath).toString());
         } catch (e) {
           console.error(e);
         }
-        if (debugJson) {
-          const buildInfoFilePath = path.join(
-            path.dirname(debugFilePath),
-            debugJson.buildInfo
-          );
-          // console.log(`getting buildInfo file ${buildInfoFilePath}`);
-          let buildInfo;
-          try {
-            buildInfo = JSON.parse(
-              fs.readFileSync(buildInfoFilePath).toString()
-            );
-          } catch (e) {
-            console.error(e);
-          }
 
-          if (buildInfo) {
-            artifact = {
-              ...artifact,
-              ...buildInfo.output.contracts[artifact.sourceName][name],
-              solcInput: JSON.stringify(buildInfo.input, null, "  "),
-              solcInputHash: path.basename(buildInfoFilePath, ".json")
-            };
-          }
+        if (buildInfo) {
+          artifact = {
+            ...artifact,
+            ...buildInfo.output.contracts[artifact.sourceName][name],
+            solcInput: JSON.stringify(buildInfo.input, null, "  "),
+            solcInputHash: path.basename(buildInfoFilePath, ".json")
+          };
         }
       }
-    } catch (e) {
-      console.error(e);
     }
   }
   return artifact;
 }
 
-export async function getArtifactFromFolder(
+export async function getExtendedArtifactFromFolder(
   name: string,
   folderPath: string
 ): Promise<ExtendedArtifact | undefined> {
-  return getArtifactFromFolderSync(name, folderPath);
+  return getExtendedArtifactFromFolderSync(name, folderPath);
 }
 
 export function loadAllDeployments(

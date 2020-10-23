@@ -30,7 +30,8 @@ import {
   loadAllDeployments,
   traverse,
   deleteDeployments,
-  getArtifactFromFolder
+  getArtifactFromFolder,
+  getExtendedArtifactFromFolder
 } from "./utils";
 import { addHelpers, waitForTx } from "./helpers";
 import {
@@ -126,7 +127,7 @@ export class DeploymentsManager {
       getArtifact: async (contractName: string): Promise<ExtendedArtifact> => {
         let artifact:
           | ExtendedArtifact
-          | undefined = await getArtifactFromFolder(
+          | undefined = await getExtendedArtifactFromFolder(
           contractName,
           this.env.config.paths.artifacts
         );
@@ -135,7 +136,10 @@ export class DeploymentsManager {
         }
         const importPaths = this.getImportPaths();
         for (const importPath of importPaths) {
-          artifact = await getArtifactFromFolder(contractName, importPath);
+          artifact = await getExtendedArtifactFromFolder(
+            contractName,
+            importPath
+          );
           if (artifact) {
             return artifact;
           }
