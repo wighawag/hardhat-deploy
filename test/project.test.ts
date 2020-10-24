@@ -4,7 +4,7 @@ import {useEnvironment} from './helpers';
 
 describe('Integration tests examples', function () {
   describe('Hardhat Runtime Environment extension', function () {
-    useEnvironment('hardhat-project', "hardhat");
+    useEnvironment('hardhat-project', 'hardhat');
 
     it('It should add the example field', function () {
       assert.isNotNull(this.env.deployments);
@@ -15,4 +15,3 @@ describe('Integration tests examples', function () {
     });
   });
 });
-

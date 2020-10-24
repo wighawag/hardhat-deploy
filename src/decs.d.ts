@@ -1,1 +1,1 @@
-declare module "match-all";
+declare module 'match-all';

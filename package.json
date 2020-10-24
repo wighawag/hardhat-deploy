@@ -75,8 +75,8 @@
   "scripts": {
     "prepare": "node ./.setup.js",
     "compile": "hardhat compile",
-    "lint:fix": "prettier --write src/**/*.{js,ts} test/**/*.{js,ts} && eslint --fix .",
-    "lint": "eslint .",
+    "lint:fix": "prettier --write solc*/**/*.sol && prettier --write src/**/*.{js,ts} test/**/*.{js,ts} && eslint --fix .",
+    "lint": "prettier --check solc*/**/*.sol && prettier --check src/**/*.{js,ts} test/**/*.{js,ts} && eslint .",
     "test": "mocha --timeout 20000 --exit",
     "build": "tsc",
     "watch": "tsc -w",

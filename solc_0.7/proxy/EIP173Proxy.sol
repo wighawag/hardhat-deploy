@@ -11,10 +11,7 @@ interface ERC165 {
 contract EIP173Proxy is Proxy {
     // ////////////////////////// EVENTS ///////////////////////////////////////////////////////////////////////
 
-    event OwnershipTransferred(
-        address indexed previousOwner,
-        address indexed newOwner
-    );
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     // /////////////////////// CONSTRUCTOR //////////////////////////////////////////////////////////////////////
 
@@ -44,9 +41,7 @@ contract EIP173Proxy is Proxy {
         ERC165 implementation;
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
-            implementation := sload(
-                0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc
-            )
+            implementation := sload(0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc)
         }
 
         // This technically is not standard compliant as it ERC-165 require 30,000 gas which that call cannot ensure, since it is itself inside `supportsInterface`
@@ -62,10 +57,7 @@ contract EIP173Proxy is Proxy {
         _setOwner(newOwner);
     }
 
-    function changeImplementation(
-        address newImplementation,
-        bytes calldata data
-    ) external onlyOwner {
+    function changeImplementation(address newImplementation, bytes calldata data) external onlyOwner {
         _setImplementation(newImplementation, data);
     }
 
@@ -81,9 +73,7 @@ contract EIP173Proxy is Proxy {
     function _owner() internal view returns (address adminAddress) {
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
-            adminAddress := sload(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
-            )
+            adminAddress := sload(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103)
         }
     }
 
@@ -91,10 +81,7 @@ contract EIP173Proxy is Proxy {
         address previousOwner = _owner();
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
-            sstore(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103,
-                newOwner
-            )
+            sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, newOwner)
         }
         emit OwnershipTransferred(previousOwner, newOwner);
     }

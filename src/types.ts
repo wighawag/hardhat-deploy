@@ -1,10 +1,5 @@
-import {
-  Deployment,
-  FixtureFunc,
-  DeploymentSubmission,
-  Artifact,
-  LinkReferences
-} from "hardhat/types";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {Deployment, FixtureFunc, DeploymentSubmission, LinkReferences} from 'hardhat/types';
 
 export type ExtendedArtifact = {
   abi: any[];
@@ -27,7 +22,7 @@ export interface PartialExtension {
   get(name: string): Promise<Deployment>;
   getOrNull(name: string): Promise<Deployment | null>;
   getDeploymentsFromAddress(address: string): Promise<Deployment[]>;
-  all(): Promise<{ [name: string]: Deployment }>;
+  all(): Promise<{[name: string]: Deployment}>;
   getArtifact(name: string): Promise<ExtendedArtifact>;
   run(
     tags?: string | string[],
@@ -38,8 +33,8 @@ export interface PartialExtension {
       export?: string;
       exportAll?: string;
     }
-  ): Promise<{ [name: string]: Deployment }>;
-  fixture(tags?: string | string[]): Promise<{ [name: string]: Deployment }>;
+  ): Promise<{[name: string]: Deployment}>;
+  fixture(tags?: string | string[]): Promise<{[name: string]: Deployment}>;
   createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
   log(...args: any[]): void;
 }

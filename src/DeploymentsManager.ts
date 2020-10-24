@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   HardhatRuntimeEnvironment,
   DeployFunction,
@@ -6,22 +7,17 @@ import {
   FixtureFunc,
   DeploymentSubmission,
   Export,
-  MultiExport
-} from "hardhat/types";
-import { Artifacts } from "hardhat/internal/artifacts";
-import { ExtendedArtifact, PartialExtension } from "./types";
+} from 'hardhat/types';
+import {ExtendedArtifact, PartialExtension} from './types';
 
-import fs from "fs-extra";
-import path from "path";
+import fs from 'fs-extra';
+import path from 'path';
 
-import { BigNumber } from "@ethersproject/bignumber";
-import {
-  parse as parseTransaction,
-  Transaction
-} from "@ethersproject/transactions";
+import {BigNumber} from '@ethersproject/bignumber';
+import {parse as parseTransaction, Transaction} from '@ethersproject/transactions';
 
-import debug from "debug";
-const log = debug("hardhat:wighawag:hardhat-deploy");
+import debug from 'debug';
+const log = debug('hardhat:wighawag:hardhat-deploy');
 
 import {
   addDeployments,
@@ -30,21 +26,17 @@ import {
   loadAllDeployments,
   traverse,
   deleteDeployments,
-  getArtifactFromFolder,
-  getExtendedArtifactFromFolder
-} from "./utils";
-import { addHelpers, waitForTx } from "./helpers";
-import {
-  TransactionResponse,
-  TransactionRequest
-} from "@ethersproject/providers";
+  getExtendedArtifactFromFolder,
+} from './utils';
+import {addHelpers, waitForTx} from './helpers';
+import {TransactionResponse} from '@ethersproject/providers';
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
 
   private db: {
     accountsLoaded: boolean;
-    namedAccounts: { [name: string]: string };
+    namedAccounts: {[name: string]: string};
     unnamedAccounts: string[];
     deploymentsLoaded: boolean;
     deployments: Record<string, Deployment>;
@@ -60,17 +52,17 @@ export class DeploymentsManager {
       };
     };
     logEnabled: boolean;
-    pendingTransactions: { [hash: string]: any };
+    pendingTransactions: {[hash: string]: any};
     savePendingTx: boolean;
     gasPrice?: string;
-    migrations: { [id: string]: number };
+    migrations: {[id: string]: number};
   };
 
   private env: HardhatRuntimeEnvironment;
   private deploymentsPath: string;
 
   constructor(env: HardhatRuntimeEnvironment) {
-    log("constructing DeploymentsManager");
+    log('constructing DeploymentsManager');
     this.db = {
       accountsLoaded: false,
       namedAccounts: {},
@@ -85,7 +77,7 @@ export class DeploymentsManager {
       logEnabled: false,
       pendingTransactions: {},
       savePendingTx: false,
-      gasPrice: undefined
+      gasPrice: undefined,
     };
     this.env = env;
     this.deploymentsPath = env.config.paths.deployments;
@@ -95,10 +87,8 @@ export class DeploymentsManager {
     };
 
     const partialExtension: PartialExtension = {
-      save: async (
-        name: string,
-        deployment: DeploymentSubmission
-      ): Promise<boolean> => this.saveDeployment(name, deployment),
+      save: async (name: string, deployment: DeploymentSubmission): Promise<boolean> =>
+        this.saveDeployment(name, deployment),
       get: async (name: string) => {
         await this.setup();
         const deployment = this.db.deployments[name];
@@ -125,9 +115,7 @@ export class DeploymentsManager {
         return this.db.deployments; // TODO copy
       },
       getArtifact: async (contractName: string): Promise<ExtendedArtifact> => {
-        let artifact:
-          | ExtendedArtifact
-          | undefined = await getExtendedArtifactFromFolder(
+        let artifact: ExtendedArtifact | undefined = await getExtendedArtifactFromFolder(
           contractName,
           this.env.config.paths.artifacts
         );
@@ -136,10 +124,7 @@ export class DeploymentsManager {
         }
         const importPaths = this.getImportPaths();
         for (const importPath of importPaths) {
-          artifact = await getExtendedArtifactFromFolder(
-            contractName,
-            importPath
-          );
+          artifact = await getExtendedArtifactFromFolder(contractName, importPath);
           if (artifact) {
             return artifact;
           }
@@ -161,41 +146,33 @@ export class DeploymentsManager {
         } = {
           resetMemory: true,
           writeDeploymentsToFiles: false,
-          deletePreviousDeployments: false
+          deletePreviousDeployments: false,
         }
       ) => {
         return this.runDeploy(tags, {
-          resetMemory:
-            options.resetMemory === undefined ? true : options.resetMemory,
+          resetMemory: options.resetMemory === undefined ? true : options.resetMemory,
           deletePreviousDeployments:
-            options.deletePreviousDeployments === undefined
-              ? false
-              : options.deletePreviousDeployments,
+            options.deletePreviousDeployments === undefined ? false : options.deletePreviousDeployments,
           writeDeploymentsToFiles:
-            options.writeDeploymentsToFiles === undefined
-              ? false
-              : options.writeDeploymentsToFiles,
+            options.writeDeploymentsToFiles === undefined ? false : options.writeDeploymentsToFiles,
           export: options.export,
           exportAll: options.exportAll,
           log: false,
-          savePendingTx: false
+          savePendingTx: false,
         });
       },
-      fixture: async (
-        tags?: string | string[],
-        options?: { fallbackToGlobal: boolean }
-      ) => {
+      fixture: async (tags?: string | string[], options?: {fallbackToGlobal: boolean}) => {
         await this.setup();
-        options = { fallbackToGlobal: true, ...options };
-        if (typeof tags === "string") {
+        options = {fallbackToGlobal: true, ...options};
+        if (typeof tags === 'string') {
           tags = [tags];
         }
-        const globalKey = "::global";
+        const globalKey = '::global';
         const globalFixture = this.db.pastFixtures[globalKey];
 
         let fixtureKey = globalKey;
         if (tags !== undefined) {
-          fixtureKey = "::" + tags.join(".");
+          fixtureKey = '::' + tags.join('.');
         }
 
         if (this.db.pastFixtures[fixtureKey]) {
@@ -211,14 +188,14 @@ export class DeploymentsManager {
           writeDeploymentsToFiles: false,
           deletePreviousDeployments: false,
           log: false,
-          savePendingTx: false
+          savePendingTx: false,
         });
 
         await this.saveSnapshot(fixtureKey);
         return this.db.deployments;
       },
       createFixture: (func: FixtureFunc) => {
-        const baseId = "" + ++this.db.fixtureCounter + "::";
+        const baseId = '' + ++this.db.fixtureCounter + '::';
         return async (options?: any) => {
           let id = baseId;
           if (options !== undefined) {
@@ -238,7 +215,7 @@ export class DeploymentsManager {
         if (this.db.logEnabled) {
           console.log(...args);
         }
-      }
+      },
     } as any;
 
     const print = (msg: string) => {
@@ -247,7 +224,7 @@ export class DeploymentsManager {
       }
     };
 
-    log("adding helpers");
+    log('adding helpers');
     this.deploymentsExtension = addHelpers(
       env,
       partialExtension,
@@ -266,7 +243,7 @@ export class DeploymentsManager {
     );
   }
 
-  public async dealWithPendingTransactions() {
+  public async dealWithPendingTransactions(): Promise<void> {
     let pendingTxs: {
       [txHash: string]: {
         name: string;
@@ -288,12 +265,7 @@ export class DeploymentsManager {
         };
       };
     } = {};
-    const chainId = await getChainId(this.env);
-    const pendingTxPath = path.join(
-      this.deploymentsPath,
-      this.env.network.name,
-      ".pendingTransactions"
-    );
+    const pendingTxPath = path.join(this.deploymentsPath, this.env.network.name, '.pendingTransactions');
     try {
       pendingTxs = JSON.parse(fs.readFileSync(pendingTxPath).toString());
     } catch (e) {}
@@ -318,7 +290,7 @@ export class DeploymentsManager {
               s: decoded.s,
               v: decoded.v,
               // creates: tx.creates, // TODO test
-              chainId: decoded.chainId
+              chainId: decoded.chainId,
             };
           }
           tx = recode(txData.decoded);
@@ -326,7 +298,7 @@ export class DeploymentsManager {
         if (this.db.gasPrice) {
           if (tx.gasPrice.lt(this.db.gasPrice)) {
             // TODO
-            console.log("TODO : resubmit tx with higher gas price");
+            console.log('TODO : resubmit tx with higher gas price');
             console.log(tx);
           }
         }
@@ -335,44 +307,30 @@ export class DeploymentsManager {
         console.error(`no access to raw data for tx ${txHash}`);
       }
       if (this.db.logEnabled) {
-        console.log(
-          `waiting for tx ${txHash}` +
-            (txData.name ? ` for ${txData.name} Deployment` : "")
-        );
+        console.log(`waiting for tx ${txHash}` + (txData.name ? ` for ${txData.name} Deployment` : ''));
       }
       const receipt = await waitForTx(this.env.network.provider, txHash, false);
       if (receipt.contractAddress && txData.name) {
         await this.saveDeployment(txData.name, {
           ...txData.deployment,
-          receipt
+          receipt,
         });
       }
       delete pendingTxs[txHash];
       if (Object.keys(pendingTxs).length === 0) {
         fs.removeSync(pendingTxPath);
       } else {
-        fs.writeFileSync(pendingTxPath, JSON.stringify(pendingTxs, null, "  "));
+        fs.writeFileSync(pendingTxPath, JSON.stringify(pendingTxs, null, '  '));
       }
     }
   }
 
-  public async onPendingTx(
-    tx: TransactionResponse,
-    name?: string,
-    deployment?: any
-  ): Promise<TransactionResponse> {
-    if (
-      this.db.writeDeploymentsToFiles &&
-      this.env.network.saveDeployments &&
-      this.db.savePendingTx
-    ) {
-      const chainId = await getChainId(this.env);
-      const deployFolderPath = path.join(
-        this.deploymentsPath,
-        this.env.network.name
-      );
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  public async onPendingTx(tx: TransactionResponse, name?: string, deployment?: any): Promise<TransactionResponse> {
+    if (this.db.writeDeploymentsToFiles && this.env.network.saveDeployments && this.db.savePendingTx) {
+      const deployFolderPath = path.join(this.deploymentsPath, this.env.network.name);
       // console.log("tx", tx.hash);
-      const pendingTxPath = path.join(deployFolderPath, ".pendingTransactions");
+      const pendingTxPath = path.join(deployFolderPath, '.pendingTransactions');
       fs.ensureDirSync(deployFolderPath);
       const rawTx = tx.raw;
       const decoded = tx.raw
@@ -389,15 +347,10 @@ export class DeploymentsManager {
             s: tx.s,
             v: tx.v,
             // creates: tx.creates, // TODO test
-            chainId: tx.chainId
+            chainId: tx.chainId,
           };
-      this.db.pendingTransactions[tx.hash] = name
-        ? { name, deployment, rawTx, decoded }
-        : { rawTx, decoded };
-      fs.writeFileSync(
-        pendingTxPath,
-        JSON.stringify(this.db.pendingTransactions, null, "  ")
-      );
+      this.db.pendingTransactions[tx.hash] = name ? {name, deployment, rawTx, decoded} : {rawTx, decoded};
+      fs.writeFileSync(pendingTxPath, JSON.stringify(this.db.pendingTransactions, null, '  '));
       // await new Promise(r => setTimeout(r, 20000));
       const wait = tx.wait.bind(tx);
       tx.wait = async () => {
@@ -407,10 +360,7 @@ export class DeploymentsManager {
         if (Object.keys(this.db.pendingTransactions).length === 0) {
           fs.removeSync(pendingTxPath);
         } else {
-          fs.writeFileSync(
-            pendingTxPath,
-            JSON.stringify(this.db.pendingTransactions, null, "  ")
-          );
+          fs.writeFileSync(pendingTxPath, JSON.stringify(this.db.pendingTransactions, null, '  '));
         }
         return receipt;
       };
@@ -418,7 +368,7 @@ export class DeploymentsManager {
     return tx;
   }
 
-  public async getNamedAccounts(): Promise<{ [name: string]: string }> {
+  public async getNamedAccounts(): Promise<{[name: string]: string}> {
     await this.setupAccounts();
     return this.db.namedAccounts;
   }
@@ -428,9 +378,7 @@ export class DeploymentsManager {
     return this.db.unnamedAccounts;
   }
 
-  public async loadDeployments(
-    chainIdExpected: boolean = true
-  ): Promise<{ [name: string]: Deployment }> {
+  public async loadDeployments(chainIdExpected = true): Promise<{[name: string]: Deployment}> {
     const networkName = this.env.network.name;
 
     let chainId: string | undefined;
@@ -440,13 +388,9 @@ export class DeploymentsManager {
 
     let migrations = {};
     try {
-      log("loading migrations");
+      log('loading migrations');
       migrations = JSON.parse(
-        fs
-          .readFileSync(
-            path.join(this.deploymentsPath, networkName, ".migrations.json")
-          )
-          .toString()
+        fs.readFileSync(path.join(this.deploymentsPath, networkName, '.migrations.json')).toString()
       );
     } catch (e) {}
     this.db.migrations = migrations;
@@ -458,7 +402,7 @@ export class DeploymentsManager {
       this.env.config.external.deployments[networkName];
     if (extraDeploymentPaths) {
       for (const deploymentFolderPath of extraDeploymentPaths) {
-        addDeployments(this.db, deploymentFolderPath, "", undefined, chainId);
+        addDeployments(this.db, deploymentFolderPath, '', undefined, chainId);
       }
     }
 
@@ -467,47 +411,30 @@ export class DeploymentsManager {
   }
 
   public async deletePreviousDeployments(): Promise<void> {
-    const chainId = await getChainId(this.env);
     const folderPath = this.env.network.name;
     try {
-      fs.removeSync(
-        path.join(this.deploymentsPath, folderPath, ".migrations.json")
-      );
+      fs.removeSync(path.join(this.deploymentsPath, folderPath, '.migrations.json'));
     } catch (e) {}
     deleteDeployments(this.deploymentsPath, folderPath);
   }
 
-  public async getSolcInputPath() {
-    const chainId = await getChainId(this.env);
-    return path.join(this.deploymentsPath, this.env.network.name, "solcInputs");
+  public getSolcInputPath(): string {
+    return path.join(this.deploymentsPath, this.env.network.name, 'solcInputs');
   }
 
-  public async saveDeployment(
-    name: string,
-    deployment: DeploymentSubmission
-  ): Promise<boolean> {
-    if (
-      typeof deployment.address === undefined &&
-      !deployment.receipt?.contractAddress
-    ) {
-      throw new Error(
-        "deployment need a receipt with contractAddress or an address"
-      );
+  public async saveDeployment(name: string, deployment: DeploymentSubmission): Promise<boolean> {
+    if (typeof deployment.address === undefined && !deployment.receipt?.contractAddress) {
+      throw new Error('deployment need a receipt with contractAddress or an address');
     }
     if (typeof deployment.abi === undefined) {
-      throw new Error("deployment need an ABI");
+      throw new Error('deployment need an ABI');
     }
 
     const chainId = await getChainId(this.env);
 
-    const toSave =
-      this.db.writeDeploymentsToFiles && this.env.network.saveDeployments;
+    const toSave = this.db.writeDeploymentsToFiles && this.env.network.saveDeployments;
 
-    const filepath = path.join(
-      this.deploymentsPath,
-      this.env.network.name,
-      name + ".json"
-    );
+    const filepath = path.join(this.deploymentsPath, this.env.network.name, name + '.json');
 
     // handle ethers receipt :
     const receipt = deployment.receipt;
@@ -528,18 +455,17 @@ export class DeploymentsManager {
           events: receipt.events,
           blockNumber: receipt.blockNumber,
           cumulativeGasUsed:
-            receipt.cumulativeGasUsed &&
-            (receipt.cumulativeGasUsed as BigNumber)._isBigNumber
+            receipt.cumulativeGasUsed && (receipt.cumulativeGasUsed as BigNumber)._isBigNumber
               ? receipt.cumulativeGasUsed.toString()
               : receipt.cumulativeGasUsed,
           status: receipt.status,
-          byzantium: receipt.byzantium
+          byzantium: receipt.byzantium,
         }
       : undefined;
 
     // from : https://stackoverflow.com/a/14810722/1663971
     function objectMap(object: any, mapFn: (obj: any) => any) {
-      return Object.keys(object).reduce(function(result: any, key) {
+      return Object.keys(object).reduce(function (result: any, key) {
         result[key] = mapFn(object[key]);
         return result;
       }, {});
@@ -553,7 +479,7 @@ export class DeploymentsManager {
       if (Array.isArray(v)) {
         return v.map(transform);
       }
-      if (typeof v === "object") {
+      if (typeof v === 'object') {
         return objectMap(v, transform);
       }
       return v;
@@ -565,8 +491,7 @@ export class DeploymentsManager {
       JSON.stringify({
         address: deployment.address || actualReceipt?.contractAddress,
         abi: deployment.abi,
-        transactionHash:
-          deployment.transactionHash || actualReceipt?.transactionHash,
+        transactionHash: deployment.transactionHash || actualReceipt?.transactionHash,
         receipt: actualReceipt,
         args: actualArgs,
         linkedData: deployment.linkedData,
@@ -583,26 +508,22 @@ export class DeploymentsManager {
         userdoc: deployment.userdoc,
         storageLayout: deployment.storageLayout,
         methodIdentifiers: deployment.methodIdentifiers,
-        gasEstimates: deployment.gasEstimates
+        gasEstimates: deployment.gasEstimates,
       })
     );
     this.db.deployments[name] = obj;
     if (obj.address === undefined && obj.transactionHash !== undefined) {
       let receiptFetched;
       try {
-        receiptFetched = await waitForTx(
-          this.env.network.provider,
-          obj.transactionHash,
-          true
-        );
+        receiptFetched = await waitForTx(this.env.network.provider, obj.transactionHash, true);
         obj.address = receiptFetched.contractAddress;
         if (!obj.address) {
-          throw new Error("no contractAddress in receipt");
+          throw new Error('no contractAddress in receipt');
         }
       } catch (e) {
         console.error(e);
         if (toSave) {
-          console.log("deleting " + filepath);
+          console.log('deleting ' + filepath);
           fs.unlinkSync(filepath);
         }
         delete this.db.deployments[name];
@@ -617,30 +538,20 @@ export class DeploymentsManager {
       try {
         fs.mkdirSync(this.deploymentsPath);
       } catch (e) {}
-      const deployFolderpath = path.join(
-        this.deploymentsPath,
-        this.env.network.name
-      );
+      const deployFolderpath = path.join(this.deploymentsPath, this.env.network.name);
       try {
         fs.mkdirSync(deployFolderpath);
       } catch (e) {}
-      const chainIdFilepath = path.join(deployFolderpath, ".chainId");
+      const chainIdFilepath = path.join(deployFolderpath, '.chainId');
       if (!fs.existsSync(chainIdFilepath)) {
         fs.writeFileSync(chainIdFilepath, chainId);
       }
 
-      fs.writeFileSync(filepath, JSON.stringify(obj, null, "  "));
+      fs.writeFileSync(filepath, JSON.stringify(obj, null, '  '));
 
       if (deployment.solcInputHash) {
-        const solcInputsFolderpath = path.join(
-          this.deploymentsPath,
-          this.env.network.name,
-          "solcInputs"
-        );
-        const solcInputFilepath = path.join(
-          solcInputsFolderpath,
-          deployment.solcInputHash + ".json"
-        );
+        const solcInputsFolderpath = path.join(this.deploymentsPath, this.env.network.name, 'solcInputs');
+        const solcInputFilepath = path.join(solcInputsFolderpath, deployment.solcInputHash + '.json');
         if (!fs.existsSync(solcInputFilepath)) {
           try {
             fs.mkdirSync(solcInputsFolderpath);
@@ -671,11 +582,10 @@ export class DeploymentsManager {
       resetMemory: true,
       deletePreviousDeployments: false,
       writeDeploymentsToFiles: true,
-      savePendingTx: false
+      savePendingTx: false,
     }
-  ): Promise<{ [name: string]: Deployment }> {
-    log("runDeploy");
-    const chainId = await getChainId(this.env);
+  ): Promise<{[name: string]: Deployment}> {
+    log('runDeploy');
 
     if (this.env.config.external?.deploy) {
       for (const deployScriptsPath of this.env.config.external.deploy) {
@@ -689,12 +599,12 @@ export class DeploymentsManager {
     this.db.logEnabled = options.log;
     this.db.gasPrice = options.gasPrice;
     if (options.resetMemory) {
-      log("reseting memory");
+      log('reseting memory');
       this.db.deployments = {};
       this.db.migrations = {};
     }
     if (options.deletePreviousDeployments) {
-      log("deleting previous deployments");
+      log('deleting previous deployments');
       this.db.deployments = {};
       this.db.migrations = {};
       await this.deletePreviousDeployments();
@@ -703,11 +613,11 @@ export class DeploymentsManager {
         await this.dealWithPendingTransactions(); // TODO deal with reset ?
       }
     }
-    if (tags !== undefined && typeof tags === "string") {
+    if (tags !== undefined && typeof tags === 'string') {
       tags = [tags];
     }
     const deployPath = this.env.config.paths.deploy;
-    
+
     await this.executeDeployScripts(deployPath, tags);
 
     await this.export(options);
@@ -715,21 +625,18 @@ export class DeploymentsManager {
     return this.db.deployments;
   }
 
-  public async executeDeployScripts(deployScriptsPath: string, tags?: string[]) {
+  public async executeDeployScripts(deployScriptsPath: string, tags?: string[]): Promise<void> {
     const deploymentFolderPath = this.env.network.name;
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
-    
+
     let filesStats;
     try {
       filesStats = traverse(deployScriptsPath);
     } catch (e) {
-      // console.log('no folder at ' + deployPath);
-      return {};
+      return;
     }
-    filesStats = filesStats.filter(v => !v.directory);
-    let fileNames = filesStats.map(
-      (a: { relativePath: string }) => a.relativePath
-    );
+    filesStats = filesStats.filter((v) => !v.directory);
+    let fileNames = filesStats.map((a: {relativePath: string}) => a.relativePath);
     fileNames = fileNames.sort((a: string, b: string) => {
       if (a < b) {
         return -1;
@@ -739,10 +646,10 @@ export class DeploymentsManager {
       }
       return 0;
     });
-    log("deploy script folder parsed");
+    log('deploy script folder parsed');
 
-    const funcByFilePath: { [filename: string]: DeployFunction } = {};
-    const scriptPathBags: { [tag: string]: string[] } = {};
+    const funcByFilePath: {[filename: string]: DeployFunction} = {};
+    const scriptPathBags: {[tag: string]: string[]} = {};
     const scriptFilePaths: string[] = [];
     for (const filename of fileNames) {
       const scriptFilePath = path.join(deployScriptsPath, filename);
@@ -757,17 +664,12 @@ export class DeploymentsManager {
         funcByFilePath[scriptFilePath] = deployFunc;
       } catch (e) {
         // console.error("require failed", e);
-        throw new Error(
-          "ERROR processing skip func of " +
-            scriptFilePath +
-            ":\n" +
-            (e.stack || e)
-        );
+        throw new Error('ERROR processing skip func of ' + scriptFilePath + ':\n' + (e.stack || e));
       }
       // console.log("get tags if any for " + scriptFilePath);
       let scriptTags = deployFunc.tags;
       if (scriptTags !== undefined) {
-        if (typeof scriptTags === "string") {
+        if (typeof scriptTags === 'string') {
           scriptTags = [scriptTags];
         }
         for (const tag of scriptTags) {
@@ -797,10 +699,10 @@ export class DeploymentsManager {
         scriptFilePaths.push(scriptFilePath);
       }
     }
-    log("tag collected");
+    log('tag collected');
 
     // console.log({ scriptFilePaths });
-    const scriptsRegisteredToRun: { [filename: string]: boolean } = {};
+    const scriptsRegisteredToRun: {[filename: string]: boolean} = {};
     const scriptsToRun: Array<{
       func: DeployFunction;
       filePath: string;
@@ -828,12 +730,12 @@ export class DeploymentsManager {
         if (deployFunc.runAtTheEnd) {
           scriptsToRunAtTheEnd.push({
             filePath: scriptFilePath,
-            func: deployFunc
+            func: deployFunc,
           });
         } else {
           scriptsToRun.push({
             filePath: scriptFilePath,
-            func: deployFunc
+            func: deployFunc,
           });
         }
         scriptsRegisteredToRun[scriptFilePath] = true;
@@ -842,15 +744,13 @@ export class DeploymentsManager {
     for (const scriptFilePath of scriptFilePaths) {
       recurseDependencies(scriptFilePath);
     }
-    log("dependencies collected");
+    log('dependencies collected');
 
     try {
       for (const deployScript of scriptsToRun.concat(scriptsToRunAtTheEnd)) {
         const filename = path.basename(deployScript.filePath);
         if (deployScript.func.id && this.db.migrations[deployScript.func.id]) {
-          log(
-            `skipping ${filename} as migrations already executed and complete`
-          );
+          log(`skipping ${filename} as migrations already executed and complete`);
           continue;
         }
         let skip = false;
@@ -860,12 +760,7 @@ export class DeploymentsManager {
             skip = await deployScript.func.skip(this.env);
           } catch (e) {
             // console.error("skip failed", e);
-            throw new Error(
-              "ERROR processing skip func of " +
-                deployScript.filePath +
-                ":\n" +
-                (e.stack || e)
-            );
+            throw new Error('ERROR processing skip func of ' + deployScript.filePath + ':\n' + (e.stack || e));
           }
           log(`checking skip for ${deployScript.filePath} complete`);
         }
@@ -876,43 +771,28 @@ export class DeploymentsManager {
             result = await deployScript.func(this.env);
           } catch (e) {
             // console.error("execution failed", e);
-            throw new Error(
-              "ERROR processing " +
-                deployScript.filePath +
-                ":\n" +
-                (e.stack || e)
-            );
+            throw new Error('ERROR processing ' + deployScript.filePath + ':\n' + (e.stack || e));
           }
           log(`executing ${deployScript.filePath} complete`);
-          if (result && typeof result === "boolean") {
+          if (result && typeof result === 'boolean') {
             if (!deployScript.func.id) {
               throw new Error(
                 `${deployScript.filePath} return true to not be eecuted again, but does not provide an id. the script function need to have the field "id" to be set`
               );
             }
-            this.db.migrations[deployScript.func.id] = Math.floor(
-              Date.now() / 1000
-            );
+            this.db.migrations[deployScript.func.id] = Math.floor(Date.now() / 1000);
             // TODO refactor to extract this whole path and folder existence stuff
-            const toSave =
-              this.db.writeDeploymentsToFiles &&
-              this.env.network.saveDeployments;
+            const toSave = this.db.writeDeploymentsToFiles && this.env.network.saveDeployments;
             if (toSave) {
               try {
                 fs.mkdirSync(this.deploymentsPath);
               } catch (e) {}
               try {
-                fs.mkdirSync(
-                  path.join(this.deploymentsPath, deploymentFolderPath)
-                );
+                fs.mkdirSync(path.join(this.deploymentsPath, deploymentFolderPath));
               } catch (e) {}
               fs.writeFileSync(
-                path.join(
-                  this.deploymentsPath,
-                  deploymentFolderPath,
-                  ".migrations.json"
-                ),
-                JSON.stringify(this.db.migrations, null, "  ")
+                path.join(this.deploymentsPath, deploymentFolderPath, '.migrations.json'),
+                JSON.stringify(this.db.migrations, null, '  ')
               );
             }
           }
@@ -923,27 +803,20 @@ export class DeploymentsManager {
       throw e;
     }
     this.db.writeDeploymentsToFiles = wasWrittingToFiles;
-    log("deploy scripts complete");
+    log('deploy scripts complete');
   }
 
-  public async export(options: {
-    exportAll?: string;
-    export?: string;
-  }): Promise<void> {
+  public async export(options: {exportAll?: string; export?: string}): Promise<void> {
     let chainId: string | undefined;
     try {
-      chainId = fs
-        .readFileSync(
-          path.join(this.deploymentsPath, this.env.network.name, ".chainId")
-        )
-        .toString();
+      chainId = fs.readFileSync(path.join(this.deploymentsPath, this.env.network.name, '.chainId')).toString();
     } catch (e) {}
     if (!chainId) {
       chainId = await getChainId(this.env);
     }
 
     if (options.exportAll !== undefined) {
-      log("load all deployments for export-all");
+      log('load all deployments for export-all');
       const all = loadAllDeployments(
         this.env,
         this.deploymentsPath,
@@ -963,7 +836,7 @@ export class DeploymentsManager {
         currentNetworkDeployments[contractName] = {
           address: deployment.address,
           abi: deployment.abi,
-          linkedData: deployment.linkedData
+          linkedData: deployment.linkedData,
         };
       }
       if (all[chainId] === undefined) {
@@ -975,14 +848,14 @@ export class DeploymentsManager {
       all[chainId][this.env.network.name] = {
         name: this.env.network.name,
         chainId,
-        contracts: currentNetworkDeployments
+        contracts: currentNetworkDeployments,
       };
-      fs.writeFileSync(options.exportAll, JSON.stringify(all, null, "  ")); // TODO remove bytecode ?
-      log("export-all complete");
+      fs.writeFileSync(options.exportAll, JSON.stringify(all, null, '  ')); // TODO remove bytecode ?
+      log('export-all complete');
     }
 
     if (options.export !== undefined) {
-      log("single export...");
+      log('single export...');
       const currentNetworkDeployments: {
         [contractName: string]: {
           address: string;
@@ -997,38 +870,30 @@ export class DeploymentsManager {
           currentNetworkDeployments[contractName] = {
             address: deployment.address,
             abi: deployment.abi,
-            linkedData: deployment.linkedData
+            linkedData: deployment.linkedData,
           };
         }
       } else {
-        throw new Error("chainId is undefined");
+        throw new Error('chainId is undefined');
       }
       const singleExport: Export = {
         name: this.env.network.name,
         chainId,
-        contracts: currentNetworkDeployments
+        contracts: currentNetworkDeployments,
       };
-      fs.writeFileSync(
-        options.export,
-        JSON.stringify(singleExport, null, "  ")
-      ); // TODO remove bytecode ?
-      log("single export complete");
+      fs.writeFileSync(options.export, JSON.stringify(singleExport, null, '  ')); // TODO remove bytecode ?
+      log('single export complete');
     }
   }
 
   private getImportPaths() {
     let importPaths = [this.env.config.paths.imports];
-    const externalImports =
-      this.env.config.external && this.env.config.external.artifacts;
+    const externalImports = this.env.config.external && this.env.config.external.artifacts;
     if (externalImports) {
-      if (typeof externalImports === "string") {
-        importPaths.push(
-          path.join(this.env.config.paths.root, externalImports)
-        );
+      if (typeof externalImports === 'string') {
+        importPaths.push(path.join(this.env.config.paths.root, externalImports));
       } else {
-        importPaths = importPaths.concat(
-          externalImports.map(v => path.join(this.env.config.paths.root, v))
-        );
+        importPaths = importPaths.concat(externalImports.map((v) => path.join(this.env.config.paths.root, v)));
       }
     }
     return importPaths;
@@ -1039,7 +904,7 @@ export class DeploymentsManager {
       if (process.env.HARDHAT_DEPLOY_FIXTURE) {
         if (!process.env.HARDHAT_DEPLOY_NO_COMPILE) {
           // console.log("compiling...");
-          await this.env.run("compile");
+          await this.env.run('compile');
         }
         this.db.deploymentsLoaded = true;
         // console.log("running global fixture....");
@@ -1047,7 +912,7 @@ export class DeploymentsManager {
       } else {
         if (process.env.HARDHAT_DEPLOY_COMPILE) {
           // console.log("compiling...");
-          await this.env.run("compile");
+          await this.env.run('compile');
         }
         await this.loadDeployments();
       }
@@ -1055,20 +920,16 @@ export class DeploymentsManager {
   }
 
   private async saveSnapshot(key: string, data?: any) {
-    const snapshot = await this.env.network.provider.send("evm_snapshot", []);
+    const snapshot = await this.env.network.provider.send('evm_snapshot', []);
     this.db.pastFixtures[key] = {
       index: ++this.db.snapshotCounter,
       snapshot,
       data,
-      deployments: { ...this.db.deployments }
+      deployments: {...this.db.deployments},
     };
   }
 
-  private async revertSnapshot(saved: {
-    index: number;
-    snapshot: any;
-    deployments: any;
-  }) {
+  private async revertSnapshot(saved: {index: number; snapshot: any; deployments: any}) {
     const snapshotToRevertIndex = saved.index;
     for (const fixtureKey of Object.keys(this.db.pastFixtures)) {
       const snapshotIndex = this.db.pastFixtures[fixtureKey].index;
@@ -1076,30 +937,26 @@ export class DeploymentsManager {
         delete this.db.pastFixtures[fixtureKey];
       }
     }
-    await this.env.network.provider.send("evm_revert", [saved.snapshot]);
-    saved.snapshot = await this.env.network.provider.send("evm_snapshot", []); // it is necessary to re-snapshot it
-    this.db.deployments = { ...saved.deployments };
+    await this.env.network.provider.send('evm_revert', [saved.snapshot]);
+    saved.snapshot = await this.env.network.provider.send('evm_snapshot', []); // it is necessary to re-snapshot it
+    this.db.deployments = {...saved.deployments};
   }
 
   private async setupAccounts(): Promise<{
-    namedAccounts: { [name: string]: string };
+    namedAccounts: {[name: string]: string};
     unnamedAccounts: string[];
   }> {
     if (!this.db.accountsLoaded) {
       const chainId = await getChainId(this.env);
-      const accounts = await this.env.network.provider.send("eth_accounts");
-      const { namedAccounts, unnamedAccounts } = processNamedAccounts(
-        this.env,
-        accounts,
-        chainId
-      );
+      const accounts = await this.env.network.provider.send('eth_accounts');
+      const {namedAccounts, unnamedAccounts} = processNamedAccounts(this.env, accounts, chainId);
       this.db.namedAccounts = namedAccounts;
       this.db.unnamedAccounts = unnamedAccounts;
       this.db.accountsLoaded = true;
     }
     return {
       namedAccounts: this.db.namedAccounts,
-      unnamedAccounts: this.db.unnamedAccounts
+      unnamedAccounts: this.db.unnamedAccounts,
     };
   }
 }

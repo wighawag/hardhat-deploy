@@ -1,15 +1,13 @@
-import "hardhat/types/runtime";
-import "hardhat/types/config";
-import type { BigNumber } from "@ethersproject/bignumber";
-import { ExtendedArtifact } from "./types";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import 'hardhat/types/runtime';
+import 'hardhat/types/config';
+import type {BigNumber} from '@ethersproject/bignumber';
+import {ExtendedArtifact} from './types';
 
-declare module "hardhat/types/config" {
+declare module 'hardhat/types/config' {
   export interface HardhatUserConfig {
     namedAccounts?: {
-      [name: string]:
-        | string
-        | number
-        | { [network: string]: null | number | string };
+      [name: string]: string | number | {[network: string]: null | number | string};
     };
     external?: {
       deployments?: {
@@ -22,10 +20,7 @@ declare module "hardhat/types/config" {
 
   export interface HardhatConfig {
     namedAccounts: {
-      [name: string]:
-        | string
-        | number
-        | { [network: string]: null | number | string };
+      [name: string]: string | number | {[network: string]: null | number | string};
     };
     external?: {
       deployments?: {
@@ -73,7 +68,7 @@ declare module "hardhat/types/config" {
   }
 }
 
-declare module "hardhat/types/runtime" {
+declare module 'hardhat/types/runtime' {
   export interface HardhatRuntimeEnvironment {
     deployments: DeploymentsExtension;
     getNamedAccounts: () => Promise<{
@@ -108,6 +103,7 @@ declare module "hardhat/types/runtime" {
 
   export type Address = string;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   export type ABI = any[]; // TODO abi
 
   export type Log = {
@@ -228,13 +224,7 @@ declare module "hardhat/types/runtime" {
     newlyDeployed: boolean;
   }
 
-  export type Json =
-    | null
-    | boolean
-    | number
-    | string
-    | Json[]
-    | { [prop: string]: Json };
+  export type Json = null | boolean | number | string | Json[] | {[prop: string]: Json};
 
   // from https://github.com/Microsoft/TypeScript/issues/1897#issuecomment-580962081
   type JsonCompatible<T> = {
@@ -247,10 +237,7 @@ declare module "hardhat/types/runtime" {
       : JsonCompatible<T[P]>;
   };
 
-  export type FixtureFunc = (
-    env: HardhatRuntimeEnvironment,
-    options?: Json
-  ) => Promise<any>;
+  export type FixtureFunc = (env: HardhatRuntimeEnvironment, options?: Json) => Promise<any>;
 
   export interface DeploymentsExtension {
     deploy(name: string, options: DeployOptions): Promise<DeployResult>;
@@ -264,15 +251,12 @@ declare module "hardhat/types/runtime" {
       address: Address;
       deploy(): Promise<DeployResult>;
     }>;
-    fetchIfDifferent(
-      name: string,
-      options: DeployOptions
-    ): Promise<{ differences: boolean; address?: string }>;
+    fetchIfDifferent(name: string, options: DeployOptions): Promise<{differences: boolean; address?: string}>;
     save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;
     getOrNull(name: string): Promise<Deployment | null>;
     getDeploymentsFromAddress(address: string): Promise<Deployment[]>;
-    all(): Promise<{ [name: string]: Deployment }>;
+    all(): Promise<{[name: string]: Deployment}>;
     getArtifact(name: string): Promise<ExtendedArtifact>;
     run(
       tags?: string | string[],
@@ -283,30 +267,15 @@ declare module "hardhat/types/runtime" {
         export?: string;
         exportAll?: string;
       }
-    ): Promise<{ [name: string]: Deployment }>;
-    fixture(
-      tags?: string | string[],
-      options?: { fallbackToGlobal: boolean }
-    ): Promise<{ [name: string]: Deployment }>;
+    ): Promise<{[name: string]: Deployment}>;
+    fixture(tags?: string | string[], options?: {fallbackToGlobal: boolean}): Promise<{[name: string]: Deployment}>;
     createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
     log(...args: any[]): void;
 
-    execute(
-      name: string,
-      options: TxOptions,
-      methodName: string,
-      ...args: any[]
-    ): Promise<Receipt>;
+    execute(name: string, options: TxOptions, methodName: string, ...args: any[]): Promise<Receipt>;
     rawTx(tx: SimpleTx): Promise<Receipt>;
-    catchUnknownSigner(
-      action: Promise<any> | (() => Promise<any>)
-    ): Promise<void>;
-    read(
-      name: string,
-      options: CallOptions,
-      methodName: string,
-      ...args: any[]
-    ): Promise<any>;
+    catchUnknownSigner(action: Promise<any> | (() => Promise<any>)): Promise<void>;
+    read(name: string, options: CallOptions, methodName: string, ...args: any[]): Promise<any>;
     read(name: string, methodName: string, ...args: any[]): Promise<any>;
     // rawCall(to: Address, data: string): Promise<any>; // TODO ?
   }
@@ -320,14 +289,14 @@ declare module "hardhat/types/runtime" {
   export interface Export {
     chainId: string;
     name: string;
-    contracts: { [name: string]: ContractExport };
+    contracts: {[name: string]: ContractExport};
   }
 
   export type MultiExport = {
-    [chainId: string]: { [name: string]: Export };
+    [chainId: string]: {[name: string]: Export};
   };
 
-  export type Libraries = { [libraryName: string]: Address };
+  export type Libraries = {[libraryName: string]: Address};
 
   export interface FacetCut {
     facetAddress: string;

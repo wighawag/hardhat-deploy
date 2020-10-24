@@ -17,10 +17,7 @@ contract TransparentProxy is Proxy {
 
     // ///////////////////// EXTERNAL ///////////////////////////////////////////////////////////////////////////
 
-    function changeImplementation(
-        address newImplementation,
-        bytes calldata data
-    ) external ifAdmin {
+    function changeImplementation(address newImplementation, bytes calldata data) external ifAdmin {
         _setImplementation(newImplementation, data);
     }
 
@@ -33,9 +30,7 @@ contract TransparentProxy is Proxy {
         uint256 disabled;
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
-            disabled := sload(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6102
-            )
+            disabled := sload(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6102)
         }
         require(disabled == 0, "changeAdmin has been disabled");
 
@@ -69,19 +64,14 @@ contract TransparentProxy is Proxy {
     function _admin() internal view returns (address adminAddress) {
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
-            adminAddress := sload(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
-            )
+            adminAddress := sload(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103)
         }
     }
 
     function _setAdmin(address newAdmin) internal {
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
-            sstore(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103,
-                newAdmin
-            )
+            sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, newAdmin)
         }
     }
 }

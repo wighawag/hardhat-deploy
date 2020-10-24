@@ -1,15 +1,23 @@
 {
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "[solidity]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "solidity.linter": "solhint",
+  "solidity.enableLocalNodeCompiler": false,
+  "solidity.compileUsingRemoteVersion": "0.7.1+commit.f4a555b.Emscripten.clang",
+  "solidity.packageDefaultDependenciesContractsDirectory": "src",
+  "solidity.packageDefaultDependenciesDirectory": "node_modules",
+  "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
-    },
-    "[json]": {
-        "editor.formatOnSave": false,
-        "editor.codeActionsOnSave": {}
-    },
-    "solidity.linter": "solhint",
-    "solidity.enableLocalNodeCompiler": false,
-    "solidity.compileUsingLocalVersion": "./cache/compilers/soljson-v0.6.5+commit.f956cc89.js",
-    "solidity.packageDefaultDependenciesContractsDirectory": "solc_0.7",
-    "solidity.packageDefaultDependenciesDirectory": "node_modules"
+  },
+  "[json]": {
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {}
+  },
+  "mochaExplorer.env": {
+    "HARDHAT_CONFIG": "hardhat.config.ts"
+  },
+  "mochaExplorer.require": ["ts-node/register/transpile-only"]
 }

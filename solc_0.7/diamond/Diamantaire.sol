@@ -14,10 +14,7 @@ contract Diamantaire {
         bytes calldata data,
         bytes32 salt
     ) external payable returns (Diamond diamond) {
-        if (
-            salt !=
-            0x0000000000000000000000000000000000000000000000000000000000000000
-        ) {
+        if (salt != 0x0000000000000000000000000000000000000000000000000000000000000000) {
             salt = keccak256(abi.encodePacked(salt, owner));
             diamond = new Diamond{value: msg.value, salt: salt}(address(this));
         } else {
@@ -25,11 +22,7 @@ contract Diamantaire {
         }
         emit DiamondCreated(diamond);
 
-        IDiamondCut(address(diamond)).diamondCut(
-            _diamondCut,
-            data.length > 0 ? address(diamond) : address(0),
-            data
-        );
+        IDiamondCut(address(diamond)).diamondCut(_diamondCut, data.length > 0 ? address(diamond) : address(0), data);
         IERC173(address(diamond)).transferOwnership(owner);
     }
 }

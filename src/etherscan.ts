@@ -1,11 +1,12 @@
-import fs from "fs";
-import axios from "axios";
-import qs from "qs";
-import path from "path";
-import { defaultAbiCoder, ParamType } from "@ethersproject/abi";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import chalk from "chalk";
-import matchAll from "match-all";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from 'fs';
+import axios from 'axios';
+import qs from 'qs';
+import path from 'path';
+import {defaultAbiCoder, ParamType} from '@ethersproject/abi';
+import {HardhatRuntimeEnvironment} from 'hardhat/types';
+import chalk from 'chalk';
+import matchAll from 'match-all';
 
 function log(...args: any[]) {
   console.log(...args);
@@ -34,7 +35,7 @@ function extractOneLicenseFromSourceFile(source: string): string | undefined {
 function extractLicenseFromSources(metadata: string): string[] {
   const regex = /\/\/ SPDX-License-Identifier: (.*?)[\s\\]/g;
   const matches = matchAll(metadata, regex).toArray();
-  const licensesFound: { [license: string]: boolean } = {};
+  const licensesFound: {[license: string]: boolean} = {};
   const licenses = [];
   if (matches) {
     for (const match of matches) {
@@ -49,43 +50,43 @@ function extractLicenseFromSources(metadata: string): string[] {
 
 function getLicenseType(license: string): undefined | number {
   const licenseType = (() => {
-    if (license === "None") {
+    if (license === 'None') {
       return 1;
     }
-    if (license === "UNLICENSED") {
+    if (license === 'UNLICENSED') {
       return 2;
     }
-    if (license === "MIT") {
+    if (license === 'MIT') {
       return 3;
     }
-    if (license === "GPL-2.0") {
+    if (license === 'GPL-2.0') {
       return 4;
     }
-    if (license === "GPL-3.0") {
+    if (license === 'GPL-3.0') {
       return 5;
     }
-    if (license === "LGPL-2.1") {
+    if (license === 'LGPL-2.1') {
       return 6;
     }
-    if (license === "LGPL-3.0") {
+    if (license === 'LGPL-3.0') {
       return 7;
     }
-    if (license === "BSD-2-Clause") {
+    if (license === 'BSD-2-Clause') {
       return 8;
     }
-    if (license === "BSD-3-Clause") {
+    if (license === 'BSD-3-Clause') {
       return 9;
     }
-    if (license === "MPL-2.0") {
+    if (license === 'MPL-2.0') {
       return 10;
     }
-    if (license === "OSL-3.0") {
+    if (license === 'OSL-3.0') {
       return 11;
     }
-    if (license === "Apache-2.0") {
+    if (license === 'Apache-2.0') {
       return 12;
     }
-    if (license === "AGPL-3.0") {
+    if (license === 'AGPL-3.0') {
       return 13;
     }
   })();
@@ -101,7 +102,7 @@ export async function submitSources(
     fallbackOnSolcInput?: boolean;
     forceLicense?: boolean;
   }
-) {
+): Promise<void> {
   config = config || {};
   const fallbackOnSolcInput = config.fallbackOnSolcInput;
   const licenseOption = config.license;
@@ -111,20 +112,20 @@ export async function submitSources(
   const all = await hre.deployments.all();
   let host: string;
   switch (chainId) {
-    case "1":
-      host = "https://api.etherscan.io";
+    case '1':
+      host = 'https://api.etherscan.io';
       break;
-    case "3":
-      host = "https://api-ropsten.etherscan.io";
+    case '3':
+      host = 'https://api-ropsten.etherscan.io';
       break;
-    case "4":
-      host = "https://api-rinkeby.etherscan.io";
+    case '4':
+      host = 'https://api-rinkeby.etherscan.io';
       break;
-    case "5":
-      host = "https://api-goerli.etherscan.io";
+    case '5':
+      host = 'https://api-goerli.etherscan.io';
       break;
-    case "42":
-      host = "https://api-kovan.etherscan.io";
+    case '42':
+      host = 'https://api-kovan.etherscan.io';
       break;
     default:
       return logError(`Network with chainId: ${chainId} not supported`);
@@ -132,13 +133,13 @@ export async function submitSources(
 
   async function submit(name: string, useSolcInput?: boolean) {
     const deployment = all[name];
-    const { address, metadata: metadataString } = deployment;
+    const {address, metadata: metadataString} = deployment;
     const abiResponse = await axios.get(
       `${host}/api?module=contract&action=getabi&address=${address}&apikey=${etherscanApiKey}`
     );
-    const { data: abiData } = abiResponse;
+    const {data: abiData} = abiResponse;
     let contractABI;
-    if (abiData.status !== "0") {
+    if (abiData.status !== '0') {
       try {
         contractABI = JSON.parse(abiData.result);
       } catch (e) {
@@ -146,15 +147,13 @@ export async function submitSources(
         return;
       }
     }
-    if (contractABI && contractABI !== "") {
+    if (contractABI && contractABI !== '') {
       log(`already verified: ${name} (${address}), skipping.`);
       return;
     }
 
     if (!metadataString) {
-      logError(
-        `Contract ${name} was deployed without saving metadata. Cannot submit to etherscan, skipping.`
-      );
+      logError(`Contract ${name} was deployed without saving metadata. Cannot submit to etherscan, skipping.`);
       return;
     }
     const metadata = JSON.parse(metadataString);
@@ -176,9 +175,7 @@ export async function submitSources(
     const contractNamePath = `${contractFilepath}:${contractName}`;
 
     const contractSourceFile = metadata.sources[contractFilepath].content;
-    const sourceLicenseType = extractOneLicenseFromSourceFile(
-      contractSourceFile
-    );
+    const sourceLicenseType = extractOneLicenseFromSourceFile(contractSourceFile);
 
     let license = licenseOption;
     if (!sourceLicenseType) {
@@ -215,36 +212,32 @@ export async function submitSources(
     let solcInput: {
       language: string;
       settings: any;
-      sources: Record<string, { content: string }>;
+      sources: Record<string, {content: string}>;
     };
     if (useSolcInput) {
       const solcInputHash = deployment.solcInputHash;
       let solcInputStringFromDeployment: string | undefined;
       try {
-        solcInputStringFromDeployment = fs
-          .readFileSync(path.join(solcInputsPath, solcInputHash + ".json"))
-          .toString();
+        solcInputStringFromDeployment = fs.readFileSync(path.join(solcInputsPath, solcInputHash + '.json')).toString();
       } catch (e) {}
       if (!solcInputStringFromDeployment) {
-        logError(
-          `Contract ${name} was deployed without saving solcInput. Cannot submit to etherscan, skipping.`
-        );
+        logError(`Contract ${name} was deployed without saving solcInput. Cannot submit to etherscan, skipping.`);
         return;
       }
       solcInput = JSON.parse(solcInputStringFromDeployment);
     } else {
-      const settings = { ...metadata.settings };
+      const settings = {...metadata.settings};
       delete settings.compilationTarget;
       solcInput = {
         language: metadata.language,
         settings,
-        sources: {}
+        sources: {},
       };
       for (const sourcePath of Object.keys(metadata.sources)) {
         const source = metadata.sources[sourcePath];
         // only content as this fails otherwise
         solcInput.sources[sourcePath] = {
-          content: source.content
+          content: source.content,
         };
       }
     }
@@ -257,8 +250,7 @@ export async function submitSources(
         if (!settings.libraries[contractNamePath]) {
           settings.libraries[contractNamePath] = {};
         }
-        settings.libraries[contractNamePath][libraryName] =
-          deployment.libraries[libraryName];
+        settings.libraries[contractNamePath][libraryName] = deployment.libraries[libraryName];
       }
     }
     const solcInputString = JSON.stringify(solcInput);
@@ -267,13 +259,9 @@ export async function submitSources(
 
     let constructorArguements: string | undefined;
     if (deployment.args) {
-      const constructor: { inputs: ParamType[] } = deployment.abi.find(
-        v => v.type === "constructor"
-      );
+      const constructor: {inputs: ParamType[]} = deployment.abi.find((v) => v.type === 'constructor');
       if (constructor) {
-        constructorArguements = defaultAbiCoder
-          .encode(constructor.inputs, deployment.args)
-          .slice(2);
+        constructorArguements = defaultAbiCoder.encode(constructor.inputs, deployment.args).slice(2);
       }
     } else {
       logInfo(`no args found, assuming empty constructor...`);
@@ -283,33 +271,30 @@ export async function submitSources(
       [fieldName: string]: string | number | void | undefined; // TODO type
     } = {
       apikey: etherscanApiKey,
-      module: "contract",
-      action: "verifysourcecode",
+      module: 'contract',
+      action: 'verifysourcecode',
       contractaddress: address,
       sourceCode: solcInputString,
-      codeformat: "solidity-standard-json-input",
+      codeformat: 'solidity-standard-json-input',
       contractname: contractNamePath,
       compilerversion: `v${metadata.compiler.version}`, // see http://etherscan.io/solcversions for list of support versions
       constructorArguements,
-      licenseType
+      licenseType,
     };
 
     const submissionResponse = await axios.request({
       url: `${host}/api`,
-      method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-      data: qs.stringify(postData)
+      method: 'POST',
+      headers: {'content-type': 'application/x-www-form-urlencoded'},
+      data: qs.stringify(postData),
     });
-    const { data: submissionData } = submissionResponse;
+    const {data: submissionData} = submissionResponse;
 
     let guid: string;
-    if (submissionData.status === "1") {
+    if (submissionData.status === '1') {
       guid = submissionData.result;
     } else {
-      logError(
-        `contract ${name} failed to submit : "${submissionData.message}"`,
-        submissionData
-      );
+      logError(`contract ${name} failed to submit : "${submissionData.message}"`, submissionData);
       return;
     }
     if (!guid) {
@@ -319,70 +304,65 @@ export async function submitSources(
 
     async function checkStatus(): Promise<string | undefined> {
       // TODO while loop and delay :
-      const statusResponse = await axios.get(
-        `${host}/api?apikey=${etherscanApiKey}`,
-        {
-          params: {
-            guid,
-            module: "contract",
-            action: "checkverifystatus"
-          }
-        }
-      );
-      const { data: statusData } = statusResponse;
-      if (statusData.status === "1") {
-        return "success";
+      const statusResponse = await axios.get(`${host}/api?apikey=${etherscanApiKey}`, {
+        params: {
+          guid,
+          module: 'contract',
+          action: 'checkverifystatus',
+        },
+      });
+      const {data: statusData} = statusResponse;
+      if (statusData.status === '1') {
+        return 'success';
       }
-      if (statusData.result === "Pending in queue") {
+      if (statusData.result === 'Pending in queue') {
         return undefined;
       }
-      logError(
-        `Failed to verify contract ${name}: ${statusData.message}, ${statusData.result}`
-      );
+      logError(`Failed to verify contract ${name}: ${statusData.message}, ${statusData.result}`);
 
       logError(
         JSON.stringify(
           {
-            apikey: "XXXXXX",
-            module: "contract",
-            action: "verifysourcecode",
+            apikey: 'XXXXXX',
+            module: 'contract',
+            action: 'verifysourcecode',
             contractaddress: address,
-            sourceCode: "...",
-            codeformat: "solidity-standard-json-input",
+            sourceCode: '...',
+            codeformat: 'solidity-standard-json-input',
             contractname: contractNamePath,
             compilerversion: `v${metadata.compiler.version}`, // see http://etherscan.io/solcversions for list of support versions
             constructorArguements,
-            licenseType
+            licenseType,
           },
           null,
-          "  "
+          '  '
         )
       );
       // logError(JSON.stringify(postData, null, "  "));
       // logInfo(postData.sourceCode);
-      return "failure";
+      return 'failure';
     }
 
-    logInfo("waiting for result...");
+    logInfo('waiting for result...');
     let result;
     while (!result) {
-      await new Promise(resolve => setTimeout(resolve, 10 * 1000));
+      await new Promise((resolve) => setTimeout(resolve, 10 * 1000));
       result = await checkStatus();
     }
 
-    if (result === "success") {
+    if (result === 'success') {
       logSuccess(` => contract ${name} is now verified`);
     }
 
-    if (result === "failure") {
+    if (result === 'failure') {
       if (!useSolcInput && fallbackOnSolcInput) {
         logInfo(
-          "Falling back on solcInput. etherscan seems to sometime require full solc-input with all source files, even though this should not be needed. See https://github.com/ethereum/solidity/issues/9573"
+          'Falling back on solcInput. etherscan seems to sometime require full solc-input with all source files, even though this should not be needed. See https://github.com/ethereum/solidity/issues/9573'
         );
         await submit(name, true);
       } else {
         logInfo(
-          "Etherscan sometime fails to verify when only metadata sources are given. See https://github.com/ethereum/solidity/issues/9573. You can add the option --solc-input to try with full solc-input sources. This will include all contract source in the etherscan result, even the one not relevant to the contract being verified"
+          'Etherscan sometime fails to verify when only metadata sources are given. See https://github.com/ethereum/solidity/issues/9573. You can add the option --solc-input to try with full solc-input sources. This will include all contract source in the etherscan result, even the one not relevant to the contract being verified'
         );
       }
     }

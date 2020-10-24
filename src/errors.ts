@@ -1,4 +1,4 @@
-import { BigNumber } from "@ethersproject/bignumber";
+import {BigNumber} from '@ethersproject/bignumber';
 
 export class UnknownSignerError extends Error {
   constructor(
@@ -7,13 +7,11 @@ export class UnknownSignerError extends Error {
       to: string;
       data?: string;
       value?: string | BigNumber;
-      contract?: { name: string; method: string; args: any[] };
+      contract?: {name: string; method: string; args: unknown[]};
     }
   ) {
     super(
-      `Unknown Signer for account: ${
-        data.from
-      } Trying to execute the following::\n ${JSON.stringify(data, null, "  ")}`
+      `Unknown Signer for account: ${data.from} Trying to execute the following::\n ${JSON.stringify(data, null, '  ')}`
     );
     Error.captureStackTrace(this, UnknownSignerError);
   }

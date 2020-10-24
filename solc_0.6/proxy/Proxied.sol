@@ -27,9 +27,7 @@ abstract contract Proxied {
     function _admin() internal view returns (address adminAddress) {
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
-            adminAddress := sload(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
-            )
+            adminAddress := sload(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103)
         }
     }
 }
