@@ -78,8 +78,8 @@
     "lint:fix": "prettier --write solc*/**/*.sol && prettier --write src/**/*.{js,ts} test/**/*.{js,ts} && eslint --fix .",
     "lint": "prettier --check solc*/**/*.sol && prettier --check src/**/*.{js,ts} test/**/*.{js,ts} && eslint .",
     "test": "mocha --timeout 20000 --exit",
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "hardhat compile && tsc",
+    "watch": "hardhat compile && tsc -w",
     "publish:next": "npm publish --tag next",
     "publish:release": "npm publish",
     "prepublishOnly": "npm run build"

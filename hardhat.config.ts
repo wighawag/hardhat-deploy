@@ -1,13 +1,16 @@
 import {HardhatUserConfig, internalTask} from 'hardhat/config';
 import {TASK_COMPILE_SOLIDITY_GET_COMPILER_INPUT} from 'hardhat/builtin-tasks/task-names';
 
-function addIfNotPresent(array, value) {
+function addIfNotPresent(array: string[], value: string) {
   if (array.indexOf(value) === -1) {
     array.push(value);
   }
 }
 
-function setupExtraSolcSettings(settings) {
+function setupExtraSolcSettings(settings: {
+  metadata?: {useLiteralContent?: boolean};
+  outputSelection: {[key: string]: {[key: string]: string[]}};
+}): void {
   settings.metadata = settings.metadata || {};
   settings.metadata.useLiteralContent = true;
 

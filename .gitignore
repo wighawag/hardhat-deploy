@@ -12,3 +12,5 @@ node_modules/
 !.env*.default
 .vscode/*
 !.vscode/settings.json.default
+
+cache/
