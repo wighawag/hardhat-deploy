@@ -16,11 +16,12 @@ declare module "hardhat/types/config" {
         [networkName: string]: string[];
       };
       artifacts?: string[];
+      deploy?: string[];
     };
   }
 
   export interface HardhatConfig {
-    namedAccounts?: {
+    namedAccounts: {
       [name: string]:
         | string
         | number
@@ -31,6 +32,7 @@ declare module "hardhat/types/config" {
         [networkName: string]: string[];
       };
       artifacts?: string[];
+      deploy?: string[];
     };
   }
 
@@ -52,7 +54,6 @@ declare module "hardhat/types/config" {
     imports?: string;
   }
 
-  // TODO ensure they are set at runtime
   export interface HardhatNetworkConfig {
     live: boolean;
     saveDeployments: boolean;

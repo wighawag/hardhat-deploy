@@ -676,9 +676,14 @@ export class DeploymentsManager {
   ): Promise<{ [name: string]: Deployment }> {
     log("runDeploy");
     const chainId = await getChainId(this.env);
+
+    if (this.env.config.external?.deploy) {
+      for (const deployScriptsPath of this.env.config.external.deploy) {
+        await this.executeDeployScripts(deployScriptsPath);
+      }
+    }
+
     await this.loadDeployments();
-    const deploymentFolderPath = this.env.network.name;
-    const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
     this.db.writeDeploymentsToFiles = options.writeDeploymentsToFiles;
     this.db.savePendingTx = options.savePendingTx;
     this.db.logEnabled = options.log;
@@ -702,9 +707,21 @@ export class DeploymentsManager {
       tags = [tags];
     }
     const deployPath = this.env.config.paths.deploy;
+    
+    await this.executeDeployScripts(deployPath, tags);
+
+    await this.export(options);
+
+    return this.db.deployments;
+  }
+
+  public async executeDeployScripts(deployScriptsPath: string, tags?: string[]) {
+    const deploymentFolderPath = this.env.network.name;
+    const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
+    
     let filesStats;
     try {
-      filesStats = traverse(deployPath);
+      filesStats = traverse(deployScriptsPath);
     } catch (e) {
       // console.log('no folder at ' + deployPath);
       return {};
@@ -728,7 +745,7 @@ export class DeploymentsManager {
     const scriptPathBags: { [tag: string]: string[] } = {};
     const scriptFilePaths: string[] = [];
     for (const filename of fileNames) {
-      const scriptFilePath = path.join(deployPath, filename);
+      const scriptFilePath = path.join(deployScriptsPath, filename);
       let deployFunc: DeployFunction;
       // console.log("fetching " + scriptFilePath);
       try {
@@ -907,10 +924,6 @@ export class DeploymentsManager {
     }
     this.db.writeDeploymentsToFiles = wasWrittingToFiles;
     log("deploy scripts complete");
-
-    await this.export(options);
-
-    return this.db.deployments;
   }
 
   public async export(options: {

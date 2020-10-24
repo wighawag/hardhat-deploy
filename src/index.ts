@@ -40,6 +40,19 @@ function isHardhatEVM(hre: HardhatRuntimeEnvironment): boolean {
   );
 }
 
+function normalizePathArray(
+  config: HardhatConfig,
+  paths: string[]
+) : string[] {
+  const newArray: string[] = [];
+  for (const value of paths) {
+    if (value) {
+      newArray.push(normalizePath(config, value, value));
+    }
+  }
+  return newArray;
+}
+
 function normalizePath(
   config: HardhatConfig,
   userPath: string | undefined,
@@ -74,6 +87,31 @@ extendConfig(
       userConfig.paths?.deploy,
       TASK_DEPLOY
     );
+
+    if (userConfig.namedAccounts) {
+      config.namedAccounts = userConfig.namedAccounts;
+    } else {
+      config.namedAccounts = {};
+    }
+
+    if (userConfig.external) {
+      if (!config.external) {
+        config.external = {};
+      }
+      if (userConfig.external.artifacts) {
+        config.external.artifacts = normalizePathArray(config, userConfig.external.artifacts)
+      }
+      if (userConfig.external.deployments) {
+        config.external.deployments = {};
+        for (const key of Object.keys(userConfig.external.deployments)) {
+          config.external.deployments[key] = normalizePathArray(config, userConfig.external.deployments[key]);
+        }
+      }
+
+      if (userConfig.external.deploy) {
+        config.external.deploy = normalizePathArray(config, userConfig.external.deploy)
+      }
+    }
   }
 );
 
@@ -353,11 +391,24 @@ task(TASK_DEPLOY, "Deploy contracts")
     undefined,
     types.string
   )
+  .addOptionalParam(
+    "deployScripts",
+    "override deploy script folder path",
+    undefined,
+    types.string
+  )
   .addFlag("noCompile", "disable pre compilation")
   .addFlag("reset", "whether to delete deployments files first")
   .addFlag("silent", "whether to remove log")
   .addFlag("watch", "redeploy on every change of contract or deploy script")
   .setAction(async (args, hre) => {
+    if (args.deployScripts) {
+      hre.config.paths.deploy = normalizePath(
+        hre.config,
+        args.deployScripts,
+        args.deployScripts
+      );
+    }
     args.log = !args.silent;
     delete args.silent;
     if (args.write === undefined) {

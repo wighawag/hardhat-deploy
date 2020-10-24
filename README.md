@@ -405,7 +405,7 @@ It also add the `external` field to `HardhatConfig`
 
 Such fiels allows to specify paths for external artifacts or deployments. The use of the `paths` field is not possible because hardhat expects all paths field to be string. It does not accept arrays or objects, see https://github.com/nomiclabs/hardhat/issues/776.
 
-The external object has 2 fields:
+The external object has 3 fields:
 
 ```js
 {
@@ -413,7 +413,8 @@ The external object has 2 fields:
         artifacts: ["node_modules/@cartesi/arbitration/build/contracts"],
         deployments: {
           rinkeby: ["node_modules/@cartesi/arbitration/build/contracts"],
-        }
+        },
+        deploy: ["node_modules/somepackage/deploy"]
     }
 }
 ```
@@ -421,6 +422,8 @@ The external object has 2 fields:
 The artifacts fields specify an array of path to look for artifact. it support both hardhat and truffle artifacts.
 
 The deployments fields specify an object whose field name are the hardhat network and the value is an array of path to look for deployments. It supports both hardhat-deploy and truffle formats.
+
+The deploy fields specify an array of path that deploy scripts to execute. This allow project to share the deployment procedure. A boon for developer aiming at integrating it as they can get the contracts to be deployed for testing locally.
 
 ### Access to Artifacts (non-deployed contract code and abi)
 
