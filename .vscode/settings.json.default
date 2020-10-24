@@ -1,5 +1,12 @@
 {
     "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+    },
+    "[json]": {
+        "editor.formatOnSave": false,
+        "editor.codeActionsOnSave": {}
+    },
     "solidity.linter": "solhint",
     "solidity.enableLocalNodeCompiler": false,
     "solidity.compileUsingLocalVersion": "./cache/compilers/soljson-v0.6.5+commit.f956cc89.js",

@@ -1,4 +1,3 @@
-# EditorConfig is awesome: https://EditorConfig.org
 root = true
 
 [*]
@@ -7,7 +6,8 @@ end_of_line = lf
 indent_style = space
 indent_size = 2
 insert_final_newline = true
-trim_trailing_whitespace = false
 
+# 4 space indentation
 [*.sol]
+indent_style = space
 indent_size = 4

@@ -1,24 +1,22 @@
-import { resetHardhatContext } from "hardhat/plugins-testing";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import {resetHardhatContext} from 'hardhat/plugins-testing';
+import {HardhatRuntimeEnvironment} from 'hardhat/types';
+import path from 'path';
 
-declare module "mocha" {
+declare module 'mocha' {
   interface Context {
     env: HardhatRuntimeEnvironment;
   }
 }
 
-export function useEnvironment(projectPath: string) {
-  let previousCWD: string;
+export function useEnvironment(fixtureProjectName: string, networkName = 'localhost'): void {
+  beforeEach('Loading hardhat environment', function () {
+    process.chdir(path.join(__dirname, 'fixture-projects', fixtureProjectName));
+    process.env.HARDHAT_NETWORK = networkName;
 
-  beforeEach("Loading hardhat environment", function() {
-    previousCWD = process.cwd();
-    process.chdir(projectPath);
-
-    this.env = require("hardhat");
+    this.env = require('hardhat');
   });
 
-  afterEach("Resetting hardhat", function() {
+  afterEach('Resetting hardhat', function () {
     resetHardhatContext();
-    process.chdir(previousCWD);
   });
 }
