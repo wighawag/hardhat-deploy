@@ -26,22 +26,41 @@ import {
 } from 'hardhat/types';
 import {ExtendedArtifact, PartialExtension} from './types';
 import {UnknownSignerError} from './errors';
-import {mergeABIs, getExtendedArtifactFromFolderSync} from './utils';
+import {mergeABIs, getExtendedArtifactFromFolder} from './utils';
 import path from 'path';
 
-function artifactFromFolderSync(name: string, folderPath: string): ExtendedArtifact {
-  return getExtendedArtifactFromFolderSync(name, folderPath) as ExtendedArtifact;
+function artifactFromFolder(name: string, folderPath: string): Promise<ExtendedArtifact> {
+  return getExtendedArtifactFromFolder(name, folderPath) as Promise<ExtendedArtifact>;
 }
 
-const artifactsFolder = path.join(__dirname, '../artifacts');
-const eip173Proxy = artifactFromFolderSync('EIP173Proxy', artifactsFolder);
-const diamondBase = artifactFromFolderSync('Diamond', artifactsFolder);
-const diamondCutFacet = artifactFromFolderSync('DiamondCutFacet', artifactsFolder);
-const diamondLoupeFacet = artifactFromFolderSync('DiamondLoupeFacet', artifactsFolder);
-const ownershipFacet = artifactFromFolderSync('OwnershipFacet', artifactsFolder);
-const diamantaire = artifactFromFolderSync('Diamantaire', artifactsFolder);
+let eip173Proxy: ExtendedArtifact;
+let diamondBase: ExtendedArtifact;
+let diamondCutFacet: ExtendedArtifact;
+let diamondLoupeFacet: ExtendedArtifact;
+let ownershipFacet: ExtendedArtifact;
+let diamantaire: ExtendedArtifact;
 
-diamondBase.abi = mergeABIs(false, diamondBase.abi, diamondCutFacet.abi, diamondLoupeFacet.abi, ownershipFacet.abi);
+async function initArtifacts() {
+  if (!diamantaire) {
+    const artifactsFolder = path.join(__dirname, '../artifacts');
+    eip173Proxy = await artifactFromFolder('EIP173Proxy', artifactsFolder);
+    diamondBase = await artifactFromFolder('Diamond', artifactsFolder);
+    diamondCutFacet = await artifactFromFolder('DiamondCutFacet', artifactsFolder);
+    diamondLoupeFacet = await artifactFromFolder('DiamondLoupeFacet', artifactsFolder);
+    ownershipFacet = await artifactFromFolder('OwnershipFacet', artifactsFolder);
+    diamantaire = await artifactFromFolder('Diamantaire', artifactsFolder);
+
+    diamondBase.abi = mergeABIs(false, diamondBase.abi, diamondCutFacet.abi, diamondLoupeFacet.abi, ownershipFacet.abi);
+  }
+  return {
+    eip173Proxy,
+    diamondBase,
+    diamondCutFacet,
+    diamondLoupeFacet,
+    ownershipFacet,
+    diamantaire,
+  };
+}
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -608,6 +627,7 @@ export function addHelpers(
   }
 
   async function _deployViaEIP173Proxy(name: string, options: DeployOptions): Promise<DeployResult> {
+    await initArtifacts();
     const oldDeployment = await getDeploymentOrNUll(name);
     let updateMethod;
     let upgradeIndex;
@@ -787,6 +807,7 @@ Plus they are only used when the contract is meant to be used as standalone when
   }
 
   async function _deployViaDiamondProxy(name: string, options: DiamondOptions): Promise<DeployResult> {
+    await initArtifacts();
     const oldDeployment = await getDeploymentOrNUll(name);
     let proxy;
     const deployResult = _checkUpgradeIndex(oldDeployment, options.upgradeIndex);

@@ -7,6 +7,7 @@ import {Artifact, HardhatRuntimeEnvironment, MultiExport} from 'hardhat/types';
 import {BigNumber} from '@ethersproject/bignumber';
 import {ExtendedArtifact} from './types';
 import {Artifacts} from 'hardhat/internal/artifacts';
+import murmur128 from 'murmur-128';
 
 let chainId: string;
 export async function getChainId(hre: HardhatRuntimeEnvironment): Promise<string> {
@@ -40,7 +41,10 @@ function getOldArtifactSync(name: string, folderPath: string): ExtendedArtifact 
   return artifact;
 }
 
-export function getArtifactFromFolderSync(name: string, folderPath: string): Artifact | undefined {
+export async function getArtifactFromFolder(
+  name: string,
+  folderPath: string
+): Promise<Artifact | ExtendedArtifact | undefined> {
   const artifacts = new Artifacts(folderPath);
   let artifact = getOldArtifactSync(name, folderPath);
   if (!artifact) {
@@ -51,49 +55,10 @@ export function getArtifactFromFolderSync(name: string, folderPath: string): Art
   return artifact;
 }
 
-export async function getArtifactFromFolder(name: string, folderPath: string): Promise<Artifact | undefined> {
-  return getArtifactFromFolderSync(name, folderPath);
-}
-
-export function getExtendedArtifactFromFolderSync(name: string, folderPath: string): ExtendedArtifact | undefined {
-  const artifacts = new Artifacts(folderPath);
-  let artifact = getOldArtifactSync(name, folderPath);
-  if (!artifact) {
-    try {
-      artifact = artifacts.readArtifactSync(name);
-    } catch (e) {}
-    if (artifact && artifact._format === 'hh-sol-artifact-1') {
-      const debugFilePath = path.join(folderPath, artifact.sourceName, name + '.dbg.json');
-      // console.log(`getting debug file ${debugFilePath}`);
-      let debugJson;
-      try {
-        debugJson = JSON.parse(fs.readFileSync(debugFilePath).toString());
-      } catch (e) {
-        console.error(e);
-      }
-      if (debugJson) {
-        const buildInfoFilePath = path.join(path.dirname(debugFilePath), debugJson.buildInfo);
-        // console.log(`getting buildInfo file ${buildInfoFilePath}`);
-        let buildInfo;
-        try {
-          buildInfo = JSON.parse(fs.readFileSync(buildInfoFilePath).toString());
-        } catch (e) {
-          console.error(e);
-        }
-
-        if (buildInfo) {
-          artifact = {
-            ...artifact,
-            ...buildInfo.output.contracts[artifact.sourceName][name],
-            solcInput: JSON.stringify(buildInfo.input, null, '  '),
-            solcInputHash: path.basename(buildInfoFilePath, '.json'),
-          };
-        }
-      }
-    }
-  }
-  return artifact;
-}
+// TODO
+// const solcInputMetadataCache: Record<string,
+// const buildInfoCache
+// const hashCache: Record<string, string> = {};
 
 export async function getExtendedArtifactFromFolder(
   name: string,
@@ -102,15 +67,17 @@ export async function getExtendedArtifactFromFolder(
   const artifacts = new Artifacts(folderPath);
   let artifact = getOldArtifactSync(name, folderPath);
   if (!artifact && (await artifacts.artifactExists(name))) {
-    artifact = await artifacts.readArtifact(name);
-    const fullyQualifiedName = artifact.sourceName + ':' + name;
+    const hardhatArtifact: Artifact = await artifacts.readArtifact(name);
+    const fullyQualifiedName = hardhatArtifact.sourceName + ':' + name;
     const buildInfo = await artifacts.getBuildInfo(fullyQualifiedName);
     if (buildInfo) {
+      const solcInput = JSON.stringify(buildInfo.input, null, '  ');
+      const solcInputHash = btoa(String.fromCharCode(...new Uint8Array(murmur128(solcInput))));
       artifact = {
-        ...artifact,
-        ...buildInfo.output.contracts[artifact.sourceName][name],
-        solcInput: JSON.stringify(buildInfo.input, null, '  '),
-        solcInputHash: path.basename(buildInfoFilePath, '.json'),
+        ...hardhatArtifact,
+        ...buildInfo.output.contracts[hardhatArtifact.sourceName][name],
+        solcInput,
+        solcInputHash,
       };
     }
   }
@@ -132,10 +99,7 @@ export function loadAllDeployments(
       let chainIdFound: string;
       const chainIdFilepath = path.join(fPath, '.chainId');
       if (fs.existsSync(chainIdFilepath)) {
-        chainIdFound = fs
-          .readFileSync(chainIdFilepath)
-          .toString()
-          .trim();
+        chainIdFound = fs.readFileSync(chainIdFilepath).toString().trim();
         name = fileName;
       } else {
         throw new Error(
@@ -205,10 +169,7 @@ function loadDeployments(
     if (expectedChainId) {
       const chainIdFilepath = path.join(deployPath, '.chainId');
       if (fs.existsSync(chainIdFilepath)) {
-        const chainIdFound = fs
-          .readFileSync(chainIdFilepath)
-          .toString()
-          .trim();
+        const chainIdFound = fs.readFileSync(chainIdFilepath).toString().trim();
         if (expectedChainId !== chainIdFound) {
           throw new Error(
             `Loading deployment in folder '${deployPath}' (with chainId: ${chainIdFound}) for a different chainId (${expectedChainId})`
@@ -381,7 +342,7 @@ export function processNamedAccounts(
   }
 }
 
-export const traverse = function(
+export const traverse = function (
   dir: string,
   result: any[] = [],
   topDir?: string,

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {Deployment, FixtureFunc, DeploymentSubmission, LinkReferences, Artifact} from 'hardhat/types';
+import {Deployment, FixtureFunc, DeploymentSubmission, LinkReferences} from 'hardhat/types';
 
-export type ExtendedArtifact = Artifact & {
+export type ExtendedArtifact = {
   abi: any[];
   bytecode: string; // "0x"-prefixed hex string
   deployedBytecode?: string; // "0x"-prefixed hex string
