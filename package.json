@@ -1,6 +1,6 @@
 {
   "name": "hardhat-deploy",
-  "version": "0.7.0-beta.8",
+  "version": "0.7.0-beta.9",
   "description": "Hardhat Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/hardhat-deploy",
   "author": "wighawag",
@@ -79,8 +79,8 @@
     "lint:fix": "prettier --write solc*/**/*.sol && prettier --write src/**/*.{js,ts} test/**/*.{js,ts} && eslint --fix .",
     "lint": "prettier --check solc*/**/*.sol && prettier --check src/**/*.{js,ts} test/**/*.{js,ts} && eslint .",
     "test": "mocha --timeout 20000 --exit",
-    "build": "hardhat compile && tsc",
-    "watch": "hardhat compile && tsc -w",
+    "build": "tsc",
+    "watch": "tsc -w",
     "publish:next": "npm publish --tag next",
     "publish:release": "npm publish",
     "prepublishOnly": "npm run build"
