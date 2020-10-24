@@ -214,7 +214,7 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
       if (!args.noCompile) {
         await hre.run('compile');
       }
-      return hre.run(TASK_DEPLOY_RUN_DEPLOY);
+      return hre.run(TASK_DEPLOY_RUN_DEPLOY, args);
     }
 
     let currentPromise: Promise<{
