@@ -27,8 +27,8 @@ export const TASK_EXPORT = 'export';
 export const TASK_ETHERSCAN_VERIFY = 'etherscan-verify';
 
 function isHardhatEVM(hre: HardhatRuntimeEnvironment): boolean {
-  const {network, hardhatArguments} = hre;
-  return !(network.name !== HARDHAT_NETWORK_NAME && hardhatArguments.network !== undefined);
+  const {network} = hre;
+  return network.name === HARDHAT_NETWORK_NAME;
 }
 
 function normalizePathArray(config: HardhatConfig, paths: string[]): string[] {
