@@ -929,9 +929,9 @@ export class DeploymentsManager {
     const externalImports = this.env.config.external && this.env.config.external.artifacts;
     if (externalImports) {
       if (typeof externalImports === 'string') {
-        importPaths.push(path.join(this.env.config.paths.root, externalImports));
+        importPaths.push(externalImports);
       } else {
-        importPaths = importPaths.concat(externalImports.map((v) => path.join(this.env.config.paths.root, v)));
+        importPaths = importPaths.concat(externalImports);
       }
     }
     return importPaths;
