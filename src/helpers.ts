@@ -23,44 +23,21 @@ import {
   DiamondOptions,
   Create2DeployOptions,
   FacetCut,
+  Artifact,
+  DeploymentSubmission,
 } from 'hardhat/types';
-import {ExtendedArtifact, PartialExtension} from './types';
+import {PartialExtension} from './types';
 import {UnknownSignerError} from './errors';
-import {mergeABIs, getExtendedArtifactFromFolder} from './utils';
-import path from 'path';
+import {mergeABIs} from './utils';
 
-function artifactFromFolder(name: string, folderPath: string): Promise<ExtendedArtifact> {
-  return getExtendedArtifactFromFolder(name, folderPath) as Promise<ExtendedArtifact>;
-}
+import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
+import diamondBase from '../extendedArtifacts/Diamond.json';
+import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
+import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
+import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
+import diamantaire from '../extendedArtifacts/Diamantaire.json';
 
-let eip173Proxy: ExtendedArtifact;
-let diamondBase: ExtendedArtifact;
-let diamondCutFacet: ExtendedArtifact;
-let diamondLoupeFacet: ExtendedArtifact;
-let ownershipFacet: ExtendedArtifact;
-let diamantaire: ExtendedArtifact;
-
-async function initArtifacts() {
-  if (!diamantaire) {
-    const artifactsFolder = path.join(__dirname, '../artifacts');
-    eip173Proxy = await artifactFromFolder('EIP173Proxy', artifactsFolder);
-    diamondBase = await artifactFromFolder('Diamond', artifactsFolder);
-    diamondCutFacet = await artifactFromFolder('DiamondCutFacet', artifactsFolder);
-    diamondLoupeFacet = await artifactFromFolder('DiamondLoupeFacet', artifactsFolder);
-    ownershipFacet = await artifactFromFolder('OwnershipFacet', artifactsFolder);
-    diamantaire = await artifactFromFolder('Diamantaire', artifactsFolder);
-
-    diamondBase.abi = mergeABIs(false, diamondBase.abi, diamondCutFacet.abi, diamondLoupeFacet.abi, ownershipFacet.abi);
-  }
-  return {
-    eip173Proxy,
-    diamondBase,
-    diamondCutFacet,
-    diamondLoupeFacet,
-    ownershipFacet,
-    diamantaire,
-  };
-}
+diamondBase.abi = mergeABIs(false, diamondBase.abi, diamondCutFacet.abi, diamondLoupeFacet.abi, ownershipFacet.abi);
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -160,7 +137,9 @@ const availableAccounts: {[name: string]: boolean} = {};
 export function addHelpers(
   env: HardhatRuntimeEnvironment,
   partialExtension: PartialExtension, // TODO
-  getArtifact: (name: string) => Promise<ExtendedArtifact>,
+  getArtifact: (name: string) => Promise<Artifact>,
+  saveDeployment: (name: string, deployment: DeploymentSubmission, artifactName?: string) => Promise<void>,
+  willSaveToDisk: () => boolean,
   onPendingTx: (txResponse: TransactionResponse, name?: string, data?: any) => Promise<TransactionResponse>,
   getGasPrice: () => Promise<BigNumber | undefined>,
   log: (...args: any[]) => void,
@@ -254,31 +233,33 @@ export function addHelpers(
     name: string,
     options: DeployOptions
   ): Promise<{
-    artifact: ExtendedArtifact;
-    contractName?: string;
+    artifact: Artifact;
+    artifactName?: string;
   }> {
-    let artifact: ExtendedArtifact;
-    let contractName: string | undefined;
+    let artifact: Artifact;
+    let artifactName: string | undefined;
     if (options.contract) {
       if (typeof options.contract === 'string') {
-        contractName = options.contract;
-        artifact = await getArtifact(options.contract);
+        artifactName = options.contract;
+        artifact = await getArtifact(artifactName);
       } else {
-        artifact = options.contract;
+        artifact = options.contract as Artifact; // TODO better handling
       }
     } else {
-      contractName = name;
-      artifact = await getArtifact(name);
+      artifactName = name;
+      artifact = await getArtifact(artifactName);
     }
-    return {artifact, contractName};
+    return {artifact, artifactName};
   }
 
-  async function getLinkedArtifact(name: string, options: DeployOptions): Promise<ExtendedArtifact> {
+  async function getLinkedArtifact(
+    name: string,
+    options: DeployOptions
+  ): Promise<{artifact: Artifact; artifactName: string | undefined}> {
     // TODO get linked artifact
-    const artifactInfo = await getArtifactFromOptions(name, options);
-    const {artifact} = artifactInfo;
+    const {artifact, artifactName} = await getArtifactFromOptions(name, options);
     const byteCode = linkLibraries(artifact, options.libraries);
-    return {...artifact, bytecode: byteCode};
+    return {artifact: {...artifact, bytecode: byteCode}, artifactName};
   }
 
   async function _deploy(name: string, options: DeployOptions): Promise<DeployResult> {
@@ -289,7 +270,7 @@ export function addHelpers(
       throw new Error('no signer for ' + from);
     }
 
-    const linkedArtifact = await getLinkedArtifact(name, options);
+    const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(name, options);
 
     const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
@@ -340,23 +321,18 @@ export function addHelpers(
       } catch (e) {}
     }
 
-    // const extendedAtifact = artifact as any; // TODO future version of hardhat will hopefully have that info
-    const preDeployment = {
-      abi: linkedArtifact.abi,
+    let preDeployment = {
+      ...linkedArtifact,
       args,
       linkedData: options.linkedData,
-      solcInputHash: linkedArtifact.solcInputHash,
-      solcInput: linkedArtifact.solcInput,
-      metadata: linkedArtifact.metadata,
-      bytecode: linkedArtifact.bytecode,
-      deployedBytecode: linkedArtifact.deployedBytecode,
-      libraries: options.libraries,
-      userdoc: linkedArtifact.userdoc,
-      devdoc: linkedArtifact.devdoc,
-      methodIdentifiers: linkedArtifact.methodIdentifiers,
-      storageLayout: linkedArtifact.storageLayout,
-      gasEstimates: linkedArtifact.evm?.gasEstimates,
     };
+    if (artifactName && willSaveToDisk()) {
+      const extendedArtifact = await env.deployments.getExtendedArtifact(artifactName);
+      preDeployment = {
+        ...extendedArtifact,
+        ...preDeployment,
+      };
+    }
     tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait();
     const address = options.deterministicDeployment && create2Address ? create2Address : receipt.contractAddress;
@@ -366,7 +342,7 @@ export function addHelpers(
       receipt,
       transactionHash: receipt.transactionHash,
     };
-    await env.deployments.save(name, deployment);
+    await saveDeployment(name, deployment);
     return {
       ...deployment,
       address,
@@ -556,26 +532,16 @@ export function addHelpers(
             throw new Error('no differences found but no address, this should be impossible');
           }
 
-          const linkedArtifact = await getLinkedArtifact(name, options);
+          const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(name, options);
 
           // receipt missing
           const newDeployment = {
-            abi: linkedArtifact.abi,
+            ...linkedArtifact,
             address: diffResult.address,
             linkedData: options.linkedData,
-            solcInputHash: linkedArtifact.solcInputHash,
-            solcInput: linkedArtifact.solcInput,
-            metadata: linkedArtifact.metadata,
-            bytecode: linkedArtifact.bytecode,
-            deployedBytecode: linkedArtifact.deployedBytecode,
-            libraries: options.libraries,
-            userdoc: linkedArtifact.userdoc,
-            devdoc: linkedArtifact.devdoc,
-            methodIdentifiers: linkedArtifact.methodIdentifiers,
-            storageLayout: linkedArtifact.storageLayout,
-            gasEstimates: linkedArtifact.evm?.gasEstimates,
+            // TODO args ?
           };
-          await env.deployments.save(name, newDeployment);
+          await saveDeployment(name, newDeployment, artifactName);
           result = {
             ...newDeployment,
             newlyDeployed: false,
@@ -627,7 +593,6 @@ export function addHelpers(
   }
 
   async function _deployViaEIP173Proxy(name: string, options: DeployOptions): Promise<DeployResult> {
-    await initArtifacts();
     const oldDeployment = await getDeploymentOrNUll(name);
     let updateMethod;
     let upgradeIndex;
@@ -722,9 +687,11 @@ Plus they are only used when the contract is meant to be used as standalone when
           throw new Error('could not execute `changeImplementation`');
         }
       }
-      const proxiedDeployment = {
-        ...implementation,
+      const proxiedDeployment: DeploymentSubmission = {
+        ...eip173Proxy,
         address: proxy.address,
+        linkedData: options.linkedData,
+        abi: implementation.abi,
         execute: updateMethod
           ? {
               methodName: updateMethod,
@@ -737,7 +704,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           ? proxiedDeployment.history.concat([oldDeployment])
           : [oldDeployment];
       }
-      await env.deployments.save(name, proxiedDeployment);
+      await saveDeployment(name, proxiedDeployment);
 
       const deployment = await env.deployments.get(name);
       return {
@@ -807,7 +774,6 @@ Plus they are only used when the contract is meant to be used as standalone when
   }
 
   async function _deployViaDiamondProxy(name: string, options: DiamondOptions): Promise<DeployResult> {
-    await initArtifacts();
     const oldDeployment = await getDeploymentOrNUll(name);
     let proxy;
     const deployResult = _checkUpgradeIndex(oldDeployment, options.upgradeIndex);
@@ -969,19 +935,15 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
 
         proxy = {
-          abi: diamondBase.abi,
+          ...diamondBase,
           address: proxyAddress,
           receipt: createReceipt,
           transactionHash: createReceipt.transactionHash,
           args: [owner],
-          bytecode: diamondBase.bytecode,
-          deployedBytecode: diamondBase.deployedBytecode,
-          metadata: diamondBase.metadata,
-          // TODO if more fiels are added, we need to add more
         };
-        await env.deployments.save(proxyName, proxy);
+        await saveDeployment(proxyName, proxy);
 
-        await env.deployments.save(name, {
+        await saveDeployment(name, {
           address: proxy.address,
           receipt: proxy.receipt,
           transactionHash: proxy.transactionHash,
@@ -990,7 +952,6 @@ Plus they are only used when the contract is meant to be used as standalone when
           diamondCut: facetCuts,
           abi,
           execute: options.execute,
-          // metadata: diamondBase.metadata
         });
       } else {
         if (!oldDeployment) {
@@ -1012,7 +973,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         if (!executeReceipt) {
           throw new Error('failed to execute');
         }
-        await env.deployments.save(name, {
+        await saveDeployment(name, {
           receipt: executeReceipt,
           transactionHash: executeReceipt.transactionHash,
           history: oldDeployment.history ? oldDeployment.history.concat(oldDeployment) : [oldDeployment],
@@ -1022,7 +983,6 @@ Plus they are only used when the contract is meant to be used as standalone when
           facets: facetSnapshot,
           diamondCut: facetCuts,
           execute: options.execute,
-          // metadata: oldDeployment.metadata
         });
       }
 

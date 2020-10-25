@@ -20,13 +20,13 @@
   ],
   "files": [
     "dist/src/",
-    "dist/artifacts/",
+    "dist/extendedArtifacts/",
+    "extendedArtifacts/",
     "src/",
     "LICENSE",
     "README.md",
     "solc_0.6/",
-    "solc_0.7/",
-    "artifacts/*.json"
+    "solc_0.7"
   ],
   "devDependencies": {
     "@types/chai": "^4.1.7",

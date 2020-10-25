@@ -8,7 +8,8 @@
     "outDir": "./dist",
     "strict": true,
     "rootDirs": ["./src", "./test"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "resolveJsonModule": true
   },
   "exclude": ["dist", "node_modules"],
   "include": ["./test", "./src"]

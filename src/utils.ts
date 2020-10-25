@@ -72,7 +72,7 @@ export async function getExtendedArtifactFromFolder(
     const buildInfo = await artifacts.getBuildInfo(fullyQualifiedName);
     if (buildInfo) {
       const solcInput = JSON.stringify(buildInfo.input, null, '  ');
-      const solcInputHash = btoa(String.fromCharCode(...new Uint8Array(murmur128(solcInput))));
+      const solcInputHash = Buffer.from(murmur128(solcInput)).toString('hex');
       artifact = {
         ...hardhatArtifact,
         ...buildInfo.output.contracts[hardhatArtifact.sourceName][name],

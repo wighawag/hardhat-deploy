@@ -7,6 +7,7 @@ import {
   FixtureFunc,
   DeploymentSubmission,
   Export,
+  Artifact,
 } from 'hardhat/types';
 import {ExtendedArtifact, PartialExtension} from './types';
 
@@ -27,9 +28,11 @@ import {
   traverse,
   deleteDeployments,
   getExtendedArtifactFromFolder,
+  getArtifactFromFolder,
 } from './utils';
 import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
+import {string} from 'hardhat/internal/core/params/argumentTypes';
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -114,7 +117,28 @@ export class DeploymentsManager {
         await this.setup();
         return this.db.deployments; // TODO copy
       },
-      getArtifact: async (contractName: string): Promise<ExtendedArtifact> => {
+      getArtifact: async (contractName: string): Promise<Artifact> => {
+        let artifact: Artifact | ExtendedArtifact | undefined = await getArtifactFromFolder(
+          contractName,
+          this.env.config.paths.artifacts
+        );
+        if (artifact) {
+          return artifact as Artifact;
+        }
+        const importPaths = this.getImportPaths();
+        for (const importPath of importPaths) {
+          artifact = await getArtifactFromFolder(contractName, importPath);
+          if (artifact) {
+            return artifact as Artifact;
+          }
+        }
+
+        if (!artifact) {
+          throw new Error(`cannot find artifact "${contractName}"`);
+        }
+        return artifact;
+      },
+      getExtendedArtifact: async (contractName: string): Promise<ExtendedArtifact> => {
         let artifact: ExtendedArtifact | undefined = await getExtendedArtifactFromFolder(
           contractName,
           this.env.config.paths.artifacts
@@ -229,6 +253,20 @@ export class DeploymentsManager {
       env,
       partialExtension,
       partialExtension.getArtifact,
+      async (name: string, deployment: DeploymentSubmission, artifactName?: string): Promise<void> => {
+        if (artifactName && this.db.writeDeploymentsToFiles && this.env.network.saveDeployments) {
+          // toSave (see deployments.save function)
+          const extendedArtifact = await this.env.deployments.getExtendedArtifact(artifactName);
+          deployment = {
+            ...deployment,
+            ...extendedArtifact,
+          };
+        }
+        await this.env.deployments.save(name, deployment);
+      },
+      () => {
+        return this.db.writeDeploymentsToFiles && this.env.network.saveDeployments;
+      },
       this.onPendingTx.bind(this),
       async () => {
         // TODO extraGasPrice ?

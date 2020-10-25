@@ -3,6 +3,7 @@ import 'hardhat/types/runtime';
 import 'hardhat/types/config';
 import type {BigNumber} from '@ethersproject/bignumber';
 import {ExtendedArtifact} from './types';
+import {Artifact} from 'hardhat/types';
 
 declare module 'hardhat/types/config' {
   export interface HardhatUserConfig {
@@ -257,7 +258,8 @@ declare module 'hardhat/types/runtime' {
     getOrNull(name: string): Promise<Deployment | null>;
     getDeploymentsFromAddress(address: string): Promise<Deployment[]>;
     all(): Promise<{[name: string]: Deployment}>;
-    getArtifact(name: string): Promise<ExtendedArtifact>;
+    getExtendedArtifact(name: string): Promise<ExtendedArtifact>;
+    getArtifact(name: string): Promise<Artifact>;
     run(
       tags?: string | string[],
       options?: {
