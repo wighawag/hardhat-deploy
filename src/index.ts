@@ -292,7 +292,7 @@ task(TASK_TEST, 'Runs mocha tests')
   .addFlag('deployFixture', 'run the global fixture before tests')
   .setAction(async (args, hre, runSuper) => {
     if (args.deployFixture || process.env.HARDHAT_DEPLOY_FIXTURE) {
-      if (!args.noCompile && !process.env.HARDHAT_DEPLOY_NO_COMPILE) {
+      if (!args.noCompile) {
         await hre.run('compile');
       }
       await hre.deployments.fixture();

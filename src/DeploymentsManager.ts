@@ -940,7 +940,7 @@ export class DeploymentsManager {
   private async setup() {
     if (!this.db.deploymentsLoaded) {
       if (process.env.HARDHAT_DEPLOY_FIXTURE) {
-        if (!process.env.HARDHAT_DEPLOY_NO_COMPILE) {
+        if (process.env.HARDHAT_COMPILE) {
           // console.log("compiling...");
           await this.env.run('compile');
         }
@@ -948,7 +948,7 @@ export class DeploymentsManager {
         // console.log("running global fixture....");
         await this.env.deployments.fixture();
       } else {
-        if (process.env.HARDHAT_DEPLOY_COMPILE) {
+        if (process.env.HARDHAT_COMPILE) {
           // console.log("compiling...");
           await this.env.run('compile');
         }
