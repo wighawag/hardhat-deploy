@@ -201,7 +201,7 @@ declare module 'hardhat/types/runtime' {
   export interface TxOptions extends CallOptions {
     from: string;
     log?: boolean;
-    dev_forceMine?: boolean;
+    autoMine?: boolean;
     estimatedGasLimit?: string | number | BigNumber;
     estimateGasExtra?: string | number | BigNumber;
   }

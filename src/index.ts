@@ -5,13 +5,7 @@ import {HardhatRuntimeEnvironment, Deployment, HardhatConfig, HardhatUserConfig,
 import {extendEnvironment, task, subtask, extendConfig} from 'hardhat/config';
 import {HARDHAT_NETWORK_NAME} from 'hardhat/internal/constants';
 import * as types from 'hardhat/internal/core/params/argumentTypes';
-import {
-  TASK_NODE,
-  TASK_COMPILE_SOLIDITY_GET_COMPILER_INPUT,
-  TASK_TEST,
-  TASK_NODE_GET_PROVIDER,
-  TASK_NODE_SERVER_READY,
-} from 'hardhat/builtin-tasks/task-names';
+import {TASK_NODE, TASK_TEST, TASK_NODE_GET_PROVIDER, TASK_NODE_SERVER_READY} from 'hardhat/builtin-tasks/task-names';
 
 import debug from 'debug';
 const log = debug('hardhat:wighawag:hardhat-deploy');
@@ -82,6 +76,10 @@ extendConfig((config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) =>
     if (userConfig.external.deploy) {
       config.external.deploy = normalizePathArray(config, userConfig.external.deploy);
     }
+  }
+
+  for (const compiler of config.solidity.compilers) {
+    setupExtraSolcSettings(compiler.settings);
   }
 });
 
@@ -167,13 +165,6 @@ function setupExtraSolcSettings(settings: {
   // addIfNotPresent(settings.outputSelection["*"][""], "irOptimized");
   // addIfNotPresent(settings.outputSelection["*"][""], "ast");
 }
-
-subtask(TASK_COMPILE_SOLIDITY_GET_COMPILER_INPUT).setAction(async (_, __, runSuper) => {
-  const input = await runSuper();
-  setupExtraSolcSettings(input.settings);
-
-  return input;
-});
 
 subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
   .addOptionalParam('export', 'export current network deployments')

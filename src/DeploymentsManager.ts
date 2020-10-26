@@ -546,7 +546,7 @@ export class DeploymentsManager {
         userdoc: deployment.userdoc,
         storageLayout: deployment.storageLayout,
         methodIdentifiers: deployment.methodIdentifiers,
-        gasEstimates: deployment.gasEstimates,
+        gasEstimates: deployment.gasEstimates, // TODO double check : use evm field ?
       })
     );
     this.db.deployments[name] = obj;
@@ -554,6 +554,7 @@ export class DeploymentsManager {
       let receiptFetched;
       try {
         receiptFetched = await waitForTx(this.env.network.provider, obj.transactionHash, true);
+        // TODO add receipt ?
         obj.address = receiptFetched.contractAddress;
         if (!obj.address) {
           throw new Error('no contractAddress in receipt');

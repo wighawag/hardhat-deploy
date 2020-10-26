@@ -603,7 +603,7 @@ nonce?: string | number | BigNumber;
 estimatedGasLimit?: string | number | BigNumber; // to speed up the estimation, it is possible to provide an upper gasLimit
 estimateGasExtra?: string | number | BigNumber; // this option allow you to add a gas buffer on top of the estimation
 
-dev_forceMine?: boolean; // this force a evm_mine to be executed. this is useful to speed deployment on test network that allow to specify a block delay (ganache for example). This option basically skip the delay by force mining.
+autoMine?: boolean; // this force a evm_mine to be executed. this is useful to speed deployment on test network that allow to specify a block delay (ganache for example). This option basically skip the delay by force mining.
 deterministicDeployment? boolean | string; // if true, it will deploy the contract at a deterministic address based on bytecode and constuctor arguments. The address will be the same across all network. It use create2 opcode for that, if it is a string, the string will be used as the salt.
 ```
 

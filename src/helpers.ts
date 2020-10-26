@@ -315,7 +315,7 @@ export function addHelpers(
     // const ethersContract = await factory.deploy(...args, overrides);
     // let tx = ethersContract.deployTransaction;
 
-    if (options.dev_forceMine) {
+    if (options.autoMine) {
       try {
         await provider.send('evm_mine', []);
       } catch (e) {}
@@ -323,6 +323,7 @@ export function addHelpers(
 
     let preDeployment = {
       ...linkedArtifact,
+      transactionHash: tx.hash,
       args,
       linkedData: options.linkedData,
     };
@@ -689,6 +690,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       }
       const proxiedDeployment: DeploymentSubmission = {
         ...eip173Proxy,
+        receipt: proxy.receipt,
         address: proxy.address,
         linkedData: options.linkedData,
         abi: implementation.abi,
@@ -1034,7 +1036,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       };
       let pendingTx = await ethersSigner.sendTransaction(transactionData);
       pendingTx = await onPendingTx(pendingTx);
-      if (tx.dev_forceMine) {
+      if (tx.autoMine) {
         try {
           await provider.send('evm_mine', []);
         } catch (e) {}
@@ -1144,7 +1146,7 @@ data: ${data}
       print(`executing ${name}.${methodName}... `);
     }
 
-    if (options.dev_forceMine) {
+    if (options.autoMine) {
       try {
         await provider.send('evm_mine', []);
       } catch (e) {}
