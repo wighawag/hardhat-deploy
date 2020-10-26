@@ -87,7 +87,7 @@ npm install -D hardhat-deploy
 And add the following statement to your `hardhat.config.js`:
 
 ```js
-import "hardhat-deploy";
+import 'hardhat-deploy';
 ```
 
 ### TypeScript support
@@ -150,8 +150,8 @@ export interface Deployment {
   userdoc?: any;
   devdoc?: any;
   methodIdentifiers?: any;
-  diamondCut?: { address: string; sigs: string[] }[];
-  facets?: { address: string; sigs: string[] }[];
+  diamondCut?: {address: string; sigs: string[]}[];
+  facets?: {address: string; sigs: string[]}[];
   storageLayout?: any;
 }
 ```
@@ -308,7 +308,7 @@ This plugin extends the Hardhat Runtime Environment by adding 4 fields:
 
 - `getNamedAccounts: () => Promise<{ [name: string]: string }>`: a function returning an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see [Configuration](#configuration)).
 
-- `getUnamedAccounts: () => Promise<string[]}>`: accounts which has no names, useful for test where you want to be sure that the account is not one of the predefined one
+- `getUnnamedAccounts: () => Promise<string[]}>`: accounts which has no names, useful for test where you want to be sure that the account is not one of the predefined one
 
 - `deployments`: contains functions to access past deployments or to save new ones, as well as helpers functions.
 
@@ -430,14 +430,14 @@ The deploy fields specify an array of path that deploy scripts to execute. This 
 you can access contract artifact via `getArtifact` function :
 
 ```js
-const { deployments } = require("hardhat");
+const {deployments} = require('hardhat');
 const artifact = await deployments.getArtifact(artifactName);
 ```
 
 With the `hardhat-deploy-ethers` plugin you can get your ethers contract via :
 
 ```js
-const { deployments, ethers } = require("hardhat");
+const {deployments, ethers} = require('hardhat');
 const factory = await ethers.getContractFactory(artifactName);
 ```
 
@@ -494,20 +494,15 @@ This is why the `hre.deployments.deploy` function will by default only deploy if
 An example of a deploy script :
 
 ```js
-module.exports = async ({
-  getNamedAccounts,
-  deployments,
-  getChainId,
-  getUnamedAccounts
-}) => {
-  const { deploy } = deployments;
-  const { deployer } = await getNamedAccounts();
+module.exports = async ({getNamedAccounts, deployments, getChainId, getUnnamedAccounts}) => {
+  const {deploy} = deployments;
+  const {deployer} = await getNamedAccounts();
 
   // the following will only deploy "GenericMetaTxProcessor" if the contract was never deployed or if the code changed since last deployment
-  await deploy("GenericMetaTxProcessor", {
+  await deploy('GenericMetaTxProcessor', {
     from: deployer,
     gas: 4000000,
-    args: []
+    args: [],
   });
 };
 ```
@@ -516,7 +511,7 @@ As you can see the HRE passed in has 4 new fields :
 
 - `getNamedAccounts` is a function that returns a promise to an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see [`namedAccounts`](#namedaccounts)).
 
-- `getUnamedAccounts`: function that return a promise to an array of accounts (which were not used in `getNamedAccounts`), useful for test where you want to be sure that the account is not one of the predefined one
+- `getUnnamedAccounts`: function that return a promise to an array of accounts (which were not used in `getNamedAccounts`), useful for test where you want to be sure that the account is not one of the predefined one
 
 - `deployments`, which contains functions to access past deployments or to save new ones, as well as helpers functions.
 
@@ -658,7 +653,7 @@ The first one is exported via the `--export <file>` option and follow the follow
 export interface Export {
   chainId: string;
   name: string;
-  contracts: { [name: string]: ContractExport };
+  contracts: {[name: string]: ContractExport};
 }
 ```
 
@@ -668,7 +663,7 @@ The second one is exported via the `--export-all <file>` option and follow the f
 
 ```js
 export type MultiExport = {
-  [chainId: string]: { [name: string]: Export }
+  [chainId: string]: {[name: string]: Export},
 };
 ```
 
@@ -689,12 +684,12 @@ To perform such proxy deployment, you just need to invoke the deploy function wi
 See example :
 
 ```js
-module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
-  const { deploy } = deployments;
-  const { deployer } = await getNamedAccounts();
-  await deploy("Greeter", {
+module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
+  const {deploy} = deployments;
+  const {deployer} = await getNamedAccounts();
+  await deploy('Greeter', {
     from: deployer,
-    proxy: true
+    proxy: true,
   });
 };
 ```
@@ -705,13 +700,13 @@ the `args` field will be then used for that function instead of the contructor. 
 See example :
 
 ```js
-module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
-  const { deploy } = deployments;
-  const { deployer } = await getNamedAccounts();
-  await deploy("Greeter", {
+module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
+  const {deploy} = deployments;
+  const {deployer} = await getNamedAccounts();
+  await deploy('Greeter', {
     from: deployer,
-    proxy: "postUpgrade",
-    args: ["arg1", 2, 3]
+    proxy: 'postUpgrade',
+    args: ['arg1', 2, 3],
   });
 };
 ```
@@ -721,16 +716,16 @@ The proxy option can also be an object which can set the specific owner that the
 See example:
 
 ```js
-module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
-  const { deploy } = deployments;
-  const { deployer, greeterOwner } = await getNamedAccounts();
-  await deploy("Greeter", {
+module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
+  const {deploy} = deployments;
+  const {deployer, greeterOwner} = await getNamedAccounts();
+  await deploy('Greeter', {
     from: deployer,
     proxy: {
       owner: greeterOwner,
-      methodName: "postUpgrade"
+      methodName: 'postUpgrade',
     },
-    args: ["arg1", 2, 3]
+    args: ['arg1', 2, 3],
   });
 };
 ```
@@ -750,13 +745,13 @@ Instead of specifying the facets to cut out or cut in, which the diamond contrac
 To deploy a contract with 3 facet you can do as follow :
 
 ```js
-module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
-  const { diamond } = deployments;
-  const { deployer, diamondAdmin } = await getNamedAccounts();
-  await diamond.deploy("ADiamondContract", {
+module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
+  const {diamond} = deployments;
+  const {deployer, diamondAdmin} = await getNamedAccounts();
+  await diamond.deploy('ADiamondContract', {
     from: deployer,
     owner: diamondAdmin,
-    facets: ["Facet1", "Facet2", "Facet3"]
+    facets: ['Facet1', 'Facet2', 'Facet3'],
   });
 };
 ```
@@ -764,13 +759,13 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 if you then later execute the following script:
 
 ```js
-module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
-  const { diamond } = deployments;
-  const { deployer, diamondAdmin } = await getNamedAccounts();
-  await diamond.deploy("ADiamondContract", {
+module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
+  const {diamond} = deployments;
+  const {deployer, diamondAdmin} = await getNamedAccounts();
+  await diamond.deploy('ADiamondContract', {
     from: diamondAdmin, // this need to be the diamondAdmin for upgrade
     owner: diamondAdmin,
-    facets: ["NewFacet", "Facet2", "Facet3"]
+    facets: ['NewFacet', 'Facet2', 'Facet3'],
   });
 };
 ```
@@ -789,14 +784,14 @@ Like normal proxies you can also execute a function at the time of an upgrade.
 This is done by specifying the execute field in the diamond deploy options :
 
 ```js
-diamond.deploy("ADiamondContract", {
+diamond.deploy('ADiamondContract', {
   from: deployer,
   owner: diamondAdmin,
-  facets: ["NewFacet", "Facet2", "Facet3"],
+  facets: ['NewFacet', 'Facet2', 'Facet3'],
   execute: {
-    methodName: "postUpgrade",
-    args: ["one", 2, "0x3"]
-  }
+    methodName: 'postUpgrade',
+    args: ['one', 2, '0x3'],
+  },
 });
 ```
 
@@ -817,17 +812,17 @@ Tests can then use the `hre.deployments.fixture` function to run the deployment 
 Here is an example of a test :
 
 ```js
-const { deployments } = require("hardhat");
+const {deployments} = require('hardhat');
 
-describe("Token", () => {
+describe('Token', () => {
   beforeEach(async () => {
     await deployments.fixture();
   });
-  it("testing 1 2 3", async function() {
-    const Token = await deployments.get("Token"); // Token is available because the fixture was executed
+  it('testing 1 2 3', async function () {
+    const Token = await deployments.get('Token'); // Token is available because the fixture was executed
     console.log(Token.address);
-    const ERC721BidSale = await deployments.get("ERC721BidSale");
-    console.log({ ERC721BidSale });
+    const ERC721BidSale = await deployments.get('ERC721BidSale');
+    console.log({ERC721BidSale});
   });
 });
 ```
@@ -837,15 +832,15 @@ If the deployment scripts are complex, the first test could take while (as the f
 Tests can also leverage named accounts for clearer test. Combined with `hardhat-deploy-ethers` plugin, you can write succint test :
 
 ```js
-const { ethers, getNamedAccounts } = require("hardhat");
+const {ethers, getNamedAccounts} = require('hardhat');
 
-describe("Token", () => {
+describe('Token', () => {
   beforeEach(async () => {
     await deployments.fixture();
   });
-  it("testing 1 2 3", async function() {
-    const { tokenOwner } = await getNamedAccounts();
-    const TokenContract = await ethers.getContract("Token", tokenOwner);
+  it('testing 1 2 3', async function () {
+    const {tokenOwner} = await getNamedAccounts();
+    const TokenContract = await ethers.getContract('Token', tokenOwner);
     await TokenContract.mint(2);
   });
 });
@@ -900,7 +895,7 @@ In other word tests can use `deployments.fixture(<specific tag>)` where specific
 If a test need the deployments to only include the specific deployment specified by the tag, it can use the following :
 
 ```js
-deployments.fixture("<specific tag>", { fallbackToGlobal: false });
+deployments.fixture('<specific tag>', {fallbackToGlobal: false});
 ```
 
 Due to how snapshot/revert works in hardhat, this means that these test will not be able to benefit from the global fixture snapshot and will have to deploy their contract as part of the fixture call. This is automatix but means that these tests will run slower.
@@ -912,12 +907,12 @@ Due to how snapshot/revert works in hardhat, this means that these test will not
 The run task act as before but thanks to the `hre.deployments` field it can access deployed contract :
 
 ```js
-const hre = require("hardhat");
-const { deployments, getNamedAccounts } = hre;
+const hre = require('hardhat');
+const {deployments, getNamedAccounts} = hre;
 
 (async () => {
   console.log(await deployments.all());
-  console.log({ namedAccounts: await getNamedAccounts() });
+  console.log({namedAccounts: await getNamedAccounts()});
 })();
 ```
 
@@ -942,42 +937,38 @@ Then if another deploy script has such tag as a dependency, then when this latte
 Here is an example of two deploy scripts :
 
 ```js
-module.exports = async ({ getNamedAccounts, deployments }) => {
-  const { deployIfDifferent, log } = deployments;
+module.exports = async ({getNamedAccounts, deployments}) => {
+  const {deployIfDifferent, log} = deployments;
   const namedAccounts = await getNamedAccounts();
-  const { deployer } = namedAccounts;
-  const deployResult = await deploy("Token", {
+  const {deployer} = namedAccounts;
+  const deployResult = await deploy('Token', {
     from: deployer,
-    args: ["hello", 100]
+    args: ['hello', 100],
   });
   if (deployResult.newlyDeployed) {
-    log(
-      `contract Token deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`
-    );
+    log(`contract Token deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
   }
 };
-module.exports.tags = ["Token"];
+module.exports.tags = ['Token'];
 ```
 
 ```js
-module.exports = async function({ getNamedAccounts, deployments }) {
-  const { deployIfDifferent, log } = deployments;
+module.exports = async function ({getNamedAccounts, deployments}) {
+  const {deployIfDifferent, log} = deployments;
   const namedAccounts = await getNamedAccounts();
-  const { deployer } = namedAccounts;
-  const Token = await deployments.get("Token");
-  const deployResult = await deploy("Sale", {
+  const {deployer} = namedAccounts;
+  const Token = await deployments.get('Token');
+  const deployResult = await deploy('Sale', {
     from: deployer,
-    contract: "ERC721BidSale",
-    args: [Token.address, 1, 3600]
+    contract: 'ERC721BidSale',
+    args: [Token.address, 1, 3600],
   });
   if (deployResult.newlyDeployed) {
-    log(
-      `contract Sale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`
-    );
+    log(`contract Sale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
   }
 };
-module.exports.tags = ["Sale"];
-module.exports.dependencies = ["Token"]; // this ensure the TOken script above is executed first, so `deployments.get('Token') succeeds
+module.exports.tags = ['Sale'];
+module.exports.dependencies = ['Token']; // this ensure the TOken script above is executed first, so `deployments.get('Token') succeeds
 ```
 
 As you can see the second one depends on the first. This is because the second script depends on a tag that the first script registers as using.
@@ -989,13 +980,13 @@ then both scripts will be run, ensuring Sale is ready.
 You can also define the script to run after another script is run by setting `runAtTheEnd` to be true. For example:
 
 ```js
-module.exports = async function({ getNamedAccounts, deployments }) {
-  const { deployIfDifferent, execute, log } = deployments;
+module.exports = async function ({getNamedAccounts, deployments}) {
+  const {deployIfDifferent, execute, log} = deployments;
   const namedAccounts = await getNamedAccounts();
-  const { deployer, admin } = namedAccounts;
-  await execute("Sale", { from: deployer }, "setAdmin", admin);
+  const {deployer, admin} = namedAccounts;
+  await execute('Sale', {from: deployer}, 'setAdmin', admin);
 };
-module.exports.tags = ["Sale"];
+module.exports.tags = ['Sale'];
 module.exports.runAtTheEnd = true;
 ```
 
