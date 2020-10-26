@@ -1,6 +1,6 @@
 {
   "name": "hardhat-deploy",
-  "version": "0.7.0-beta.17",
+  "version": "0.7.0-beta.18",
   "description": "Hardhat Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/hardhat-deploy",
   "author": "wighawag",
@@ -65,7 +65,7 @@
     "@ethersproject/wallet": "^5.0.2",
     "@types/qs": "^6.9.4",
     "axios": "^0.19.2",
-    "chalk": "^4.0.0",
+    "chalk": "^4.1.0",
     "chokidar": "^3.4.0",
     "debug": "^4.1.1",
     "fs-extra": "^9.0.0",
