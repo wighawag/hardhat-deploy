@@ -450,9 +450,6 @@ export class DeploymentsManager {
 
   public async deletePreviousDeployments(): Promise<void> {
     const folderPath = this.env.network.name;
-    try {
-      fs.removeSync(path.join(this.deploymentsPath, folderPath, '.migrations.json'));
-    } catch (e) {}
     deleteDeployments(this.deploymentsPath, folderPath);
   }
 
@@ -632,6 +629,13 @@ export class DeploymentsManager {
       }
     }
 
+    if (options.deletePreviousDeployments) {
+      log('deleting previous deployments');
+      this.db.deployments = {};
+      this.db.migrations = {};
+      await this.deletePreviousDeployments();
+    }
+
     await this.loadDeployments();
     this.db.writeDeploymentsToFiles = options.writeDeploymentsToFiles;
     this.db.savePendingTx = options.savePendingTx;
@@ -642,15 +646,8 @@ export class DeploymentsManager {
       this.db.deployments = {};
       this.db.migrations = {};
     }
-    if (options.deletePreviousDeployments) {
-      log('deleting previous deployments');
-      this.db.deployments = {};
-      this.db.migrations = {};
-      await this.deletePreviousDeployments();
-    } else {
-      if (options.savePendingTx) {
-        await this.dealWithPendingTransactions(); // TODO deal with reset ?
-      }
+    if (!options.deletePreviousDeployments && options.savePendingTx) {
+      await this.dealWithPendingTransactions(); // TODO deal with reset ?
     }
     if (tags !== undefined && typeof tags === 'string') {
       tags = [tags];
