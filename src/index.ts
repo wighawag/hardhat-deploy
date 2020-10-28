@@ -348,7 +348,7 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, _, runSuper) => {
     nodeTaskArgs = args;
-    console.log('node', args);
+    // console.log('node', args);
     await runSuper(args);
   });
 
@@ -356,20 +356,19 @@ subtask(TASK_NODE_GET_PROVIDER).setAction(
   async (args, hre, runSuper): Promise<EthereumProvider> => {
     const provider = await runSuper(args);
     if (nodeTaskArgs.noDeploy) {
-      console.log('skip');
+      // console.log('skip');
       return provider;
     }
-    console.log('enabling logging');
+    // console.log('enabling logging');
     await enableProviderLogging(provider, false);
 
     if (isHardhatEVM(hre)) {
       hre.network.name = 'localhost'; // Ensure deployments can be fetched with console
     }
-    nodeTaskArgs.watch = false;
     nodeTaskArgs.log = !nodeTaskArgs.silent;
     delete nodeTaskArgs.silent;
     nodeTaskArgs.pendingtx = false;
-    await hre.run(TASK_DEPLOY_MAIN, nodeTaskArgs);
+    await hre.run(TASK_DEPLOY_MAIN, {...nodeTaskArgs, watch: false});
 
     await enableProviderLogging(provider, true);
 
