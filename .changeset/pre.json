@@ -1,0 +1,10 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "hardhat-deploy": "0.7.0-beta.20"
+  },
+  "changesets": [
+    "tasty-pillows-attend"
+  ]
+}

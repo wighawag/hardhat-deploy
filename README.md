@@ -101,11 +101,9 @@ But if you add folders to the `include` field in `tsconfig.json` you ll also nee
 
 for deploy script (see below) you can write them this way to benefit from typing :
 
-```
-import {
-  HardhatRuntimeEnvironment,
-  DeployFunction,
-} from "hardhat/types";
+```ts
+import {HardhatRuntimeEnvironment} from 'hardhat/types';
+import {DeployFunction} from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // code here
@@ -113,7 +111,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 ```
 
-TODO update: See a full example of typescript usage here : https://github.com/wighawag/hardhat-deploy-ts-test
+See a template that use hardhat-deploy here : https://github.com/wighawag/template-ethereum-contracts
+
+See a full example of typescript usage here : https://github.com/wighawag/hardhat-deploy-ts-test
 
 ### Migrating existing deployment to hardhat-deploy
 
@@ -495,7 +495,12 @@ This is why the `hre.deployments.deploy` function will by default only deploy if
 An example of a deploy script :
 
 ```js
-module.exports = async ({getNamedAccounts, deployments, getChainId, getUnnamedAccounts}) => {
+module.exports = async ({
+  getNamedAccounts,
+  deployments,
+  getChainId,
+  getUnnamedAccounts,
+}) => {
   const {deploy} = deployments;
   const {deployer} = await getNamedAccounts();
 
@@ -842,7 +847,7 @@ describe('Token', () => {
   it('testing 1 2 3', async function () {
     const {tokenOwner} = await getNamedAccounts();
     const TokenContract = await ethers.getContract('Token', tokenOwner);
-    await TokenContract.mint(2).then(tx => tx.wait());
+    await TokenContract.mint(2).then((tx) => tx.wait());
   });
 });
 ```
@@ -949,7 +954,9 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     args: ['hello', 100],
   });
   if (deployResult.newlyDeployed) {
-    log(`contract Token deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
+    log(
+      `contract Token deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`
+    );
   }
 };
 module.exports.tags = ['Token'];
@@ -967,7 +974,9 @@ module.exports = async function ({getNamedAccounts, deployments}) {
     args: [Token.address, 1, 3600],
   });
   if (deployResult.newlyDeployed) {
-    log(`contract Sale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`);
+    log(
+      `contract Sale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`
+    );
   }
 };
 module.exports.tags = ['Sale'];
