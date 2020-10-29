@@ -842,7 +842,7 @@ describe('Token', () => {
   it('testing 1 2 3', async function () {
     const {tokenOwner} = await getNamedAccounts();
     const TokenContract = await ethers.getContract('Token', tokenOwner);
-    await TokenContract.mint(2);
+    await TokenContract.mint(2).then(tx => tx.wait());
   });
 });
 ```
@@ -858,7 +858,7 @@ const setupTest = deployments.createFixture(async ({deployments, getNamedAccount
   await deployments.fixture(); // ensure you start from a fresh deployments
   const { tokenOwner } = await getNamedAccounts();
   const TokenContract = await ethers.getContract("Token", tokenOwner);
-  await TokenContract.mint(10); //this mint is executed once and then `createFixture` will ensure it is snapshotted
+  await TokenContract.mint(10).then(tx => tx.wait()); //this mint is executed once and then `createFixture` will ensure it is snapshotted
   return {
     tokenOwner: {
       address: tokenOwner,
