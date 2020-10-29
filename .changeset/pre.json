@@ -5,6 +5,7 @@
     "hardhat-deploy": "0.7.0-beta.20"
   },
   "changesets": [
+    "quick-impalas-decide",
     "tasty-pillows-attend"
   ]
 }

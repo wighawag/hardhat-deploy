@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.22
+
+### Patch Changes
+
+- fix types declaration not being published
+
 ## 0.7.0-beta.21
 
 ### Patch Changes
