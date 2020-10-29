@@ -2,7 +2,11 @@
 import {Signer} from '@ethersproject/abstract-signer';
 import {Web3Provider, TransactionResponse} from '@ethersproject/providers';
 import {getAddress} from '@ethersproject/address';
-import {Contract, ContractFactory, PayableOverrides} from '@ethersproject/contracts';
+import {
+  Contract,
+  ContractFactory,
+  PayableOverrides,
+} from '@ethersproject/contracts';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
@@ -37,7 +41,13 @@ import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
 import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
 import diamantaire from '../extendedArtifacts/Diamantaire.json';
 
-diamondBase.abi = mergeABIs(false, diamondBase.abi, diamondCutFacet.abi, diamondLoupeFacet.abi, ownershipFacet.abi);
+diamondBase.abi = mergeABIs(
+  false,
+  diamondBase.abi,
+  diamondCutFacet.abi,
+  diamondLoupeFacet.abi,
+  ownershipFacet.abi
+);
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -53,7 +63,9 @@ function fixProvider(providerGiven: any): any {
     ) => {
       providerGiven
         .send(req.method, req.params)
-        .then((result: any) => callback(null, {result, id: req.id, jsonrpc: req.jsonrpc}))
+        .then((result: any) =>
+          callback(null, {result, id: req.id, jsonrpc: req.jsonrpc})
+        )
         .catch((error: any) => callback(error, null));
     };
   }
@@ -69,22 +81,34 @@ function findAll(toFind: string[], array: string[]): boolean {
   return true;
 }
 
-function linkRawLibrary(bytecode: string, libraryName: string, libraryAddress: string): string {
+function linkRawLibrary(
+  bytecode: string,
+  libraryName: string,
+  libraryAddress: string
+): string {
   const address = libraryAddress.replace('0x', '');
   let encodedLibraryName;
   if (libraryName.startsWith('$') && libraryName.endsWith('$')) {
     encodedLibraryName = libraryName.slice(1, libraryName.length - 1);
   } else {
-    encodedLibraryName = solidityKeccak256(['string'], [libraryName]).slice(2, 36);
+    encodedLibraryName = solidityKeccak256(['string'], [libraryName]).slice(
+      2,
+      36
+    );
   }
   const pattern = new RegExp(`_+\\$${encodedLibraryName}\\$_+`, 'g');
   if (!pattern.exec(bytecode)) {
-    throw new Error(`Can't link '${libraryName}' (${encodedLibraryName}) in \n----\n ${bytecode}\n----\n`);
+    throw new Error(
+      `Can't link '${libraryName}' (${encodedLibraryName}) in \n----\n ${bytecode}\n----\n`
+    );
   }
   return bytecode.replace(pattern, address);
 }
 
-function linkRawLibraries(bytecode: string, libraries: {[libraryName: string]: Address}): string {
+function linkRawLibraries(
+  bytecode: string,
+  libraries: {[libraryName: string]: Address}
+): string {
   for (const libName of Object.keys(libraries)) {
     const libAddress = libraries[libName];
     bytecode = linkRawLibrary(bytecode, libName, libAddress);
@@ -108,7 +132,9 @@ function linkLibraries(
   if (libraries) {
     if (artifact.linkReferences) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for (const [fileName, fileReferences] of Object.entries(artifact.linkReferences)) {
+      for (const [fileName, fileReferences] of Object.entries(
+        artifact.linkReferences
+      )) {
         for (const [libName, fixups] of Object.entries(fileReferences)) {
           const addr = libraries[libName];
           if (addr === undefined) {
@@ -138,9 +164,17 @@ export function addHelpers(
   env: HardhatRuntimeEnvironment,
   partialExtension: PartialExtension, // TODO
   getArtifact: (name: string) => Promise<Artifact>,
-  saveDeployment: (name: string, deployment: DeploymentSubmission, artifactName?: string) => Promise<void>,
+  saveDeployment: (
+    name: string,
+    deployment: DeploymentSubmission,
+    artifactName?: string
+  ) => Promise<void>,
   willSaveToDisk: () => boolean,
-  onPendingTx: (txResponse: TransactionResponse, name?: string, data?: any) => Promise<TransactionResponse>,
+  onPendingTx: (
+    txResponse: TransactionResponse,
+    name?: string,
+    data?: any
+  ) => Promise<TransactionResponse>,
   getGasPrice: () => Promise<BigNumber | undefined>,
   log: (...args: any[]) => void,
   print: (msg: string) => void
@@ -174,7 +208,9 @@ export function addHelpers(
     const estimatedGasLimit = options.estimatedGasLimit
       ? BigNumber.from(options.estimatedGasLimit).toNumber()
       : undefined;
-    const estimateGasExtra = options.estimateGasExtra ? BigNumber.from(options.estimateGasExtra).toNumber() : undefined;
+    const estimateGasExtra = options.estimateGasExtra
+      ? BigNumber.from(options.estimateGasExtra).toNumber()
+      : undefined;
     if (!overrides.gasLimit) {
       overrides.gasLimit = estimatedGasLimit;
       overrides.gasLimit = (await estimate(overrides)).toNumber();
@@ -187,17 +223,28 @@ export function addHelpers(
     }
   }
 
-  function getCreate2Address(create2DeployerAddress: Address, salt: string, bytecode: string): Address {
+  function getCreate2Address(
+    create2DeployerAddress: Address,
+    salt: string,
+    bytecode: string
+  ): Address {
     return getAddress(
       '0x' +
         solidityKeccak256(
           ['bytes'],
-          [`0xff${create2DeployerAddress.slice(2)}${salt.slice(2)}${solidityKeccak256(['bytes'], [bytecode]).slice(2)}`]
+          [
+            `0xff${create2DeployerAddress.slice(2)}${salt.slice(
+              2
+            )}${solidityKeccak256(['bytes'], [bytecode]).slice(2)}`,
+          ]
         ).slice(-40)
     );
   }
 
-  async function ensureCreate2DeployerReady(options: {from: string; log?: boolean}): Promise<string> {
+  async function ensureCreate2DeployerReady(options: {
+    from: string;
+    log?: boolean;
+  }): Promise<string> {
     const {address: from, ethersSigner} = getFrom(options.from);
     if (!ethersSigner) {
       throw new Error('no signer for ' + from);
@@ -207,7 +254,9 @@ export function addHelpers(
     if (code === '0x') {
       const senderAddress = '0x3fab184622dc19b6109349b94811493bf2a45362';
       if (options.log) {
-        log(`sending eth to create2 contract deployer address (${senderAddress})...`);
+        log(
+          `sending eth to create2 contract deployer address (${senderAddress})...`
+        );
       }
       // TODO gasPrice override
       await ethersSigner.sendTransaction({
@@ -257,12 +306,18 @@ export function addHelpers(
     options: DeployOptions
   ): Promise<{artifact: Artifact; artifactName: string | undefined}> {
     // TODO get linked artifact
-    const {artifact, artifactName} = await getArtifactFromOptions(name, options);
+    const {artifact, artifactName} = await getArtifactFromOptions(
+      name,
+      options
+    );
     const byteCode = linkLibraries(artifact, options.libraries);
     return {artifact: {...artifact, bytecode: byteCode}, artifactName};
   }
 
-  async function _deploy(name: string, options: DeployOptions): Promise<DeployResult> {
+  async function _deploy(
+    name: string,
+    options: DeployOptions
+  ): Promise<DeployResult> {
     const args: any[] = options.args ? [...options.args] : [];
     await init();
     const {address: from, ethersSigner} = getFrom(options.from);
@@ -270,7 +325,10 @@ export function addHelpers(
       throw new Error('no signer for ' + from);
     }
 
-    const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(name, options);
+    const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(
+      name,
+      options
+    );
 
     const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
@@ -279,22 +337,34 @@ export function addHelpers(
       nonce: options.nonce,
     };
 
-    const factory = new ContractFactory(linkedArtifact.abi, linkedArtifact.bytecode, ethersSigner);
+    const factory = new ContractFactory(
+      linkedArtifact.abi,
+      linkedArtifact.bytecode,
+      ethersSigner
+    );
     const numArguments = factory.interface.deploy.inputs.length;
     if (args.length !== numArguments) {
-      throw new Error(`expected ${numArguments} constructor arguments, got ${args.length}`);
+      throw new Error(
+        `expected ${numArguments} constructor arguments, got ${args.length}`
+      );
     }
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
 
     let create2Address;
     if (options.deterministicDeployment) {
       if (typeof unsignedTx.data === 'string') {
-        const create2DeployerAddress = await ensureCreate2DeployerReady(options);
+        const create2DeployerAddress = await ensureCreate2DeployerReady(
+          options
+        );
         const create2Salt =
           typeof options.deterministicDeployment === 'string'
             ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        create2Address = getCreate2Address(create2DeployerAddress, create2Salt, unsignedTx.data);
+        create2Address = getCreate2Address(
+          create2DeployerAddress,
+          create2Salt,
+          unsignedTx.data
+        );
         unsignedTx.to = create2DeployerAddress;
 
         unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
@@ -303,7 +373,9 @@ export function addHelpers(
       }
     }
 
-    await overrideGasLimit(unsignedTx, options, (newOverrides) => ethersSigner.estimateGas(newOverrides));
+    await overrideGasLimit(unsignedTx, options, (newOverrides) =>
+      ethersSigner.estimateGas(newOverrides)
+    );
     await setupGasPrice(unsignedTx);
     let tx = await ethersSigner.sendTransaction(unsignedTx);
 
@@ -328,7 +400,9 @@ export function addHelpers(
       linkedData: options.linkedData,
     };
     if (artifactName && willSaveToDisk()) {
-      const extendedArtifact = await env.deployments.getExtendedArtifact(artifactName);
+      const extendedArtifact = await env.deployments.getExtendedArtifact(
+        artifactName
+      );
       preDeployment = {
         ...extendedArtifact,
         ...preDeployment,
@@ -336,7 +410,10 @@ export function addHelpers(
     }
     tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait();
-    const address = options.deterministicDeployment && create2Address ? create2Address : receipt.contractAddress;
+    const address =
+      options.deterministicDeployment && create2Address
+        ? create2Address
+        : receipt.contractAddress;
     const deployment = {
       ...preDeployment,
       address,
@@ -373,7 +450,9 @@ export function addHelpers(
 
     const numArguments = factory.interface.deploy.inputs.length;
     if (args.length !== numArguments) {
-      throw new Error(`expected ${numArguments} constructor arguments, got ${args.length}`);
+      throw new Error(
+        `expected ${numArguments} constructor arguments, got ${args.length}`
+      );
     }
 
     const overrides: PayableOverrides = {
@@ -434,7 +513,9 @@ export function addHelpers(
 
       const numArguments = factory.interface.deploy.inputs.length;
       if (argArray.length !== numArguments) {
-        throw new Error(`expected ${numArguments} constructor arguments, got ${argArray.length}`);
+        throw new Error(
+          `expected ${numArguments} constructor arguments, got ${argArray.length}`
+        );
       }
 
       const overrides: PayableOverrides = {
@@ -450,8 +531,13 @@ export function addHelpers(
           typeof options.deterministicDeployment === 'string'
             ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        const create2DeployerAddress = '0x4e59b44847b379578588920ca78fbf26c0b4956c';
-        const create2Address = getCreate2Address(create2DeployerAddress, create2Salt, unsignedTx.data);
+        const create2DeployerAddress =
+          '0x4e59b44847b379578588920ca78fbf26c0b4956c';
+        const create2Address = getCreate2Address(
+          create2DeployerAddress,
+          create2Salt,
+          unsignedTx.data
+        );
         const code = await provider.getCode(create2Address);
         if (code === '0x') {
           return {differences: true, address: undefined};
@@ -463,7 +549,9 @@ export function addHelpers(
       }
     }
     const fieldsToCompareArray =
-      typeof options.fieldsToCompare === 'string' ? [options.fieldsToCompare] : options.fieldsToCompare || [];
+      typeof options.fieldsToCompare === 'string'
+        ? [options.fieldsToCompare]
+        : options.fieldsToCompare || [];
     const deployment = await env.deployments.getOrNull(name);
     if (deployment) {
       if (options.skipIfAlreadyDeployed) {
@@ -472,7 +560,9 @@ export function addHelpers(
       // TODO transactionReceipt + check for status
       let transaction;
       if (deployment.receipt) {
-        transaction = await provider.getTransaction(deployment.receipt.transactionHash);
+        transaction = await provider.getTransaction(
+          deployment.receipt.transactionHash
+        );
       } else if (deployment.transactionHash) {
         transaction = await provider.getTransaction(deployment.transactionHash);
       }
@@ -481,7 +571,11 @@ export function addHelpers(
         const {artifact} = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact, options.libraries);
-        const factory = new ContractFactory(abi, byteCode, provider.getSigner(options.from));
+        const factory = new ContractFactory(
+          abi,
+          byteCode,
+          provider.getSigner(options.from)
+        );
 
         const compareOnData = fieldsToCompareArray.indexOf('data') !== -1;
 
@@ -498,10 +592,13 @@ export function addHelpers(
           from: options.from,
         };
 
-        transaction.data = transaction.data;
         for (const field of fieldsToCompareArray) {
           if (typeof (newTransaction as any)[field] === 'undefined') {
-            throw new Error('field ' + field + ' not specified in new transaction, cant compare');
+            throw new Error(
+              'field ' +
+                field +
+                ' not specified in new transaction, cant compare'
+            );
           }
           if ((transaction as any)[field] !== (newTransaction as any)[field]) {
             return {differences: true, address: deployment.address};
@@ -513,7 +610,10 @@ export function addHelpers(
     return {differences: true, address: undefined};
   }
 
-  async function _deployOne(name: string, options: DeployOptions): Promise<DeployResult> {
+  async function _deployOne(
+    name: string,
+    options: DeployOptions
+  ): Promise<DeployResult> {
     const argsArray = options.args ? [...options.args] : [];
     options = {...options, args: argsArray};
     if (options.fieldsToCompare === undefined) {
@@ -530,10 +630,15 @@ export function addHelpers(
           result = deployment as DeployResult;
         } else {
           if (!diffResult.address) {
-            throw new Error('no differences found but no address, this should be impossible');
+            throw new Error(
+              'no differences found but no address, this should be impossible'
+            );
           }
 
-          const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(name, options);
+          const {
+            artifact: linkedArtifact,
+            artifactName,
+          } = await getLinkedArtifact(name, options);
 
           // receipt missing
           const newDeployment = {
@@ -554,7 +659,9 @@ export function addHelpers(
     }
     if (options.log) {
       if (result.newlyDeployed) {
-        log(`"${name}" deployed at ${result.address} with ${result.receipt?.gasUsed} gas`);
+        log(
+          `"${name}" deployed at ${result.address} with ${result.receipt?.gasUsed} gas`
+        );
       } else {
         log(`reusing "${name}" at ${result.address}`);
       }
@@ -562,7 +669,10 @@ export function addHelpers(
     return result;
   }
 
-  function _checkUpgradeIndex(oldDeployment: Deployment | null, upgradeIndex?: number): DeployResult | undefined {
+  function _checkUpgradeIndex(
+    oldDeployment: Deployment | null,
+    upgradeIndex?: number
+  ): DeployResult | undefined {
     if (typeof upgradeIndex === 'undefined') {
       return;
     }
@@ -572,28 +682,39 @@ export function addHelpers(
       }
     } else if (upgradeIndex === 1) {
       if (!oldDeployment) {
-        throw new Error('upgradeIndex === 1 : expects Deployments to already exists');
+        throw new Error(
+          'upgradeIndex === 1 : expects Deployments to already exists'
+        );
       }
       if (oldDeployment.history && oldDeployment.history.length > 0) {
         return {...oldDeployment, newlyDeployed: false};
       }
     } else {
       if (!oldDeployment) {
-        throw new Error(`upgradeIndex === ${upgradeIndex} : expects Deployments to already exists`);
+        throw new Error(
+          `upgradeIndex === ${upgradeIndex} : expects Deployments to already exists`
+        );
       }
       if (!oldDeployment.history) {
-        throw new Error(`upgradeIndex > 1 : expects Deployments history to exists`);
+        throw new Error(
+          `upgradeIndex > 1 : expects Deployments history to exists`
+        );
       } else if (oldDeployment.history.length > upgradeIndex - 1) {
         return {...oldDeployment, newlyDeployed: false};
       } else if (oldDeployment.history.length < upgradeIndex - 1) {
         throw new Error(
-          `upgradeIndex === ${upgradeIndex} : expects Deployments history length to be at least ${upgradeIndex - 1}`
+          `upgradeIndex === ${upgradeIndex} : expects Deployments history length to be at least ${
+            upgradeIndex - 1
+          }`
         );
       }
     }
   }
 
-  async function _deployViaEIP173Proxy(name: string, options: DeployOptions): Promise<DeployResult> {
+  async function _deployViaEIP173Proxy(
+    name: string,
+    options: DeployOptions
+  ): Promise<DeployResult> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let updateMethod;
     let upgradeIndex;
@@ -618,12 +739,18 @@ export function addHelpers(
     if (!implementationOptions.contract) {
       implementationOptions.contract = name;
     }
-    const {artifact} = await getArtifactFromOptions(implementationName, implementationOptions);
+    const {artifact} = await getArtifactFromOptions(
+      implementationName,
+      implementationOptions
+    );
 
     // ensure no clash
     mergeABIs(true, eip173Proxy.abi, artifact.abi);
 
-    const constructor = artifact.abi.find((fragment: {type: string; inputs: any[]}) => fragment.type === 'constructor');
+    const constructor = artifact.abi.find(
+      (fragment: {type: string; inputs: any[]}) =>
+        fragment.type === 'constructor'
+    );
     if (!constructor || constructor.inputs.length !== argsArray.length) {
       delete implementationOptions.args;
       if (constructor && constructor.inputs.length > 0) {
@@ -636,19 +763,29 @@ Plus they are only used when the contract is meant to be used as standalone when
         );
       }
     }
-    const implementation = await _deployOne(implementationName, implementationOptions);
+    const implementation = await _deployOne(
+      implementationName,
+      implementationOptions
+    );
     // --- --------------------------- ---
 
     if (implementation.newlyDeployed) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
-      const implementationContract = new Contract(implementation.address, implementation.abi);
+      const implementationContract = new Contract(
+        implementation.address,
+        implementation.abi
+      );
 
       let data = '0x';
       if (updateMethod) {
         if (!implementationContract[updateMethod]) {
-          throw new Error(`contract need to implement function ${updateMethod}`);
+          throw new Error(
+            `contract need to implement function ${updateMethod}`
+          );
         }
-        const txData = await implementationContract.populateTransaction[updateMethod](...argsArray);
+        const txData = await implementationContract.populateTransaction[
+          updateMethod
+        ](...argsArray);
         data = txData.data || '0x';
       }
 
@@ -675,7 +812,9 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
 
         if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
-          throw new Error('To change owner, you need to call `transferOwnership`');
+          throw new Error(
+            'To change owner, you need to call `transferOwnership`'
+          );
         }
         const executeReceipt = await execute(
           proxyName,
@@ -730,7 +869,9 @@ Plus they are only used when the contract is meant to be used as standalone when
     return getFrom(address);
   }
 
-  function getOptionalFrom(from?: string): {address?: Address; ethersSigner?: Signer} {
+  function getOptionalFrom(
+    from?: string
+  ): {address?: Address; ethersSigner?: Signer} {
     return _getFrom(from, true);
   }
 
@@ -738,7 +879,10 @@ Plus they are only used when the contract is meant to be used as standalone when
     return _getFrom(from, false) as {address: Address; ethersSigner?: Signer};
   }
 
-  function _getFrom(from?: string, optional?: boolean): {address?: Address; ethersSigner?: Signer} {
+  function _getFrom(
+    from?: string,
+    optional?: boolean
+  ): {address?: Address; ethersSigner?: Signer} {
     let ethersSigner: Signer | undefined;
     if (!from) {
       if (optional) {
@@ -772,13 +916,21 @@ Plus they are only used when the contract is meant to be used as standalone when
   function sigsFromABI(abi: any[]): string[] {
     return abi
       .filter((fragment: any) => fragment.type === 'function')
-      .map((fragment: any) => Interface.getSighash(FunctionFragment.from(fragment)));
+      .map((fragment: any) =>
+        Interface.getSighash(FunctionFragment.from(fragment))
+      );
   }
 
-  async function _deployViaDiamondProxy(name: string, options: DiamondOptions): Promise<DeployResult> {
+  async function _deployViaDiamondProxy(
+    name: string,
+    options: DiamondOptions
+  ): Promise<DeployResult> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let proxy;
-    const deployResult = _checkUpgradeIndex(oldDeployment, options.upgradeIndex);
+    const deployResult = _checkUpgradeIndex(
+      oldDeployment,
+      options.upgradeIndex
+    );
     if (deployResult) {
       return deployResult;
     }
@@ -798,11 +950,20 @@ Plus they are only used when the contract is meant to be used as standalone when
         // ensure DiamondLoupeFacet, OwnershipFacet and DiamondCutFacet are kept // TODO options to delete cut them out?
         if (
           findAll(
-            ['0xcdffacc6', '0x52ef6b2c', '0xadfca15e', '0x7a0ed627', '0x01ffc9a7'],
+            [
+              '0xcdffacc6',
+              '0x52ef6b2c',
+              '0xadfca15e',
+              '0x7a0ed627',
+              '0x01ffc9a7',
+            ],
             currentFacetCut.functionSelectors
           ) || // Loupe
           currentFacetCut.functionSelectors[0] === 'e712b4e1' || // DiamoncCut
-          findAll(['0xf2fde38b', '0x8da5cb5b'], currentFacetCut.functionSelectors) // ERC173
+          findAll(
+            ['0xf2fde38b', '0x8da5cb5b'],
+            currentFacetCut.functionSelectors
+          ) // ERC173
         ) {
           facetSnapshot.push(currentFacetCut);
         }
@@ -816,7 +977,8 @@ Plus they are only used when the contract is meant to be used as standalone when
     for (const facet of options.facets) {
       const artifact = await getArtifact(facet); // TODO getArtifactFromOptions( // allowing to pass bytecode / abi
       const constructor = artifact.abi.find(
-        (fragment: {type: string; inputs: any[]}) => fragment.type === 'constructor'
+        (fragment: {type: string; inputs: any[]}) =>
+          fragment.type === 'constructor'
       );
       if (constructor) {
         throw new Error(`Facet must not have a constructor`);
@@ -844,14 +1006,24 @@ Plus they are only used when the contract is meant to be used as standalone when
           functionSelectors: sigsFromABI(oldImpl.abi),
         };
         facetSnapshot.push(facetCut);
-        if (!oldFacets.find((f) => f.facetAddress.toLowerCase() === oldImpl.address.toLowerCase())) {
+        if (
+          !oldFacets.find(
+            (f) =>
+              f.facetAddress.toLowerCase() === oldImpl.address.toLowerCase()
+          )
+        ) {
           facetCuts.push(facetCut);
         }
       }
     }
 
     for (const oldFacet of oldFacets) {
-      if (!facetSnapshot.find((f) => f.facetAddress.toLowerCase() === oldFacet.facetAddress.toLowerCase())) {
+      if (
+        !facetSnapshot.find(
+          (f) =>
+            f.facetAddress.toLowerCase() === oldFacet.facetAddress.toLowerCase()
+        )
+      ) {
         changesDetected = true;
         facetCuts.unshift({
           facetAddress: '0x0000000000000000000000000000000000000000',
@@ -862,8 +1034,13 @@ Plus they are only used when the contract is meant to be used as standalone when
 
     let data = '0x';
     if (options.execute) {
-      const diamondContract = new Contract('0x0000000000000000000000000000000000000001', abi);
-      const txData = await diamondContract.populateTransaction[options.execute.methodName](...options.execute.args);
+      const diamondContract = new Contract(
+        '0x0000000000000000000000000000000000000001',
+        abi
+      );
+      const txData = await diamondContract.populateTransaction[
+        options.execute.methodName
+      ](...options.execute.args);
       data = txData.data || '0x';
     }
 
@@ -877,10 +1054,15 @@ Plus they are only used when the contract is meant to be used as standalone when
           from: options.from,
           deterministicDeployment: true,
         });
-        const diamantaireContract = new Contract(diamantaireDeployment.address, diamantaire.abi, provider);
+        const diamantaireContract = new Contract(
+          diamantaireDeployment.address,
+          diamantaire.abi,
+          provider
+        );
         // the diamantaire allow the execution of data at diamond construction time
 
-        let salt = '0x0000000000000000000000000000000000000000000000000000000000000000';
+        let salt =
+          '0x0000000000000000000000000000000000000000000000000000000000000000';
         if (typeof options.deterministicSalt !== 'undefined') {
           if (typeof options.deterministicSalt === 'string') {
             if (options.deterministicSalt === salt) {
@@ -896,10 +1078,20 @@ Plus they are only used when the contract is meant to be used as standalone when
               salt = options.deterministicSalt;
             }
           } else {
-            throw new Error(`deterministicSalt need to be a string, an non-zero bytes32 salt`);
+            throw new Error(
+              `deterministicSalt need to be a string, an non-zero bytes32 salt`
+            );
           }
         }
-        const createReceipt = await execute(diamantaireName, options, 'createDiamond', owner, facetCuts, data, salt);
+        const createReceipt = await execute(
+          diamantaireName,
+          options,
+          'createDiamond',
+          owner,
+          facetCuts,
+          data,
+          salt
+        );
 
         if (!createReceipt) {
           throw new Error(`failed to get receipt from diamond creation`);
@@ -914,7 +1106,9 @@ Plus they are only used when the contract is meant to be used as standalone when
           }
         }
 
-        const diamondCreatedEvent = events.find((e) => e.name === 'DiamondCreated');
+        const diamondCreatedEvent = events.find(
+          (e) => e.name === 'DiamondCreated'
+        );
         if (!diamondCreatedEvent) {
           throw new Error('DiamondCreated Not Emitted');
         }
@@ -925,14 +1119,21 @@ Plus they are only used when the contract is meant to be used as standalone when
           );
         }
 
-        if (salt !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+        if (
+          salt !==
+          '0x0000000000000000000000000000000000000000000000000000000000000000'
+        ) {
           const expectedAddress = getCreate2Address(
             diamantaireContract.address,
             solidityKeccak256(['bytes32', 'address'], [salt, owner]),
-            diamondBase.bytecode + '000000000000000000000000' + diamantaireContract.address.slice(2)
+            diamondBase.bytecode +
+              '000000000000000000000000' +
+              diamantaireContract.address.slice(2)
           );
           if (expectedAddress !== proxyAddress) {
-            throw new Error(`unexpected address ${proxyAddress} VS ${expectedAddress}`);
+            throw new Error(
+              `unexpected address ${proxyAddress} VS ${expectedAddress}`
+            );
           }
         }
 
@@ -969,7 +1170,9 @@ Plus they are only used when the contract is meant to be used as standalone when
           options,
           'diamondCut',
           facetCuts,
-          data === '0x' ? '0x0000000000000000000000000000000000000000' : proxy.address,
+          data === '0x'
+            ? '0x0000000000000000000000000000000000000000'
+            : proxy.address,
           data
         );
         if (!executeReceipt) {
@@ -978,7 +1181,9 @@ Plus they are only used when the contract is meant to be used as standalone when
         await saveDeployment(name, {
           receipt: executeReceipt,
           transactionHash: executeReceipt.transactionHash,
-          history: oldDeployment.history ? oldDeployment.history.concat(oldDeployment) : [oldDeployment],
+          history: oldDeployment.history
+            ? oldDeployment.history.concat(oldDeployment)
+            : [oldDeployment],
           linkedData: options.linkedData,
           address: proxy.address,
           abi,
@@ -1002,7 +1207,10 @@ Plus they are only used when the contract is meant to be used as standalone when
     }
   }
 
-  async function deploy(name: string, options: DeployOptions): Promise<DeployResult> {
+  async function deploy(
+    name: string,
+    options: DeployOptions
+  ): Promise<DeployResult> {
     await init();
     if (!options.proxy) {
       return _deployOne(name, options);
@@ -1010,7 +1218,10 @@ Plus they are only used when the contract is meant to be used as standalone when
     return _deployViaEIP173Proxy(name, options);
   }
 
-  async function diamond(name: string, options: DiamondOptions): Promise<DeployResult> {
+  async function diamond(
+    name: string,
+    options: DiamondOptions
+  ): Promise<DeployResult> {
     await init();
     return _deployViaDiamondProxy(name, options);
   }
@@ -1045,7 +1256,9 @@ Plus they are only used when the contract is meant to be used as standalone when
     }
   }
 
-  async function catchUnknownSigner(action: Promise<any> | (() => Promise<any>)): Promise<void> {
+  async function catchUnknownSigner(
+    action: Promise<any> | (() => Promise<any>)
+  ): Promise<void> {
     try {
       if (action instanceof Promise) {
         await action;
@@ -1093,7 +1306,12 @@ data: ${data}
     }
   }
 
-  async function execute(name: string, options: TxOptions, methodName: string, ...args: any[]): Promise<Receipt> {
+  async function execute(
+    name: string,
+    options: TxOptions,
+    methodName: string,
+    ...args: any[]
+  ): Promise<Receipt> {
     await init();
     const {address: from, ethersSigner} = getFrom(options.from);
 
@@ -1107,19 +1325,30 @@ data: ${data}
       nonce: options.nonce,
     };
 
-    const ethersContract = new Contract(deployment.address, abi, (ethersSigner as Signer) || provider);
+    const ethersContract = new Contract(
+      deployment.address,
+      abi,
+      (ethersSigner as Signer) || provider
+    );
     if (!ethersContract.functions[methodName]) {
-      throw new Error(`No method named "${methodName}" on contract deployed as "${name}"`);
+      throw new Error(
+        `No method named "${methodName}" on contract deployed as "${name}"`
+      );
     }
 
-    const numArguments = ethersContract.interface.getFunction(methodName).inputs.length;
+    const numArguments = ethersContract.interface.getFunction(methodName).inputs
+      .length;
     if (args.length !== numArguments) {
-      throw new Error(`expected ${numArguments} arguments for method "${methodName}", got ${args.length}`);
+      throw new Error(
+        `expected ${numArguments} arguments for method "${methodName}", got ${args.length}`
+      );
     }
 
     if (!ethersSigner) {
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
-      const {data} = await ethersContract.populateTransaction[methodName](...ethersArgs);
+      const {data} = await ethersContract.populateTransaction[methodName](
+        ...ethersArgs
+      );
       throw new UnknownSignerError({
         from,
         to: deployment.address,
@@ -1133,8 +1362,12 @@ data: ${data}
       });
     } else {
       await overrideGasLimit(overrides, options, (newOverrides) => {
-        const ethersArgsWithGasLimit = args ? args.concat([newOverrides]) : [newOverrides];
-        return ethersContract.estimateGas[methodName](...ethersArgsWithGasLimit);
+        const ethersArgsWithGasLimit = args
+          ? args.concat([newOverrides])
+          : [newOverrides];
+        return ethersContract.estimateGas[methodName](
+          ...ethersArgsWithGasLimit
+        );
       });
       await setupGasPrice(overrides);
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
@@ -1171,7 +1404,12 @@ data: ${data}
   //   ]); // TODO overrides
   // }
 
-  async function read(name: string, options: CallOptions | string, methodName?: string | any, ...args: unknown[]) {
+  async function read(
+    name: string,
+    options: CallOptions | string,
+    methodName?: string | any,
+    ...args: unknown[]
+  ) {
     await init();
     if (typeof options === 'string') {
       if (typeof methodName !== 'undefined') {
@@ -1199,7 +1437,11 @@ data: ${data}
       value: options.value ? BigNumber.from(options.value) : undefined,
       nonce: options.nonce,
     };
-    const ethersContract = new Contract(deployment.address, abi, caller as Signer);
+    const ethersContract = new Contract(
+      deployment.address,
+      abi,
+      caller as Signer
+    );
     // populate function
     // if (options.outputTx) {
     //   const method = ethersContract.populateTransaction[methodName];
@@ -1240,7 +1482,12 @@ data: ${data}
   };
 
   // ////////// Backward compatible for transition: //////////////////
-  (extension as any).call = (options: any, name: string, methodName: string, ...args: any[]): Promise<any> => {
+  (extension as any).call = (
+    options: any,
+    name: string,
+    methodName: string,
+    ...args: any[]
+  ): Promise<any> => {
     if (typeof options === 'string') {
       args = args || [];
       if (methodName !== undefined) {
@@ -1283,8 +1530,13 @@ function pause(duration: number): Promise<void> {
   return new Promise((res) => setTimeout(res, duration * 1000));
 }
 
-export async function waitForTx(ethereum: EthereumProvider, txHash: string, isContract: boolean): Promise<Receipt> {
+export async function waitForTx(
+  ethereum: EthereumProvider,
+  txHash: string,
+  isContract: boolean
+): Promise<Receipt> {
   let receipt;
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
       receipt = await ethereum.send('eth_getTransactionReceipt', [txHash]);

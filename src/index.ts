@@ -1,11 +1,22 @@
 import './type-extensions';
 import chalk from 'chalk';
 import path from 'path';
-import {HardhatRuntimeEnvironment, Deployment, HardhatConfig, HardhatUserConfig, EthereumProvider} from 'hardhat/types';
+import {
+  HardhatRuntimeEnvironment,
+  Deployment,
+  HardhatConfig,
+  HardhatUserConfig,
+  EthereumProvider,
+} from 'hardhat/types';
 import {extendEnvironment, task, subtask, extendConfig} from 'hardhat/config';
 import {HARDHAT_NETWORK_NAME} from 'hardhat/internal/constants';
 import * as types from 'hardhat/internal/core/params/argumentTypes';
-import {TASK_NODE, TASK_TEST, TASK_NODE_GET_PROVIDER, TASK_NODE_SERVER_READY} from 'hardhat/builtin-tasks/task-names';
+import {
+  TASK_NODE,
+  TASK_TEST,
+  TASK_NODE_GET_PROVIDER,
+  TASK_NODE_SERVER_READY,
+} from 'hardhat/builtin-tasks/task-names';
 
 import debug from 'debug';
 const log = debug('hardhat:wighawag:hardhat-deploy');
@@ -35,7 +46,11 @@ function normalizePathArray(config: HardhatConfig, paths: string[]): string[] {
   return newArray;
 }
 
-function normalizePath(config: HardhatConfig, userPath: string | undefined, defaultPath: string): string {
+function normalizePath(
+  config: HardhatConfig,
+  userPath: string | undefined,
+  defaultPath: string
+): string {
   if (userPath === undefined) {
     userPath = path.join(config.paths.root, defaultPath);
   } else {
@@ -46,42 +61,65 @@ function normalizePath(config: HardhatConfig, userPath: string | undefined, defa
   return userPath;
 }
 
-extendConfig((config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
-  config.paths.deployments = normalizePath(config, userConfig.paths?.deployments, 'deployments');
+extendConfig(
+  (config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
+    config.paths.deployments = normalizePath(
+      config,
+      userConfig.paths?.deployments,
+      'deployments'
+    );
 
-  config.paths.imports = normalizePath(config, userConfig.paths?.imports, 'imports');
+    config.paths.imports = normalizePath(
+      config,
+      userConfig.paths?.imports,
+      'imports'
+    );
 
-  config.paths.deploy = normalizePath(config, userConfig.paths?.deploy, TASK_DEPLOY);
+    config.paths.deploy = normalizePath(
+      config,
+      userConfig.paths?.deploy,
+      TASK_DEPLOY
+    );
 
-  if (userConfig.namedAccounts) {
-    config.namedAccounts = userConfig.namedAccounts;
-  } else {
-    config.namedAccounts = {};
-  }
-
-  if (userConfig.external) {
-    if (!config.external) {
-      config.external = {};
+    if (userConfig.namedAccounts) {
+      config.namedAccounts = userConfig.namedAccounts;
+    } else {
+      config.namedAccounts = {};
     }
-    if (userConfig.external.artifacts) {
-      config.external.artifacts = normalizePathArray(config, userConfig.external.artifacts);
-    }
-    if (userConfig.external.deployments) {
-      config.external.deployments = {};
-      for (const key of Object.keys(userConfig.external.deployments)) {
-        config.external.deployments[key] = normalizePathArray(config, userConfig.external.deployments[key]);
+
+    if (userConfig.external) {
+      if (!config.external) {
+        config.external = {};
+      }
+      if (userConfig.external.artifacts) {
+        config.external.artifacts = normalizePathArray(
+          config,
+          userConfig.external.artifacts
+        );
+      }
+      if (userConfig.external.deployments) {
+        config.external.deployments = {};
+        for (const key of Object.keys(userConfig.external.deployments)) {
+          config.external.deployments[key] = normalizePathArray(
+            config,
+            userConfig.external.deployments[key]
+          );
+        }
+      }
+
+      if (userConfig.external.deploy) {
+        config.external.deploy = normalizePathArray(
+          config,
+          userConfig.external.deploy
+        );
       }
     }
 
-    if (userConfig.external.deploy) {
-      config.external.deploy = normalizePathArray(config, userConfig.external.deploy);
+    for (const compiler of config.solidity.compilers) {
+      setupExtraSolcSettings(compiler.settings);
     }
   }
-
-  for (const compiler of config.solidity.compilers) {
-    setupExtraSolcSettings(compiler.settings);
-  }
-});
+);
 
 log('start...');
 let deploymentsManager: DeploymentsManager;
@@ -112,8 +150,12 @@ extendEnvironment((env) => {
   if (deploymentsManager === undefined || env.deployments === undefined) {
     deploymentsManager = new DeploymentsManager(env);
     env.deployments = deploymentsManager.deploymentsExtension;
-    env.getNamedAccounts = deploymentsManager.getNamedAccounts.bind(deploymentsManager);
-    env.getUnnamedAccounts = deploymentsManager.getUnnamedAccounts.bind(deploymentsManager);
+    env.getNamedAccounts = deploymentsManager.getNamedAccounts.bind(
+      deploymentsManager
+    );
+    env.getUnnamedAccounts = deploymentsManager.getUnnamedAccounts.bind(
+      deploymentsManager
+    );
   }
   log('ready');
 });
@@ -170,9 +212,24 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
   .addOptionalParam('tags', 'dependencies to run')
-  .addOptionalParam('write', 'whether to write deployments to file', true, types.boolean)
-  .addOptionalParam('pendingtx', 'whether to save pending tx', false, types.boolean)
-  .addOptionalParam('gasprice', 'gas price to use for transactions', undefined, types.string)
+  .addOptionalParam(
+    'write',
+    'whether to write deployments to file',
+    true,
+    types.boolean
+  )
+  .addOptionalParam(
+    'pendingtx',
+    'whether to save pending tx',
+    false,
+    types.boolean
+  )
+  .addOptionalParam(
+    'gasprice',
+    'gas price to use for transactions',
+    undefined,
+    types.string
+  )
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
   .setAction(async (args) => {
@@ -192,14 +249,32 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
   .addOptionalParam('tags', 'dependencies to run')
-  .addOptionalParam('write', 'whether to write deployments to file', true, types.boolean)
-  .addOptionalParam('pendingtx', 'whether to save pending tx', false, types.boolean)
-  .addOptionalParam('gasprice', 'gas price to use for transactions', undefined, types.string)
+  .addOptionalParam(
+    'write',
+    'whether to write deployments to file',
+    true,
+    types.boolean
+  )
+  .addOptionalParam(
+    'pendingtx',
+    'whether to save pending tx',
+    false,
+    types.boolean
+  )
+  .addOptionalParam(
+    'gasprice',
+    'gas price to use for transactions',
+    undefined,
+    types.string
+  )
   .addFlag('noCompile', 'disable pre compilation')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
-  .addFlag('watchOnly', 'do not actually deploy, just watch and deploy if changes occurs')
+  .addFlag(
+    'watchOnly',
+    'do not actually deploy, just watch and deploy if changes occurs'
+  )
   .setAction(async (args, hre) => {
     async function compileAndDeploy() {
       if (!args.noCompile) {
@@ -212,16 +287,21 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
       [name: string]: Deployment;
     }> | null = args.watchOnly ? null : compileAndDeploy();
     if (args.watch || args.watchOnly) {
-      const watcher = chokidar.watch([hre.config.paths.sources, hre.config.paths.deploy], {
-        ignored: /(^|[\/\\])\../, // ignore dotfiles
-        persistent: true,
-      });
+      const watcher = chokidar.watch(
+        [hre.config.paths.sources, hre.config.paths.deploy],
+        {
+          ignored: /(^|[/\\])\../, // ignore dotfiles
+          persistent: true,
+        }
+      );
 
-      watcher.on('ready', () => console.log('Initial scan complete. Ready for changes'));
+      watcher.on('ready', () =>
+        console.log('Initial scan complete. Ready for changes')
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let rejectPending: any = null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line no-inner-declarations,@typescript-eslint/no-explicit-any
       function pending(): Promise<any> {
         return new Promise((resolve, reject) => {
           rejectPending = reject;
@@ -297,17 +377,36 @@ task(TASK_DEPLOY, 'Deploy contracts')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
   .addOptionalParam('tags', 'dependencies to run')
-  .addOptionalParam('write', 'whether to write deployments to file', undefined, types.boolean)
+  .addOptionalParam(
+    'write',
+    'whether to write deployments to file',
+    undefined,
+    types.boolean
+  )
   // TODO pendingtx
-  .addOptionalParam('gasprice', 'gas price to use for transactions', undefined, types.string)
-  .addOptionalParam('deployScripts', 'override deploy script folder path', undefined, types.string)
+  .addOptionalParam(
+    'gasprice',
+    'gas price to use for transactions',
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    'deployScripts',
+    'override deploy script folder path',
+    undefined,
+    types.string
+  )
   .addFlag('noCompile', 'disable pre compilation')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('silent', 'whether to remove log')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, hre) => {
     if (args.deployScripts) {
-      hre.config.paths.deploy = normalizePath(hre.config, args.deployScripts, args.deployScripts);
+      hre.config.paths.deploy = normalizePath(
+        hre.config,
+        args.deployScripts,
+        args.deployScripts
+      );
     }
     args.log = !args.silent;
     delete args.silent;
@@ -318,7 +417,10 @@ task(TASK_DEPLOY, 'Deploy contracts')
     await hre.run(TASK_DEPLOY_MAIN, args);
   });
 
-task(TASK_EXPORT, 'export contract deployment of the specified network into one file')
+task(
+  TASK_EXPORT,
+  'export contract deployment of the specified network into one file'
+)
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
   .setAction(async (args) => {
@@ -326,7 +428,10 @@ task(TASK_EXPORT, 'export contract deployment of the specified network into one 
     await deploymentsManager.export(args);
   });
 
-async function enableProviderLogging(provider: EthereumProvider, enabled: boolean) {
+async function enableProviderLogging(
+  provider: EthereumProvider,
+  enabled: boolean
+) {
   await provider.request({
     method: 'hardhat_setLoggingEnabled',
     params: [enabled],
@@ -339,8 +444,18 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
   .addOptionalParam('tags', 'dependencies to run')
-  .addOptionalParam('write', 'whether to write deployments to file', true, types.boolean)
-  .addOptionalParam('gasprice', 'gas price to use for transactions', undefined, types.string)
+  .addOptionalParam(
+    'write',
+    'whether to write deployments to file',
+    true,
+    types.boolean
+  )
+  .addOptionalParam(
+    'gasprice',
+    'gas price to use for transactions',
+    undefined,
+    types.string
+  )
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('silent', 'whether to renove log')
   .addFlag('noDeploy', 'do not deploy')
@@ -380,7 +495,11 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
   if (nodeTaskArgs.showAccounts) {
     await runSuper(args);
   } else {
-    console.log(chalk.green(`Started HTTP and WebSocket JSON-RPC server at http://${args.address}:${args.port}/`));
+    console.log(
+      chalk.green(
+        `Started HTTP and WebSocket JSON-RPC server at http://${args.address}:${args.port}/`
+      )
+    );
     console.log();
   }
 
@@ -397,7 +516,10 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     undefined,
     types.string
   )
-  .addFlag('forceLicense', 'force the use of the license specified by --license option')
+  .addFlag(
+    'forceLicense',
+    'force the use of the license specified by --license option'
+  )
   .addFlag(
     'solcInput',
     'fallback on solc-input (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)'

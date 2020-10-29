@@ -1,23 +1,19 @@
 {
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  "[solidity]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true
   },
   "solidity.linter": "solhint",
   "solidity.enableLocalNodeCompiler": false,
-  "solidity.compileUsingRemoteVersion": "0.7.1+commit.f4a555b.Emscripten.clang",
-  "solidity.packageDefaultDependenciesContractsDirectory": "src",
+  "solidity.compileUsingRemoteVersion": "v0.7.1+commit.f4a555be",
+  "solidity.packageDefaultDependenciesContractsDirectory": "",
+  "solidity.enabledAsYouTypeCompilationErrorCheck": true,
+  "solidity.validationDelay": 1500,
   "solidity.packageDefaultDependenciesDirectory": "node_modules",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "[json]": {
-    "editor.formatOnSave": false,
-    "editor.codeActionsOnSave": {}
-  },
   "mochaExplorer.env": {
-    "HARDHAT_CONFIG": "hardhat.config.ts"
+    "HARDHAT_CONFIG": "hardhat.config.ts",
+    "HARDHAT_COMPILE": "true"
   },
   "mochaExplorer.require": ["ts-node/register/transpile-only"]
 }

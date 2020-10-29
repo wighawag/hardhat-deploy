@@ -153,7 +153,9 @@ export async function submitSources(
     }
 
     if (!metadataString) {
-      logError(`Contract ${name} was deployed without saving metadata. Cannot submit to etherscan, skipping.`);
+      logError(
+        `Contract ${name} was deployed without saving metadata. Cannot submit to etherscan, skipping.`
+      );
       return;
     }
     const metadata = JSON.parse(metadataString);
@@ -175,7 +177,9 @@ export async function submitSources(
     const contractNamePath = `${contractFilepath}:${contractName}`;
 
     const contractSourceFile = metadata.sources[contractFilepath].content;
-    const sourceLicenseType = extractOneLicenseFromSourceFile(contractSourceFile);
+    const sourceLicenseType = extractOneLicenseFromSourceFile(
+      contractSourceFile
+    );
 
     let license = licenseOption;
     if (!sourceLicenseType) {
@@ -218,10 +222,14 @@ export async function submitSources(
       const solcInputHash = deployment.solcInputHash;
       let solcInputStringFromDeployment: string | undefined;
       try {
-        solcInputStringFromDeployment = fs.readFileSync(path.join(solcInputsPath, solcInputHash + '.json')).toString();
+        solcInputStringFromDeployment = fs
+          .readFileSync(path.join(solcInputsPath, solcInputHash + '.json'))
+          .toString();
       } catch (e) {}
       if (!solcInputStringFromDeployment) {
-        logError(`Contract ${name} was deployed without saving solcInput. Cannot submit to etherscan, skipping.`);
+        logError(
+          `Contract ${name} was deployed without saving solcInput. Cannot submit to etherscan, skipping.`
+        );
         return;
       }
       solcInput = JSON.parse(solcInputStringFromDeployment);
@@ -250,7 +258,8 @@ export async function submitSources(
         if (!settings.libraries[contractNamePath]) {
           settings.libraries[contractNamePath] = {};
         }
-        settings.libraries[contractNamePath][libraryName] = deployment.libraries[libraryName];
+        settings.libraries[contractNamePath][libraryName] =
+          deployment.libraries[libraryName];
       }
     }
     const solcInputString = JSON.stringify(solcInput);
@@ -259,9 +268,13 @@ export async function submitSources(
 
     let constructorArguements: string | undefined;
     if (deployment.args) {
-      const constructor: {inputs: ParamType[]} = deployment.abi.find((v) => v.type === 'constructor');
+      const constructor: {inputs: ParamType[]} = deployment.abi.find(
+        (v) => v.type === 'constructor'
+      );
       if (constructor) {
-        constructorArguements = defaultAbiCoder.encode(constructor.inputs, deployment.args).slice(2);
+        constructorArguements = defaultAbiCoder
+          .encode(constructor.inputs, deployment.args)
+          .slice(2);
       }
     } else {
       logInfo(`no args found, assuming empty constructor...`);
@@ -294,7 +307,10 @@ export async function submitSources(
     if (submissionData.status === '1') {
       guid = submissionData.result;
     } else {
-      logError(`contract ${name} failed to submit : "${submissionData.message}"`, submissionData);
+      logError(
+        `contract ${name} failed to submit : "${submissionData.message}"`,
+        submissionData
+      );
       return;
     }
     if (!guid) {
@@ -304,13 +320,16 @@ export async function submitSources(
 
     async function checkStatus(): Promise<string | undefined> {
       // TODO while loop and delay :
-      const statusResponse = await axios.get(`${host}/api?apikey=${etherscanApiKey}`, {
-        params: {
-          guid,
-          module: 'contract',
-          action: 'checkverifystatus',
-        },
-      });
+      const statusResponse = await axios.get(
+        `${host}/api?apikey=${etherscanApiKey}`,
+        {
+          params: {
+            guid,
+            module: 'contract',
+            action: 'checkverifystatus',
+          },
+        }
+      );
       const {data: statusData} = statusResponse;
       if (statusData.status === '1') {
         return 'success';
@@ -318,7 +337,9 @@ export async function submitSources(
       if (statusData.result === 'Pending in queue') {
         return undefined;
       }
-      logError(`Failed to verify contract ${name}: ${statusData.message}, ${statusData.result}`);
+      logError(
+        `Failed to verify contract ${name}: ${statusData.message}, ${statusData.result}`
+      );
 
       logError(
         JSON.stringify(

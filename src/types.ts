@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {Deployment, FixtureFunc, DeploymentSubmission, LinkReferences, Artifact} from 'hardhat/types';
+import {
+  Deployment,
+  FixtureFunc,
+  DeploymentSubmission,
+  LinkReferences,
+  Artifact,
+} from 'hardhat/types';
 
 export type ExtendedArtifact = {
   abi: any[];

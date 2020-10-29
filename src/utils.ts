@@ -10,7 +10,9 @@ import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
 
 let chainId: string;
-export async function getChainId(hre: HardhatRuntimeEnvironment): Promise<string> {
+export async function getChainId(
+  hre: HardhatRuntimeEnvironment
+): Promise<string> {
   if (chainId) {
     return chainId;
   }
@@ -28,7 +30,10 @@ export async function getChainId(hre: HardhatRuntimeEnvironment): Promise<string
   return chainId;
 }
 
-function getOldArtifactSync(name: string, folderPath: string): ExtendedArtifact | undefined {
+function getOldArtifactSync(
+  name: string,
+  folderPath: string
+): ExtendedArtifact | undefined {
   const oldArtifactPath = path.join(folderPath, name + '.json');
   let artifact;
   if (fs.existsSync(oldArtifactPath)) {
@@ -111,7 +116,11 @@ export function loadAllDeployments(
       if (!all[chainIdFound]) {
         all[chainIdFound] = {};
       }
-      const contracts = loadDeployments(deploymentsPath, fileName, onlyABIAndAddress);
+      const contracts = loadDeployments(
+        deploymentsPath,
+        fileName,
+        onlyABIAndAddress
+      );
       all[chainIdFound][name] = {
         name,
         chainId: chainIdFound,
@@ -126,7 +135,13 @@ export function loadAllDeployments(
         const networkConfig = hre.config.networks[networkName];
         if (networkConfig && networkConfig.chainId) {
           const networkChainId = networkConfig.chainId.toString();
-          const contracts = loadDeployments(folderPath, '', onlyABIAndAddress, undefined, networkChainId);
+          const contracts = loadDeployments(
+            folderPath,
+            '',
+            onlyABIAndAddress,
+            undefined,
+            networkChainId
+          );
           all[chainId][networkName] = {
             name: networkName,
             chainId: networkChainId,
@@ -143,7 +158,10 @@ export function loadAllDeployments(
   return all;
 }
 
-export function deleteDeployments(deploymentsPath: string, subPath: string): void {
+export function deleteDeployments(
+  deploymentsPath: string,
+  subPath: string
+): void {
   const deployPath = path.join(deploymentsPath, subPath);
   fs.removeSync(deployPath);
 }
@@ -160,7 +178,12 @@ function loadDeployments(
 
   let filesStats;
   try {
-    filesStats = traverse(deployPath, undefined, undefined, (name) => !name.startsWith('.') && name !== 'solcInputs');
+    filesStats = traverse(
+      deployPath,
+      undefined,
+      undefined,
+      (name) => !name.startsWith('.') && name !== 'solcInputs'
+    );
   } catch (e) {
     // console.log('no folder at ' + deployPath);
     return {};
@@ -196,13 +219,17 @@ function loadDeployments(
   for (const fileName of fileNames) {
     if (fileName.substr(fileName.length - 5) === '.json') {
       const deploymentFileName = path.join(deployPath, fileName);
-      let deployment = JSON.parse(fs.readFileSync(deploymentFileName).toString());
+      let deployment = JSON.parse(
+        fs.readFileSync(deploymentFileName).toString()
+      );
       if (!deployment.address && deployment.networks) {
         if (truffleChainId && deployment.networks[truffleChainId]) {
           // TRUFFLE support
           const truffleDeployment = deployment as any; // TruffleDeployment;
-          deployment.address = truffleDeployment.networks[truffleChainId].address;
-          deployment.transactionHash = truffleDeployment.networks[truffleChainId].transactionHash;
+          deployment.address =
+            truffleDeployment.networks[truffleChainId].address;
+          deployment.transactionHash =
+            truffleDeployment.networks[truffleChainId].transactionHash;
         }
       }
       if (onlyABIAndAddress) {
@@ -229,7 +256,13 @@ export function addDeployments(
   expectedChainId?: string,
   truffleChainId?: string
 ): void {
-  const contracts = loadDeployments(deploymentsPath, subPath, false, expectedChainId, truffleChainId);
+  const contracts = loadDeployments(
+    deploymentsPath,
+    subPath,
+    false,
+    expectedChainId,
+    truffleChainId
+  );
   for (const key of Object.keys(contracts)) {
     db.deployments[key] = contracts[key];
     // TODO ABIS
@@ -251,6 +284,7 @@ function transformNamedAccounts(
   // TODO transform into checksum  address
   if (configNamedAccounts) {
     const accountNames = Object.keys(configNamedAccounts);
+    // eslint-disable-next-line no-inner-declarations
     function parseSpec(spec: any): string | undefined {
       let address: string | undefined;
       switch (typeof spec) {
@@ -273,7 +307,11 @@ function transformNamedAccounts(
             if (spec.type === 'object') {
               address = spec;
             } else {
-              const newSpec = chainConfig(spec, chainIdGiven, networkConfigName);
+              const newSpec = chainConfig(
+                spec,
+                chainIdGiven,
+                networkConfigName
+              );
               if (typeof newSpec !== 'undefined') {
                 address = parseSpec(newSpec);
               }
@@ -307,7 +345,11 @@ function transformNamedAccounts(
   return {namedAccounts, unnamedAccounts};
 }
 
-function chainConfig(object: any, chainIdGiven: string | number, networkConfigName: string) {
+function chainConfig(
+  object: any,
+  chainIdGiven: string | number,
+  networkConfigName: string
+) {
   // TODO utility function:
   let chainIdDecimal;
   if (typeof chainIdGiven === 'number') {
@@ -336,7 +378,12 @@ export function processNamedAccounts(
   chainIdGiven: string
 ): {namedAccounts: {[name: string]: string}; unnamedAccounts: string[]} {
   if (hre.config.namedAccounts) {
-    return transformNamedAccounts(hre.config.namedAccounts, chainIdGiven, accounts, hre.network.name);
+    return transformNamedAccounts(
+      hre.config.namedAccounts,
+      chainIdGiven,
+      accounts,
+      hre.network.name
+    );
   } else {
     return {namedAccounts: {}, unnamedAccounts: []};
   }
@@ -395,7 +442,10 @@ export function mergeABIs(check: boolean, ...abis: any[][]): any[] {
           return v.name === fragment.name; // TODO fallback and receive hanlding
         }
 
-        if (existingEthersFragment.type === 'constructor' || newEthersFragment.type === 'constructor') {
+        if (
+          existingEthersFragment.type === 'constructor' ||
+          newEthersFragment.type === 'constructor'
+        ) {
           return existingEthersFragment.name === newEthersFragment.name;
         }
 

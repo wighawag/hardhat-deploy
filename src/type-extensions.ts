@@ -8,7 +8,10 @@ import {Artifact} from 'hardhat/types';
 declare module 'hardhat/types/config' {
   export interface HardhatUserConfig {
     namedAccounts?: {
-      [name: string]: string | number | {[network: string]: null | number | string};
+      [name: string]:
+        | string
+        | number
+        | {[network: string]: null | number | string};
     };
     external?: {
       deployments?: {
@@ -21,7 +24,10 @@ declare module 'hardhat/types/config' {
 
   export interface HardhatConfig {
     namedAccounts: {
-      [name: string]: string | number | {[network: string]: null | number | string};
+      [name: string]:
+        | string
+        | number
+        | {[network: string]: null | number | string};
     };
     external?: {
       deployments?: {
@@ -225,7 +231,13 @@ declare module 'hardhat/types/runtime' {
     newlyDeployed: boolean;
   }
 
-  export type Json = null | boolean | number | string | Json[] | {[prop: string]: Json};
+  export type Json =
+    | null
+    | boolean
+    | number
+    | string
+    | Json[]
+    | {[prop: string]: Json};
 
   // from https://github.com/Microsoft/TypeScript/issues/1897#issuecomment-580962081
   type JsonCompatible<T> = {
@@ -238,7 +250,10 @@ declare module 'hardhat/types/runtime' {
       : JsonCompatible<T[P]>;
   };
 
-  export type FixtureFunc = (env: HardhatRuntimeEnvironment, options?: Json) => Promise<any>;
+  export type FixtureFunc = (
+    env: HardhatRuntimeEnvironment,
+    options?: Json
+  ) => Promise<any>;
 
   export interface DeploymentsExtension {
     deploy(name: string, options: DeployOptions): Promise<DeployResult>;
@@ -252,7 +267,10 @@ declare module 'hardhat/types/runtime' {
       address: Address;
       deploy(): Promise<DeployResult>;
     }>;
-    fetchIfDifferent(name: string, options: DeployOptions): Promise<{differences: boolean; address?: string}>;
+    fetchIfDifferent(
+      name: string,
+      options: DeployOptions
+    ): Promise<{differences: boolean; address?: string}>;
     save(name: string, deployment: DeploymentSubmission): Promise<void>;
     get(name: string): Promise<Deployment>;
     getOrNull(name: string): Promise<Deployment | null>;
@@ -270,14 +288,29 @@ declare module 'hardhat/types/runtime' {
         exportAll?: string;
       }
     ): Promise<{[name: string]: Deployment}>;
-    fixture(tags?: string | string[], options?: {fallbackToGlobal: boolean}): Promise<{[name: string]: Deployment}>;
+    fixture(
+      tags?: string | string[],
+      options?: {fallbackToGlobal: boolean}
+    ): Promise<{[name: string]: Deployment}>;
     createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
     log(...args: any[]): void;
 
-    execute(name: string, options: TxOptions, methodName: string, ...args: any[]): Promise<Receipt>;
+    execute(
+      name: string,
+      options: TxOptions,
+      methodName: string,
+      ...args: any[]
+    ): Promise<Receipt>;
     rawTx(tx: SimpleTx): Promise<Receipt>;
-    catchUnknownSigner(action: Promise<any> | (() => Promise<any>)): Promise<void>;
-    read(name: string, options: CallOptions, methodName: string, ...args: any[]): Promise<any>;
+    catchUnknownSigner(
+      action: Promise<any> | (() => Promise<any>)
+    ): Promise<void>;
+    read(
+      name: string,
+      options: CallOptions,
+      methodName: string,
+      ...args: any[]
+    ): Promise<any>;
     read(name: string, methodName: string, ...args: any[]): Promise<any>;
     // rawCall(to: Address, data: string): Promise<any>; // TODO ?
   }

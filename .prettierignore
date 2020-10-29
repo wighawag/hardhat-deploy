@@ -1,0 +1,8 @@
+dist/
+deployments/
+artifacts/
+cache/
+coverage/
+node_modules/
+package.json
+solc_0.7/diamond/*
