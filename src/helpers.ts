@@ -13,12 +13,10 @@ import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
 import {zeroPad, hexlify} from '@ethersproject/bytes';
 import {Interface, FunctionFragment} from '@ethersproject/abi';
 import {
-  HardhatRuntimeEnvironment,
   Deployment,
   DeployResult,
   DeploymentsExtension,
   DeployOptions,
-  EthereumProvider,
   TxOptions,
   CallOptions,
   SimpleTx,
@@ -27,10 +25,9 @@ import {
   DiamondOptions,
   Create2DeployOptions,
   FacetCut,
-  Artifact,
   DeploymentSubmission,
-} from 'hardhat/types';
-import {PartialExtension} from './types';
+} from '../types';
+import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
 import {mergeABIs} from './utils';
 
@@ -40,6 +37,11 @@ import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
 import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
 import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
 import diamantaire from '../extendedArtifacts/Diamantaire.json';
+import {
+  Artifact,
+  EthereumProvider,
+  HardhatRuntimeEnvironment,
+} from 'hardhat/types';
 
 diamondBase.abi = mergeABIs(
   false,
@@ -435,6 +437,7 @@ export function addHelpers(
     address: Address;
     deploy: () => Promise<DeployResult>;
   }> {
+    options = {...options}; // ensure no change
     // TODO refactor to share that code:
     const args: any[] = options.args ? [...options.args] : [];
     await init();
@@ -496,6 +499,7 @@ export function addHelpers(
     name: string,
     options: DeployOptions
   ): Promise<{differences: boolean; address?: string}> {
+    options = {...options}; // ensure no change
     const argArray = options.args ? [...options.args] : [];
     await init();
 
@@ -791,7 +795,7 @@ Plus they are only used when the contract is meant to be used as standalone when
 
       let proxy = await getDeploymentOrNUll(proxyName);
       if (!proxy) {
-        const proxyOptions = {...options};
+        const proxyOptions = {...options}; // ensure no change
         delete proxyOptions.proxy;
         proxyOptions.contract = eip173Proxy;
         proxyOptions.args = [implementation.address, data, owner];
@@ -1211,6 +1215,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     name: string,
     options: DeployOptions
   ): Promise<DeployResult> {
+    options = {...options}; // ensure no change
     await init();
     if (!options.proxy) {
       return _deployOne(name, options);
@@ -1222,11 +1227,13 @@ Plus they are only used when the contract is meant to be used as standalone when
     name: string,
     options: DiamondOptions
   ): Promise<DeployResult> {
+    options = {...options}; // ensure no change
     await init();
     return _deployViaDiamondProxy(name, options);
   }
 
   async function rawTx(tx: SimpleTx): Promise<Receipt> {
+    tx = {...tx};
     await init();
     const {address: from, ethersSigner} = getFrom(tx.from);
     if (!ethersSigner) {
@@ -1312,6 +1319,7 @@ data: ${data}
     methodName: string,
     ...args: any[]
   ): Promise<Receipt> {
+    options = {...options}; // ensure no change
     await init();
     const {address: from, ethersSigner} = getFrom(options.from);
 
@@ -1410,7 +1418,6 @@ data: ${data}
     methodName?: string | any,
     ...args: unknown[]
   ) {
-    await init();
     if (typeof options === 'string') {
       if (typeof methodName !== 'undefined') {
         args.unshift(methodName);
@@ -1418,6 +1425,8 @@ data: ${data}
       methodName = options;
       options = {};
     }
+    options = {...options}; // ensure no change
+    await init();
     if (typeof args === 'undefined') {
       args = [];
     }

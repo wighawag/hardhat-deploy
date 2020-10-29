@@ -3,11 +3,11 @@ import chalk from 'chalk';
 import path from 'path';
 import {
   HardhatRuntimeEnvironment,
-  Deployment,
   HardhatConfig,
   HardhatUserConfig,
   EthereumProvider,
 } from 'hardhat/types';
+import {Deployment} from '../types';
 import {extendEnvironment, task, subtask, extendConfig} from 'hardhat/config';
 import {HARDHAT_NETWORK_NAME} from 'hardhat/internal/constants';
 import * as types from 'hardhat/internal/core/params/argumentTypes';

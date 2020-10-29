@@ -26,6 +26,7 @@
     "dist/extendedArtifacts/",
     "extendedArtifacts/",
     "src/",
+    "types.ts",
     "LICENSE",
     "README.md",
     "solc_0.6/",

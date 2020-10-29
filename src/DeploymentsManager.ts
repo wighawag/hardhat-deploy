@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  HardhatRuntimeEnvironment,
   DeployFunction,
   Deployment,
   DeploymentsExtension,
   FixtureFunc,
   DeploymentSubmission,
   Export,
-  Artifact,
-} from 'hardhat/types';
-import {ExtendedArtifact, PartialExtension} from './types';
+} from '../types';
+import {ExtendedArtifact} from '../types';
+import {PartialExtension} from './internal/types';
 
 import fs from 'fs-extra';
 import path from 'path';
@@ -35,6 +34,7 @@ import {
 } from './utils';
 import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
+import {Artifact, HardhatRuntimeEnvironment} from 'hardhat/types';
 
 function recode(decoded: any): Transaction {
   return {

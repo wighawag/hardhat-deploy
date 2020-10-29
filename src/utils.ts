@@ -3,9 +3,9 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import {getAddress} from '@ethersproject/address';
 import {Interface, FunctionFragment, Fragment} from '@ethersproject/abi';
-import {Artifact, HardhatRuntimeEnvironment, MultiExport} from 'hardhat/types';
+import {Artifact, HardhatRuntimeEnvironment} from 'hardhat/types';
 import {BigNumber} from '@ethersproject/bignumber';
-import {ExtendedArtifact} from './types';
+import {ExtendedArtifact, MultiExport} from '../types';
 import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
 

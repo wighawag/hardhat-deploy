@@ -1,27 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import {Artifact} from 'hardhat/types';
+
 import {
   Deployment,
   FixtureFunc,
   DeploymentSubmission,
-  LinkReferences,
-  Artifact,
-} from 'hardhat/types';
-
-export type ExtendedArtifact = {
-  abi: any[];
-  bytecode: string; // "0x"-prefixed hex string
-  deployedBytecode?: string; // "0x"-prefixed hex string
-  metadata?: string;
-  linkReferences?: LinkReferences;
-  deployedLinkReferences?: LinkReferences;
-  solcInput?: string;
-  solcInputHash?: string;
-  userdoc?: any;
-  devdoc?: any;
-  methodIdentifiers?: any;
-  storageLayout?: any;
-  evm?: any;
-};
+  ExtendedArtifact,
+} from '../../types';
 
 export interface PartialExtension {
   save(name: string, deployment: DeploymentSubmission): Promise<void>;
@@ -42,6 +26,6 @@ export interface PartialExtension {
     }
   ): Promise<{[name: string]: Deployment}>;
   fixture(tags?: string | string[]): Promise<{[name: string]: Deployment}>;
-  createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
-  log(...args: any[]): void;
+  createFixture(func: FixtureFunc, id?: string): () => Promise<unknown>; // TODO Type Parameter
+  log(...args: unknown[]): void;
 }
