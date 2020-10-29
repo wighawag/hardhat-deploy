@@ -39,6 +39,7 @@ _A Hardhat Plugin For Replicable Deployments And Tests_
 - [Deploying and Upgrading Proxies](#deploying-and-upgrading-proxies)
 - [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535)
 - [Testing Deployed Contracts](#testing-deployed-contracts)
+  - [Creating Fixtures](#creating-fixtures)
 - [More Information On Hardhat Tasks](#more-information-on-hardhat-tasks)
   - [node task](#node-task)
   - [test task](#test-task)
@@ -845,6 +846,8 @@ describe('Token', () => {
   });
 });
 ```
+
+### Creating Fixtures
 
 Furthermore, tests can easily create efficient fixture using `deployments.createFixture`
 
