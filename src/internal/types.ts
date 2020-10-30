@@ -26,6 +26,6 @@ export interface PartialExtension {
     }
   ): Promise<{[name: string]: Deployment}>;
   fixture(tags?: string | string[]): Promise<{[name: string]: Deployment}>;
-  createFixture(func: FixtureFunc, id?: string): () => Promise<unknown>; // TODO Type Parameter
+  createFixture<T>(func: FixtureFunc<T>, id?: string): () => Promise<T>;
   log(...args: unknown[]): void;
 }

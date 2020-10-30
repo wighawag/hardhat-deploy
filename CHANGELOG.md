@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.24
+
+### Patch Changes
+
+- allow multiple tags for --tags + add type param for deployments.createFixture
+
 ## 0.7.0-beta.23
 
 ### Patch Changes

@@ -257,7 +257,7 @@ export class DeploymentsManager {
         await this.saveSnapshot(fixtureKey);
         return this.db.deployments;
       },
-      createFixture: (func: FixtureFunc) => {
+      createFixture<T>(func: FixtureFunc<T>) {
         const baseId = '' + ++this.db.fixtureCounter + '::';
         return async (options?: any) => {
           let id = baseId;

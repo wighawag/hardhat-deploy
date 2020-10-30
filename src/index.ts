@@ -215,7 +215,12 @@ function setupExtraSolcSettings(settings: {
 subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
-  .addOptionalParam('tags', 'dependencies to run')
+  .addOptionalParam(
+    'tags',
+    'specify which deploy script to execute via tags, separated by commas',
+    undefined,
+    types.string
+  )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',
@@ -237,7 +242,11 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
   .setAction(async (args) => {
-    return deploymentsManager.runDeploy(args.tags, {
+    let tags = args.tags;
+    if (typeof tags === 'string') {
+      tags = tags.split(',');
+    }
+    return deploymentsManager.runDeploy(tags, {
       log: args.log,
       resetMemory: false,
       deletePreviousDeployments: args.reset,
@@ -252,7 +261,12 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
 subtask(TASK_DEPLOY_MAIN, 'deploy ')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
-  .addOptionalParam('tags', 'dependencies to run')
+  .addOptionalParam(
+    'tags',
+    'specify which deploy script to execute via tags, separated by commas',
+    undefined,
+    types.string
+  )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',
@@ -380,7 +394,12 @@ task(TASK_TEST, 'Runs mocha tests')
 task(TASK_DEPLOY, 'Deploy contracts')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
-  .addOptionalParam('tags', 'dependencies to run')
+  .addOptionalParam(
+    'tags',
+    'specify which deploy script to execute via tags, separated by commas',
+    undefined,
+    types.string
+  )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',
@@ -447,7 +466,12 @@ let nodeTaskArgs: any;
 task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
-  .addOptionalParam('tags', 'dependencies to run')
+  .addOptionalParam(
+    'tags',
+    'specify which deploy script to execute via tags, separated by commas',
+    undefined,
+    types.string
+  )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',

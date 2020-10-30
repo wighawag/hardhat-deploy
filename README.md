@@ -231,7 +231,7 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 `--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
 
-`--tags <tags>`: only excute deploy scripts with the given tags and their dependencies (see more info [here](#deploy-scripts-tags-and-dependencies) about tags and dependencies)
+`--tags <tags>`: only excute deploy scripts with the given tags (separated by commas) and their dependencies (see more info [here](#deploy-scripts-tags-and-dependencies) about tags and dependencies)
 
 `--gasprice <gasprice>`: specify the gasprice to use by default for transactions executed via hardhat-deploy helpers in deploy scripts
 

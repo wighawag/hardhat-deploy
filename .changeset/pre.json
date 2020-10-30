@@ -5,6 +5,7 @@
     "hardhat-deploy": "0.7.0-beta.20"
   },
   "changesets": [
+    "giant-cars-move",
     "quick-impalas-decide",
     "spicy-timers-join",
     "tasty-pillows-attend"

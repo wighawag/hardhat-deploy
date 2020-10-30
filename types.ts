@@ -175,10 +175,10 @@ type JsonCompatible<T> = {
     : JsonCompatible<T[P]>;
 };
 
-export type FixtureFunc = (
+export type FixtureFunc<T> = (
   env: HardhatRuntimeEnvironment,
   options?: Json
-) => Promise<any>;
+) => Promise<T>;
 
 export interface DeploymentsExtension {
   deploy(name: string, options: DeployOptions): Promise<DeployResult>;
@@ -217,7 +217,7 @@ export interface DeploymentsExtension {
     tags?: string | string[],
     options?: {fallbackToGlobal: boolean}
   ): Promise<{[name: string]: Deployment}>;
-  createFixture(func: FixtureFunc, id?: string): () => Promise<any>; // TODO Type Parameter
+  createFixture<T>(func: FixtureFunc<T>, id?: string): () => Promise<T>;
   log(...args: any[]): void;
 
   execute(
