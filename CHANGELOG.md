@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.25
+
+### Patch Changes
+
+- fix createFixture
+
 ## 0.7.0-beta.24
 
 ### Patch Changes
