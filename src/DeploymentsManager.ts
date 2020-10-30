@@ -720,12 +720,6 @@ export class DeploymentsManager {
   ): Promise<{[name: string]: Deployment}> {
     log('runDeploy');
 
-    if (this.env.config.external?.deploy) {
-      for (const deployScriptsPath of this.env.config.external.deploy) {
-        await this.executeDeployScripts(deployScriptsPath);
-      }
-    }
-
     if (options.deletePreviousDeployments) {
       log('deleting previous deployments');
       this.db.deployments = {};
@@ -746,6 +740,13 @@ export class DeploymentsManager {
     if (!options.deletePreviousDeployments && options.savePendingTx) {
       await this.dealWithPendingTransactions(); // TODO deal with reset ?
     }
+
+    if (this.env.config.external?.deploy) {
+      for (const deployScriptsPath of this.env.config.external.deploy) {
+        await this.executeDeployScripts(deployScriptsPath);
+      }
+    }
+
     if (tags !== undefined && typeof tags === 'string') {
       tags = [tags];
     }

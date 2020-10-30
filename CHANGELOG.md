@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.23
+
+### Patch Changes
+
+- fix external deploy exec order + add export-artifacts task to export extended artifacts
+
 ## 0.7.0-beta.22
 
 ### Patch Changes

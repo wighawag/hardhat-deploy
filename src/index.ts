@@ -1,13 +1,17 @@
 import './type-extensions';
 import chalk from 'chalk';
 import path from 'path';
+import fs from 'fs-extra';
+import murmur128 from 'murmur-128';
 import {
   HardhatRuntimeEnvironment,
   HardhatConfig,
   HardhatUserConfig,
   EthereumProvider,
+  Artifact,
+  BuildInfo,
 } from 'hardhat/types';
-import {Deployment} from '../types';
+import {Deployment, ExtendedArtifact} from '../types';
 import {extendEnvironment, task, subtask, extendConfig} from 'hardhat/config';
 import {HARDHAT_NETWORK_NAME} from 'hardhat/internal/constants';
 import * as types from 'hardhat/internal/core/params/argumentTypes';
@@ -538,4 +542,104 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
       fallbackOnSolcInput: args.solcInput,
       forceLicense: args.forceLicense,
     });
+  });
+
+task('export-artifacts')
+  .addPositionalParam(
+    'dest',
+    'destination folder where the extended artifacts files will be written to',
+    undefined,
+    types.string
+  )
+  .addFlag(
+    'solcInput',
+    'if set, artifacts will have an associated solcInput files (required for old version of solidity to ensure verifiability'
+  )
+  .addOptionalParam(
+    'exclude',
+    'list of contract names separated by commas to exclude',
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    'include',
+    'list of contract names separated by commas to include. If specified, only these will be considered',
+    undefined,
+    types.string
+  )
+  .setAction(async (args, hre) => {
+    await hre.run('compile');
+    const argsInclude: string[] = args.include ? args.include.split(',') : [];
+    const checkInclude = argsInclude.length > 0;
+    const include = argsInclude.reduce(
+      (result: Record<string, boolean>, item: string) => {
+        result[item] = true;
+        return result;
+      },
+      {}
+    );
+    const argsExclude: string[] = args.exclude ? args.exclude.split(',') : [];
+    const exclude = argsExclude.reduce(
+      (result: Record<string, boolean>, item: string) => {
+        result[item] = true;
+        return result;
+      },
+      {}
+    );
+    const extendedArtifactFolderpath = args.dest;
+    fs.emptyDirSync(extendedArtifactFolderpath);
+    const artifactPaths = await hre.artifacts.getArtifactPaths();
+    for (const artifactPath of artifactPaths) {
+      const artifact: Artifact = await fs.readJSON(artifactPath);
+      const artifactName = path.basename(artifactPath, '.json');
+      if (exclude[artifactName]) {
+        continue;
+      }
+      if (checkInclude && !include[artifactName]) {
+        continue;
+      }
+      const artifactDBGPath = path.join(
+        path.dirname(artifactPath),
+        artifactName + '.dbg.json'
+      );
+      const artifactDBG = await fs.readJSON(artifactDBGPath);
+      const buildinfoPath = path.join(
+        path.dirname(artifactDBGPath),
+        artifactDBG.buildInfo
+      );
+      const buildInfo: BuildInfo = await fs.readJSON(buildinfoPath);
+      const output =
+        buildInfo.output.contracts[artifact.sourceName][artifactName];
+
+      // TODO decide on ExtendedArtifact vs Artifact vs Deployment type
+      // save space by not duplicating bytecodes
+      if (output.evm?.bytecode?.object) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (output.evm.bytecode.object as any) = undefined;
+      }
+      if (output.evm?.deployedBytecode?.object) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (output.evm.deployedBytecode.object as any) = undefined;
+      }
+      // -----------------------------------------
+
+      const extendedArtifact: ExtendedArtifact = {
+        ...artifact,
+        ...output,
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (extendedArtifact as any)._format = undefined;
+
+      if (args.solcInput) {
+        const solcInput = JSON.stringify(buildInfo.input, null, '  ');
+        const solcInputHash = Buffer.from(murmur128(solcInput)).toString('hex');
+        extendedArtifact.solcInput = solcInput;
+        extendedArtifact.solcInputHash = solcInputHash;
+      }
+
+      fs.writeFileSync(
+        path.join(extendedArtifactFolderpath, artifactName + '.json'),
+        JSON.stringify(extendedArtifact, null, '  ')
+      );
+    }
   });
