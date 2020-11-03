@@ -421,6 +421,7 @@ export function addHelpers(
       address,
       receipt,
       transactionHash: receipt.transactionHash,
+      libraries: options.libraries,
     };
     await saveDeployment(name, deployment);
     return {
@@ -649,7 +650,8 @@ export function addHelpers(
             ...linkedArtifact,
             address: diffResult.address,
             linkedData: options.linkedData,
-            // TODO args ?
+            libraries: options.libraries,
+            args: argsArray,
           };
           await saveDeployment(name, newDeployment, artifactName);
           result = {
@@ -837,6 +839,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         address: proxy.address,
         linkedData: options.linkedData,
         abi: implementation.abi,
+        args: proxy.args,
         execute: updateMethod
           ? {
               methodName: updateMethod,
@@ -1065,6 +1068,8 @@ Plus they are only used when the contract is meant to be used as standalone when
         );
         // the diamantaire allow the execution of data at diamond construction time
 
+        let deterministicDiamondAlreadyDeployed = false;
+        let expectedAddress: string | undefined = undefined;
         let salt =
           '0x0000000000000000000000000000000000000000000000000000000000000000';
         if (typeof options.deterministicSalt !== 'undefined') {
@@ -1080,6 +1085,17 @@ Plus they are only used when the contract is meant to be used as standalone when
                 );
               }
               salt = options.deterministicSalt;
+              expectedAddress = getCreate2Address(
+                diamantaireContract.address,
+                solidityKeccak256(['bytes32', 'address'], [salt, owner]),
+                diamondBase.bytecode +
+                  '000000000000000000000000' +
+                  diamantaireContract.address.slice(2)
+              );
+              const code = await provider.getCode(expectedAddress);
+              if (code !== '0x') {
+                deterministicDiamondAlreadyDeployed = true;
+              }
             }
           } else {
             throw new Error(
@@ -1087,70 +1103,69 @@ Plus they are only used when the contract is meant to be used as standalone when
             );
           }
         }
-        const createReceipt = await execute(
-          diamantaireName,
-          options,
-          'createDiamond',
-          owner,
-          facetCuts,
-          data,
-          salt
-        );
 
-        if (!createReceipt) {
-          throw new Error(`failed to get receipt from diamond creation`);
-        }
+        if (expectedAddress && deterministicDiamondAlreadyDeployed) {
+          proxy = {
+            ...diamondBase,
+            address: expectedAddress,
+            args: [diamantaireDeployment.address],
+          };
+          await saveDeployment(proxyName, proxy);
+        } else {
+          const createReceipt = await execute(
+            diamantaireName,
+            options,
+            'createDiamond',
+            owner,
+            facetCuts,
+            data,
+            salt
+          );
 
-        const events = [];
-        if (createReceipt.logs) {
-          for (const l of createReceipt.logs) {
-            try {
-              events.push(diamantaireContract.interface.parseLog(l));
-            } catch (e) {}
+          if (!createReceipt) {
+            throw new Error(`failed to get receipt from diamond creation`);
           }
-        }
 
-        const diamondCreatedEvent = events.find(
-          (e) => e.name === 'DiamondCreated'
-        );
-        if (!diamondCreatedEvent) {
-          throw new Error('DiamondCreated Not Emitted');
-        }
-        const proxyAddress = diamondCreatedEvent.args.diamond;
-        if (options.log) {
-          log(
-            `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address}) cuts: ${facetCuts} with ${createReceipt.gasUsed} gas`
-          );
-        }
+          const events = [];
+          if (createReceipt.logs) {
+            for (const l of createReceipt.logs) {
+              try {
+                events.push(diamantaireContract.interface.parseLog(l));
+              } catch (e) {}
+            }
+          }
 
-        if (
-          salt !==
-          '0x0000000000000000000000000000000000000000000000000000000000000000'
-        ) {
-          const expectedAddress = getCreate2Address(
-            diamantaireContract.address,
-            solidityKeccak256(['bytes32', 'address'], [salt, owner]),
-            diamondBase.bytecode +
-              '000000000000000000000000' +
-              diamantaireContract.address.slice(2)
+          const diamondCreatedEvent = events.find(
+            (e) => e.name === 'DiamondCreated'
           );
-          if (expectedAddress !== proxyAddress) {
+          if (!diamondCreatedEvent) {
+            throw new Error('DiamondCreated Not Emitted');
+          }
+          const proxyAddress = diamondCreatedEvent.args.diamond;
+          if (options.log) {
+            log(
+              `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address}) cuts: ${facetCuts} with ${createReceipt.gasUsed} gas`
+            );
+          }
+
+          if (expectedAddress && expectedAddress !== proxyAddress) {
             throw new Error(
               `unexpected address ${proxyAddress} VS ${expectedAddress}`
             );
           }
+          proxy = {
+            ...diamondBase,
+            address: proxyAddress,
+            receipt: createReceipt,
+            transactionHash: createReceipt.transactionHash,
+            args: [diamantaireDeployment.address],
+          };
+          await saveDeployment(proxyName, proxy);
         }
 
-        proxy = {
-          ...diamondBase,
-          address: proxyAddress,
-          receipt: createReceipt,
-          transactionHash: createReceipt.transactionHash,
-          args: [owner],
-        };
-        await saveDeployment(proxyName, proxy);
-
         await saveDeployment(name, {
+          ...diamondBase,
+          args: proxy.args,
           address: proxy.address,
           receipt: proxy.receipt,
           transactionHash: proxy.transactionHash,

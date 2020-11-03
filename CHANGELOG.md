@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.27
+
+### Patch Changes
+
+- fix determinsitic diamond redeployment + verifiability of contracts using libraries
+
 ## 0.7.0-beta.25
 
 ### Patch Changes
