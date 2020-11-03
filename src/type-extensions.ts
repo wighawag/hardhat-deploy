@@ -15,8 +15,10 @@ declare module 'hardhat/types/config' {
       deployments?: {
         [networkName: string]: string[];
       };
-      artifacts?: string[];
-      deploy?: string[];
+      contracts?: {
+        artifacts: string;
+        deploy?: string;
+      }[];
     };
   }
 
@@ -31,8 +33,10 @@ declare module 'hardhat/types/config' {
       deployments?: {
         [networkName: string]: string[];
       };
-      artifacts?: string[];
-      deploy?: string[];
+      contracts?: {
+        artifacts: string;
+        deploy?: string;
+      }[];
     };
   }
 

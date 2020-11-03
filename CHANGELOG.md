@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.28
+
+### Patch Changes
+
+- Breaking change for external field: isolate external deploy script from other artifacts
+
 ## 0.7.0-beta.27
 
 ### Patch Changes

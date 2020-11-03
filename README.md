@@ -406,25 +406,33 @@ It also add the `external` field to `HardhatConfig`
 
 Such fiels allows to specify paths for external artifacts or deployments. The use of the `paths` field is not possible because hardhat expects all paths field to be string. It does not accept arrays or objects, see https://github.com/nomiclabs/hardhat/issues/776.
 
-The external object has 3 fields:
+The external object has 2 fields:
 
 ```js
 {
     external: {
-        artifacts: ["node_modules/@cartesi/arbitration/build/contracts"],
+        contracts: [
+          {
+            artifacts: "node_modules/@cartesi/arbitration/export/artifacts",
+            deploy: "node_modules/@cartesi/arbitration/export/deploy"
+          },
+          {
+            artifacts: "node_modules/someotherpackage/artifacts",
+          }
+        ],
         deployments: {
           rinkeby: ["node_modules/@cartesi/arbitration/build/contracts"],
         },
-        deploy: ["node_modules/somepackage/deploy"]
     }
 }
 ```
 
-The artifacts fields specify an array of path to look for artifact. it support both hardhat and truffle artifacts.
+The contract field specify an array of object which itself have 2 fields.
+
+- artifacts: (mandatory) it is a path to an artifact folder. This support both hardhat and truffle artifacts.
+- deploy: (optional) it specifies a path to a folder where reside deploy script. The deploy script have only access to the artifact specified in the artifacts field. This allow project to share their deployment procedure. A boon for developer aiming at integrating it as they can get the contracts to be deployed for testing locally.
 
 The deployments fields specify an object whose field name are the hardhat network and the value is an array of path to look for deployments. It supports both hardhat-deploy and truffle formats.
-
-The deploy fields specify an array of path that deploy scripts to execute. This allow project to share the deployment procedure. A boon for developer aiming at integrating it as they can get the contracts to be deployed for testing locally.
 
 ### Access to Artifacts (non-deployed contract code and abi)
 

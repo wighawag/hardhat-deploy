@@ -95,11 +95,26 @@ extendConfig(
       if (!config.external) {
         config.external = {};
       }
-      if (userConfig.external.artifacts) {
-        config.external.artifacts = normalizePathArray(
-          config,
-          userConfig.external.artifacts
-        );
+      if (userConfig.external.contracts) {
+        const externalContracts: {artifacts: string; deploy?: string}[] = [];
+        config.external.contracts = externalContracts;
+        for (const userDefinedExternalContracts of userConfig.external
+          .contracts) {
+          externalContracts.push({
+            artifacts: normalizePath(
+              config,
+              userDefinedExternalContracts.artifacts,
+              userDefinedExternalContracts.artifacts
+            ),
+            deploy: userDefinedExternalContracts.deploy
+              ? normalizePath(
+                  config,
+                  userDefinedExternalContracts.deploy,
+                  userDefinedExternalContracts.deploy
+                )
+              : undefined,
+          });
+        }
       }
       if (userConfig.external.deployments) {
         config.external.deployments = {};
@@ -109,13 +124,6 @@ extendConfig(
             userConfig.external.deployments[key]
           );
         }
-      }
-
-      if (userConfig.external.deploy) {
-        config.external.deploy = normalizePathArray(
-          config,
-          userConfig.external.deploy
-        );
       }
     }
 

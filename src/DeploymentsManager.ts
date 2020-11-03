@@ -78,6 +78,7 @@ export class DeploymentsManager {
     savePendingTx: boolean;
     gasPrice?: string;
     migrations: {[id: string]: number};
+    onlyArtifacts?: string;
   };
 
   private env: HardhatRuntimeEnvironment;
@@ -139,6 +140,18 @@ export class DeploymentsManager {
         return this.db.deployments; // TODO copy
       },
       getArtifact: async (contractName: string): Promise<Artifact> => {
+        if (this.db.onlyArtifacts) {
+          const artifactFromFolder = await getArtifactFromFolder(
+            contractName,
+            this.db.onlyArtifacts
+          );
+          if (!artifactFromFolder) {
+            throw new Error(
+              `cannot find artifact "${contractName}" from folder ${this.db.onlyArtifacts}`
+            );
+          }
+          return artifactFromFolder as Artifact;
+        }
         let artifact:
           | Artifact
           | ExtendedArtifact
@@ -165,6 +178,18 @@ export class DeploymentsManager {
       getExtendedArtifact: async (
         contractName: string
       ): Promise<ExtendedArtifact> => {
+        if (this.db.onlyArtifacts) {
+          const artifactFromFolder = await getExtendedArtifactFromFolder(
+            contractName,
+            this.db.onlyArtifacts
+          );
+          if (!artifactFromFolder) {
+            throw new Error(
+              `cannot find artifact "${contractName}" from folder ${this.db.onlyArtifacts}`
+            );
+          }
+          return artifactFromFolder as ExtendedArtifact;
+        }
         let artifact:
           | ExtendedArtifact
           | undefined = await getExtendedArtifactFromFolder(
@@ -741,9 +766,16 @@ export class DeploymentsManager {
       await this.dealWithPendingTransactions(); // TODO deal with reset ?
     }
 
-    if (this.env.config.external?.deploy) {
-      for (const deployScriptsPath of this.env.config.external.deploy) {
-        await this.executeDeployScripts(deployScriptsPath);
+    if (this.env.config.external?.contracts) {
+      for (const externalContracts of this.env.config.external.contracts) {
+        if (externalContracts.deploy) {
+          this.db.onlyArtifacts = externalContracts.artifacts;
+          try {
+            await this.executeDeployScripts(externalContracts.deploy);
+          } finally {
+            this.db.onlyArtifacts = undefined;
+          }
+        }
       }
     }
 
@@ -1063,14 +1095,10 @@ export class DeploymentsManager {
   }
 
   private getImportPaths() {
-    let importPaths = [this.env.config.paths.imports];
-    const externalImports =
-      this.env.config.external && this.env.config.external.artifacts;
-    if (externalImports) {
-      if (typeof externalImports === 'string') {
-        importPaths.push(externalImports);
-      } else {
-        importPaths = importPaths.concat(externalImports);
+    const importPaths = [this.env.config.paths.imports];
+    if (this.env.config.external && this.env.config.external.contracts) {
+      for (const externalContracts of this.env.config.external.contracts) {
+        importPaths.push(externalContracts.artifacts);
       }
     }
     return importPaths;
