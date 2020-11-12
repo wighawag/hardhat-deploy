@@ -606,7 +606,7 @@ skipIfAlreadyDeployed?: boolean; // if set it to true, will not attempt to deplo
 log?: boolean; // if true, it will log the result of the deployment (address and gas used)
 linkedData?: any; // This allow to associate any JSON data to the deployment. Useful for merkle tree data for example
 libraries?: { [libraryName: string]: Address }; // This let you associate libraries to the deployed contract
-proxy?: boolean | string | ProxyOptions; // This options allow to consider yoru contract as a proxy (see below for more details)
+proxy?: boolean | string | ProxyOptions; // This options allow to consider your contract as a proxy (see below for more details)
 
 // here some common tx options :
 gasLimit?: string | number | BigNumber;
@@ -988,7 +988,7 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   }
 };
 module.exports.tags = ['Sale'];
-module.exports.dependencies = ['Token']; // this ensure the TOken script above is executed first, so `deployments.get('Token') succeeds
+module.exports.dependencies = ['Token']; // this ensure the Token script above is executed first, so `deployments.get('Token')` succeeds
 ```
 
 As you can see the second one depends on the first. This is because the second script depends on a tag that the first script registers as using.
