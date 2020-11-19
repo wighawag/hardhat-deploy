@@ -5,6 +5,7 @@
     "hardhat-deploy": "0.7.0-beta.20"
   },
   "changesets": [
+    "brown-dragons-promise",
     "giant-cars-move",
     "loud-horses-cross",
     "quick-impalas-decide",

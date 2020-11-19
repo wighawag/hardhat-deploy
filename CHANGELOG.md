@@ -1,5 +1,12 @@
 # hardhat-deploy
 
+## 0.7.0-beta.29
+
+### Patch Changes
+
+- workaround hardhat_reset snapshot memory loss
+- add --fork-deployments for the node task to allow forked chain to get access to deployment from that chain
+
 ## 0.7.0-beta.28
 
 ### Patch Changes
