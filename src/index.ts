@@ -35,6 +35,9 @@ export const TASK_DEPLOY_RUN_DEPLOY = 'deploy:runDeploy';
 export const TASK_EXPORT = 'export';
 export const TASK_ETHERSCAN_VERIFY = 'etherscan-verify';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let nodeTaskArgs: Record<string, any> = {};
+
 function isHardhatEVM(hre: HardhatRuntimeEnvironment): boolean {
   const {network} = hre;
   return network.name === HARDHAT_NETWORK_NAME;
@@ -247,6 +250,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     undefined,
     types.string
   )
+  .addFlag('runAsNode', 'run as node: write to localhost')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
   .setAction(async (args) => {
@@ -263,6 +267,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       exportAll: args.exportAll,
       savePendingTx: args.pendingtx,
       gasPrice: args.gasprice,
+      runAsNode: args.runAsNode,
     });
   });
 
@@ -293,6 +298,7 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
     undefined,
     types.string
   )
+  .addFlag('runAsNode', 'run as node: write to localhost')
   .addFlag('noCompile', 'disable pre compilation')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
@@ -302,11 +308,28 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
     'do not actually deploy, just watch and deploy if changes occurs'
   )
   .setAction(async (args, hre) => {
+    if (args.reset) {
+      await deploymentsManager.deletePreviousDeployments(
+        args.runAsNode ? 'localhost' : undefined
+      );
+    }
+
+    if (
+      nodeTaskArgs.forkDeployments &&
+      nodeTaskArgs.forkDeployments !== 'localhost'
+    ) {
+      // copy existing deployment from specified netwotk into localhost deployment folder
+      fs.copy(
+        path.join(hre.config.paths.deployments, nodeTaskArgs.forkDeployments),
+        path.join(hre.config.paths.deployments, 'localhost')
+      );
+    }
+
     async function compileAndDeploy() {
       if (!args.noCompile) {
         await hre.run('compile');
       }
-      return hre.run(TASK_DEPLOY_RUN_DEPLOY, args);
+      return hre.run(TASK_DEPLOY_RUN_DEPLOY, {...args, reset: false}); // TODO reset
     }
 
     let currentPromise: Promise<{
@@ -469,8 +492,6 @@ async function enableProviderLogging(
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let nodeTaskArgs: any;
 task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
@@ -492,6 +513,19 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
     undefined,
     types.string
   )
+  .addOptionalParam(
+    'forkDeployments',
+    'this will use deployment from the named network, default to "localhost"',
+    'localhost',
+    types.string
+  )
+  .addOptionalParam(
+    'asNetwork',
+    'network name to be used, default to "localhost" (or to `--fork-deployments` value)',
+    undefined,
+    types.string
+  )
+  // TODO --unlock-accounts
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('silent', 'whether to renove log')
   .addFlag('noDeploy', 'do not deploy')
@@ -513,13 +547,24 @@ subtask(TASK_NODE_GET_PROVIDER).setAction(
     // console.log('enabling logging');
     await enableProviderLogging(provider, false);
 
-    if (isHardhatEVM(hre)) {
-      hre.network.name = 'localhost'; // Ensure deployments can be fetched with console
+    // TODO add another optional param that can change the network name : `--as-network` ?
+    if (
+      isHardhatEVM(hre) ||
+      nodeTaskArgs.forkDeployments ||
+      nodeTaskArgs.asNetwork
+    ) {
+      // TODO what about accounts and other config.networks[name] ?
+      hre.network.name =
+        nodeTaskArgs.asNetwork || nodeTaskArgs.forkDeployments || 'localhost'; // Ensure it use same config as network
     }
     nodeTaskArgs.log = !nodeTaskArgs.silent;
     delete nodeTaskArgs.silent;
     nodeTaskArgs.pendingtx = false;
-    await hre.run(TASK_DEPLOY_MAIN, {...nodeTaskArgs, watch: false});
+    await hre.run(TASK_DEPLOY_MAIN, {
+      ...nodeTaskArgs,
+      watch: false,
+      runAsNode: true,
+    });
 
     await enableProviderLogging(provider, true);
 
@@ -540,7 +585,11 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
   }
 
   if (nodeTaskArgs.watch) {
-    await hre.run(TASK_DEPLOY_MAIN, {...nodeTaskArgs, watchOnly: true});
+    await hre.run(TASK_DEPLOY_MAIN, {
+      ...nodeTaskArgs,
+      watchOnly: true,
+      runAsNode: true,
+    });
   }
 });
 

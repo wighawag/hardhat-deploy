@@ -80,6 +80,7 @@ export class DeploymentsManager {
     gasPrice?: string;
     migrations: {[id: string]: number};
     onlyArtifacts?: string;
+    runAsNode: boolean;
   };
 
   private env: HardhatRuntimeEnvironment;
@@ -102,9 +103,13 @@ export class DeploymentsManager {
       pendingTransactions: {},
       savePendingTx: false,
       gasPrice: undefined,
+      runAsNode: false,
     };
     this.env = env;
     this.deploymentsPath = env.config.paths.deployments;
+
+    // TODO
+    // this.env.artifacts = new HardhatDeployArtifacts(this.env.artifacts);
 
     this.env.getChainId = () => {
       return getChainId(this.env);
@@ -393,7 +398,7 @@ export class DeploymentsManager {
     } = {};
     const pendingTxPath = path.join(
       this.deploymentsPath,
-      this.env.network.name,
+      this.deploymentFolder(),
       '.pendingTransactions'
     );
     try {
@@ -456,7 +461,7 @@ export class DeploymentsManager {
     ) {
       const deployFolderPath = path.join(
         this.deploymentsPath,
-        this.env.network.name
+        this.deploymentFolder()
       );
       // console.log("tx", tx.hash);
       const pendingTxPath = path.join(deployFolderPath, '.pendingTransactions');
@@ -518,8 +523,6 @@ export class DeploymentsManager {
   public async loadDeployments(
     chainIdExpected = true
   ): Promise<{[name: string]: Deployment}> {
-    const networkName = this.env.network.name;
-
     let chainId: string | undefined;
     if (chainIdExpected) {
       chainId = await getChainId(this.env);
@@ -531,14 +534,24 @@ export class DeploymentsManager {
       migrations = JSON.parse(
         fs
           .readFileSync(
-            path.join(this.deploymentsPath, networkName, '.migrations.json')
+            path.join(
+              this.deploymentsPath,
+              this.deploymentFolder(),
+              '.migrations.json'
+            )
           )
           .toString()
       );
     } catch (e) {}
     this.db.migrations = migrations;
     // console.log({ migrations: this.db.migrations });
-    addDeployments(this.db, this.deploymentsPath, networkName, chainId);
+    addDeployments(
+      this.db,
+      this.deploymentsPath,
+      this.deploymentFolder(),
+      chainId
+    );
+    const networkName = this.env.network.name;
     const extraDeploymentPaths =
       this.env.config.external &&
       this.env.config.external.deployments &&
@@ -553,13 +566,17 @@ export class DeploymentsManager {
     return this.db.deployments;
   }
 
-  public async deletePreviousDeployments(): Promise<void> {
-    const folderPath = this.env.network.name;
+  public async deletePreviousDeployments(folderPath?: string): Promise<void> {
+    folderPath = folderPath || this.deploymentFolder();
     deleteDeployments(this.deploymentsPath, folderPath);
   }
 
   public getSolcInputPath(): string {
-    return path.join(this.deploymentsPath, this.env.network.name, 'solcInputs');
+    return path.join(
+      this.deploymentsPath,
+      this.deploymentFolder(),
+      'solcInputs'
+    );
   }
 
   public async saveDeployment(
@@ -585,7 +602,7 @@ export class DeploymentsManager {
 
     const filepath = path.join(
       this.deploymentsPath,
-      this.env.network.name,
+      this.deploymentFolder(),
       name + '.json'
     );
 
@@ -700,7 +717,7 @@ export class DeploymentsManager {
       } catch (e) {}
       const deployFolderpath = path.join(
         this.deploymentsPath,
-        this.env.network.name
+        this.deploymentFolder()
       );
       try {
         fs.mkdirSync(deployFolderpath);
@@ -715,7 +732,7 @@ export class DeploymentsManager {
       if (deployment.solcInputHash) {
         const solcInputsFolderpath = path.join(
           this.deploymentsPath,
-          this.env.network.name,
+          this.deploymentFolder(),
           'solcInputs'
         );
         const solcInputFilepath = path.join(
@@ -747,6 +764,7 @@ export class DeploymentsManager {
       export?: string;
       exportAll?: string;
       gasPrice?: string;
+      runAsNode?: boolean;
     } = {
       log: false,
       resetMemory: true,
@@ -756,7 +774,7 @@ export class DeploymentsManager {
     }
   ): Promise<{[name: string]: Deployment}> {
     log('runDeploy');
-
+    this.db.runAsNode = options.runAsNode || false;
     if (options.deletePreviousDeployments) {
       log('deleting previous deployments');
       this.db.deployments = {};
@@ -807,7 +825,6 @@ export class DeploymentsManager {
     deployScriptsPath: string,
     tags?: string[]
   ): Promise<void> {
-    const deploymentFolderPath = this.env.network.name;
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
 
     let filesStats;
@@ -986,6 +1003,9 @@ export class DeploymentsManager {
             this.db.migrations[deployScript.func.id] = Math.floor(
               Date.now() / 1000
             );
+
+            const deploymentFolderPath = this.deploymentFolder();
+
             // TODO refactor to extract this whole path and folder existence stuff
             const toSave =
               this.db.writeDeploymentsToFiles &&
@@ -1027,7 +1047,7 @@ export class DeploymentsManager {
     try {
       chainId = fs
         .readFileSync(
-          path.join(this.deploymentsPath, this.env.network.name, '.chainId')
+          path.join(this.deploymentsPath, this.deploymentFolder(), '.chainId')
         )
         .toString();
     } catch (e) {}
@@ -1187,6 +1207,14 @@ export class DeploymentsManager {
       }
     }
     return success;
+  }
+
+  private deploymentFolder(): string {
+    if (this.db.runAsNode) {
+      return 'localhost';
+    } else {
+      return this.env.network.name;
+    }
   }
 
   private async setupAccounts(): Promise<{
