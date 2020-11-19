@@ -69,6 +69,7 @@ export class DeploymentsManager {
       [name: string]: {
         index: number;
         data?: any;
+        blockHash: string;
         snapshot: any;
         deployments: any;
       };
@@ -265,11 +266,20 @@ export class DeploymentsManager {
 
         if (this.db.pastFixtures[fixtureKey]) {
           const pastFixture = this.db.pastFixtures[fixtureKey];
-          await this.revertSnapshot(pastFixture);
-          return this.db.deployments;
-        } else if (globalFixture && options.fallbackToGlobal) {
-          await this.revertSnapshot(globalFixture);
-          return this.db.deployments;
+          const success = await this.revertSnapshot(pastFixture);
+          if (success) {
+            return this.db.deployments;
+          } else {
+            delete this.db.pastFixtures[fixtureKey];
+          }
+        }
+        if (globalFixture && options.fallbackToGlobal) {
+          const success = await this.revertSnapshot(globalFixture);
+          if (success) {
+            return this.db.deployments;
+          } else {
+            delete this.db.pastFixtures[globalKey];
+          }
         }
         await this.runDeploy(tags, {
           resetMemory: true,
@@ -291,8 +301,10 @@ export class DeploymentsManager {
           }
           const saved = this.db.pastFixtures[id];
           if (saved) {
-            await this.revertSnapshot(saved);
-            return saved.data;
+            const success = await this.revertSnapshot(saved);
+            if (success) {
+              return saved.data;
+            }
           }
           const data = await func(this.env, options);
           await this.saveSnapshot(id, data);
@@ -849,6 +861,9 @@ export class DeploymentsManager {
           scriptTags = [scriptTags];
         }
         for (const tag of scriptTags) {
+          if (tag.indexOf(',') >= 0) {
+            throw new Error('Tag cannot contains commas');
+          }
           const bag = scriptPathBags[tag] || [];
           scriptPathBags[tag] = bag;
           bag.push(scriptFilePath);
@@ -1125,11 +1140,16 @@ export class DeploymentsManager {
   }
 
   private async saveSnapshot(key: string, data?: any) {
+    const latestBlock = await this.env.network.provider.send(
+      'eth_getBlockByNumber',
+      ['latest', false]
+    );
     const snapshot = await this.env.network.provider.send('evm_snapshot', []);
     this.db.pastFixtures[key] = {
       index: ++this.db.snapshotCounter,
       snapshot,
       data,
+      blockHash: latestBlock.hash,
       deployments: {...this.db.deployments},
     };
   }
@@ -1137,8 +1157,9 @@ export class DeploymentsManager {
   private async revertSnapshot(saved: {
     index: number;
     snapshot: any;
+    blockHash: string;
     deployments: any;
-  }) {
+  }): Promise<boolean> {
     const snapshotToRevertIndex = saved.index;
     for (const fixtureKey of Object.keys(this.db.pastFixtures)) {
       const snapshotIndex = this.db.pastFixtures[fixtureKey].index;
@@ -1146,9 +1167,26 @@ export class DeploymentsManager {
         delete this.db.pastFixtures[fixtureKey];
       }
     }
-    await this.env.network.provider.send('evm_revert', [saved.snapshot]);
-    saved.snapshot = await this.env.network.provider.send('evm_snapshot', []); // it is necessary to re-snapshot it
-    this.db.deployments = {...saved.deployments};
+    const success = await this.env.network.provider.send('evm_revert', [
+      saved.snapshot,
+    ]);
+    if (success) {
+      const blockRetrieved = await this.env.network.provider.send(
+        'eth_getBlockByHash',
+        [saved.blockHash, false]
+      );
+      if (blockRetrieved) {
+        saved.snapshot = await this.env.network.provider.send(
+          'evm_snapshot',
+          []
+        ); // it is necessary to re-snapshot it
+        this.db.deployments = {...saved.deployments};
+      } else {
+        // TODO or should we throw ?
+        return false;
+      }
+    }
+    return success;
   }
 
   private async setupAccounts(): Promise<{

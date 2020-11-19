@@ -26,4 +26,7 @@
 - [ ] check clash on proxy
 - [ ] rename SemiTransparentProxy and TransparentProxy
 - [ ] hre.run("deploy:before-deploy") in the runDeploy for deploymentManager
-- [ ] test --tags one,two,three
+- [x] fix doc on gas vs gasLimit
+- [x] fix issues with hardhat_reset
+- [ ] SPDX license detection regex more flexible ?
+- [ ] accept "auto" as allowed argument for `gasPrice` to make it compatible with `hre.network.config.gasPrice`
