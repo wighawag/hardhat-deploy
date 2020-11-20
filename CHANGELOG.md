@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.30
+
+### Patch Changes
+
+- node task reset deployments by default (use --no-reset to not reset)
+
 ## 0.7.0-beta.29
 
 ### Patch Changes

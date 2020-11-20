@@ -250,7 +250,6 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     undefined,
     types.string
   )
-  .addFlag('runAsNode', 'run as node: write to localhost')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
   .setAction(async (args) => {
@@ -267,7 +266,6 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       exportAll: args.exportAll,
       savePendingTx: args.pendingtx,
       gasPrice: args.gasprice,
-      runAsNode: args.runAsNode,
     });
   });
 
@@ -298,7 +296,6 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
     undefined,
     types.string
   )
-  .addFlag('runAsNode', 'run as node: write to localhost')
   .addFlag('noCompile', 'disable pre compilation')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
@@ -526,13 +523,14 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
     types.string
   )
   // TODO --unlock-accounts
-  .addFlag('reset', 'whether to delete deployments files first')
+  .addFlag('noReset', 'do not delete deployments files already present')
   .addFlag('silent', 'whether to renove log')
   .addFlag('noDeploy', 'do not deploy')
   .addFlag('showAccounts', 'display account addresses and private keys')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, _, runSuper) => {
     nodeTaskArgs = args;
+    deploymentsManager.runAsNode(true);
     // console.log('node', args);
     await runSuper(args);
   });
@@ -563,7 +561,7 @@ subtask(TASK_NODE_GET_PROVIDER).setAction(
     await hre.run(TASK_DEPLOY_MAIN, {
       ...nodeTaskArgs,
       watch: false,
-      runAsNode: true,
+      reset: !nodeTaskArgs.noReset,
     });
 
     await enableProviderLogging(provider, true);
@@ -588,7 +586,7 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
     await hre.run(TASK_DEPLOY_MAIN, {
       ...nodeTaskArgs,
       watchOnly: true,
-      runAsNode: true,
+      reset: !nodeTaskArgs.noReset,
     });
   }
 });

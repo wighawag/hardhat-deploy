@@ -374,6 +374,10 @@ export class DeploymentsManager {
     );
   }
 
+  public runAsNode(enabled: boolean): void {
+    this.db.runAsNode = enabled;
+  }
+
   public async dealWithPendingTransactions(): Promise<void> {
     let pendingTxs: {
       [txHash: string]: {
@@ -764,7 +768,6 @@ export class DeploymentsManager {
       export?: string;
       exportAll?: string;
       gasPrice?: string;
-      runAsNode?: boolean;
     } = {
       log: false,
       resetMemory: true,
@@ -774,7 +777,6 @@ export class DeploymentsManager {
     }
   ): Promise<{[name: string]: Deployment}> {
     log('runDeploy');
-    this.db.runAsNode = options.runAsNode || false;
     if (options.deletePreviousDeployments) {
       log('deleting previous deployments');
       this.db.deployments = {};
