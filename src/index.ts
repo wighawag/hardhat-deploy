@@ -326,7 +326,7 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
       if (!args.noCompile) {
         await hre.run('compile');
       }
-      return hre.run(TASK_DEPLOY_RUN_DEPLOY, {...args, reset: false}); // TODO reset
+      return hre.run(TASK_DEPLOY_RUN_DEPLOY, {...args, reset: false});
     }
 
     let currentPromise: Promise<{
@@ -586,7 +586,7 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
     await hre.run(TASK_DEPLOY_MAIN, {
       ...nodeTaskArgs,
       watchOnly: true,
-      reset: !nodeTaskArgs.noReset,
+      reset: false,
     });
   }
 });
