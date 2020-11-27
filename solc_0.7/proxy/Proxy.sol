@@ -9,10 +9,6 @@ abstract contract Proxy {
 
     // ///////////////////// EXTERNAL ///////////////////////////////////////////////////////////////////////////
 
-    receive() external payable {
-        _fallback();
-    }
-
     fallback() external payable {
         _fallback();
     }

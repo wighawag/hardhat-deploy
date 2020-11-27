@@ -19,7 +19,7 @@ contract EIP173Proxy is Proxy {
         address implementationAddress,
         bytes memory data,
         address ownerAddress
-    ) {
+    ) payable {
         _setImplementation(implementationAddress, data);
         _setOwner(ownerAddress);
     }
@@ -57,7 +57,7 @@ contract EIP173Proxy is Proxy {
         _setOwner(newOwner);
     }
 
-    function changeImplementation(address newImplementation, bytes calldata data) external onlyOwner {
+    function changeImplementation(address newImplementation, bytes calldata data) external payable onlyOwner {
         _setImplementation(newImplementation, data);
     }
 

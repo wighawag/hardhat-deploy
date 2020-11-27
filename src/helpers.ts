@@ -26,12 +26,14 @@ import {
   Create2DeployOptions,
   FacetCut,
   DeploymentSubmission,
+  ExtendedArtifact,
 } from '../types';
 import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
 import {mergeABIs} from './utils';
 
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
+import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
 import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
 import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
@@ -724,9 +726,28 @@ export function addHelpers(
     const oldDeployment = await getDeploymentOrNUll(name);
     let updateMethod;
     let upgradeIndex;
+    let proxyContract: ExtendedArtifact = eip173Proxy;
     if (typeof options.proxy === 'object') {
       upgradeIndex = options.proxy.upgradeIndex;
       updateMethod = options.proxy.methodName;
+      if (options.proxy.proxyContract) {
+        if (typeof options.proxy.proxyContract === 'string') {
+          try {
+            proxyContract = await getArtifact(options.proxy.proxyContract);
+          } catch (e) {}
+          if (!proxyContract || proxyContract === eip173Proxy) {
+            if (options.proxy.proxyContract === 'EIP173ProxyWithReceive') {
+              proxyContract = eip173ProxyWithReceive;
+            } else if (options.proxy.proxyContract === 'EIP173Proxy') {
+              proxyContract = eip173Proxy;
+            } else {
+              throw new Error(
+                `no contract found for ${options.proxy.proxyContract}`
+              );
+            }
+          }
+        }
+      }
     } else if (typeof options.proxy === 'string') {
       updateMethod = options.proxy;
     }
@@ -740,7 +761,7 @@ export function addHelpers(
 
     // --- Implementation Deployment ---
     const implementationName = name + '_Implementation';
-    const implementationOptions = {...options};
+    const implementationOptions = {...options, value: '0'}; // to not pass value to implementation deploy
     delete implementationOptions.proxy;
     if (!implementationOptions.contract) {
       implementationOptions.contract = name;
@@ -751,7 +772,7 @@ export function addHelpers(
     );
 
     // ensure no clash
-    mergeABIs(true, eip173Proxy.abi, artifact.abi);
+    mergeABIs(true, proxyContract.abi, artifact.abi);
 
     const constructor = artifact.abi.find(
       (fragment: {type: string; inputs: any[]}) =>
@@ -799,7 +820,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       if (!proxy) {
         const proxyOptions = {...options}; // ensure no change
         delete proxyOptions.proxy;
-        proxyOptions.contract = eip173Proxy;
+        proxyOptions.contract = proxyContract;
         proxyOptions.args = [implementation.address, data, owner];
         proxy = await _deployOne(proxyName, proxyOptions);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
@@ -834,7 +855,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
       }
       const proxiedDeployment: DeploymentSubmission = {
-        ...eip173Proxy,
+        ...proxyContract,
         receipt: proxy.receipt,
         address: proxy.address,
         linkedData: options.linkedData,

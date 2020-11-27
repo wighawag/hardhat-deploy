@@ -87,6 +87,7 @@ export interface ProxyOptions {
   owner?: Address;
   upgradeIndex?: number;
   methodName?: string;
+  proxyContract?: string; // default to EIP173Proxy
 }
 
 export interface DeployOptionsBase extends TxOptions {
