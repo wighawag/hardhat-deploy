@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.31
+
+### Patch Changes
+
+- fix reset on node --watch + fix msg.value for Proxy + allow receive ETH for Proxy
+
 ## 0.7.0-beta.30
 
 ### Patch Changes
