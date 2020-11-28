@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.32
+
+### Patch Changes
+
+- fix value 0
+
 ## 0.7.0-beta.31
 
 ### Patch Changes

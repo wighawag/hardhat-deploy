@@ -761,7 +761,7 @@ export function addHelpers(
 
     // --- Implementation Deployment ---
     const implementationName = name + '_Implementation';
-    const implementationOptions = {...options, value: '0'}; // to not pass value to implementation deploy
+    const implementationOptions = {...options, value: undefined}; // to not pass value to implementation deploy
     delete implementationOptions.proxy;
     if (!implementationOptions.contract) {
       implementationOptions.contract = name;
