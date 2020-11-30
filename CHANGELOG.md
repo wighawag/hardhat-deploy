@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.33
+
+### Patch Changes
+
+- log tx hash + wait for tx (where it was not) + add sourcify task (wip)
+
 ## 0.7.0-beta.32
 
 ### Patch Changes
