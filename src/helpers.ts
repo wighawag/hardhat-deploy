@@ -257,27 +257,30 @@ export function addHelpers(
     const code = await provider.getCode(create2DeployerAddress);
     if (code === '0x') {
       const senderAddress = '0x3fab184622dc19b6109349b94811493bf2a45362';
-      if (options.log) {
-        log(
-          `sending eth to create2 contract deployer address (${senderAddress})...`
-        );
-      }
       // TODO gasPrice override
-      await ethersSigner.sendTransaction({
+      const ethTx = await ethersSigner.sendTransaction({
         to: senderAddress,
         value: BigNumber.from('10000000000000000').toHexString(),
       });
+      if (options.log) {
+        log(
+          `sending eth to create2 contract deployer address (${senderAddress}) (tx: ${ethTx.hash})...`
+        );
+      }
+      await ethTx.wait();
+
       // await provider.send("eth_sendTransaction", [{
       //   from
       // }]);
-      if (options.log) {
-        log(
-          `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)...`
-        );
-      }
-      await provider.sendTransaction(
+      const deployTx = await provider.sendTransaction(
         '0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222'
       );
+      if (options.log) {
+        log(
+          `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy) (tx: ${deployTx.hash})...`
+        );
+      }
+      await deployTx.wait();
     }
     return create2DeployerAddress;
   }
@@ -383,6 +386,10 @@ export function addHelpers(
     await setupGasPrice(unsignedTx);
     let tx = await ethersSigner.sendTransaction(unsignedTx);
 
+    if (options.log) {
+      print(`deploying "${name}" (tx: ${tx.hash})...`);
+    }
+
     // await overrideGasLimit(overrides, options, newOverrides =>
     //   ethersSigner.estimateGas(newOverrides)
     // );
@@ -426,6 +433,11 @@ export function addHelpers(
       libraries: options.libraries,
     };
     await saveDeployment(name, deployment);
+    if (options.log) {
+      print(
+        `: deployed at ${deployment.address} with ${receipt?.gasUsed} gas\n`
+      );
+    }
     return {
       ...deployment,
       address,
@@ -661,18 +673,10 @@ export function addHelpers(
             newlyDeployed: false,
           };
         }
+        log(`reusing "${name}" at ${result.address}`);
       }
     } else {
       result = await _deploy(name, options);
-    }
-    if (options.log) {
-      if (result.newlyDeployed) {
-        log(
-          `"${name}" deployed at ${result.address} with ${result.receipt?.gasUsed} gas`
-        );
-      } else {
-        log(`reusing "${name}" at ${result.address}`);
-      }
     }
     return result;
   }
@@ -1165,7 +1169,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           const proxyAddress = diamondCreatedEvent.args.diamond;
           if (options.log) {
             log(
-              `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address}) cuts: ${facetCuts} with ${createReceipt.gasUsed} gas`
+              `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address} (tx: ${createReceipt.transactionHash})) with ${createReceipt.gasUsed} gas`
             );
           }
 
@@ -1420,7 +1424,7 @@ data: ${data}
     tx = await onPendingTx(tx);
 
     if (options.log) {
-      print(`executing ${name}.${methodName}... `);
+      print(`executing ${name}.${methodName} (tx: ${tx.hash}) ...`);
     }
 
     if (options.autoMine) {
