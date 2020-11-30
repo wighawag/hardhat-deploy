@@ -28,12 +28,14 @@ const log = debug('hardhat:wighawag:hardhat-deploy');
 import {DeploymentsManager} from './DeploymentsManager';
 import chokidar from 'chokidar';
 import {submitSources} from './etherscan';
+import {submitSourcesToSourcify} from './sourcify';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
 export const TASK_DEPLOY_RUN_DEPLOY = 'deploy:runDeploy';
 export const TASK_EXPORT = 'export';
 export const TASK_ETHERSCAN_VERIFY = 'etherscan-verify';
+export const TASK_SOURCIFY = 'sourcify';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let nodeTaskArgs: Record<string, any> = {};
@@ -621,6 +623,21 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
       fallbackOnSolcInput: args.solcInput,
       forceLicense: args.forceLicense,
     });
+  });
+
+task(TASK_SOURCIFY, 'submit contract source code to sourcify.eth')
+  .addOptionalParam(
+    'endpoint',
+    'endpoint url for sourcify',
+    undefined,
+    types.string
+  )
+  .addFlag(
+    'writeFailingMetadata',
+    'write to disk failing metadata for easy debugging'
+  )
+  .setAction(async (args, hre) => {
+    await submitSourcesToSourcify(hre, args);
   });
 
 task('export-artifacts')
