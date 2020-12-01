@@ -157,28 +157,9 @@ export interface DeployResult extends Deployment {
   newlyDeployed: boolean;
 }
 
-export type Json =
-  | null
-  | boolean
-  | number
-  | string
-  | Json[]
-  | {[prop: string]: Json};
-
-// from https://github.com/Microsoft/TypeScript/issues/1897#issuecomment-580962081
-type JsonCompatible<T> = {
-  [P in keyof T]: T[P] extends Json
-    ? T[P]
-    : Pick<T, P> extends Required<Pick<T, P>>
-    ? never
-    : T[P] extends (() => any) | undefined
-    ? never
-    : JsonCompatible<T[P]>;
-};
-
-export type FixtureFunc<T> = (
+export type FixtureFunc<T, O> = (
   env: HardhatRuntimeEnvironment,
-  options?: Json
+  options?: O
 ) => Promise<T>;
 
 export interface DeploymentsExtension {
@@ -218,7 +199,10 @@ export interface DeploymentsExtension {
     tags?: string | string[],
     options?: {fallbackToGlobal: boolean}
   ): Promise<{[name: string]: Deployment}>;
-  createFixture<T>(func: FixtureFunc<T>, id?: string): () => Promise<T>;
+  createFixture<T, O>(
+    func: FixtureFunc<T, O>,
+    id?: string
+  ): (options?: O) => Promise<T>;
   log(...args: any[]): void;
 
   execute(

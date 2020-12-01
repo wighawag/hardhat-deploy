@@ -297,9 +297,9 @@ export class DeploymentsManager {
         await this.saveSnapshot(fixtureKey);
         return this.db.deployments;
       },
-      createFixture: <T>(func: FixtureFunc<T>) => {
+      createFixture: <T, O>(func: FixtureFunc<T, O>) => {
         const baseId = '' + ++this.db.fixtureCounter + '::';
-        return async (options?: any) => {
+        return async (options?: O) => {
           let id = baseId;
           if (options !== undefined) {
             id = id + JSON.stringify(options);

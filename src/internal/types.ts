@@ -26,6 +26,9 @@ export interface PartialExtension {
     }
   ): Promise<{[name: string]: Deployment}>;
   fixture(tags?: string | string[]): Promise<{[name: string]: Deployment}>;
-  createFixture<T>(func: FixtureFunc<T>, id?: string): () => Promise<T>;
+  createFixture<T, O>(
+    func: FixtureFunc<T, O>,
+    id?: string
+  ): (options?: O) => Promise<T>;
   log(...args: unknown[]): void;
 }
