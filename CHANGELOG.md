@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.35
+
+### Patch Changes
+
+- fix getUnnamedAccounts : return addresses not named in namedAccounts
+
 ## 0.7.0-beta.34
 
 ### Patch Changes
