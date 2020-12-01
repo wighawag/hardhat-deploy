@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.34
+
+### Patch Changes
+
+- add better typing for createFixture options
+
 ## 0.7.0-beta.33
 
 ### Patch Changes
