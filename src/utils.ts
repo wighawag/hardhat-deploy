@@ -332,13 +332,13 @@ function transformNamedAccounts(
       const address = parseSpec(spec);
       if (address) {
         namedAccounts[accountName] = address;
-        usedAccounts[address] = true;
+        usedAccounts[address.toLowerCase()] = true;
       }
     }
   }
   const unnamedAccounts = [];
   for (const address of accounts) {
-    if (!usedAccounts[address]) {
+    if (!usedAccounts[address.toLowerCase()]) {
       unnamedAccounts.push(getAddress(address));
     }
   }
@@ -385,7 +385,7 @@ export function processNamedAccounts(
       hre.network.name
     );
   } else {
-    return {namedAccounts: {}, unnamedAccounts: []};
+    return {namedAccounts: {}, unnamedAccounts: accounts};
   }
 }
 
