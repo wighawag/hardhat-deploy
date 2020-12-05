@@ -460,7 +460,7 @@ export function mergeABIs(check: boolean, ...abis: any[][]): any[] {
           return v.name === fragment.name; // TODO fallback and receive hanlding
         }
       });
-      if (foundSameSig) {
+      if (foundSameSig && fragment.name !== 'supportsInterface') {
         if (check) {
           if (fragment.type === 'function') {
             throw new Error(
