@@ -46,11 +46,13 @@ import {
 } from 'hardhat/types';
 
 diamondBase.abi = mergeABIs(
-  false,
-  diamondBase.abi,
-  diamondCutFacet.abi,
-  diamondLoupeFacet.abi,
-  ownershipFacet.abi
+  [
+    diamondBase.abi,
+    diamondCutFacet.abi,
+    diamondLoupeFacet.abi,
+    ownershipFacet.abi,
+  ],
+  {check: false, skipSupportsInterface: false}
 );
 
 function fixProvider(providerGiven: any): any {
@@ -737,7 +739,9 @@ export function addHelpers(
       if (options.proxy.proxyContract) {
         if (typeof options.proxy.proxyContract === 'string') {
           try {
-            proxyContract = await getArtifact(options.proxy.proxyContract);
+            proxyContract = await env.deployments.getExtendedArtifact(
+              options.proxy.proxyContract
+            );
           } catch (e) {}
           if (!proxyContract || proxyContract === eip173Proxy) {
             if (options.proxy.proxyContract === 'EIP173ProxyWithReceive') {
@@ -776,8 +780,10 @@ export function addHelpers(
     );
 
     // ensure no clash
-    mergeABIs(true, proxyContract.abi, artifact.abi);
-
+    mergeABIs([proxyContract.abi, artifact.abi], {
+      check: true,
+      skipSupportsInterface: true, // TODO options for custom proxy ?
+    });
     const constructor = artifact.abi.find(
       (fragment: {type: string; inputs: any[]}) =>
         fragment.type === 'constructor'
@@ -1015,7 +1021,10 @@ Plus they are only used when the contract is meant to be used as standalone when
       if (constructor) {
         throw new Error(`Facet must not have a constructor`);
       }
-      abi = mergeABIs(true, abi, artifact.abi);
+      abi = mergeABIs([abi, artifact.abi], {
+        check: true,
+        skipSupportsInterface: false,
+      });
       // TODO allow facet to be named so multiple version could coexist
       const implementation = await _deployOne(facet, {
         from: options.from,

@@ -422,7 +422,10 @@ export const traverse = function (
   return result;
 };
 
-export function mergeABIs(check: boolean, ...abis: any[][]): any[] {
+export function mergeABIs(
+  abis: any[][],
+  options: {check: boolean; skipSupportsInterface: boolean}
+): any[] {
   if (abis.length === 0) {
     return [];
   }
@@ -461,7 +464,13 @@ export function mergeABIs(check: boolean, ...abis: any[][]): any[] {
         }
       });
       if (foundSameSig) {
-        if (check) {
+        if (
+          options.check &&
+          !(
+            options.skipSupportsInterface &&
+            fragment.name === 'supportsInterface'
+          )
+        ) {
           if (fragment.type === 'function') {
             throw new Error(
               `function "${fragment.name}" will shadow "${foundSameSig.name}". Please update code to avoid conflict.`
