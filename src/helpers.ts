@@ -779,11 +779,16 @@ export function addHelpers(
       implementationOptions
     );
 
+    const proxyContractConstructor = proxyContract.abi.find(
+      (v) => v.type === 'constructor'
+    );
     // ensure no clash
-    mergeABIs([proxyContract.abi, artifact.abi], {
+    const mergedABI = mergeABIs([proxyContract.abi, artifact.abi], {
       check: true,
       skipSupportsInterface: true, // TODO options for custom proxy ?
-    });
+    }).filter((v) => v.type !== 'constructor');
+    mergedABI.push(proxyContractConstructor); // use proxy constructor abi
+
     const constructor = artifact.abi.find(
       (fragment: {type: string; inputs: any[]}) =>
         fragment.type === 'constructor'
@@ -869,7 +874,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         receipt: proxy.receipt,
         address: proxy.address,
         linkedData: options.linkedData,
-        abi: implementation.abi,
+        abi: mergedABI,
         args: proxy.args,
         execute: updateMethod
           ? {

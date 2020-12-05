@@ -5,6 +5,7 @@
     "hardhat-deploy": "0.7.0-beta.20"
   },
   "changesets": [
+    "afraid-eyes-care",
     "brown-dragons-promise",
     "curly-lamps-run",
     "few-shirts-love",

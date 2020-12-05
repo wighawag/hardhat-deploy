@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.37
+
+### Patch Changes
+
+- use proxy constructor abi for proxied contracts
+
 ## 0.7.0-beta.36
 
 ### Patch Changes
