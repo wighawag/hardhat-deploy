@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.36
+
+### Patch Changes
+
+- fix supportsInterface for Proxied Contract and fix custom Proxy contract by saving the extended artifacts
+
 ## 0.7.0-beta.35
 
 ### Patch Changes
