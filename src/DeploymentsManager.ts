@@ -768,6 +768,7 @@ export class DeploymentsManager {
       export?: string;
       exportAll?: string;
       gasPrice?: string;
+      clearScriptCache?: boolean;
     } = {
       log: false,
       resetMemory: true,
@@ -803,7 +804,9 @@ export class DeploymentsManager {
         if (externalContracts.deploy) {
           this.db.onlyArtifacts = externalContracts.artifacts;
           try {
-            await this.executeDeployScripts(externalContracts.deploy);
+            await this.executeDeployScripts(externalContracts.deploy, [], {
+              clearScriptCache: options.clearScriptCache,
+            });
           } finally {
             this.db.onlyArtifacts = undefined;
           }
@@ -816,7 +819,9 @@ export class DeploymentsManager {
     }
     const deployPath = this.env.config.paths.deploy;
 
-    await this.executeDeployScripts(deployPath, tags);
+    await this.executeDeployScripts(deployPath, tags || [], {
+      clearScriptCache: options.clearScriptCache,
+    });
 
     await this.export(options);
 
@@ -825,8 +830,12 @@ export class DeploymentsManager {
 
   public async executeDeployScripts(
     deployScriptsPath: string,
-    tags?: string[]
+    tags: string[],
+    options?: {
+      clearScriptCache?: boolean;
+    }
   ): Promise<void> {
+    options = options || {};
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
 
     let filesStats;
@@ -858,7 +867,9 @@ export class DeploymentsManager {
       let deployFunc: DeployFunction;
       // console.log("fetching " + scriptFilePath);
       try {
-        // TODO when watch is enabled : delete require.cache[path.resolve(scriptFilePath)]; // ensure we reload it every time, so changes are taken in consideration
+        if (options.clearScriptCache) {
+          delete require.cache[path.resolve(scriptFilePath)];
+        }
         deployFunc = require(scriptFilePath);
         if ((deployFunc as any).default) {
           deployFunc = (deployFunc as any).default as DeployFunction;

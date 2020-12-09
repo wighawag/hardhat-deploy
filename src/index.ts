@@ -252,6 +252,10 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     undefined,
     types.string
   )
+  .addFlag(
+    'clearScriptCache',
+    'clear npm require cache for deploy scripts before invocation'
+  )
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
   .setAction(async (args) => {
@@ -268,6 +272,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       exportAll: args.exportAll,
       savePendingTx: args.pendingtx,
       gasPrice: args.gasprice,
+      clearScriptCache: args.clearScriptCache,
     });
   });
 
@@ -328,7 +333,11 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
       if (!args.noCompile) {
         await hre.run('compile');
       }
-      return hre.run(TASK_DEPLOY_RUN_DEPLOY, {...args, reset: false});
+      return hre.run(TASK_DEPLOY_RUN_DEPLOY, {
+        ...args,
+        reset: false,
+        clearScriptCache: args.watch || args.watchOnly,
+      });
     }
 
     let currentPromise: Promise<{

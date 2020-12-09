@@ -937,7 +937,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       if (from.length === 64) {
         from = '0x' + from;
       }
-      const wallet = new Wallet(from);
+      const wallet = new Wallet(from, provider);
       from = wallet.address;
       ethersSigner = wallet;
     } else {
