@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.38
+
+### Patch Changes
+
+- from as privateKey fix + clear npm script cache so watch work as intended
+
 ## 0.7.0-beta.37
 
 ### Patch Changes
