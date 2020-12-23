@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.39
+
+### Patch Changes
+
+- fix SPDX regex
+
 ## 0.7.0-beta.38
 
 ### Patch Changes
