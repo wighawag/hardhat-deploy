@@ -247,14 +247,10 @@ export function addHelpers(
     );
   }
 
-  async function ensureCreate2DeployerReady(options: {
-    from: string;
-    log?: boolean;
-  }): Promise<string> {
-    const {address: from, ethersSigner} = getFrom(options.from);
-    if (!ethersSigner) {
-      throw new Error('no signer for ' + from);
-    }
+  async function ensureCreate2DeployerReady(
+    options: DeployOptions
+  ): Promise<string> {
+    const {ethersSigner} = await getSignerFromOptions(options);
     const create2DeployerAddress = '0x4e59b44847b379578588920ca78fbf26c0b4956c';
     const code = await provider.getCode(create2DeployerAddress);
     if (code === '0x') {
@@ -329,11 +325,7 @@ export function addHelpers(
   ): Promise<DeployResult> {
     const args: any[] = options.args ? [...options.args] : [];
     await init();
-    const {address: from, ethersSigner} = getFrom(options.from);
-    if (!ethersSigner) {
-      throw new Error('no signer for ' + from);
-    }
-
+    const {ethersSigner} = await getSignerFromOptions(options);
     const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(
       name,
       options
@@ -447,6 +439,26 @@ export function addHelpers(
     };
   }
 
+  async function getSignerFromOptions(
+    options: DeployOptions
+  ): Promise<{from: string; ethersSigner: Signer}> {
+    let from: string;
+    let ethersSigner: Signer | undefined;
+    if (options.deployer) {
+      ethersSigner = options.deployer;
+      from = await ethersSigner.getAddress();
+      options.from = from;
+    } else {
+      const res = getFrom(options.from);
+      from = res.address;
+      ethersSigner = res.ethersSigner;
+    }
+    if (!ethersSigner) {
+      throw new Error('no signer for ' + from);
+    }
+    return {from, ethersSigner};
+  }
+
   async function deterministic(
     name: string,
     options: Create2DeployOptions
@@ -459,20 +471,7 @@ export function addHelpers(
     const args: any[] = options.args ? [...options.args] : [];
     await init();
 
-    let from: string;
-    let ethersSigner: Signer | undefined;
-    if (options.deployer) {
-      ethersSigner = options.deployer
-      from = await ethersSigner.getAddress()
-      options.from = from
-    } else {
-      const res = getFrom(options.from);
-      from = res.address
-      ethersSigner = res.ethersSigner
-    }
-    if (!ethersSigner) {
-      throw new Error('no signer for ' + from);
-    }
+    const {ethersSigner} = await getSignerFromOptions(options);
     const artifactInfo = await getArtifactFromOptions(name, options);
     const {artifact} = artifactInfo;
     const abi = artifact.abi;
@@ -532,11 +531,7 @@ export function addHelpers(
     await init();
 
     if (options.deterministicDeployment) {
-      // TODO remove duplication:
-      const {address: from, ethersSigner} = getFrom(options.from);
-      if (!ethersSigner) {
-        throw new Error('no signer for ' + from);
-      }
+      const {ethersSigner} = await getSignerFromOptions(options);
       const artifactInfo = await getArtifactFromOptions(name, options);
       const {artifact} = artifactInfo;
       const abi = artifact.abi;
