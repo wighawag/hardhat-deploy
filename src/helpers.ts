@@ -458,7 +458,18 @@ export function addHelpers(
     // TODO refactor to share that code:
     const args: any[] = options.args ? [...options.args] : [];
     await init();
-    const {address: from, ethersSigner} = getFrom(options.from);
+
+    let from: string;
+    let ethersSigner: Signer | undefined;
+    if (options.deployer) {
+      ethersSigner = options.deployer
+      from = await ethersSigner.getAddress()
+      options.from = from
+    } else {
+      const res = getFrom(options.from);
+      from = res.address
+      ethersSigner = res.ethersSigner
+    }
     if (!ethersSigner) {
       throw new Error('no signer for ' + from);
     }

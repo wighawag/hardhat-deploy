@@ -7,6 +7,7 @@ import {
   HardhatRuntimeEnvironment,
 } from 'hardhat/types';
 import type {BigNumber} from '@ethersproject/bignumber';
+import { Signer } from '@ethersproject/abstract-signer'
 
 export type ExtendedArtifact = {
   abi: any[];
@@ -118,6 +119,7 @@ export interface DeployOptions extends DeployOptionsBase {
 
 export interface Create2DeployOptions extends DeployOptionsBase {
   salt?: string;
+  deployer?: Signer;
 }
 
 export interface CallOptions {
