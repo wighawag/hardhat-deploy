@@ -13,7 +13,7 @@ import {
 } from 'hardhat/types';
 import {Deployment, ExtendedArtifact} from '../types';
 import {extendEnvironment, task, subtask, extendConfig} from 'hardhat/config';
-import {HARDHAT_NETWORK_NAME} from 'hardhat/plugins';
+import {HARDHAT_NETWORK_NAME, HardhatPluginError} from 'hardhat/plugins';
 import * as types from 'hardhat/internal/core/params/argumentTypes'; // TODO harhdat argument types not from internal
 import {
   TASK_NODE,
@@ -532,7 +532,7 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, hre, runSuper) => {
     if (!isHardhatEVM(hre)) {
-      throw new Error(
+      throw new HardhatPluginError(
         `
 Unsupported network for JSON-RPC server. Only hardhat is currently supported.
 hardhat-deploy cannot run on the hardhat provider when defaultNetwork is not hardhat, see https://github.com/nomiclabs/hardhat/issues/1139 and https://github.com/wighawag/hardhat-deploy/issues/63
