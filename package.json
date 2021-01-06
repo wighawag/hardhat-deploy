@@ -71,7 +71,7 @@
     "@ethersproject/transactions": "^5.0.2",
     "@ethersproject/wallet": "^5.0.2",
     "@types/qs": "^6.9.4",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "chalk": "^4.1.0",
     "chokidar": "^3.4.0",
     "debug": "^4.1.1",
