@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.41
+
+### Patch Changes
+
+- Bumps axios from 0.19.2 to 0.21.1.
+
 ## 0.7.0-beta.40
 
 ### Patch Changes
