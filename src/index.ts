@@ -13,8 +13,8 @@ import {
 } from 'hardhat/types';
 import {Deployment, ExtendedArtifact} from '../types';
 import {extendEnvironment, task, subtask, extendConfig} from 'hardhat/config';
-import {HARDHAT_NETWORK_NAME} from 'hardhat/internal/constants';
-import * as types from 'hardhat/internal/core/params/argumentTypes';
+import {HARDHAT_NETWORK_NAME} from 'hardhat/plugins';
+import * as types from 'hardhat/internal/core/params/argumentTypes'; // TODO harhdat argument types not from internal
 import {
   TASK_NODE,
   TASK_TEST,
@@ -38,7 +38,7 @@ export const TASK_ETHERSCAN_VERIFY = 'etherscan-verify';
 export const TASK_SOURCIFY = 'sourcify';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let nodeTaskArgs: Record<string, any> = {};
+const nodeTaskArgs: Record<string, any> = {};
 
 function isHardhatEVM(hre: HardhatRuntimeEnvironment): boolean {
   const {network} = hre;
@@ -350,7 +350,7 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let rejectPending: any = null;
       // eslint-disable-next-line no-inner-declarations,@typescript-eslint/no-explicit-any
-      function pending(): Promise<any> {
+      function pending(): Promise<void> {
         return new Promise((resolve, reject) => {
           rejectPending = reject;
           if (currentPromise) {
@@ -530,9 +530,17 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   .addFlag('noDeploy', 'do not deploy')
   .addFlag('showAccounts', 'display account addresses and private keys')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
-  .setAction(async (args, _, runSuper) => {
-    nodeTaskArgs = args;
-    deploymentsManager.runAsNode(true);
+  .setAction(async (args, hre, runSuper) => {
+    if (!isHardhatEVM(hre)) {
+      throw new Error(
+        `
+Unsupported network for JSON-RPC server. Only hardhat is currently supported.
+hardhat-deploy cannot run on the hardhat provider when defaultNetwork is not hardhat, see https://github.com/nomiclabs/hardhat/issues/1139 and https://github.com/wighawag/hardhat-deploy/issues/63
+you can specifiy hardhat via "--network hardhat"
+`
+      );
+    }
+
     // console.log('node', args);
     await runSuper(args);
   });
