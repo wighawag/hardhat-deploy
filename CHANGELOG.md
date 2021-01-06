@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.40
+
+### Patch Changes
+
+- Ensure node task do not run on non-hardhat network
+
 ## 0.7.0-beta.39
 
 ### Patch Changes
