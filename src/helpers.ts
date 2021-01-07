@@ -32,7 +32,7 @@ import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
 import {mergeABIs} from './utils';
 
-import OpenZeppelinTransparentProxy from '../extendedArtifacts/EIP173Proxy.json';
+import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
