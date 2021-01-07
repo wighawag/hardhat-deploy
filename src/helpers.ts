@@ -32,6 +32,7 @@ import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
 import {mergeABIs} from './utils';
 
+import OpenZeppelinTransparentProxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
@@ -733,6 +734,7 @@ export function addHelpers(
     let updateMethod;
     let upgradeIndex;
     let proxyContract: ExtendedArtifact = eip173Proxy;
+    let openzeppelin = false;
     if (typeof options.proxy === 'object') {
       upgradeIndex = options.proxy.upgradeIndex;
       updateMethod = options.proxy.methodName;
@@ -748,6 +750,11 @@ export function addHelpers(
               proxyContract = eip173ProxyWithReceive;
             } else if (options.proxy.proxyContract === 'EIP173Proxy') {
               proxyContract = eip173Proxy;
+            } else if (
+              options.proxy.proxyContract === 'OpenZeppelinTransparentProxy'
+            ) {
+              proxyContract = OpenZeppelinTransparentProxy;
+              openzeppelin = true;
             } else {
               throw new Error(
                 `no contract found for ${options.proxy.proxyContract}`
@@ -836,37 +843,39 @@ Plus they are only used when the contract is meant to be used as standalone when
         const proxyOptions = {...options}; // ensure no change
         delete proxyOptions.proxy;
         proxyOptions.contract = proxyContract;
-        proxyOptions.args = [implementation.address, data, owner];
+        proxyOptions.args = openzeppelin
+          ? [implementation.address, owner, data]
+          : [implementation.address, data, owner];
         proxy = await _deployOne(proxyName, proxyOptions);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
-        let currentOwner: string;
+        const ownerStorage = await provider.getStorageAt(
+          proxy.address,
+          '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
+        );
+        const currentOwner = BigNumber.from(ownerStorage).toHexString();
 
-        try {
-          currentOwner = await read(proxyName, {...options}, 'owner');
-        } catch (e) {
-          const ownerStorage = await provider.getStorageAt(
-            // fallback on old proxy // TODO test
-            proxy.address,
-            '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
-          );
-          currentOwner = BigNumber.from(ownerStorage).toHexString();
-        }
+        const changeOwnershipMethod = openzeppelin
+          ? 'changeAdmin'
+          : 'transferOwnership';
+        const changeImplementationMethod = openzeppelin
+          ? 'upgradeToAndCall'
+          : 'changeImplementation';
 
         if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
           throw new Error(
-            'To change owner, you need to call `transferOwnership`'
+            `To change owner/admin, you need to call ${changeOwnershipMethod}`
           );
         }
         const executeReceipt = await execute(
           proxyName,
           {...options},
-          'changeImplementation',
+          changeImplementationMethod,
           implementation.address,
           data
         );
         if (!executeReceipt) {
-          throw new Error('could not execute `changeImplementation`');
+          throw new Error(`could not execute ${changeImplementationMethod}`);
         }
       }
       const proxiedDeployment: DeploymentSubmission = {
