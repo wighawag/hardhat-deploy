@@ -382,7 +382,7 @@ export function processNamedAccounts(
       hre.config.namedAccounts,
       chainIdGiven,
       accounts,
-      hre.network.name
+      process.env.HARDHAT_DEPLOY_ACCOUNTS_NETWORK || hre.network.name
     );
   } else {
     return {namedAccounts: {}, unnamedAccounts: accounts};

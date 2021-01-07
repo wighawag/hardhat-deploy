@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.42
+
+### Patch Changes
+
+- add env HARDHAT_DEPLOY_ACCOUNTS_NETWORK to specify a different network for named accounts
+
 ## 0.7.0-beta.41
 
 ### Patch Changes
