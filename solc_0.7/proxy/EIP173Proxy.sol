@@ -44,8 +44,9 @@ contract EIP173Proxy is Proxy {
             implementation := sload(0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc)
         }
 
-        // This technically is not standard compliant as it ERC-165 require 30,000 gas which that call cannot ensure, since it is itself inside `supportsInterface`
-        // in practise this is unlikely to be an issue
+        // Technically this is not standard compliant as ERC-165 require 30,000 gas which that call cannot ensure
+        // because it is itself inside `supportsInterface` that might only get 30,000 gas.
+        // In practise this is unlikely to be an issue.
         try implementation.supportsInterface(id) returns (bool support) {
             return support;
         } catch {
