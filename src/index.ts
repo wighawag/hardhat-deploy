@@ -38,7 +38,7 @@ export const TASK_ETHERSCAN_VERIFY = 'etherscan-verify';
 export const TASK_SOURCIFY = 'sourcify';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const nodeTaskArgs: Record<string, any> = {};
+let nodeTaskArgs: Record<string, any> = {};
 
 function isHardhatEVM(hre: HardhatRuntimeEnvironment): boolean {
   const {network} = hre;
@@ -531,6 +531,7 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   .addFlag('showAccounts', 'display account addresses and private keys')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, hre, runSuper) => {
+    nodeTaskArgs = args;
     if (!isHardhatEVM(hre)) {
       throw new HardhatPluginError(
         `

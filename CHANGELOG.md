@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.43
+
+### Patch Changes
+
+- fix bug introduced in last changes : node task args were not considered
+
 ## 0.7.0-beta.42
 
 ### Patch Changes
