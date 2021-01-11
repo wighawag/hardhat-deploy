@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.44
+
+### Patch Changes
+
+- default to write deployment to file so can run scripts that deploy contract without losing info
+
 ## 0.7.0-beta.43
 
 ### Patch Changes

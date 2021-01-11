@@ -95,7 +95,7 @@ export class DeploymentsManager {
       deploymentsLoaded: false,
       deployments: {},
       migrations: {},
-      writeDeploymentsToFiles: false,
+      writeDeploymentsToFiles: true, // should default to true ? so we can run scripts that use `deploy` by default
       fixtureCounter: 0,
       snapshotCounter: 0,
       pastFixtures: {},
