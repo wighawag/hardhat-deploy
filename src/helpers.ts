@@ -850,7 +850,7 @@ Plus they are only used when the contract is meant to be used as standalone when
             proxy.address,
             '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
           );
-          currentOwner = BigNumber.from(ownerStorage).toHexString();
+          currentOwner = getAddress(BigNumber.from(ownerStorage).toHexString());
         }
 
         if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
