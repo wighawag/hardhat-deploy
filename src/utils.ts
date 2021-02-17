@@ -73,7 +73,11 @@ export async function getExtendedArtifactFromFolder(
   let artifact = getOldArtifactSync(name, folderPath);
   if (!artifact && (await artifacts.artifactExists(name))) {
     const hardhatArtifact: Artifact = await artifacts.readArtifact(name);
-    const fullyQualifiedName = hardhatArtifact.sourceName + ':' + name;
+    // check if name is already a fullyQualifiedName
+    let fullyQualifiedName = name;
+    if (!fullyQualifiedName.includes(':')) {
+      fullyQualifiedName = `${hardhatArtifact.sourceName}:${name}`;
+    }
     const buildInfo = await artifacts.getBuildInfo(fullyQualifiedName);
     if (buildInfo) {
       const solcInput = JSON.stringify(buildInfo.input, null, '  ');
