@@ -680,6 +680,7 @@ export class DeploymentsManager {
         diamondCut: deployment.diamondCut,
         execute: deployment.execute,
         history: deployment.history,
+        implementation: deployment.implementation,
         devdoc: deployment.devdoc,
         userdoc: deployment.userdoc,
         storageLayout: deployment.storageLayout,

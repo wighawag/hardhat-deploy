@@ -7,6 +7,7 @@ import {
   ContractFactory,
   PayableOverrides,
 } from '@ethersproject/contracts';
+import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
@@ -858,9 +859,15 @@ Plus they are only used when the contract is meant to be used as standalone when
             'To change owner, you need to call `transferOwnership`'
           );
         }
+        if (currentOwner === AddressZero) {
+          throw new Error(
+            'The Proxy belongs to no-one. It cannot be upgraded anymore'
+          );
+        }
+
         const executeReceipt = await execute(
           proxyName,
-          {...options},
+          {...options, from: currentOwner},
           'changeImplementation',
           implementation.address,
           data
@@ -875,6 +882,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         address: proxy.address,
         linkedData: options.linkedData,
         abi: mergedABI,
+        implementation: implementation.address,
         args: proxy.args,
         execute: updateMethod
           ? {
@@ -896,6 +904,27 @@ Plus they are only used when the contract is meant to be used as standalone when
         newlyDeployed: true,
       };
     } else {
+      const oldDeployment = await env.deployments.get(name);
+
+      if (oldDeployment.implementation !== implementation.address) {
+        const proxiedDeployment: DeploymentSubmission = {
+          ...oldDeployment,
+          implementation: implementation.address,
+          linkedData: options.linkedData,
+          abi: mergedABI,
+          execute: updateMethod
+            ? {
+                methodName: updateMethod,
+                args: argsArray,
+              }
+            : undefined,
+        };
+        proxiedDeployment.history = proxiedDeployment.history
+          ? proxiedDeployment.history.concat([oldDeployment])
+          : [oldDeployment];
+        await saveDeployment(name, proxiedDeployment);
+      }
+
       const deployment = await env.deployments.get(name);
       return {
         ...deployment,
@@ -1318,8 +1347,15 @@ Plus they are only used when the contract is meant to be used as standalone when
   }
 
   async function catchUnknownSigner(
-    action: Promise<any> | (() => Promise<any>)
-  ): Promise<void> {
+    action: Promise<any> | (() => Promise<any>),
+    options?: {log?: boolean}
+  ): Promise<null | {
+    from: string;
+    to?: string;
+    value?: string;
+    data?: string;
+  }> {
+    const outputLog = !options || options.log === undefined || options.log;
     try {
       if (action instanceof Promise) {
         await action;
@@ -1329,42 +1365,68 @@ Plus they are only used when the contract is meant to be used as standalone when
     } catch (e) {
       if (e instanceof UnknownSignerError) {
         const {from, to, data, value, contract} = e.data;
-        console.error('no signer for ' + from);
-        if (contract) {
-          console.log(`Please execute the following on ${contract.name}`);
+        if (outputLog) {
+          console.error('no signer for ' + from);
           console.log(
-            `
+            `---------------------------------------------------------------------------------------`
+          );
+          if (contract) {
+            console.log(`Please execute the following on ${contract.name}`);
+            console.log(
+              `
 from: ${from}
-to: ${to}
-value: ${value ? (typeof value === 'string' ? value : value.toString()) : '0'}
+to: ${to}${
+                value
+                  ? '\nvalue: ' +
+                    (typeof value === 'string' ? value : value.toString())
+                  : ''
+              }
 data: ${data}
 `
-          );
-          console.log('if you have an interface use the following');
-          console.log(
-            `
+            );
+            console.log('if you have an interface use the following');
+            console.log(
+              `
 from: ${from}
-to: ${to} (${contract.name})
-value: ${value}
+to: ${to} (${contract.name})${
+                value
+                  ? '\nvalue: ' +
+                    (typeof value === 'string' ? value : value.toString())
+                  : ''
+              }
 method: ${contract.method}
-args: [${contract.args.join(',')}]
+args:
+  - ${contract.args.join('\n  - ')}
 `
-          );
-        } else {
-          console.log(`Please execute the following`);
-          console.log(
-            `
+            );
+          } else {
+            console.log(`Please execute the following`);
+            console.log(
+              `
 from: ${from}
-to: ${to}
-value: ${value ? (typeof value === 'string' ? value : value.toString()) : '0'}
+to: ${to}${
+                value
+                  ? '\nvalue: ' +
+                    (typeof value === 'string' ? value : value.toString())
+                  : ''
+              }
 data: ${data}
 `
+            );
+          }
+          console.log(
+            `---------------------------------------------------------------------------------------`
           );
         }
+        if (!value || typeof value === 'string') {
+          return {from, to, value, data};
+        }
+        return {from, to, value: value?.toString(), data};
       } else {
         throw e;
       }
     }
+    return null;
   }
 
   async function execute(

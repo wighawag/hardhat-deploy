@@ -1,5 +1,12 @@
 # hardhat-deploy
 
+## 0.7.0-beta.45
+
+### Patch Changes
+
+- allow to execute proxy deploy after deployment was made elsewhere to actualise the deployment files
+- fixed (by @zgorizzo69) for artfiact using full qualified names
+
 ## 0.7.0-beta.44
 
 ### Patch Changes

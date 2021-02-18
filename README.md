@@ -1,10 +1,6 @@
-[![hardhat](https://hardhat.org/hardhat-plugin-badge.svg?1)](https://hardhat.org)
-
 <h1> hardhat-deploy</h1>
 
-_A Hardhat Plugin For Replicable Deployments And Tests_
-
-[Hardhat](https://hardhat.org) Deployment And Test Plugin.
+_A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Tests_
 
 - [What is it for ?](#what-is-it-for-)
 - [Installation](#installation)
@@ -37,7 +33,7 @@ _A Hardhat Plugin For Replicable Deployments And Tests_
 - [Handling contract using libraries](#handling-contract-using-libraries)
 - [Exporting Deployments](#exporting-deployments)
 - [Deploying and Upgrading Proxies](#deploying-and-upgrading-proxies)
-- [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535)
+<!-- - [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535) -->
 - [Testing Deployed Contracts](#testing-deployed-contracts)
   - [Creating Fixtures](#creating-fixtures)
 - [More Information On Hardhat Tasks](#more-information-on-hardhat-tasks)
@@ -51,31 +47,57 @@ _A Hardhat Plugin For Replicable Deployments And Tests_
 
 This [hardhat](https://hardhat.dev) plugin adds a mechanism to deploy contracts to any network, keeping track of them and replicating the same environment for testing.
 
-It also adds a mechanism to associate names to addresses so test and deployment scripts can be reconfigured by simply changing the address a name points to, allowing different configurations per network. This also results in much clearer tests and deployment scripts (no more `accounts[2]` in your code).
+It also adds a mechanism to associate names to addresses so test and deployment scripts can be reconfigured by simply changing the address a name points to, allowing different configurations per network. This also results in much clearer tests and deployment scripts (no more `accounts[0]` in your code).
 
 This plugin contains a lot more features too, all geared toward a better developer experience :
 
 - chain configuration export, listing deployed contract, their abi and address, usefull for webapps.
-- library linking at time of deployment
-- deterministic deployment across networks
-- ability to submit contract source to etherscan for verification. Because hardhat-deploy will save all necessary info, it can be executed at any time.
+- library linking at time of deployment.
+- deterministic deployment across networks.
 - deployment dependency system (allowing you to only deploy what is needed).
-- deployment as migration so once a deployment is done, it can be set to never be executed again.
 - deployment retrying (by saving pending tx): so you can feel confident when making a deployment that you can always recover.
 - deployments as test fixture using `evm_snapshot` to speed up testing.
 - ability to create your own test fixture that automatically benefit from `evm_snapshot` to speed up tests using it.
 - combined with [hardhat-deploy-ethers](https://github.com/wighawag/hardhat-deploy-ethers) it has the ability to get ethers contract instance by name (like `await ethers.getContract("ContractName")`).
 - importing previously compiled contract (possibly in different solidity compiler version).
-- importing artifact from external sources (like npm packages), including truffle support
-- importing deployments from external sources (like npm packages), including truffle support
+- importing artifact from external sources (like npm packages), including truffle support.
+- importing deployments from external sources (like npm packages), including truffle support.
 - ability to log information in `deploy` mode only (while in test the console remains clean).
 - contains helpers to read and execute transaction on deployed contract referring to them by name.
-- These helpers contains options to auto mine on dev environment like ganache (to speed up deployments).
+- These helpers contains options to auto mine on dev environment like ganache (to speed up test deployments).
 - save metadata of deployed contract so they can always be fully verified, via [sourcify](https://github.com/ethereum/sourcify) or [etherscan](https://etherscan.io).
+- ability to submit contract source to etherscan and sourcify for verification. Because hardhat-deploy will save all necessary info, it can be executed at any time.
 - proxy deployment with ability to upgrade them transparently, only if code changes.
-- diamond deployment with facets, allowing you to focus on what the new version will be. It will generate the diamondCut necessary to reach the new state.
+<!-- - diamond deployment with facets, allowing you to focus on what the new version will be. It will generate the diamondCut necessary to reach the new state. -->
 - watch and deploy: hardhat-deploy can watch both your deploy script and contract code and redeploy on changes.
-- HCR (Hot Contract Replacement): the watch feature combined with proxy or diamond, gives you an experience akin to frontend Hot Module Replacement: Once your contract change, the deployment is executed and your contract retain the same address and same state.
+- HCR (Hot Contract Replacement): the watch feature combined with proxy <!--or diamond-->, gives you an experience akin to frontend Hot Module Replacement: Once your contract change, the deployment is executed and your contract retain the same address and same state, allowing you to tweak your contracts while debugging your front-end.
+
+## hardhay-deploy in a nutshell
+
+Before going into the details, here is a very simple summary of the basic feature of hardhat-deploy.
+
+hardhat-deploy allow you to write [`deploy scripts`](#deploy-scripts) in the `deploy` folder. Each of these files that look as follow will be executed in turn when you execute the following task: `hardhat --network <networkName> deploy`
+
+```js
+// deploy/00_deploy_my_contract.js
+module.exports = async ({getNamedAccounts, deployments}) => {
+  const {deploy} = deployments;
+  const {deployer} = await getNamedAccounts();
+  await deploy('MyContract', {
+    from: deployer,
+    args: ['Hello'],
+    log: true,
+  });
+};
+module.exports.tags = ['MyContract]
+```
+
+Furthermore you can also ensure these scripts are executed in test too by calling `await deployments.fixture(['MyContract])` in your test.
+This is optimized so if multiple test use the same contract, the deployment will be executed once and each test will start with the exact same state.
+
+This is a huge benefit for testing as you are not any more required to replicate the deployment procedure in your tests. The features of tag (Seen in the script above) and [dependencies](#deploy-scripts-tags-and-dependencies) will also make your life easier when writing complex deployment procedures.
+
+You can even group deploy scripts in different sub folder and ensure they are executed in their logical order.
 
 ## Installation
 
@@ -93,9 +115,9 @@ import 'hardhat-deploy';
 
 ### TypeScript support
 
-With hardhad the tsconfig.json is optional.
+With hardhat the tsconfig.json is optional.
 
-But if you add folders to the `include` field in `tsconfig.json` you ll also need to include `hardhat.config.ts` like :
+But if you add folders to the `include` field in `tsconfig.json`, you ll also need to include `hardhat.config.ts` like :
 
 `include": ["./hardhat.config.ts", "./scripts", "./deploy", "./test"]`
 
@@ -113,9 +135,11 @@ export default func;
 
 See a template that use hardhat-deploy here : https://github.com/wighawag/template-ethereum-contracts
 
-See a full example of typescript usage here : https://github.com/wighawag/hardhat-deploy-ts-test
+See a more complete example of typescript usage here : https://github.com/wighawag/hardhat-deploy-ts-test
 
 ### Migrating existing deployment to hardhat-deploy
+
+(Only needed for existing project that already deployed contracts and have the deployment information available (at minimum, address and abi))
 
 You might want to switch your current deployment process to use hardhat-deploy. In that case you probably have some deployments saved elsewhere.
 
@@ -217,9 +241,9 @@ The reason why hardhat-deploy save chainId in the `.chainId` file is both for
 
 This plugin adds the _deploy_ task to Hardhat.
 
-This task will execute the scripts in the `deploy` folder and save the contract deployments to disk. These deployments are supposed to be saved for example in a git repository. This way they can be accessed later.
+This task will execute the scripts in the `deploy` folder and save the contract deployments to disk. These deployments are supposed to be saved for example in a git repository. This way they can be accessed later. But you are free to save them elsewhere and get them back via your mechanism of choice.
 
-With the deployment saved, it allows you to deploy a contract only if changed were made.
+With the deployment saved, it allows you to deploy a contract only if changes were made.
 
 Deploy scripts (also called Deploy functions) can also perform aribtrary logic.
 
@@ -243,13 +267,39 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 `--silent`: This flag remove hardhat-deploy log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
-`--watch`: This flag make the task never ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) or [Diamond](#builtin-in-support-for-diamonds-eip2535)) this allow to have HCR (Hot Contract Replacement).
+`--watch`: This flag make the task never ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) <!-- or [Diamond](#builtin-in-support-for-diamonds-eip2535) -->) this allow to have HCR (Hot Contract Replacement).
 
 ### hardhat node
 
 This plugin modify the _node_ task so that it also execute the deployment script before exposing the server http RPC interface
 
-It also add the same options as the _deploy_ task with the same functionality. It adds an extra flag:
+It add similar options than the `deploy` task :
+
+#### Options
+
+`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend.
+
+`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
+
+`--tags <tags>`: only excute deploy scripts with the given tags (separated by commas) and their dependencies (see more info [here](#deploy-scripts-tags-and-dependencies) about tags and dependencies)
+
+`--gasprice <gasprice>`: specify the gasprice to use by default for transactions executed via hardhat-deploy helpers in deploy scripts
+
+`--write <boolean>`: default to true (except for hardhat network). If true, write deployments to disk (in deployments path, see [path config](#extra-paths-config)).
+
+`--forkDeployments <networkName>`: default to `localhost`, this options allow you to specify the network to fetch the deployment from when running in fork mode. This is necessary as hardhat fork feature do not keep track fo which network this fork is of, see : https://github.com/nomiclabs/hardhat/issues/1164
+
+`--asNetwork <networkName`: default to `localhost` (or the value specified by `--forkDeployments` if any), this option allow you to specify the network name to be used for hardhat-deploy functionality like which folder the resulting deployment should be saved
+
+#### Flags
+
+`--noReset`: This flag prevent the resetong of the deployments. This is usually not desired when running the `node` task as a network is created from scratch and previous deployemnt are irrelevant.
+
+`--show-accounts`: this flag will output the account private keys
+
+`--silent`: This flag remove hardhat-deploy log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
+
+`--watch`: This flag make the task never ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) <!--or [Diamond](#builtin-in-support-for-diamonds-eip2535) -->) this allow to have HCR (Hot Contract Replacement).
 
 `--no-deploy` that discard all other options to revert to normal `hardhat node` behavior without any deployment being performed.
 
@@ -257,7 +307,7 @@ Note that the deployments are saved as if the network name is `localhost`. This 
 
 ### hardhat test
 
-This plugin add to the _test_ task a flag argument `--deploy-fixture` that run the global deployments fixture before the tests and snapshot it.
+This plugin add to the _test_ task a flag argument `--deploy-fixture` that run the global deployments fixture before the tests and snapshot it. This will generaly speed up the tests.
 
 ### hardhat etherscan-verify
 
@@ -276,17 +326,21 @@ To execute that task, you need to specifiy the network to run against :
 hardhat --network mainnet etherscan-verify --api-key <apikey>
 ```
 
+### hardhat sourcify
+
+This plugin adds the _sourcify_ task to Hardhat.
+
+Similar to `hardhat etherscan-verify` this task will submit the contract source and other info of all deployed contracts to sourcify.
+
+```
+hardhat --network mainnet sourcify
+```
+
+Later this task might instead pin the metadata to ipfs, so sourcify can automatically verify them.
+
 #### Options
 
-`--api-key <API_KEY>`: Etherscan API key. Optional as such api key can also be set by setting the environment variable : ETHERSCAN_API_KEY
-
-`--license <SPDX>`: specifiy the license to use (using SPDX id) or can be "UNLICENSED". Note that etherscan have limited support for licenses, see : https://etherscan.io/contract-license-types
-
-#### Flags
-
-`--solcInput`: allow the use of full solc-input as fallback. Note that the whole source folder will be included in the result of the verification on etherscan.
-
-`--force-license`: This flag force the use of the license specified by --license (useful if your inline SPDX are not compatible with etherscan list)
+`--endpoint <endpoint>`: specify the sourcify endpoint
 
 ### hardhat export
 
@@ -537,11 +591,14 @@ The deploynments field contains the `deploy` function taht allow you to deploy c
 
 The deployments field contains several helpers function to deploy contract but also execute transaction.
 
-```js
-deploy(name: string, options: DeployOptions): Promise<DeployResult>; // deploy a contract
+<!--
 diamond: { // deploy diamond based contract (see section below)
   deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
 };
+ -->
+
+```js
+deploy(name: string, options: DeployOptions): Promise<DeployResult>; // deploy a contract
 deterministic( // return the determinsitic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
       name: string,
       options: Create2DeployOptions
@@ -748,7 +805,7 @@ Note that for the second invokation, this deployment will fails to upgrade the p
 
 To make it work, you have to create a new script that have for `from` field: `greeterOwner`. If such value is a a multi sig or an address not registered as part of hardhat signers, the tx will not be executed but instead an error will be throw, mentionning the tx data necessary to perform the upgrade.
 
-## Builtin-In Support For Diamonds (EIP2535)
+<!-- ## Builtin-In Support For Diamonds (EIP2535)
 
 The deployments field also expose the diamond field: `hre.deployments.diamond` that let you deploy [Diamonds](https://eips.ethereum.org/EIPS/eip-2535) in an easy way.
 
@@ -813,7 +870,7 @@ Since the diamond standard has no builtin mechanism to make the deployment of Di
 
 The Diamantaire also support the deterministic deployment of Diamond.
 An extra field can be passed to the Diamond deployment options : `deterministicSalt`. It has to be a non-zero 32bytes string (in hex format).
-Note that if you want to deploy 2 diamonds with same owner, you'll need 2 different deterministicSalt for them to be 2 separate contracts.
+Note that if you want to deploy 2 diamonds with same owner, you'll need 2 different deterministicSalt for them to be 2 separate contracts. -->
 
 ## Testing Deployed Contracts
 
