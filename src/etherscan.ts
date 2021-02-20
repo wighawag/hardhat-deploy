@@ -127,6 +127,12 @@ export async function submitSources(
     case '42':
       host = 'https://api-kovan.etherscan.io';
       break;
+    case '97':
+      host = 'https://api-testnet.bscscan.com';
+      break;
+    case '56':
+      host = 'https://api.bscscan.com';
+      break;
     default:
       return logError(`Network with chainId: ${chainId} not supported`);
   }
