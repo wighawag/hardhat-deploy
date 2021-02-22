@@ -72,7 +72,7 @@ This plugin contains a lot more features too, all geared toward a better develop
 - watch and deploy: hardhat-deploy can watch both your deploy script and contract code and redeploy on changes.
 - HCR (Hot Contract Replacement): the watch feature combined with proxy <!--or diamond-->, gives you an experience akin to frontend Hot Module Replacement: Once your contract change, the deployment is executed and your contract retain the same address and same state, allowing you to tweak your contracts while debugging your front-end.
 
-## hardhay-deploy in a nutshell
+## hardhat-deploy in a nutshell
 
 Before going into the details, here is a very simple summary of the basic feature of hardhat-deploy.
 
@@ -89,10 +89,10 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     log: true,
   });
 };
-module.exports.tags = ['MyContract]
+module.exports.tags = ['MyContract']
 ```
 
-Furthermore you can also ensure these scripts are executed in test too by calling `await deployments.fixture(['MyContract])` in your test.
+Furthermore you can also ensure these scripts are executed in test too by calling `await deployments.fixture(['MyContract'])` in your test.
 This is optimized so if multiple test use the same contract, the deployment will be executed once and each test will start with the exact same state.
 
 This is a huge benefit for testing as you are not any more required to replicate the deployment procedure in your tests. The features of tag (Seen in the script above) and [dependencies](#deploy-scripts-tags-and-dependencies) will also make your life easier when writing complex deployment procedures.
