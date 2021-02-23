@@ -67,7 +67,7 @@ export async function submitSourcesToSourcify(
 
     if (!metadataString) {
       logError(
-        `Contract ${name} was deployed without saving metadata. Cannot submit to etherscan, skipping.`
+        `Contract ${name} was deployed without saving metadata. Cannot submit to sourcify, skipping.`
       );
       return;
     }

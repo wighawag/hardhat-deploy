@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.46
+
+### Patch Changes
+
+- fix wrong link for sourcify and add binance chain for etherscan verification
+
 ## 0.7.0-beta.45
 
 ### Patch Changes

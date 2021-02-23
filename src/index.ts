@@ -634,7 +634,10 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     });
   });
 
-task(TASK_SOURCIFY, 'submit contract source code to sourcify.eth')
+task(
+  TASK_SOURCIFY,
+  'submit contract source code to sourcify (https://sourcify.dev)'
+)
   .addOptionalParam(
     'endpoint',
     'endpoint url for sourcify',

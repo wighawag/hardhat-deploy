@@ -30,3 +30,4 @@
 - [x] fix issues with hardhat_reset
 - [ ] SPDX license detection regex more flexible ?
 - [ ] accept "auto" as allowed argument for `gasPrice` to make it compatible with `hre.network.config.gasPrice`
+- [ ] error on Library missing in bytecode
