@@ -71,7 +71,10 @@ contract Diamantaire {
     ) external payable returns (Diamond diamond) {
         if (salt != 0x0000000000000000000000000000000000000000000000000000000000000000) {
             salt = keccak256(abi.encodePacked(salt, owner));
-            diamond = new Diamond{value: msg.value, salt: salt}(_builtinDiamondCut, Diamond.DiamondArgs({owner:address(this)}));
+            diamond = new Diamond{value: msg.value, salt: salt}(
+                _builtinDiamondCut,
+                Diamond.DiamondArgs({owner:address(this)})
+            );
         } else {
             diamond = new Diamond{value: msg.value}(_builtinDiamondCut, Diamond.DiamondArgs({owner:address(this)}));
         }
