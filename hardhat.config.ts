@@ -117,11 +117,11 @@ task(TASK_COMPILE).setAction(async (args, hre, runSuper) => {
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: '0.7.1',
+    version: '0.7.6',
     settings: {
       optimizer: {
         enabled: true,
-        runs: 2000,
+        runs: 2000000,
       },
     },
   },
