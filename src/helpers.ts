@@ -28,6 +28,8 @@ import {
   FacetCut,
   DeploymentSubmission,
   ExtendedArtifact,
+  FacetCutAction,
+  Facet,
 } from '../types';
 import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
@@ -941,6 +943,12 @@ Plus they are only used when the contract is meant to be used as standalone when
     return getFrom(address);
   }
 
+  function getDiamondOwner(options: DiamondOptions) {
+    let address = options.from; // admim default to msg.sender
+    address = options.owner || address;
+    return getFrom(address);
+  }
+
   function getOptionalFrom(
     from?: string
   ): {address?: Address; ethersSigner?: Signer} {
@@ -1007,18 +1015,37 @@ Plus they are only used when the contract is meant to be used as standalone when
       return deployResult;
     }
 
+    if (options.deterministicSalt) {
+      throw new Error(`diamond determinsitc deployment not implemented yet`);
+    }
+
     const proxyName = name + '_DiamondProxy';
-    const {address: owner} = getProxyOwner(options);
-    const facetSnapshot: FacetCut[] = [];
-    const oldFacets: FacetCut[] = [];
+    const {address: owner} = getDiamondOwner(options);
+    const newSelectors: string[] = [];
+    const facetSnapshot: Facet[] = [];
+    const oldFacets: Facet[] = [];
+    const selectorToNotTouch: {[selector: string]: boolean} = {};
+    for (const selector of [
+      '0xcdffacc6',
+      '0x52ef6b2c',
+      '0xadfca15e',
+      '0x7a0ed627',
+      '0x01ffc9a7',
+      '0x1f931c1c',
+      '0xf2fde38b',
+      '0x8da5cb5b',
+    ]) {
+      selectorToNotTouch[selector] = true;
+    }
     if (oldDeployment) {
       proxy = await getDeployment(proxyName);
       const diamondProxy = new Contract(proxy.address, proxy.abi, provider);
 
-      const currentFacetCuts: FacetCut[] = await diamondProxy.facets();
-      for (const currentFacetCut of currentFacetCuts) {
-        oldFacets.push(currentFacetCut);
+      const currentFacets: Facet[] = await diamondProxy.facets();
+      for (const currentFacet of currentFacets) {
+        oldFacets.push(currentFacet);
 
+        // TODO check selector
         // ensure DiamondLoupeFacet, OwnershipFacet and DiamondCutFacet are kept // TODO options to delete cut them out?
         if (
           findAll(
@@ -1029,15 +1056,13 @@ Plus they are only used when the contract is meant to be used as standalone when
               '0x7a0ed627',
               '0x01ffc9a7',
             ],
-            currentFacetCut.functionSelectors
+            currentFacet.functionSelectors
           ) || // Loupe
-          currentFacetCut.functionSelectors[0] === 'e712b4e1' || // DiamoncCut
-          findAll(
-            ['0xf2fde38b', '0x8da5cb5b'],
-            currentFacetCut.functionSelectors
-          ) // ERC173
+          currentFacet.functionSelectors[0] === '0x1f931c1c' || // DiamoncCut
+          findAll(['0xf2fde38b', '0x8da5cb5b'], currentFacet.functionSelectors) // ERC173
         ) {
-          facetSnapshot.push(currentFacetCut);
+          facetSnapshot.push(currentFacet);
+          newSelectors.push(...currentFacet.functionSelectors);
         }
       }
     }
@@ -1067,44 +1092,85 @@ Plus they are only used when the contract is meant to be used as standalone when
       });
       if (implementation.newlyDeployed) {
         // console.log(`facet ${facet} deployed at ${implementation.address}`);
-        changesDetected = true;
-        const facetCut = {
+        const newFacet = {
           facetAddress: implementation.address,
           functionSelectors: sigsFromABI(implementation.abi),
         };
-        facetCuts.push(facetCut);
-        facetSnapshot.push(facetCut);
+        facetSnapshot.push(newFacet);
+        newSelectors.push(...newFacet.functionSelectors);
       } else {
         const oldImpl = await getDeployment(facet);
-        const facetCut = {
+        const newFacet = {
           facetAddress: oldImpl.address,
           functionSelectors: sigsFromABI(oldImpl.abi),
         };
-        facetSnapshot.push(facetCut);
-        if (
-          !oldFacets.find(
-            (f) =>
-              f.facetAddress.toLowerCase() === oldImpl.address.toLowerCase()
-          )
-        ) {
-          facetCuts.push(facetCut);
-        }
+        facetSnapshot.push(newFacet);
+        newSelectors.push(...newFacet.functionSelectors);
       }
     }
 
+    const oldSelectors: string[] = [];
+    const oldSelectorsFacetAddress: {[selector: string]: string} = {};
     for (const oldFacet of oldFacets) {
-      if (
-        !facetSnapshot.find(
-          (f) =>
-            f.facetAddress.toLowerCase() === oldFacet.facetAddress.toLowerCase()
-        )
-      ) {
+      for (const selector of oldFacet.functionSelectors) {
+        oldSelectors.push(selector);
+        oldSelectorsFacetAddress[selector] = oldFacet.facetAddress;
+      }
+    }
+
+    for (const newFacet of facetSnapshot) {
+      const selectorsToAdd: string[] = [];
+      const selectorsToReplace: string[] = [];
+
+      for (const selector of newFacet.functionSelectors) {
+        if (oldSelectors.indexOf(selector) > 0) {
+          if (
+            oldSelectorsFacetAddress[selector].toLowerCase() !==
+              newFacet.facetAddress.toLowerCase() &&
+            !selectorToNotTouch[selector]
+          ) {
+            selectorsToReplace.push(selector);
+          }
+        } else {
+          if (!selectorToNotTouch[selector]) {
+            selectorsToAdd.push(selector);
+          }
+        }
+      }
+
+      if (selectorsToReplace.length > 0) {
         changesDetected = true;
-        facetCuts.unshift({
-          facetAddress: '0x0000000000000000000000000000000000000000',
-          functionSelectors: oldFacet.functionSelectors,
+        facetCuts.push({
+          facetAddress: newFacet.facetAddress,
+          functionSelectors: selectorsToReplace,
+          action: FacetCutAction.Replace,
         });
       }
+
+      if (selectorsToAdd.length > 0) {
+        changesDetected = true;
+        facetCuts.push({
+          facetAddress: newFacet.facetAddress,
+          functionSelectors: selectorsToAdd,
+          action: FacetCutAction.Add,
+        });
+      }
+    }
+
+    const selectorsToDelete: string[] = [];
+    for (const selector of oldSelectors) {
+      if (newSelectors.indexOf(selector) === -1) {
+        selectorsToDelete.push(selector);
+      }
+    }
+
+    if (selectorsToDelete.length > 0) {
+      changesDetected = true;
+      facetCuts.unshift({
+        facetAddress: '0x0000000000000000000000000000000000000000',
+        functionSelectors: selectorsToDelete,
+        action: FacetCutAction.Remove,
+      });
     }
 
     let data = '0x';
@@ -1249,12 +1315,19 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
         const currentOwner = await read(proxyName, 'owner');
         if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
-          throw new Error(`The Diamond owner is not ${owner}`);
+          throw new Error(
+            'To change owner, you need to call `transferOwnership`'
+          );
+        }
+        if (currentOwner === AddressZero) {
+          throw new Error(
+            'The Diamond belongs to no-one. It cannot be upgraded anymore'
+          );
         }
 
         const executeReceipt = await execute(
           name,
-          options,
+          {...options, from: currentOwner},
           'diamondCut',
           facetCuts,
           data === '0x'
@@ -1286,6 +1359,21 @@ Plus they are only used when the contract is meant to be used as standalone when
         newlyDeployed: true,
       };
     } else {
+      const oldDeployment = await env.deployments.get(name);
+
+      const proxiedDeployment: DeploymentSubmission = {
+        ...oldDeployment,
+        facets: facetSnapshot,
+        diamondCut: facetCuts,
+        abi,
+        execute: options.execute,
+      };
+      // TODO ?
+      // proxiedDeployment.history = proxiedDeployment.history
+      //   ? proxiedDeployment.history.concat([oldDeployment])
+      //   : [oldDeployment];
+      await saveDeployment(name, proxiedDeployment);
+
       const deployment = await env.deployments.get(name);
       return {
         ...deployment,
