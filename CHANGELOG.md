@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.47
+
+### Patch Changes
+
+- add new etherscan endpoint + allow test to access existing deployment (useful for fork testing)
+
 ## 0.7.0-beta.46
 
 ### Patch Changes
