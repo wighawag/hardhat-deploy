@@ -254,7 +254,10 @@ export class DeploymentsManager {
       },
       fixture: async (
         tags?: string | string[],
-        options?: {fallbackToGlobal: boolean}
+        options?: {
+          fallbackToGlobal?: boolean;
+          keepExistingDeployments?: boolean;
+        }
       ) => {
         await this.setup();
         options = {fallbackToGlobal: true, ...options};
@@ -287,7 +290,7 @@ export class DeploymentsManager {
           }
         }
         await this.runDeploy(tags, {
-          resetMemory: true,
+          resetMemory: !options.keepExistingDeployments,
           writeDeploymentsToFiles: false,
           deletePreviousDeployments: false,
           log: false,
@@ -1151,7 +1154,9 @@ export class DeploymentsManager {
         }
         this.db.deploymentsLoaded = true;
         // console.log("running global fixture....");
-        await this.env.deployments.fixture();
+        await this.env.deployments.fixture(undefined, {
+          keepExistingDeployments: true, // by default reuse the existing deployments (useful for fork testing)
+        });
       } else {
         if (process.env.HARDHAT_COMPILE) {
           // console.log("compiling...");

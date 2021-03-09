@@ -414,7 +414,9 @@ task(TASK_TEST, 'Runs mocha tests')
       if (!args.noCompile) {
         await hre.run('compile');
       }
-      await hre.deployments.fixture();
+      await hre.deployments.fixture(undefined, {
+        keepExistingDeployments: true, // by default reuse the existing deployments (useful for fork testing)
+      });
       return runSuper({...args, noCompile: true});
     } else {
       return runSuper(args);
