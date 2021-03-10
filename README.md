@@ -47,11 +47,6 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Tests_
 <!-- - [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535) -->
 - [Testing Deployed Contracts](#testing-deployed-contracts)
   - [Creating Fixtures](#creating-fixtures)
-- [More Information On Hardhat Tasks](#more-information-on-hardhat-tasks)
-  - [node task](#node-task)
-  - [test task](#test-task)
-  - [run task](#run-task)
-  - [console task](#console-task)
 - [Deploy Scripts: Tags And Dependencies](#deploy-scripts-tags-and-dependencies)
 
 ## What is it for ?
