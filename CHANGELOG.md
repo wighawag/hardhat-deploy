@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.48
+
+### Patch Changes
+
+- better message for tx that need to be executed from other account
+
 ## 0.7.0-beta.47
 
 ### Patch Changes

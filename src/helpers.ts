@@ -1366,25 +1366,15 @@ Plus they are only used when the contract is meant to be used as standalone when
       if (e instanceof UnknownSignerError) {
         const {from, to, data, value, contract} = e.data;
         if (outputLog) {
+          console.log(
+            `---------------------------------------------------------------------------------------`
+          );
           console.error('no signer for ' + from);
+          console.log(`Please execute the following:`);
           console.log(
             `---------------------------------------------------------------------------------------`
           );
           if (contract) {
-            console.log(`Please execute the following on ${contract.name}`);
-            console.log(
-              `
-from: ${from}
-to: ${to}${
-                value
-                  ? '\nvalue: ' +
-                    (typeof value === 'string' ? value : value.toString())
-                  : ''
-              }
-data: ${data}
-`
-            );
-            console.log('if you have an interface use the following');
             console.log(
               `
 from: ${from}
@@ -1397,10 +1387,11 @@ to: ${to} (${contract.name})${
 method: ${contract.method}
 args:
   - ${contract.args.join('\n  - ')}
+
+(raw data: ${data} )
 `
             );
           } else {
-            console.log(`Please execute the following`);
             console.log(
               `
 from: ${from}
