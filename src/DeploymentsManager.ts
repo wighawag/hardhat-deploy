@@ -915,13 +915,6 @@ export class DeploymentsManager {
       }
     }
     log('tag collected');
-
-    // -----> scriptFilePath has succesfully been stored to list of scriptFilePaths
-
-    /**
-     * @dev Need to separate `scriptsRegisteredToRun` into 2 separate lists:
-     *      evmFilenames and ovmFilenames
-     */
     // console.log({ scriptFilePaths });
     const scriptsRegisteredToRun: {[filename: string]: boolean} = {};
     const scriptsToRun: Array<{
