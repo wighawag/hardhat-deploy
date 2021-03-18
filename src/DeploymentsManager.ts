@@ -148,7 +148,7 @@ export class DeploymentsManager {
       getArtifact: async (contractName: string): Promise<Artifact> => {
         if (this.db.onlyArtifacts) {
           const artifactFromFolder = await getArtifactFromFolder(
-            contractName,
+            contractName, // contract name exclude `-ovm`
             this.db.onlyArtifacts
           );
           if (!artifactFromFolder) {
@@ -855,212 +855,208 @@ export class DeploymentsManager {
     });
     log('deploy script folder parsed');
 
-    if (!fileNames.includes('-ovm')) {
-      const funcByFilePath: {[filename: string]: DeployFunction} = {};
-      const scriptPathBags: {[tag: string]: string[]} = {};
-      const scriptFilePaths: string[] = [];
-      for (const filename of fileNames) {
-        const scriptFilePath = path.join(deployScriptsPath, filename);
-        let deployFunc: DeployFunction;
-        // console.log("fetching " + scriptFilePath);
-        try {
-          delete require.cache[path.resolve(scriptFilePath)]; // ensure we reload it every time, so changes are taken in consideration
-          deployFunc = require(scriptFilePath);
-          if ((deployFunc as any).default) {
-            deployFunc = (deployFunc as any).default as DeployFunction;
+    const funcByFilePath: {[filename: string]: DeployFunction} = {};
+    const scriptPathBags: {[tag: string]: string[]} = {};
+    const scriptFilePaths: string[] = [];
+    for (const filename of fileNames) {
+      const scriptFilePath = path.join(deployScriptsPath, filename);
+      let deployFunc: DeployFunction;
+      // console.log("fetching " + scriptFilePath);
+      try {
+        delete require.cache[path.resolve(scriptFilePath)]; // ensure we reload it every time, so changes are taken in consideration
+        deployFunc = require(scriptFilePath);
+        if ((deployFunc as any).default) {
+          deployFunc = (deployFunc as any).default as DeployFunction;
+        }
+        funcByFilePath[scriptFilePath] = deployFunc;
+      } catch (e) {
+        // console.error("require failed", e);
+        throw new Error(
+          'ERROR processing skip func of ' +
+            scriptFilePath +
+            ':\n' +
+            (e.stack || e)
+        );
+      }
+      // console.log("get tags if any for " + scriptFilePath);
+      let scriptTags = deployFunc.tags;
+      if (scriptTags !== undefined) {
+        if (typeof scriptTags === 'string') {
+          scriptTags = [scriptTags];
+        }
+        for (const tag of scriptTags) {
+          if (tag.indexOf(',') >= 0) {
+            throw new Error('Tag cannot contains commas');
           }
-          // Func by filepath ???
-          funcByFilePath[scriptFilePath] = deployFunc;
+          const bag = scriptPathBags[tag] || [];
+          scriptPathBags[tag] = bag;
+          bag.push(scriptFilePath);
+        }
+      }
+      // console.log("tags found " + scriptFilePath, scriptTags);
+      if (tags !== undefined) {
+        let found = false;
+        if (scriptTags !== undefined) {
+          for (const tagToFind of tags) {
+            for (const tag of scriptTags) {
+              if (tag === tagToFind) {
+                scriptFilePaths.push(scriptFilePath);
+                found = true;
+                break;
+              }
+            }
+            if (found) {
+              break;
+            }
+          }
+        }
+      } else {
+        scriptFilePaths.push(scriptFilePath);
+      }
+    }
+    log('tag collected');
+
+    // -----> scriptFilePath has succesfully been stored to list of scriptFilePaths
+
+    /**
+     * @dev Need to separate `scriptsRegisteredToRun` into 2 separate lists:
+     *      evmFilenames and ovmFilenames
+     */
+    // console.log({ scriptFilePaths });
+    const scriptsRegisteredToRun: {[filename: string]: boolean} = {};
+    const scriptsToRun: Array<{
+      func: DeployFunction;
+      // Need check for if filename is `*-ovm.json` or `*.json` to auto-detect
+      //  deployment
+      filePath: string; 
+    }> = [];
+    const scriptsToRunAtTheEnd: Array<{
+      func: DeployFunction;
+      filePath: string;
+    }> = [];
+    function recurseDependencies(scriptFilePath: string) {
+      if (scriptsRegisteredToRun[scriptFilePath]) {
+        return;
+      }
+      
+      const deployFunc = funcByFilePath[scriptFilePath];
+      // So, each deployFunction is checked for whether it has dependencies
+      // If we decide to put all deployFunctions in a single deploy script,
+      // then we're limited by the zscript  
+      if (deployFunc.dependencies) {
+        for (const dependency of deployFunc.dependencies) {
+          const scriptFilePathsToAdd = scriptPathBags[dependency];
+          if (scriptFilePathsToAdd) {
+            for (const scriptFilenameToAdd of scriptFilePathsToAdd) {
+              recurseDependencies(scriptFilenameToAdd);
+            }
+          }
+        }
+      }
+      if (!scriptsRegisteredToRun[scriptFilePath]) {
+        if (deployFunc.runAtTheEnd) {
+          scriptsToRunAtTheEnd.push({
+            filePath: scriptFilePath,
+            func: deployFunc,
+          });
+        } else {
+          scriptsToRun.push({
+            filePath: scriptFilePath,
+            func: deployFunc,
+          });
+        }
+        scriptsRegisteredToRun[scriptFilePath] = true;
+      }
+    }
+    for (const scriptFilePath of scriptFilePaths) {
+      recurseDependencies(scriptFilePath);
+    }
+    log('dependencies collected');
+
+  try {
+    for (const deployScript of scriptsToRun.concat(scriptsToRunAtTheEnd)) {
+      const filename = path.basename(deployScript.filePath);
+      if (deployScript.func.id && this.db.migrations[deployScript.func.id]) {
+        log(
+          `skipping ${filename} as migrations already executed and complete`
+        );
+        continue;
+      }
+      let skip = false;
+      if (deployScript.func.skip) {
+        log(`should we skip  ${deployScript.filePath} ?`);
+        try {
+          skip = await deployScript.func.skip(this.env);
         } catch (e) {
-          // console.error("require failed", e);
+          // console.error("skip failed", e);
           throw new Error(
             'ERROR processing skip func of ' +
-              scriptFilePath +
+              deployScript.filePath +
               ':\n' +
               (e.stack || e)
           );
         }
-        // console.log("get tags if any for " + scriptFilePath);
-        let scriptTags = deployFunc.tags;
-        if (scriptTags !== undefined) {
-          if (typeof scriptTags === 'string') {
-            scriptTags = [scriptTags];
-          }
-          for (const tag of scriptTags) {
-            if (tag.indexOf(',') >= 0) {
-              throw new Error('Tag cannot contains commas');
-            }
-            const bag = scriptPathBags[tag] || [];
-            scriptPathBags[tag] = bag;
-            bag.push(scriptFilePath);
-          }
-        }
-        // console.log("tags found " + scriptFilePath, scriptTags);
-        if (tags !== undefined) {
-          let found = false;
-          if (scriptTags !== undefined) {
-            for (const tagToFind of tags) {
-              for (const tag of scriptTags) {
-                if (tag === tagToFind) {
-                  // add scriptFilePath if it contains a valid scriptTag
-                  scriptFilePaths.push(scriptFilePath);
-                  found = true;
-                  break;
-                }
-              }
-              if (found) {
-                break;
-              }
-            }
-          }
-        } else {
-          scriptFilePaths.push(scriptFilePath);
-        }
+        log(`checking skip for ${deployScript.filePath} complete`);
       }
-      log('tag collected');
-
-      // -----> scriptFilePath has succesfully been stored to list of scriptFilePaths
-
-      /**
-       * @dev Need to separate `scriptsRegisteredToRun` into 2 separate lists:
-       *      evmFilenames and ovmFilenames
-       */
-      // console.log({ scriptFilePaths });
-      const scriptsRegisteredToRun: {[filename: string]: boolean} = {};
-      const scriptsToRun: Array<{
-        func: DeployFunction;
-        // Need check for if deployment is for the EVM or OVM, to specify the
-        // proper filename (`*-ovm.json` for OVM or `*.json` for EVM)
-        filePath: string; 
-      }> = [];
-      const scriptsToRunAtTheEnd: Array<{
-        func: DeployFunction;
-        filePath: string;
-      }> = [];
-      function recurseDependencies(scriptFilePath: string) {
-        if (scriptsRegisteredToRun[scriptFilePath]) {
-          return;
+      if (!skip) {
+        log(`executing  ${deployScript.filePath}`);
+        let result;
+        try {
+          result = await deployScript.func(this.env);
+        } catch (e) {
+          // console.error("execution failed", e);
+          throw new Error(
+            'ERROR processing ' +
+              deployScript.filePath +
+              ':\n' +
+              (e.stack || e)
+          );
         }
-        
-        const deployFunc = funcByFilePath[scriptFilePath];
-        // So, each deployFunction is checked for whether it has dependencies
-        // If we decide to put all deployFunctions in a single deploy script,
-        // then we're limited by the zscript  
-        if (deployFunc.dependencies) {
-          for (const dependency of deployFunc.dependencies) {
-            const scriptFilePathsToAdd = scriptPathBags[dependency];
-            if (scriptFilePathsToAdd) {
-              for (const scriptFilenameToAdd of scriptFilePathsToAdd) {
-                recurseDependencies(scriptFilenameToAdd);
-              }
-            }
-          }
-        }
-        if (!scriptsRegisteredToRun[scriptFilePath]) {
-          if (deployFunc.runAtTheEnd) {
-            scriptsToRunAtTheEnd.push({
-              filePath: scriptFilePath,
-              func: deployFunc,
-            });
-          } else {
-            scriptsToRun.push({
-              filePath: scriptFilePath,
-              func: deployFunc,
-            });
-          }
-          scriptsRegisteredToRun[scriptFilePath] = true;
-        }
-      }
-      for (const scriptFilePath of scriptFilePaths) {
-        recurseDependencies(scriptFilePath);
-      }
-      log('dependencies collected');
-
-      try {
-        for (const deployScript of scriptsToRun.concat(scriptsToRunAtTheEnd)) {
-          const filename = path.basename(deployScript.filePath);
-          if (deployScript.func.id && this.db.migrations[deployScript.func.id]) {
-            log(
-              `skipping ${filename} as migrations already executed and complete`
+        log(`executing ${deployScript.filePath} complete`);
+        if (result && typeof result === 'boolean') {
+          if (!deployScript.func.id) {
+            throw new Error(
+              `${deployScript.filePath} return true to not be eecuted again, but does not provide an id. the script function need to have the field "id" to be set`
             );
-            continue;
           }
-          let skip = false;
-          if (deployScript.func.skip) {
-            log(`should we skip  ${deployScript.filePath} ?`);
-            try {
-              skip = await deployScript.func.skip(this.env);
-            } catch (e) {
-              // console.error("skip failed", e);
-              throw new Error(
-                'ERROR processing skip func of ' +
-                  deployScript.filePath +
-                  ':\n' +
-                  (e.stack || e)
-              );
-            }
-            log(`checking skip for ${deployScript.filePath} complete`);
-          }
-          if (!skip) {
-            log(`executing  ${deployScript.filePath}`);
-            let result;
-            try {
-              result = await deployScript.func(this.env);
-            } catch (e) {
-              // console.error("execution failed", e);
-              throw new Error(
-                'ERROR processing ' +
-                  deployScript.filePath +
-                  ':\n' +
-                  (e.stack || e)
-              );
-            }
-            log(`executing ${deployScript.filePath} complete`);
-            if (result && typeof result === 'boolean') {
-              if (!deployScript.func.id) {
-                throw new Error(
-                  `${deployScript.filePath} return true to not be eecuted again, but does not provide an id. the script function need to have the field "id" to be set`
-                );
-              }
-              this.db.migrations[deployScript.func.id] = Math.floor(
-                Date.now() / 1000
-              );
+          this.db.migrations[deployScript.func.id] = Math.floor(
+            Date.now() / 1000
+          );
 
-              const deploymentFolderPath = this.deploymentFolder();
+          const deploymentFolderPath = this.deploymentFolder();
 
-              // TODO refactor to extract this whole path and folder existence stuff
-              const toSave =
-                this.db.writeDeploymentsToFiles &&
-                this.env.network.saveDeployments;
-              if (toSave) {
-                try {
-                  fs.mkdirSync(this.deploymentsPath);
-                } catch (e) {}
-                try {
-                  fs.mkdirSync(
-                    path.join(this.deploymentsPath, deploymentFolderPath)
-                  );
-                } catch (e) {}
-                fs.writeFileSync(
-                  path.join(
-                    this.deploymentsPath,
-                    deploymentFolderPath,
-                    '.migrations.json'
-                  ),
-                  JSON.stringify(this.db.migrations, null, '  ')
-                );
-              }
-            }
+          // TODO refactor to extract this whole path and folder existence stuff
+          const toSave =
+            this.db.writeDeploymentsToFiles &&
+            this.env.network.saveDeployments;
+          if (toSave) {
+            try {
+              fs.mkdirSync(this.deploymentsPath);
+            } catch (e) {}
+            try {
+              fs.mkdirSync(
+                path.join(this.deploymentsPath, deploymentFolderPath)
+              );
+            } catch (e) {}
+            fs.writeFileSync(
+              path.join(
+                this.deploymentsPath,
+                deploymentFolderPath,
+                '.migrations.json'
+              ),
+              JSON.stringify(this.db.migrations, null, '  ')
+            );
           }
         }
-      } catch (e) {
-        this.db.writeDeploymentsToFiles = wasWrittingToFiles;
-        throw e;
       }
-      this.db.writeDeploymentsToFiles = wasWrittingToFiles;
-      log('deploy scripts complete');
     }
+  } catch (e) {
+    this.db.writeDeploymentsToFiles = wasWrittingToFiles;
+    throw e;
   }
+  this.db.writeDeploymentsToFiles = wasWrittingToFiles;
+  log('deploy scripts complete');
+}
 
   public async export(options: {
     exportAll?: string;
