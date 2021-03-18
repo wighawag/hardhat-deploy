@@ -242,12 +242,12 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     undefined,
     types.string
   )
-  .addOptionalParam(
-    'isOVM', 
-    'whether the network deployments are for the OVM',
-    false,
-    types.boolean
-  )
+  // .addOptionalParam(
+  //   'isOVM', 
+  //   'whether the network deployments are for the OVM',
+  //   false,
+  //   types.boolean
+  // )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',
@@ -294,12 +294,12 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
     undefined,
     types.string
   )
-  .addOptionalParam(
-    'isOVM', 
-    'whether the network deployments are for the OVM',
-    false,
-    types.boolean
-  )
+  // .addOptionalParam(
+  //   'isOVM', 
+  //   'whether the network deployments are for the OVM',
+  //   false,
+  //   types.boolean
+  // )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',
@@ -444,7 +444,7 @@ task(TASK_TEST, 'Runs mocha tests')
   });
 
 /**
- * @dev Refactor to include `isOVM` as optional parameter
+ * @dev `isOVM` MAY NOT BE NEEDED
  */
 task(TASK_DEPLOY, 'Deploy contracts')
   .addOptionalParam('export', 'export current network deployments')
@@ -455,12 +455,12 @@ task(TASK_DEPLOY, 'Deploy contracts')
     undefined,
     types.string
   )
-  .addOptionalParam(
-    'isOVM',
-    'whether the network deployments are for the OVM',
-    false,
-    types.boolean
-  )
+  // .addOptionalParam(
+  //   'isOVM',
+  //   'whether the network deployments are for the OVM',
+  //   false,
+  //   types.boolean
+  // )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',
@@ -531,12 +531,12 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
     undefined,
     types.string
   )
-  .addOptionalParam(
-    'isOVM',
-    'whether the network deployments are for the OVM',
-    false,
-    types.boolean
-  )
+  // .addOptionalParam(
+  //   'isOVM',
+  //   'whether the network deployments are for the OVM',
+  //   false,
+  //   types.boolean
+  // )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',
