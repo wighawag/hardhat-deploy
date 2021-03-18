@@ -65,32 +65,14 @@ internalTask(TASK_COMPILE_SOLIDITY_GET_COMPILER_INPUT).setAction(
   }
 );
 
-/**
- * @dev EDITING THIS TASK MAY NOT BE REQUIRED TO ENABLE AUTO-DETECTION OF
- *      DEPLOYMENT NETWORKS FOR CONTRACTS
- */
 task(TASK_COMPILE).setAction(async (args, hre, runSuper) => {
   await runSuper(args);
   const extendedArtifactFolderpath = 'extendedArtifacts';
   fs.emptyDirSync(extendedArtifactFolderpath);
-  // Source of `getArtifactPaths()`
-  // 
-  //   public async getArtifactPaths(): Promise<string[]> {
-  //   const paths = await glob(path.join(this._artifactsPath, "**/*.json"), {
-  //     ignore: [this._buildInfosGlob, this._dbgsGlob],
-  //   });
-
-  //   return paths.sort();
-  // }
-  // returns a list of sorted path-strings
   const artifactPaths = await hre.artifacts.getArtifactPaths();
   for (const artifactPath of artifactPaths) {
-    // parse path to JSON
     const artifact: Artifact = await fs.readJSON(artifactPath);
-    // extract filename from path, set as artifactName
     const artifactName = path.basename(artifactPath, '.json');
-    // extract directory name of path, add extracted filename from path, add 
-    // `dbg.json` filename extension.
     const artifactDBGPath = path.join( 
       path.dirname(artifactPath), 
       artifactName + '.dbg.json'
@@ -104,9 +86,6 @@ task(TASK_COMPILE).setAction(async (args, hre, runSuper) => {
     const output =
       buildInfo.output.contracts[artifact.sourceName][artifactName];
 
-    /**
-     * @dev For EVM
-     */
     // TODO decide on ExtendedArtifact vs Artifact vs Deployment type
     // save space by not duplicating bytecodes
     if (output.evm?.bytecode?.object) {
@@ -117,18 +96,6 @@ task(TASK_COMPILE).setAction(async (args, hre, runSuper) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (output.evm.deployedBytecode.object as any) = undefined;
     }
-
-    // /**
-    //  * @dev For OVM
-    //  */
-    //  if (output.ovm?.bytecode?.object) {
-    //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    //   (output.ovm.bytecode.object as any) = undefined;
-    // }
-    // if (output.ovm?.deployedBytecode?.object) {
-    //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    //   (output.ovm.deployedBytecode.object as any) = undefined;
-    // }
 
     // -----------------------------------------
 
