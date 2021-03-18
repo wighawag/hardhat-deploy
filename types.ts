@@ -104,7 +104,7 @@ export interface DeployOptionsBase extends TxOptions {
         devdoc?: any;
         gasEstimates?: any;
       };
-  customArtifacts: boolean;
+  // customArtifacts: boolean;
   args?: any[];
   fieldsToCompare?: string | string[];
   skipIfAlreadyDeployed?: boolean;
