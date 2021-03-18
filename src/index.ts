@@ -30,6 +30,7 @@ import chokidar from 'chokidar';
 import {submitSources} from './etherscan';
 import {submitSourcesToSourcify} from './sourcify';
 
+
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
 export const TASK_DEPLOY_RUN_DEPLOY = 'deploy:runDeploy';
@@ -40,6 +41,9 @@ export const TASK_SOURCIFY = 'sourcify';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let nodeTaskArgs: Record<string, any> = {};
 
+/**
+ * @dev Could add `isHardhatOVM`?
+ */
 function isHardhatEVM(hre: HardhatRuntimeEnvironment): boolean {
   const {network} = hre;
   return network.name === HARDHAT_NETWORK_NAME;
@@ -140,6 +144,10 @@ extendConfig(
 
 log('start...');
 let deploymentsManager: DeploymentsManager;
+
+/**
+ * @dev This is for `hardhat.config.ts`
+ */
 extendEnvironment((env) => {
   let live = true;
   if (env.network.name === 'localhost' || env.network.name === 'hardhat') {
@@ -235,6 +243,12 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     types.string
   )
   .addOptionalParam(
+    'isOVM', 
+    'whether the network deployments are for the OVM',
+    false,
+    types.boolean
+  )
+  .addOptionalParam(
     'write',
     'whether to write deployments to file',
     true,
@@ -279,6 +293,12 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
     'specify which deploy script to execute via tags, separated by commas',
     undefined,
     types.string
+  )
+  .addOptionalParam(
+    'isOVM', 
+    'whether the network deployments are for the OVM',
+    false,
+    types.boolean
   )
   .addOptionalParam(
     'write',
@@ -423,6 +443,9 @@ task(TASK_TEST, 'Runs mocha tests')
     }
   });
 
+/**
+ * @dev Refactor to include `isOVM` as optional parameter
+ */
 task(TASK_DEPLOY, 'Deploy contracts')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
@@ -431,6 +454,12 @@ task(TASK_DEPLOY, 'Deploy contracts')
     'specify which deploy script to execute via tags, separated by commas',
     undefined,
     types.string
+  )
+  .addOptionalParam(
+    'isOVM',
+    'whether the network deployments are for the OVM',
+    false,
+    types.boolean
   )
   .addOptionalParam(
     'write',
@@ -501,6 +530,12 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
     'specify which deploy script to execute via tags, separated by commas',
     undefined,
     types.string
+  )
+  .addOptionalParam(
+    'isOVM',
+    'whether the network deployments are for the OVM',
+    false,
+    types.boolean
   )
   .addOptionalParam(
     'write',

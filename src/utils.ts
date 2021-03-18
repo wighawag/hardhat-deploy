@@ -34,7 +34,10 @@ function getOldArtifactSync(
   name: string,
   folderPath: string
 ): ExtendedArtifact | undefined {
-  const oldArtifactPath = path.join(folderPath, name + '.json');
+  /**
+   * @dev Add check for if the user has `-ovm.json`, and if so, use 
+   */
+  const oldArtifactPath = path.join(folderPath, name + ('.json' || '-ovm.json')); // <--- HERE IS THE JSON!!!
   let artifact;
   if (fs.existsSync(oldArtifactPath)) {
     try {
@@ -45,6 +48,27 @@ function getOldArtifactSync(
   }
   return artifact;
 }
+
+// Does adding the login to retreive both `.json` and `-ovm.json` files in 
+// `getOldArtifactSync()` solve the auto-detection of deployment networks? 
+//
+// If not, what else must be done to solve network auto-detection.
+//
+//
+// 1. `getOldArtifactSync()` is called by `getArtifactFromFolder()`
+//
+// 2. `getArtifactFromFolder()` is called by `getArtifact()` in
+//     `partialExtension` of the constructor of `DeploymentsManager` 
+//     (in `DeploymentsManager.ts`)
+//
+// 3. Does `getArtifact()` get used in executing deploy scripts? 
+//    
+// 4. How is `getArtifact()` different or similar to `hre.artifacts.getArtifactPaths()`
+//    in `hardhat.config.ts` ?
+//    ANSWER: `hre.artifacts.getArtifactPaths()` is used for the contracts provided
+//            a priori in this repo, i.e. contracts under ./solc_0.6 and ./solc_0.7
+// 
+//
 
 export async function getArtifactFromFolder(
   name: string,

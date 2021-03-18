@@ -300,7 +300,7 @@ export function addHelpers(
     if (options.contract) {
       if (typeof options.contract === 'string') {
         artifactName = options.contract;
-        artifact = await getArtifact(artifactName);
+        artifact = await getArtifact(artifactName); // getArtifact should detect whether the contract is for the OVM or EVM
       } else {
         artifact = options.contract as Artifact; // TODO better handling
       }
@@ -496,6 +496,9 @@ export function addHelpers(
             : '0x0000000000000000000000000000000000000000000000000000000000000000',
           unsignedTx.data
         ),
+        /**
+         * @dev `deploy` function used in deploy scripts
+         */
         deploy: () =>
           deploy(name, {
             ...options,

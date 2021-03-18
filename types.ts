@@ -91,6 +91,9 @@ export interface ProxyOptions {
 }
 
 export interface DeployOptionsBase extends TxOptions {
+  // could add:
+  //      isOVM: boolean
+  // but, this doesn't auto-detect whether the `.json` is for the OVM or EVM
   contract?:
     | string
     | {
@@ -104,6 +107,7 @@ export interface DeployOptionsBase extends TxOptions {
         devdoc?: any;
         gasEstimates?: any;
       };
+  customArtifacts: boolean;
   args?: any[];
   fieldsToCompare?: string | string[];
   skipIfAlreadyDeployed?: boolean;
