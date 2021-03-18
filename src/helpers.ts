@@ -300,7 +300,10 @@ export function addHelpers(
     if (options.contract) {
       if (typeof options.contract === 'string') {
         artifactName = options.contract;
-        artifact = await getArtifact(artifactName); // getArtifact should detect whether the contract is for the OVM or EVM
+        // Since `getArtifact returns `Promise<Artifact>`, and the `Artifact`
+        // interface is imported from `hardhat` itself, we likely will not be
+        // able to change anything here to detect for `.json` or `-ovm.json`. 
+        artifact = await getArtifact(artifactName);
       } else {
         artifact = options.contract as Artifact; // TODO better handling
       }
