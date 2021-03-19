@@ -299,13 +299,16 @@ export function addHelpers(
     let artifactName: string | undefined;
     if (options.contract) {
       if (typeof options.contract === 'string') {
-        artifactName = options.contract;
-        artifact = await getArtifact(artifactName);
+        // If `ovm` field in `DeployOptions` is set to `true`...
+        options.ovm ? 
+          artifactName = options.contract + '-ovm' :  // use OVM artifactName
+          artifactName = options.contract; // else, use EVM artifactName
+        artifact = await getArtifact(artifactName); // retrieve artifact
       } else {
         artifact = options.contract as Artifact; // TODO better handling
       }
     } else {
-      artifactName = name;
+      options.ovm ? artifactName = name + '-ovm' : artifactName = name;
       artifact = await getArtifact(artifactName);
     }
     return {artifact, artifactName};
