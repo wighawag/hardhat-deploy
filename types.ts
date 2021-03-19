@@ -105,7 +105,6 @@ export interface DeployOptionsBase extends TxOptions {
         gasEstimates?: any;
       };
   args?: any[];
-  ovm?: boolean;
   fieldsToCompare?: string | string[];
   skipIfAlreadyDeployed?: boolean;
   linkedData?: any; // JSONable ?

@@ -299,8 +299,8 @@ export function addHelpers(
     let artifactName: string | undefined;
     if (options.contract) {
       if (typeof options.contract === 'string') {
-        // If `ovm` field in `DeployOptions` is set to `true`...
-        options.ovm ? 
+        // If `hardhat deploy --useovm true`... 
+        (env as any).useOVM ? 
           artifactName = options.contract + '-ovm' :  // use OVM artifactName
           artifactName = options.contract; // else, use EVM artifactName
         artifact = await getArtifact(artifactName); // retrieve artifact
@@ -308,9 +308,10 @@ export function addHelpers(
         artifact = options.contract as Artifact; // TODO better handling
       }
     } else {
-      options.ovm ? artifactName = name + '-ovm' : artifactName = name;
+      (env as any).useOVM ? artifactName = name + '-ovm' : artifactName = name;
       artifact = await getArtifact(artifactName);
     }
+    
     return {artifact, artifactName};
   }
 

@@ -772,12 +772,14 @@ export class DeploymentsManager {
       export?: string;
       exportAll?: string;
       gasPrice?: string;
+      useOVM?: boolean;
     } = {
       log: false,
       resetMemory: true,
       deletePreviousDeployments: false,
       writeDeploymentsToFiles: true,
       savePendingTx: false,
+      useOVM: false,
     }
   ): Promise<{[name: string]: Deployment}> {
     log('runDeploy');
@@ -793,6 +795,7 @@ export class DeploymentsManager {
     this.db.savePendingTx = options.savePendingTx;
     this.db.logEnabled = options.log;
     this.db.gasPrice = options.gasPrice;
+    (this.env as any).useOVM = options.useOVM;
     if (options.resetMemory) {
       log('reseting memory');
       this.db.deployments = {};

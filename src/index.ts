@@ -235,6 +235,12 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     types.string
   )
   .addOptionalParam(
+    'useovm',
+    'use OVM network for deployment',
+    false,
+    types.boolean
+  )
+  .addOptionalParam(
     'write',
     'whether to write deployments to file',
     true,
@@ -259,6 +265,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     if (typeof tags === 'string') {
       tags = tags.split(',');
     }
+    console.log('TASK_DEPLOY_RUN_DEPLOY is being run... ')
     return deploymentsManager.runDeploy(tags, {
       log: args.log,
       resetMemory: false,
@@ -268,6 +275,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       exportAll: args.exportAll,
       savePendingTx: args.pendingtx,
       gasPrice: args.gasprice,
+      useOVM: args.useovm
     });
   });
 
@@ -279,6 +287,12 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
     'specify which deploy script to execute via tags, separated by commas',
     undefined,
     types.string
+  )
+  .addOptionalParam(
+    'useovm',
+    'use OVM network for deployment',
+    false,
+    types.boolean
   )
   .addOptionalParam(
     'write',
@@ -324,6 +338,7 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
       );
     }
 
+    console.log('TASK_DEPLOY_MAIN is being run... ')
     async function compileAndDeploy() {
       if (!args.noCompile) {
         await hre.run('compile');
@@ -446,6 +461,12 @@ task(TASK_DEPLOY, 'Deploy contracts')
     types.string
   )
   .addOptionalParam(
+    'useovm',
+    'use OVM network for deployment',
+    false,
+    types.boolean
+  )
+  .addOptionalParam(
     'deployScripts',
     'override deploy script folder path',
     undefined,
@@ -463,6 +484,7 @@ task(TASK_DEPLOY, 'Deploy contracts')
         args.deployScripts
       );
     }
+    console.log('TASK_DEPLOY is being run... ')
     args.log = !args.silent;
     delete args.silent;
     if (args.write === undefined) {
