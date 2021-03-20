@@ -311,7 +311,6 @@ export function addHelpers(
       (env as any).useOVM ? artifactName = name + '-ovm' : artifactName = name;
       artifact = await getArtifact(artifactName);
     }
-    
     return {artifact, artifactName};
   }
 

@@ -265,7 +265,6 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     if (typeof tags === 'string') {
       tags = tags.split(',');
     }
-    console.log('TASK_DEPLOY_RUN_DEPLOY is being run... ')
     return deploymentsManager.runDeploy(tags, {
       log: args.log,
       resetMemory: false,
@@ -338,7 +337,6 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
       );
     }
 
-    console.log('TASK_DEPLOY_MAIN is being run... ')
     async function compileAndDeploy() {
       if (!args.noCompile) {
         await hre.run('compile');
@@ -484,7 +482,6 @@ task(TASK_DEPLOY, 'Deploy contracts')
         args.deployScripts
       );
     }
-    console.log('TASK_DEPLOY is being run... ')
     args.log = !args.silent;
     delete args.silent;
     if (args.write === undefined) {
