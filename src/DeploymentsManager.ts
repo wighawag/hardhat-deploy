@@ -86,8 +86,14 @@ export class DeploymentsManager {
   private env: HardhatRuntimeEnvironment;
   private deploymentsPath: string;
 
+  public impersonateUnknownAccounts: boolean;
+  public impersonatedAccounts: string[];
+
   constructor(env: HardhatRuntimeEnvironment) {
     log('constructing DeploymentsManager');
+
+    this.impersonateUnknownAccounts = true;
+    this.impersonatedAccounts = [];
     this.db = {
       accountsLoaded: false,
       namedAccounts: {},
@@ -335,6 +341,7 @@ export class DeploymentsManager {
     log('adding helpers');
     this.deploymentsExtension = addHelpers(
       env,
+      this,
       partialExtension,
       partialExtension.getArtifact,
       async (
@@ -1217,6 +1224,10 @@ export class DeploymentsManager {
     return success;
   }
 
+  disableAutomaticImpersonation(): void {
+    this.impersonateUnknownAccounts = false;
+  }
+
   private deploymentFolder(): string {
     if (this.db.runAsNode) {
       return 'localhost';
@@ -1232,15 +1243,29 @@ export class DeploymentsManager {
     if (!this.db.accountsLoaded) {
       const chainId = await getChainId(this.env);
       const accounts = await this.env.network.provider.send('eth_accounts');
-      const {namedAccounts, unnamedAccounts} = processNamedAccounts(
-        this.env,
-        accounts,
-        chainId
-      );
+      const {
+        namedAccounts,
+        unnamedAccounts,
+        unknownAccounts,
+      } = processNamedAccounts(this.env, accounts, chainId);
+      if (
+        this.env.network.name === 'hardhat' &&
+        this.impersonateUnknownAccounts &&
+        !process.env.HARDHAT_DEPLOY_NO_IMPERSONATION
+      ) {
+        for (const address of unknownAccounts) {
+          await this.env.network.provider.request({
+            method: 'hardhat_impersonateAccount',
+            params: [address],
+          });
+          this.impersonatedAccounts.push(address);
+        }
+      }
       this.db.namedAccounts = namedAccounts;
       this.db.unnamedAccounts = unnamedAccounts;
       this.db.accountsLoaded = true;
     }
+
     return {
       namedAccounts: this.db.namedAccounts,
       unnamedAccounts: this.db.unnamedAccounts,

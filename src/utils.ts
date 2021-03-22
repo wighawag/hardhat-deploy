@@ -282,7 +282,16 @@ function transformNamedAccounts(
   chainIdGiven: string | number,
   accounts: string[],
   networkConfigName: string
-): {namedAccounts: {[name: string]: string}; unnamedAccounts: string[]} {
+): {
+  namedAccounts: {[name: string]: string};
+  unnamedAccounts: string[];
+  unknownAccounts: string[];
+} {
+  const unknownAccountsDict: {[address: string]: boolean} = {};
+  const knownAccountsDict: {[address: string]: boolean} = {};
+  for (const account of accounts) {
+    knownAccountsDict[account.toLowerCase()] = true;
+  }
   const namedAccounts: {[name: string]: string} = {};
   const usedAccounts: {[address: string]: boolean} = {};
   // TODO transform into checksum  address
@@ -337,6 +346,9 @@ function transformNamedAccounts(
       if (address) {
         namedAccounts[accountName] = address;
         usedAccounts[address.toLowerCase()] = true;
+        if (!knownAccountsDict[address.toLowerCase()]) {
+          unknownAccountsDict[address.toLowerCase()] = true;
+        }
       }
     }
   }
@@ -346,7 +358,11 @@ function transformNamedAccounts(
       unnamedAccounts.push(getAddress(address));
     }
   }
-  return {namedAccounts, unnamedAccounts};
+  return {
+    namedAccounts,
+    unnamedAccounts,
+    unknownAccounts: Object.keys(unknownAccountsDict).map(getAddress),
+  };
 }
 
 function chainConfig(
@@ -380,7 +396,11 @@ export function processNamedAccounts(
   hre: HardhatRuntimeEnvironment,
   accounts: string[],
   chainIdGiven: string
-): {namedAccounts: {[name: string]: string}; unnamedAccounts: string[]} {
+): {
+  namedAccounts: {[name: string]: string};
+  unnamedAccounts: string[];
+  unknownAccounts: string[];
+} {
   if (hre.config.namedAccounts) {
     return transformNamedAccounts(
       hre.config.namedAccounts,
@@ -389,7 +409,7 @@ export function processNamedAccounts(
       process.env.HARDHAT_DEPLOY_ACCOUNTS_NETWORK || hre.network.name
     );
   } else {
-    return {namedAccounts: {}, unnamedAccounts: accounts};
+    return {namedAccounts: {}, unnamedAccounts: accounts, unknownAccounts: []};
   }
 }
 

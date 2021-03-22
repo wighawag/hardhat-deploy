@@ -271,7 +271,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     });
   });
 
-subtask(TASK_DEPLOY_MAIN, 'deploy ')
+subtask(TASK_DEPLOY_MAIN, 'deploy')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
   .addOptionalParam(
@@ -409,7 +409,11 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
 
 task(TASK_TEST, 'Runs mocha tests')
   .addFlag('deployFixture', 'run the global fixture before tests')
+  .addFlag('noImpersonation', 'do not impersonate unknown accounts')
   .setAction(async (args, hre, runSuper) => {
+    if (args.noImpersonation) {
+      deploymentsManager.disableAutomaticImpersonation();
+    }
     if (args.deployFixture || process.env.HARDHAT_DEPLOY_FIXTURE) {
       if (!args.noCompile) {
         await hre.run('compile');
@@ -451,11 +455,15 @@ task(TASK_DEPLOY, 'Deploy contracts')
     undefined,
     types.string
   )
+  .addFlag('noImpersonation', 'do not impersonate unknown accounts')
   .addFlag('noCompile', 'disable pre compilation')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('silent', 'whether to remove log')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, hre) => {
+    if (args.noImpersonation) {
+      deploymentsManager.disableAutomaticImpersonation();
+    }
     if (args.deployScripts) {
       hre.config.paths.deploy = normalizePath(
         hre.config,
@@ -528,11 +536,15 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   )
   // TODO --unlock-accounts
   .addFlag('noReset', 'do not delete deployments files already present')
+  .addFlag('noImpersonation', 'do not impersonate unknown accounts')
   .addFlag('silent', 'whether to renove log')
   .addFlag('noDeploy', 'do not deploy')
   .addFlag('showAccounts', 'display account addresses and private keys')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, hre, runSuper) => {
+    if (args.noImpersonation) {
+      deploymentsManager.disableAutomaticImpersonation();
+    }
     nodeTaskArgs = args;
     if (!isHardhatEVM(hre)) {
       throw new HardhatPluginError(
@@ -620,6 +632,10 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     'solcInput',
     'fallback on solc-input (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)'
   )
+  // .addFlag(
+  //   'logHttpRequestOnError',
+  //   'log the whole http request for debugging purpose, this output your API key, so use it aknowingly'
+  // )
   .setAction(async (args, hre) => {
     const etherscanApiKey = args.apiKey || process.env.ETHERSCAN_API_KEY;
     if (!etherscanApiKey) {
@@ -633,6 +649,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
       license: args.license,
       fallbackOnSolcInput: args.solcInput,
       forceLicense: args.forceLicense,
+      // logHttpRequestOnError: args.logHttpRequestOnError
     });
   });
 

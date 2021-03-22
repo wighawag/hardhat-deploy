@@ -45,6 +45,7 @@ import {
   EthereumProvider,
   HardhatRuntimeEnvironment,
 } from 'hardhat/types';
+import {DeploymentsManager} from './DeploymentsManager';
 
 diamondBase.abi = mergeABIs(
   [
@@ -169,6 +170,7 @@ let provider: Web3Provider;
 const availableAccounts: {[name: string]: boolean} = {};
 export function addHelpers(
   env: HardhatRuntimeEnvironment,
+  deploymentManager: DeploymentsManager,
   partialExtension: PartialExtension, // TODO
   getArtifact: (name: string) => Promise<Artifact>,
   saveDeployment: (
@@ -193,6 +195,10 @@ export function addHelpers(
         const accounts = await provider.send('eth_accounts', []);
         for (const account of accounts) {
           availableAccounts[account.toLowerCase()] = true;
+        }
+
+        for (const address of deploymentManager.impersonatedAccounts) {
+          availableAccounts[address.toLowerCase()] = true;
         }
       } catch (e) {}
     }
