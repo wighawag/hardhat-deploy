@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.49
+
+### Patch Changes
+
+- fix deterministic deployment overwrite + add auto account impersonation
+
 ## 0.7.0-beta.48
 
 ### Patch Changes
