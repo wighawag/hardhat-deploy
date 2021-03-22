@@ -655,7 +655,32 @@ export function addHelpers(
       } else {
         const deployment = await getDeploymentOrNUll(name);
         if (deployment) {
-          result = deployment as DeployResult;
+          if (
+            options.deterministicDeployment &&
+            diffResult.address &&
+            diffResult.address.toLowerCase() !== deployment.address
+          ) {
+            const {
+              artifact: linkedArtifact,
+              artifactName,
+            } = await getLinkedArtifact(name, options);
+
+            // receipt missing
+            const newDeployment = {
+              ...linkedArtifact,
+              address: diffResult.address,
+              linkedData: options.linkedData,
+              libraries: options.libraries,
+              args: argsArray,
+            };
+            await saveDeployment(name, newDeployment, artifactName);
+            result = {
+              ...newDeployment,
+              newlyDeployed: false,
+            };
+          } else {
+            result = deployment as DeployResult;
+          }
         } else {
           if (!diffResult.address) {
             throw new Error(
