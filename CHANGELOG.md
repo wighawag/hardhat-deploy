@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.50
+
+### Patch Changes
+
+- add solidity source of Proxied.sol for solidity 0.8
+
 ## 0.7.0-beta.49
 
 ### Patch Changes
