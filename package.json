@@ -31,7 +31,8 @@
     "LICENSE",
     "README.md",
     "solc_0.6/",
-    "solc_0.7"
+    "solc_0.7",
+    "solc_0.8"
   ],
   "devDependencies": {
     "@changesets/cli": "^2.11.1",
