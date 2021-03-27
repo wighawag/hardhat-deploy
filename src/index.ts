@@ -84,11 +84,19 @@ extendConfig(
       'imports'
     );
 
-    config.paths.deploy = normalizePath(
-      config,
-      userConfig.paths?.deploy,
-      TASK_DEPLOY
-    );
+    if (userConfig.paths?.deploy) {
+      let deployPaths = [];
+      if (typeof userConfig.paths.deploy === 'string') {
+        deployPaths = [userConfig.paths.deploy];
+      } else {
+        deployPaths = userConfig.paths.deploy;
+      }
+      config.paths.deploy = deployPaths.map((p) =>
+        normalizePath(config, p, 'deploy')
+      );
+    } else {
+      config.paths.deploy = [normalizePath(config, undefined, 'deploy')];
+    }
 
     if (userConfig.namedAccounts) {
       config.namedAccounts = userConfig.namedAccounts;
@@ -156,6 +164,16 @@ extendEnvironment((env) => {
   const tags = env.network.config.tags || [];
   for (const tag of tags) {
     env.network.tags[tag] = true;
+  }
+
+  if (env.network.config.deploy) {
+    env.network.deploy = env.network.config.deploy;
+  } else {
+    env.network.deploy = env.config.paths.deploy;
+  }
+
+  if (env.network.config.live !== undefined) {
+    live = env.network.config.live;
   }
 
   if (env.network.config.saveDeployments === undefined) {
@@ -271,7 +289,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     });
   });
 
-subtask(TASK_DEPLOY_MAIN, 'deploy ')
+subtask(TASK_DEPLOY_MAIN, 'deploy')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
   .addOptionalParam(
@@ -336,7 +354,7 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
     }> | null = args.watchOnly ? null : compileAndDeploy();
     if (args.watch || args.watchOnly) {
       const watcher = chokidar.watch(
-        [hre.config.paths.sources, hre.config.paths.deploy],
+        [hre.config.paths.sources, ...hre.network.deploy],
         {
           ignored: /(^|[/\\])\../, // ignore dotfiles
           persistent: true,
@@ -409,12 +427,18 @@ subtask(TASK_DEPLOY_MAIN, 'deploy ')
 
 task(TASK_TEST, 'Runs mocha tests')
   .addFlag('deployFixture', 'run the global fixture before tests')
+  .addFlag('noImpersonation', 'do not impersonate unknown accounts')
   .setAction(async (args, hre, runSuper) => {
+    if (args.noImpersonation) {
+      deploymentsManager.disableAutomaticImpersonation();
+    }
     if (args.deployFixture || process.env.HARDHAT_DEPLOY_FIXTURE) {
       if (!args.noCompile) {
         await hre.run('compile');
       }
-      await hre.deployments.fixture();
+      await hre.deployments.fixture(undefined, {
+        keepExistingDeployments: true, // by default reuse the existing deployments (useful for fork testing)
+      });
       return runSuper({...args, noCompile: true});
     } else {
       return runSuper(args);
@@ -449,17 +473,20 @@ task(TASK_DEPLOY, 'Deploy contracts')
     undefined,
     types.string
   )
+  .addFlag('noImpersonation', 'do not impersonate unknown accounts')
   .addFlag('noCompile', 'disable pre compilation')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('silent', 'whether to remove log')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, hre) => {
+    if (args.noImpersonation) {
+      deploymentsManager.disableAutomaticImpersonation();
+    }
     if (args.deployScripts) {
-      hre.config.paths.deploy = normalizePath(
-        hre.config,
-        args.deployScripts,
-        args.deployScripts
-      );
+      // TODO support commas separated list
+      hre.network.deploy = [
+        normalizePath(hre.config, args.deployScripts, args.deployScripts),
+      ];
     }
     args.log = !args.silent;
     delete args.silent;
@@ -526,11 +553,15 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   )
   // TODO --unlock-accounts
   .addFlag('noReset', 'do not delete deployments files already present')
+  .addFlag('noImpersonation', 'do not impersonate unknown accounts')
   .addFlag('silent', 'whether to renove log')
   .addFlag('noDeploy', 'do not deploy')
   .addFlag('showAccounts', 'display account addresses and private keys')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, hre, runSuper) => {
+    if (args.noImpersonation) {
+      deploymentsManager.disableAutomaticImpersonation();
+    }
     nodeTaskArgs = args;
     if (!isHardhatEVM(hre)) {
       throw new HardhatPluginError(
@@ -618,6 +649,10 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     'solcInput',
     'fallback on solc-input (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)'
   )
+  // .addFlag(
+  //   'logHttpRequestOnError',
+  //   'log the whole http request for debugging purpose, this output your API key, so use it aknowingly'
+  // )
   .setAction(async (args, hre) => {
     const etherscanApiKey = args.apiKey || process.env.ETHERSCAN_API_KEY;
     if (!etherscanApiKey) {
@@ -631,6 +666,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
       license: args.license,
       fallbackOnSolcInput: args.solcInput,
       forceLicense: args.forceLicense,
+      // logHttpRequestOnError: args.logHttpRequestOnError
     });
   });
 

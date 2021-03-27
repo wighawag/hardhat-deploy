@@ -133,6 +133,12 @@ export async function submitSources(
     case '56':
       host = 'https://api.bscscan.com';
       break;
+    case '128':
+      host = 'https://api.hecoinfo.com';
+      break;
+    case '256':
+      host = 'https://api-testnet.hecoinfo.com';
+      break;
     default:
       return logError(`Network with chainId: ${chainId} not supported`);
   }

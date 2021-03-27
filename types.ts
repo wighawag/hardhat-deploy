@@ -197,7 +197,7 @@ export interface DeploymentsExtension {
   ): Promise<{[name: string]: Deployment}>;
   fixture(
     tags?: string | string[],
-    options?: {fallbackToGlobal: boolean}
+    options?: {fallbackToGlobal?: boolean; keepExistingDeployments?: boolean}
   ): Promise<{[name: string]: Deployment}>;
   createFixture<T, O>(
     func: FixtureFunc<T, O>,

@@ -13,6 +13,7 @@ import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
 import {zeroPad, hexlify} from '@ethersproject/bytes';
 import {Interface, FunctionFragment} from '@ethersproject/abi';
+import {LedgerSigner} from '@ethersproject/hardware-wallets';
 import {
   Deployment,
   DeployResult,
@@ -47,6 +48,7 @@ import {
   EthereumProvider,
   HardhatRuntimeEnvironment,
 } from 'hardhat/types';
+import {DeploymentsManager} from './DeploymentsManager';
 
 diamondBase.abi = mergeABIs(
   [
@@ -171,6 +173,7 @@ let provider: Web3Provider;
 const availableAccounts: {[name: string]: boolean} = {};
 export function addHelpers(
   env: HardhatRuntimeEnvironment,
+  deploymentManager: DeploymentsManager,
   partialExtension: PartialExtension, // TODO
   getArtifact: (name: string) => Promise<Artifact>,
   saveDeployment: (
@@ -195,6 +198,10 @@ export function addHelpers(
         const accounts = await provider.send('eth_accounts', []);
         for (const account of accounts) {
           availableAccounts[account.toLowerCase()] = true;
+        }
+
+        for (const address of deploymentManager.impersonatedAccounts) {
+          availableAccounts[address.toLowerCase()] = true;
         }
       } catch (e) {}
     }
@@ -254,7 +261,7 @@ export function addHelpers(
     from: string;
     log?: boolean;
   }): Promise<string> {
-    const {address: from, ethersSigner} = getFrom(options.from);
+    const {address: from, ethersSigner, hardwareWallet} = getFrom(options.from);
     if (!ethersSigner) {
       throw new Error('no signer for ' + from);
     }
@@ -263,27 +270,40 @@ export function addHelpers(
     if (code === '0x') {
       const senderAddress = '0x3fab184622dc19b6109349b94811493bf2a45362';
       // TODO gasPrice override
+
+      if (options.log || hardwareWallet) {
+        print(
+          `sending eth to create2 contract deployer address (${senderAddress})`
+        );
+        if (hardwareWallet) {
+          print(` (please confirm on your ${hardwareWallet})`);
+        }
+      }
       const ethTx = await ethersSigner.sendTransaction({
         to: senderAddress,
         value: BigNumber.from('10000000000000000').toHexString(),
       });
-      if (options.log) {
-        log(
-          `sending eth to create2 contract deployer address (${senderAddress}) (tx: ${ethTx.hash})...`
-        );
+      if (options.log || hardwareWallet) {
+        log(` (tx: ${ethTx.hash})...`);
       }
       await ethTx.wait();
 
       // await provider.send("eth_sendTransaction", [{
       //   from
       // }]);
+      if (options.log || hardwareWallet) {
+        print(
+          `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)`
+        );
+        if (hardwareWallet) {
+          print(` (please confirm on your ${hardwareWallet})`);
+        }
+      }
       const deployTx = await provider.sendTransaction(
         '0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222'
       );
-      if (options.log) {
-        log(
-          `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy) (tx: ${deployTx.hash})...`
-        );
+      if (options.log || hardwareWallet) {
+        log(` (tx: ${deployTx.hash})...`);
       }
       await deployTx.wait();
     }
@@ -332,7 +352,7 @@ export function addHelpers(
   ): Promise<DeployResult> {
     const args: any[] = options.args ? [...options.args] : [];
     await init();
-    const {address: from, ethersSigner} = getFrom(options.from);
+    const {address: from, ethersSigner, hardwareWallet} = getFrom(options.from);
     if (!ethersSigner) {
       throw new Error('no signer for ' + from);
     }
@@ -389,10 +409,17 @@ export function addHelpers(
       ethersSigner.estimateGas(newOverrides)
     );
     await setupGasPrice(unsignedTx);
+
+    if (options.log || hardwareWallet) {
+      print(`deploying "${name}"`);
+      if (hardwareWallet) {
+        print(` (please confirm on your ${hardwareWallet})`);
+      }
+    }
     let tx = await ethersSigner.sendTransaction(unsignedTx);
 
-    if (options.log) {
-      print(`deploying "${name}" (tx: ${tx.hash})...`);
+    if (options.log || hardwareWallet) {
+      print(` (tx: ${tx.hash})...`);
     }
 
     // await overrideGasLimit(overrides, options, newOverrides =>
@@ -438,7 +465,7 @@ export function addHelpers(
       libraries: options.libraries,
     };
     await saveDeployment(name, deployment);
-    if (options.log) {
+    if (options.log || hardwareWallet) {
       print(
         `: deployed at ${deployment.address} with ${receipt?.gasUsed} gas\n`
       );
@@ -592,14 +619,11 @@ export function addHelpers(
       }
 
       if (transaction) {
+        const {ethersSigner} = await getOptionalFrom(options.from);
         const {artifact} = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact, options.libraries);
-        const factory = new ContractFactory(
-          abi,
-          byteCode,
-          provider.getSigner(options.from)
-        );
+        const factory = new ContractFactory(abi, byteCode, ethersSigner);
 
         const compareOnData = fieldsToCompareArray.indexOf('data') !== -1;
 
@@ -651,7 +675,32 @@ export function addHelpers(
       } else {
         const deployment = await getDeploymentOrNUll(name);
         if (deployment) {
-          result = deployment as DeployResult;
+          if (
+            options.deterministicDeployment &&
+            diffResult.address &&
+            diffResult.address.toLowerCase() !== deployment.address
+          ) {
+            const {
+              artifact: linkedArtifact,
+              artifactName,
+            } = await getLinkedArtifact(name, options);
+
+            // receipt missing
+            const newDeployment = {
+              ...linkedArtifact,
+              address: diffResult.address,
+              linkedData: options.linkedData,
+              libraries: options.libraries,
+              args: argsArray,
+            };
+            await saveDeployment(name, newDeployment, artifactName);
+            result = {
+              ...newDeployment,
+              newlyDeployed: false,
+            };
+          } else {
+            result = deployment as DeployResult;
+          }
         } else {
           if (!diffResult.address) {
             throw new Error(
@@ -951,19 +1000,26 @@ Plus they are only used when the contract is meant to be used as standalone when
 
   function getOptionalFrom(
     from?: string
-  ): {address?: Address; ethersSigner?: Signer} {
+  ): {address?: Address; ethersSigner?: Signer; hardwareWallet?: string} {
     return _getFrom(from, true);
   }
 
-  function getFrom(from?: string): {address: Address; ethersSigner?: Signer} {
-    return _getFrom(from, false) as {address: Address; ethersSigner?: Signer};
+  function getFrom(
+    from?: string
+  ): {address: Address; ethersSigner?: Signer; hardwareWallet?: string} {
+    return _getFrom(from, false) as {
+      address: Address;
+      ethersSigner?: Signer;
+      hardwareWallet?: string;
+    };
   }
 
   function _getFrom(
     from?: string,
     optional?: boolean
-  ): {address?: Address; ethersSigner?: Signer} {
+  ): {address?: Address; ethersSigner?: Signer; hardwareWallet?: string} {
     let ethersSigner: Signer | undefined;
+    let hardwareWallet: string | undefined = undefined;
     if (!from) {
       if (optional) {
         return {};
@@ -980,10 +1036,17 @@ Plus they are only used when the contract is meant to be used as standalone when
     } else {
       if (availableAccounts[from.toLowerCase()]) {
         ethersSigner = provider.getSigner(from);
+      } else {
+        // TODO register protocol based account as availableAccounts ? if so do not else here
+        if (
+          deploymentManager.addressesToProtocol[from.toLowerCase()] === 'ledger'
+        )
+          ethersSigner = new LedgerSigner(provider);
+        hardwareWallet = 'ledger';
       }
     }
 
-    return {address: from, ethersSigner};
+    return {address: from, ethersSigner, hardwareWallet};
   }
 
   // async function findEvents(contract: Contract, event: string, blockHash: string): Promise<any[]> {
@@ -1020,7 +1083,7 @@ Plus they are only used when the contract is meant to be used as standalone when
     }
 
     const proxyName = name + '_DiamondProxy';
-    const {address: owner} = getDiamondOwner(options);
+    const {address: owner, hardwareWallet} = getDiamondOwner(options);
     const newSelectors: string[] = [];
     const facetSnapshot: Facet[] = [];
     const oldFacets: Facet[] = [];
@@ -1276,7 +1339,7 @@ Plus they are only used when the contract is meant to be used as standalone when
             throw new Error('DiamondCreated Not Emitted');
           }
           const proxyAddress = diamondCreatedEvent.args.diamond;
-          if (options.log) {
+          if (options.log || hardwareWallet) {
             log(
               `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address} (tx: ${createReceipt.transactionHash})) with ${createReceipt.gasUsed} gas`
             );
@@ -1406,7 +1469,7 @@ Plus they are only used when the contract is meant to be used as standalone when
   async function rawTx(tx: SimpleTx): Promise<Receipt> {
     tx = {...tx};
     await init();
-    const {address: from, ethersSigner} = getFrom(tx.from);
+    const {address: from, ethersSigner, hardwareWallet} = getFrom(tx.from);
     if (!ethersSigner) {
       throw new UnknownSignerError({
         from,
@@ -1423,6 +1486,9 @@ Plus they are only used when the contract is meant to be used as standalone when
         nonce: tx.nonce,
         data: tx.data,
       };
+      if (hardwareWallet) {
+        log(` please confirm on your ${hardwareWallet}`);
+      }
       let pendingTx = await ethersSigner.sendTransaction(transactionData);
       pendingTx = await onPendingTx(pendingTx);
       if (tx.autoMine) {
@@ -1454,25 +1520,15 @@ Plus they are only used when the contract is meant to be used as standalone when
       if (e instanceof UnknownSignerError) {
         const {from, to, data, value, contract} = e.data;
         if (outputLog) {
+          console.log(
+            `---------------------------------------------------------------------------------------`
+          );
           console.error('no signer for ' + from);
+          console.log(`Please execute the following:`);
           console.log(
             `---------------------------------------------------------------------------------------`
           );
           if (contract) {
-            console.log(`Please execute the following on ${contract.name}`);
-            console.log(
-              `
-from: ${from}
-to: ${to}${
-                value
-                  ? '\nvalue: ' +
-                    (typeof value === 'string' ? value : value.toString())
-                  : ''
-              }
-data: ${data}
-`
-            );
-            console.log('if you have an interface use the following');
             console.log(
               `
 from: ${from}
@@ -1485,10 +1541,11 @@ to: ${to} (${contract.name})${
 method: ${contract.method}
 args:
   - ${contract.args.join('\n  - ')}
+
+(raw data: ${data} )
 `
             );
           } else {
-            console.log(`Please execute the following`);
             console.log(
               `
 from: ${from}
@@ -1525,7 +1582,7 @@ data: ${data}
   ): Promise<Receipt> {
     options = {...options}; // ensure no change
     await init();
-    const {address: from, ethersSigner} = getFrom(options.from);
+    const {address: from, ethersSigner, hardwareWallet} = getFrom(options.from);
 
     let tx;
     const deployment = await env.deployments.get(name);
@@ -1554,6 +1611,13 @@ data: ${data}
       throw new Error(
         `expected ${numArguments} arguments for method "${methodName}", got ${args.length}`
       );
+    }
+
+    if (options.log || hardwareWallet) {
+      print(`executing ${name}.${methodName}`);
+      if (hardwareWallet) {
+        print(` (please confirm on your ${hardwareWallet})`);
+      }
     }
 
     if (!ethersSigner) {
@@ -1587,8 +1651,8 @@ data: ${data}
     }
     tx = await onPendingTx(tx);
 
-    if (options.log) {
-      print(`executing ${name}.${methodName} (tx: ${tx.hash}) ...`);
+    if (options.log || hardwareWallet) {
+      print(` (tx: ${tx.hash}) ...`);
     }
 
     if (options.autoMine) {
@@ -1597,7 +1661,7 @@ data: ${data}
       } catch (e) {}
     }
     const receipt = await tx.wait();
-    if (options.log) {
+    if (options.log || hardwareWallet) {
       print(`: performed with ${receipt.gasUsed} gas\n`);
     }
     return receipt;

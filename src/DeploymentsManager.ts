@@ -27,7 +27,7 @@ import {
   processNamedAccounts,
   getChainId,
   loadAllDeployments,
-  traverse,
+  traverseMultipleDirectory,
   deleteDeployments,
   getExtendedArtifactFromFolder,
   getArtifactFromFolder,
@@ -86,8 +86,15 @@ export class DeploymentsManager {
   private env: HardhatRuntimeEnvironment;
   private deploymentsPath: string;
 
+  public impersonateUnknownAccounts: boolean;
+  public impersonatedAccounts: string[];
+  public addressesToProtocol: {[address: string]: string} = {};
+
   constructor(env: HardhatRuntimeEnvironment) {
     log('constructing DeploymentsManager');
+
+    this.impersonateUnknownAccounts = true;
+    this.impersonatedAccounts = [];
     this.db = {
       accountsLoaded: false,
       namedAccounts: {},
@@ -254,7 +261,10 @@ export class DeploymentsManager {
       },
       fixture: async (
         tags?: string | string[],
-        options?: {fallbackToGlobal: boolean}
+        options?: {
+          fallbackToGlobal?: boolean;
+          keepExistingDeployments?: boolean;
+        }
       ) => {
         await this.setup();
         options = {fallbackToGlobal: true, ...options};
@@ -287,7 +297,7 @@ export class DeploymentsManager {
           }
         }
         await this.runDeploy(tags, {
-          resetMemory: true,
+          resetMemory: !options.keepExistingDeployments,
           writeDeploymentsToFiles: false,
           deletePreviousDeployments: false,
           log: false,
@@ -332,6 +342,7 @@ export class DeploymentsManager {
     log('adding helpers');
     this.deploymentsExtension = addHelpers(
       env,
+      this,
       partialExtension,
       partialExtension.getArtifact,
       async (
@@ -804,7 +815,7 @@ export class DeploymentsManager {
         if (externalContracts.deploy) {
           this.db.onlyArtifacts = externalContracts.artifacts;
           try {
-            await this.executeDeployScripts(externalContracts.deploy);
+            await this.executeDeployScripts([externalContracts.deploy]);
           } finally {
             this.db.onlyArtifacts = undefined;
           }
@@ -815,9 +826,10 @@ export class DeploymentsManager {
     if (tags !== undefined && typeof tags === 'string') {
       tags = [tags];
     }
-    const deployPath = this.env.config.paths.deploy;
 
-    await this.executeDeployScripts(deployPath, tags);
+    const deployPaths = this.env.network.deploy;
+
+    await this.executeDeployScripts(deployPaths, tags);
 
     await this.export(options);
 
@@ -825,22 +837,18 @@ export class DeploymentsManager {
   }
 
   public async executeDeployScripts(
-    deployScriptsPath: string,
+    deployScriptsPaths: string[],
     tags?: string[]
   ): Promise<void> {
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
 
-    let filesStats;
+    let filepaths;
     try {
-      filesStats = traverse(deployScriptsPath);
+      filepaths = traverseMultipleDirectory(deployScriptsPaths);
     } catch (e) {
       return;
     }
-    filesStats = filesStats.filter((v) => !v.directory);
-    let fileNames = filesStats.map(
-      (a: {relativePath: string}) => a.relativePath
-    );
-    fileNames = fileNames.sort((a: string, b: string) => {
+    filepaths = filepaths.sort((a: string, b: string) => {
       if (a < b) {
         return -1;
       }
@@ -854,12 +862,12 @@ export class DeploymentsManager {
     const funcByFilePath: {[filename: string]: DeployFunction} = {};
     const scriptPathBags: {[tag: string]: string[]} = {};
     const scriptFilePaths: string[] = [];
-    for (const filename of fileNames) {
-      const scriptFilePath = path.join(deployScriptsPath, filename);
+    for (const filepath of filepaths) {
+      const scriptFilePath = path.resolve(filepath);
       let deployFunc: DeployFunction;
       // console.log("fetching " + scriptFilePath);
       try {
-        delete require.cache[path.resolve(scriptFilePath)]; // ensure we reload it every time, so changes are taken in consideration
+        delete require.cache[scriptFilePath]; // ensure we reload it every time, so changes are taken in consideration
         deployFunc = require(scriptFilePath);
         if ((deployFunc as any).default) {
           deployFunc = (deployFunc as any).default as DeployFunction;
@@ -868,10 +876,7 @@ export class DeploymentsManager {
       } catch (e) {
         // console.error("require failed", e);
         throw new Error(
-          'ERROR processing skip func of ' +
-            scriptFilePath +
-            ':\n' +
-            (e.stack || e)
+          'ERROR processing skip func of ' + filepath + ':\n' + (e.stack || e)
         );
       }
       // console.log("get tags if any for " + scriptFilePath);
@@ -1151,7 +1156,9 @@ export class DeploymentsManager {
         }
         this.db.deploymentsLoaded = true;
         // console.log("running global fixture....");
-        await this.env.deployments.fixture();
+        await this.env.deployments.fixture(undefined, {
+          keepExistingDeployments: true, // by default reuse the existing deployments (useful for fork testing)
+        });
       } else {
         if (process.env.HARDHAT_COMPILE) {
           // console.log("compiling...");
@@ -1212,6 +1219,10 @@ export class DeploymentsManager {
     return success;
   }
 
+  disableAutomaticImpersonation(): void {
+    this.impersonateUnknownAccounts = false;
+  }
+
   private deploymentFolder(): string {
     if (this.db.runAsNode) {
       return 'localhost';
@@ -1227,15 +1238,31 @@ export class DeploymentsManager {
     if (!this.db.accountsLoaded) {
       const chainId = await getChainId(this.env);
       const accounts = await this.env.network.provider.send('eth_accounts');
-      const {namedAccounts, unnamedAccounts} = processNamedAccounts(
-        this.env,
-        accounts,
-        chainId
-      );
+      const {
+        namedAccounts,
+        unnamedAccounts,
+        unknownAccounts,
+        addressesToProtocol,
+      } = processNamedAccounts(this.env, accounts, chainId);
+      if (
+        this.env.network.name === 'hardhat' &&
+        this.impersonateUnknownAccounts &&
+        !process.env.HARDHAT_DEPLOY_NO_IMPERSONATION
+      ) {
+        for (const address of unknownAccounts) {
+          await this.env.network.provider.request({
+            method: 'hardhat_impersonateAccount',
+            params: [address],
+          });
+          this.impersonatedAccounts.push(address);
+        }
+      }
       this.db.namedAccounts = namedAccounts;
       this.db.unnamedAccounts = unnamedAccounts;
       this.db.accountsLoaded = true;
+      this.addressesToProtocol = addressesToProtocol;
     }
+
     return {
       namedAccounts: this.db.namedAccounts,
       unnamedAccounts: this.db.unnamedAccounts,
