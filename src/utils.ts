@@ -438,6 +438,18 @@ export function processNamedAccounts(
   }
 }
 
+export function traverseMultipleDirectory(dirs: string[]): string[] {
+  const filepaths = [];
+  for (const dir of dirs) {
+    let filesStats = traverse(dir);
+    filesStats = filesStats.filter((v) => !v.directory);
+    for (const filestat of filesStats) {
+      filepaths.push(path.join(dir, filestat.relativePath));
+    }
+  }
+  return filepaths;
+}
+
 export const traverse = function (
   dir: string,
   result: any[] = [],

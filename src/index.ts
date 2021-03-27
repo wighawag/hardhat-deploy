@@ -84,11 +84,19 @@ extendConfig(
       'imports'
     );
 
-    config.paths.deploy = normalizePath(
-      config,
-      userConfig.paths?.deploy,
-      TASK_DEPLOY
-    );
+    if (userConfig.paths?.deploy) {
+      let deployPaths = [];
+      if (typeof userConfig.paths.deploy === 'string') {
+        deployPaths = [userConfig.paths.deploy];
+      } else {
+        deployPaths = userConfig.paths.deploy;
+      }
+      config.paths.deploy = deployPaths.map((p) =>
+        normalizePath(config, p, 'deploy')
+      );
+    } else {
+      config.paths.deploy = [normalizePath(config, undefined, 'deploy')];
+    }
 
     if (userConfig.namedAccounts) {
       config.namedAccounts = userConfig.namedAccounts;
@@ -156,6 +164,16 @@ extendEnvironment((env) => {
   const tags = env.network.config.tags || [];
   for (const tag of tags) {
     env.network.tags[tag] = true;
+  }
+
+  if (env.network.config.deploy) {
+    env.network.deploy = env.network.config.deploy;
+  } else {
+    env.network.deploy = env.config.paths.deploy;
+  }
+
+  if (env.network.config.live !== undefined) {
+    live = env.network.config.live;
   }
 
   if (env.network.config.saveDeployments === undefined) {
@@ -336,7 +354,7 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
     }> | null = args.watchOnly ? null : compileAndDeploy();
     if (args.watch || args.watchOnly) {
       const watcher = chokidar.watch(
-        [hre.config.paths.sources, hre.config.paths.deploy],
+        [hre.config.paths.sources, ...hre.network.deploy],
         {
           ignored: /(^|[/\\])\../, // ignore dotfiles
           persistent: true,
@@ -465,11 +483,10 @@ task(TASK_DEPLOY, 'Deploy contracts')
       deploymentsManager.disableAutomaticImpersonation();
     }
     if (args.deployScripts) {
-      hre.config.paths.deploy = normalizePath(
-        hre.config,
-        args.deployScripts,
-        args.deployScripts
-      );
+      // TODO support commas separated list
+      hre.network.deploy = [
+        normalizePath(hre.config, args.deployScripts, args.deployScripts),
+      ];
     }
     args.log = !args.silent;
     delete args.silent;

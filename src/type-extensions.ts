@@ -44,16 +44,18 @@ declare module 'hardhat/types/config' {
     live?: boolean;
     saveDeployments?: boolean;
     tags?: string[];
+    deploy?: string | string[];
   }
 
   interface HttpNetworkUserConfig {
     live?: boolean;
     saveDeployments?: boolean;
     tags?: string[];
+    deploy?: string | string[];
   }
 
   interface ProjectPathsUserConfig {
-    deploy?: string;
+    deploy?: string | string[];
     deployments?: string;
     imports?: string;
   }
@@ -62,16 +64,18 @@ declare module 'hardhat/types/config' {
     live: boolean;
     saveDeployments: boolean;
     tags: string[];
+    deploy?: string[];
   }
 
   interface HttpNetworkConfig {
     live: boolean;
     saveDeployments: boolean;
     tags: string[];
+    deploy?: string[];
   }
 
   interface ProjectPathsConfig {
-    deploy: string;
+    deploy: string[];
     deployments: string;
     imports: string;
   }
@@ -91,5 +95,6 @@ declare module 'hardhat/types/runtime' {
     live: boolean;
     saveDeployments: boolean;
     tags: Record<string, boolean>;
+    deploy: string[];
   }
 }

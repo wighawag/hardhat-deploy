@@ -27,7 +27,7 @@ import {
   processNamedAccounts,
   getChainId,
   loadAllDeployments,
-  traverse,
+  traverseMultipleDirectory,
   deleteDeployments,
   getExtendedArtifactFromFolder,
   getArtifactFromFolder,
@@ -815,7 +815,7 @@ export class DeploymentsManager {
         if (externalContracts.deploy) {
           this.db.onlyArtifacts = externalContracts.artifacts;
           try {
-            await this.executeDeployScripts(externalContracts.deploy);
+            await this.executeDeployScripts([externalContracts.deploy]);
           } finally {
             this.db.onlyArtifacts = undefined;
           }
@@ -826,9 +826,10 @@ export class DeploymentsManager {
     if (tags !== undefined && typeof tags === 'string') {
       tags = [tags];
     }
-    const deployPath = this.env.config.paths.deploy;
 
-    await this.executeDeployScripts(deployPath, tags);
+    const deployPaths = this.env.network.deploy;
+
+    await this.executeDeployScripts(deployPaths, tags);
 
     await this.export(options);
 
@@ -836,22 +837,18 @@ export class DeploymentsManager {
   }
 
   public async executeDeployScripts(
-    deployScriptsPath: string,
+    deployScriptsPaths: string[],
     tags?: string[]
   ): Promise<void> {
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
 
-    let filesStats;
+    let filepaths;
     try {
-      filesStats = traverse(deployScriptsPath);
+      filepaths = traverseMultipleDirectory(deployScriptsPaths);
     } catch (e) {
       return;
     }
-    filesStats = filesStats.filter((v) => !v.directory);
-    let fileNames = filesStats.map(
-      (a: {relativePath: string}) => a.relativePath
-    );
-    fileNames = fileNames.sort((a: string, b: string) => {
+    filepaths = filepaths.sort((a: string, b: string) => {
       if (a < b) {
         return -1;
       }
@@ -865,12 +862,12 @@ export class DeploymentsManager {
     const funcByFilePath: {[filename: string]: DeployFunction} = {};
     const scriptPathBags: {[tag: string]: string[]} = {};
     const scriptFilePaths: string[] = [];
-    for (const filename of fileNames) {
-      const scriptFilePath = path.join(deployScriptsPath, filename);
+    for (const filepath of filepaths) {
+      const scriptFilePath = path.resolve(filepath);
       let deployFunc: DeployFunction;
       // console.log("fetching " + scriptFilePath);
       try {
-        delete require.cache[path.resolve(scriptFilePath)]; // ensure we reload it every time, so changes are taken in consideration
+        delete require.cache[scriptFilePath]; // ensure we reload it every time, so changes are taken in consideration
         deployFunc = require(scriptFilePath);
         if ((deployFunc as any).default) {
           deployFunc = (deployFunc as any).default as DeployFunction;
@@ -879,10 +876,7 @@ export class DeploymentsManager {
       } catch (e) {
         // console.error("require failed", e);
         throw new Error(
-          'ERROR processing skip func of ' +
-            scriptFilePath +
-            ':\n' +
-            (e.stack || e)
+          'ERROR processing skip func of ' + filepath + ':\n' + (e.stack || e)
         );
       }
       // console.log("get tags if any for " + scriptFilePath);
