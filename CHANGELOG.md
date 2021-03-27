@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.52
+
+### Patch Changes
+
+- allow multiple folder for deploy script, configurable per network
+
 ## 0.7.0-beta.51
 
 ### Patch Changes
