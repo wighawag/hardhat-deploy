@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.51
+
+### Patch Changes
+
+- add support for ledger hardware wallet
+
 ## 0.7.0-beta.50
 
 ### Patch Changes
