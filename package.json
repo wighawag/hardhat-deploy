@@ -67,6 +67,7 @@
     "@ethersproject/bignumber": "^5.0.5",
     "@ethersproject/bytes": "^5.0.2",
     "@ethersproject/contracts": "^5.0.2",
+    "@ethersproject/hardware-wallets": "^5.0.14",
     "@ethersproject/providers": "^5.0.5",
     "@ethersproject/solidity": "^5.0.2",
     "@ethersproject/transactions": "^5.0.2",

@@ -286,7 +286,9 @@ function transformNamedAccounts(
   namedAccounts: {[name: string]: string};
   unnamedAccounts: string[];
   unknownAccounts: string[];
+  addressesToProtocol: {[address: string]: string};
 } {
+  const addressesToProtocol: {[address: string]: string} = {};
   const unknownAccountsDict: {[address: string]: boolean} = {};
   const knownAccountsDict: {[address: string]: boolean} = {};
   for (const account of accounts) {
@@ -302,10 +304,26 @@ function transformNamedAccounts(
       let address: string | undefined;
       switch (typeof spec) {
         case 'string':
-          if (spec.slice(0, 2).toLowerCase() === '0x') {
-            address = spec;
+          // eslint-disable-next-line no-case-declarations
+          const protocolSplit = spec.split('://');
+          if (protocolSplit.length > 1) {
+            if (protocolSplit[0].toLowerCase() === 'ledger') {
+              address = protocolSplit[1];
+              addressesToProtocol[
+                address.toLowerCase()
+              ] = protocolSplit[0].toLowerCase();
+              // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
+            } else {
+              throw new Error(
+                `unsupported protocol ${protocolSplit[0]}:// for named accounts`
+              );
+            }
           } else {
-            address = parseSpec(configNamedAccounts[spec]);
+            if (spec.slice(0, 2).toLowerCase() === '0x') {
+              address = spec;
+            } else {
+              address = parseSpec(configNamedAccounts[spec]);
+            }
           }
           break;
         case 'number':
@@ -362,6 +380,7 @@ function transformNamedAccounts(
     namedAccounts,
     unnamedAccounts,
     unknownAccounts: Object.keys(unknownAccountsDict).map(getAddress),
+    addressesToProtocol,
   };
 }
 
@@ -400,6 +419,7 @@ export function processNamedAccounts(
   namedAccounts: {[name: string]: string};
   unnamedAccounts: string[];
   unknownAccounts: string[];
+  addressesToProtocol: {[address: string]: string};
 } {
   if (hre.config.namedAccounts) {
     return transformNamedAccounts(
@@ -409,7 +429,12 @@ export function processNamedAccounts(
       process.env.HARDHAT_DEPLOY_ACCOUNTS_NETWORK || hre.network.name
     );
   } else {
-    return {namedAccounts: {}, unnamedAccounts: accounts, unknownAccounts: []};
+    return {
+      namedAccounts: {},
+      unnamedAccounts: accounts,
+      unknownAccounts: [],
+      addressesToProtocol: {},
+    };
   }
 }
 

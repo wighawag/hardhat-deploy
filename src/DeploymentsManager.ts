@@ -88,6 +88,7 @@ export class DeploymentsManager {
 
   public impersonateUnknownAccounts: boolean;
   public impersonatedAccounts: string[];
+  public addressesToProtocol: {[address: string]: string} = {};
 
   constructor(env: HardhatRuntimeEnvironment) {
     log('constructing DeploymentsManager');
@@ -1247,6 +1248,7 @@ export class DeploymentsManager {
         namedAccounts,
         unnamedAccounts,
         unknownAccounts,
+        addressesToProtocol,
       } = processNamedAccounts(this.env, accounts, chainId);
       if (
         this.env.network.name === 'hardhat' &&
@@ -1264,6 +1266,7 @@ export class DeploymentsManager {
       this.db.namedAccounts = namedAccounts;
       this.db.unnamedAccounts = unnamedAccounts;
       this.db.accountsLoaded = true;
+      this.addressesToProtocol = addressesToProtocol;
     }
 
     return {
