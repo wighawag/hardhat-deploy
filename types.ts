@@ -197,7 +197,7 @@ export interface DeploymentsExtension {
   ): Promise<{[name: string]: Deployment}>;
   fixture(
     tags?: string | string[],
-    options?: {fallbackToGlobal: boolean}
+    options?: {fallbackToGlobal?: boolean; keepExistingDeployments?: boolean}
   ): Promise<{[name: string]: Deployment}>;
   createFixture<T, O>(
     func: FixtureFunc<T, O>,
@@ -213,8 +213,14 @@ export interface DeploymentsExtension {
   ): Promise<Receipt>;
   rawTx(tx: SimpleTx): Promise<Receipt>;
   catchUnknownSigner(
-    action: Promise<any> | (() => Promise<any>)
-  ): Promise<void>;
+    action: Promise<any> | (() => Promise<any>),
+    options?: {log?: boolean}
+  ): Promise<null | {
+    from: string;
+    to?: string;
+    value?: string;
+    data?: string;
+  }>;
   read(
     name: string,
     options: CallOptions,
@@ -254,6 +260,7 @@ export interface DeploymentSubmission {
   receipt?: Receipt;
   transactionHash?: string;
   history?: Deployment[];
+  implementation?: string;
   args?: any[];
   linkedData?: any;
   solcInput?: string;
@@ -285,6 +292,7 @@ export interface Deployment {
   receipt?: Receipt;
   transactionHash?: string;
   history?: Deployment[];
+  implementation?: string;
   args?: any[];
   linkedData?: any;
   solcInputHash?: string;

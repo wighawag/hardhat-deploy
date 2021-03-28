@@ -1,5 +1,54 @@
 # hardhat-deploy
 
+## 0.7.0-beta.52
+
+### Patch Changes
+
+- allow multiple folder for deploy script, configurable per network
+
+## 0.7.0-beta.51
+
+### Patch Changes
+
+- add support for ledger hardware wallet
+
+## 0.7.0-beta.50
+
+### Patch Changes
+
+- add solidity source of Proxied.sol for solidity 0.8
+
+## 0.7.0-beta.49
+
+### Patch Changes
+
+- fix deterministic deployment overwrite + add auto account impersonation
+
+## 0.7.0-beta.48
+
+### Patch Changes
+
+- better message for tx that need to be executed from other account
+
+## 0.7.0-beta.47
+
+### Patch Changes
+
+- add new etherscan endpoint + allow test to access existing deployment (useful for fork testing)
+
+## 0.7.0-beta.46
+
+### Patch Changes
+
+- fix wrong link for sourcify and add binance chain for etherscan verification
+
+## 0.7.0-beta.45
+
+### Patch Changes
+
+- allow to execute proxy deploy after deployment was made elsewhere to actualise the deployment files
+- fixed (by @zgorizzo69) for artfiact using full qualified names
+
 ## 0.7.0-beta.44
 
 ### Patch Changes

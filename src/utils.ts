@@ -73,7 +73,11 @@ export async function getExtendedArtifactFromFolder(
   let artifact = getOldArtifactSync(name, folderPath);
   if (!artifact && (await artifacts.artifactExists(name))) {
     const hardhatArtifact: Artifact = await artifacts.readArtifact(name);
-    const fullyQualifiedName = hardhatArtifact.sourceName + ':' + name;
+    // check if name is already a fullyQualifiedName
+    let fullyQualifiedName = name;
+    if (!fullyQualifiedName.includes(':')) {
+      fullyQualifiedName = `${hardhatArtifact.sourceName}:${name}`;
+    }
     const buildInfo = await artifacts.getBuildInfo(fullyQualifiedName);
     if (buildInfo) {
       const solcInput = JSON.stringify(buildInfo.input, null, '  ');
@@ -278,7 +282,18 @@ function transformNamedAccounts(
   chainIdGiven: string | number,
   accounts: string[],
   networkConfigName: string
-): {namedAccounts: {[name: string]: string}; unnamedAccounts: string[]} {
+): {
+  namedAccounts: {[name: string]: string};
+  unnamedAccounts: string[];
+  unknownAccounts: string[];
+  addressesToProtocol: {[address: string]: string};
+} {
+  const addressesToProtocol: {[address: string]: string} = {};
+  const unknownAccountsDict: {[address: string]: boolean} = {};
+  const knownAccountsDict: {[address: string]: boolean} = {};
+  for (const account of accounts) {
+    knownAccountsDict[account.toLowerCase()] = true;
+  }
   const namedAccounts: {[name: string]: string} = {};
   const usedAccounts: {[address: string]: boolean} = {};
   // TODO transform into checksum  address
@@ -289,10 +304,26 @@ function transformNamedAccounts(
       let address: string | undefined;
       switch (typeof spec) {
         case 'string':
-          if (spec.slice(0, 2).toLowerCase() === '0x') {
-            address = spec;
+          // eslint-disable-next-line no-case-declarations
+          const protocolSplit = spec.split('://');
+          if (protocolSplit.length > 1) {
+            if (protocolSplit[0].toLowerCase() === 'ledger') {
+              address = protocolSplit[1];
+              addressesToProtocol[
+                address.toLowerCase()
+              ] = protocolSplit[0].toLowerCase();
+              // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
+            } else {
+              throw new Error(
+                `unsupported protocol ${protocolSplit[0]}:// for named accounts`
+              );
+            }
           } else {
-            address = parseSpec(configNamedAccounts[spec]);
+            if (spec.slice(0, 2).toLowerCase() === '0x') {
+              address = spec;
+            } else {
+              address = parseSpec(configNamedAccounts[spec]);
+            }
           }
           break;
         case 'number':
@@ -333,6 +364,9 @@ function transformNamedAccounts(
       if (address) {
         namedAccounts[accountName] = address;
         usedAccounts[address.toLowerCase()] = true;
+        if (!knownAccountsDict[address.toLowerCase()]) {
+          unknownAccountsDict[address.toLowerCase()] = true;
+        }
       }
     }
   }
@@ -342,7 +376,12 @@ function transformNamedAccounts(
       unnamedAccounts.push(getAddress(address));
     }
   }
-  return {namedAccounts, unnamedAccounts};
+  return {
+    namedAccounts,
+    unnamedAccounts,
+    unknownAccounts: Object.keys(unknownAccountsDict).map(getAddress),
+    addressesToProtocol,
+  };
 }
 
 function chainConfig(
@@ -376,7 +415,12 @@ export function processNamedAccounts(
   hre: HardhatRuntimeEnvironment,
   accounts: string[],
   chainIdGiven: string
-): {namedAccounts: {[name: string]: string}; unnamedAccounts: string[]} {
+): {
+  namedAccounts: {[name: string]: string};
+  unnamedAccounts: string[];
+  unknownAccounts: string[];
+  addressesToProtocol: {[address: string]: string};
+} {
   if (hre.config.namedAccounts) {
     return transformNamedAccounts(
       hre.config.namedAccounts,
@@ -385,8 +429,25 @@ export function processNamedAccounts(
       process.env.HARDHAT_DEPLOY_ACCOUNTS_NETWORK || hre.network.name
     );
   } else {
-    return {namedAccounts: {}, unnamedAccounts: accounts};
+    return {
+      namedAccounts: {},
+      unnamedAccounts: accounts,
+      unknownAccounts: [],
+      addressesToProtocol: {},
+    };
   }
+}
+
+export function traverseMultipleDirectory(dirs: string[]): string[] {
+  const filepaths = [];
+  for (const dir of dirs) {
+    let filesStats = traverse(dir);
+    filesStats = filesStats.filter((v) => !v.directory);
+    for (const filestat of filesStats) {
+      filepaths.push(path.join(dir, filestat.relativePath));
+    }
+  }
+  return filepaths;
 }
 
 export const traverse = function (
