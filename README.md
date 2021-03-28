@@ -44,7 +44,7 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Tests_
   - [**3. run task**](#3-run-task)
   - [**4. console task**](#4-console-task)
 - [Deploy Scripts: Tags And Dependencies](#deploy-scripts-tags-and-dependencies)
-<!-- - [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535) -->
+- [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535)
 - [Testing Deployed Contracts](#testing-deployed-contracts)
   - [Creating Fixtures](#creating-fixtures)
 - [Deploy Scripts: Tags And Dependencies](#deploy-scripts-tags-and-dependencies)
@@ -75,9 +75,9 @@ This plugin contains a lot more features too, all geared toward a better develop
 - save metadata of deployed contract so they can always be fully verified, via [sourcify](https://github.com/ethereum/sourcify) or [etherscan](https://etherscan.io).
 - ability to submit contract source to etherscan and sourcify for verification. Because **hardhat-deploy** will save all the necessary info, it can be executed at any time.
 - proxy deployment with ability to upgrade them transparently, only if code changes.
-<!-- - diamond deployment with facets, allowing you to focus on what the new version will be. It will generate the diamondCut necessary to reach the new state. -->
+- diamond deployment with facets, allowing you to focus on what the new version will be. It will generate the diamondCut necessary to reach the new state.
 - watch and deploy: **hardhat-deploy** can watch both your deploy script and contract code and redeploy on changes.
-- HCR (Hot Contract Replacement): the watch feature combined with proxy <!--or diamond-->, gives you an experience akin to frontend Hot Module Replacement: once your contract changes, the deployment is executed and your contract retains the same address and same state, allowing you to tweak your contracts while debugging your front-end.
+- HCR (Hot Contract Replacement): the watch feature combined with proxy or diamond, gives you an experience akin to frontend Hot Module Replacement: once your contract changes, the deployment is executed and your contract retains the same address and same state, allowing you to tweak your contracts while debugging your front-end.
 
 ## hardhat-deploy in a nutshell
 
@@ -280,7 +280,7 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 `--silent`: This flag remove **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
-`--watch`: This flag make the task never ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) <!-- or [Diamond](#builtin-in-support-for-diamonds-eip2535) -->) this allow to have HCR (Hot Contract Replacement).
+`--watch`: This flag make the task never ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) or [Diamond](#builtin-in-support-for-diamonds-eip2535)) this allow to have HCR (Hot Contract Replacement).
 
 ---
 
@@ -316,7 +316,7 @@ It add similar options than the `deploy` task :
 
 `--silent`: This flag remove **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
-`--watch`: This flag make the task never ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) <!--or [Diamond](#builtin-in-support-for-diamonds-eip2535) -->) this allow to have HCR (Hot Contract Replacement).
+`--watch`: This flag make the task never ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) or [Diamond](#builtin-in-support-for-diamonds-eip2535)) this allow to have HCR (Hot Contract Replacement).
 
 `--no-deploy` that discard all other options to revert to normal `hardhat node` behavior without any deployment being performed.
 
@@ -658,12 +658,6 @@ The deploynments field contains the `deploy` function taht allow you to deploy c
 
 The deployments field contains several helpers function to deploy contract but also execute transaction.
 
-<!--
-diamond: { // deploy diamond based contract (see section below)
-  deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
-};
- -->
-
 ```js
 deploy(name: string, options: DeployOptions): Promise<DeployResult>; // deploy a contract
 deterministic( // return the determinsitic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
@@ -674,6 +668,9 @@ deterministic( // return the determinsitic address as well as a function to depl
       deploy(): Promise<DeployResult>;
     }>;
 fetchIfDifferent(name: string, options: DeployOptions): Promise<boolean>; // return true if new compiled code is different than deployed contract
+diamond: { // deploy diamond based contract (see section below)
+  deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
+};
 save(name: string, deployment: DeploymentSubmission): Promise<void>; // low level save of deployment
 get(name: string): Promise<Deployment>; // fetch a deployment by name, throw if not existing
 getOrNull(name: string): Promise<Deployment | null>; // fetch deployment by name, return null if not existing
@@ -888,13 +885,13 @@ Note that for the second invokation, this deployment will fails to upgrade the p
 
 To make it work, you have to create a new script that have for `from` field: `greeterOwner`. If such value is a a multi sig or an address not registered as part of hardhat signers, the tx will not be executed but instead an error will be throw, mentionning the tx data necessary to perform the upgrade.
 
-<!-- ## Builtin-In Support For Diamonds (EIP2535)
+## Builtin-In Support For Diamonds (EIP2535)
 
 The deployments field also expose the diamond field: `hre.deployments.diamond` that let you deploy [Diamonds](https://eips.ethereum.org/EIPS/eip-2535) in an easy way.
 
 Instead of specifying the facets to cut out or cut in, which the diamond contract expects, you specify the facets you want to end up having on the deployed contract.
 
-`diamond.deploy` expect the facet as names. The name represent the compiled contract name that going to be deployed as facet. In future version you ll be able to specify deployed contract or artifact object as facet.
+`diamond.deploy` expect the facet as names. The name represent the compiled contract (artifact) name that going to be deployed as facet. In future version you ll be able to specify deployed contract or artifact object as facet.
 
 To deploy a contract with 3 facet you can do as follow :
 
@@ -949,15 +946,11 @@ diamond.deploy('ADiamondContract', {
 });
 ```
 
-Since the diamond standard has no builtin mechanism to make the deployment of Diamond with function execution, the Diamond when deployed is actually deployed through a special contract, the `Diamantaire` (see code [here](solc_0.7/diamond/Diamantaire.sol)) that act as factory to build Diamond. It uses deterministic deployment for that so, it is transparently managed by hardhat-deploy.
+Since the diamond standard has no builtin mechanism to make the deployment of Diamond with function execution, the Diamond when deployed is actually deployed through a special contract, the `Diamantaire` (see code [here](solc_0.7/diamond/Diamantaire.sol)) that act as factory to build Diamond. It uses deterministic deployment for that so, it is transparently managed by hardhat-deploy. It also embed the implementation of the builtin facet, removing the need to have different instances of each live.
 
-The Diamantaire also support the deterministic deployment of Diamond.
+The Diamantaire also support the deterministic deployment of Diamonds.
 An extra field can be passed to the Diamond deployment options : `deterministicSalt`. It has to be a non-zero 32bytes string (in hex format).
-Note that if you want to deploy 2 diamonds with same owner, you'll need 2 different deterministicSalt for them to be 2 separate contracts. -->
-
----
-
----
+Note that if you want to deploy 2 diamonds with same owner, you'll need 2 different deterministicSalt for them to be 2 separate contracts.
 
 ## Testing Deployed Contracts
 
