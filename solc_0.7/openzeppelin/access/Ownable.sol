@@ -23,10 +23,9 @@ contract Ownable is Context {
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
-    constructor () {
-        address msgSender = _msgSender();
-        _owner = msgSender;
-        emit OwnershipTransferred(address(0), msgSender);
+    constructor (address owner) {
+        _owner = owner;
+        emit OwnershipTransferred(address(0), owner);
     }
 
     /**

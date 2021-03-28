@@ -11,11 +11,13 @@ import "./TransparentUpgradeableProxy.sol";
  */
 contract ProxyAdmin is Ownable {
 
+    constructor(address owner) Ownable(owner) {}
+
     /**
      * @dev Returns the current implementation of `proxy`.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - This contract must be the admin of `proxy`.
      */
     function getProxyImplementation(TransparentUpgradeableProxy proxy) public view returns (address) {
@@ -28,9 +30,9 @@ contract ProxyAdmin is Ownable {
 
     /**
      * @dev Returns the current admin of `proxy`.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - This contract must be the admin of `proxy`.
      */
     function getProxyAdmin(TransparentUpgradeableProxy proxy) public view returns (address) {
@@ -43,9 +45,9 @@ contract ProxyAdmin is Ownable {
 
     /**
      * @dev Changes the admin of `proxy` to `newAdmin`.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - This contract must be the current admin of `proxy`.
      */
     function changeProxyAdmin(TransparentUpgradeableProxy proxy, address newAdmin) public onlyOwner {
@@ -54,9 +56,9 @@ contract ProxyAdmin is Ownable {
 
     /**
      * @dev Upgrades `proxy` to `implementation`. See {TransparentUpgradeableProxy-upgradeTo}.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - This contract must be the admin of `proxy`.
      */
     function upgrade(TransparentUpgradeableProxy proxy, address implementation) public onlyOwner {
@@ -66,9 +68,9 @@ contract ProxyAdmin is Ownable {
     /**
      * @dev Upgrades `proxy` to `implementation` and calls a function on the new implementation. See
      * {TransparentUpgradeableProxy-upgradeToAndCall}.
-     * 
+     *
      * Requirements:
-     * 
+     *
      * - This contract must be the admin of `proxy`.
      */
     function upgradeAndCall(TransparentUpgradeableProxy proxy, address implementation, bytes memory data) public payable onlyOwner {
