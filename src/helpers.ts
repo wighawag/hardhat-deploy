@@ -37,7 +37,7 @@ import {mergeABIs} from './utils';
 
 import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
 import OptimizedTransparentUpgradeableProxy from '../extendedArtifacts/OptimizedTransparentUpgradeableProxy.json';
-import TransaparentProxyAdmin from '../extendedArtifacts/ProxyAdmin.json';
+import DefaultProxyAdmin from '../extendedArtifacts/ProxyAdmin.json';
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
@@ -662,7 +662,8 @@ export function addHelpers(
 
   async function _deployOne(
     name: string,
-    options: DeployOptions
+    options: DeployOptions,
+    failsOnExistingDeterminisitc?: boolean
   ): Promise<DeployResult> {
     const argsArray = options.args ? [...options.args] : [];
     options = {...options, args: argsArray};
@@ -675,12 +676,18 @@ export function addHelpers(
       if (diffResult.differences) {
         result = await _deploy(name, options);
       } else {
+        if (failsOnExistingDeterminisitc && options.deterministicDeployment) {
+          throw new Error(
+            `already deployed on same deterministic address: ${diffResult.address}`
+          );
+        }
         const deployment = await getDeploymentOrNUll(name);
         if (deployment) {
           if (
             options.deterministicDeployment &&
             diffResult.address &&
-            diffResult.address.toLowerCase() !== deployment.address
+            diffResult.address.toLowerCase() !==
+              deployment.address.toLowerCase()
           ) {
             const {
               artifact: linkedArtifact,
@@ -788,7 +795,6 @@ export function addHelpers(
     let updateMethod: string | undefined;
     let upgradeIndex;
     let proxyContract: ExtendedArtifact = eip173Proxy;
-    let proxyContractType = 'default';
     let viaAdminContract:
       | string
       | {name: string; artifact?: string | ArtifactData}
@@ -812,28 +818,17 @@ export function addHelpers(
               options.proxy.proxyContract === 'OpenZeppelinTransparentProxy'
             ) {
               proxyContract = OpenZeppelinTransparentProxy;
-              proxyContractType = 'transparent';
-              viaAdminContract = 'TransaparentProxyAdmin';
+              viaAdminContract = 'DefaultProxyAdmin';
             } else if (
               options.proxy.proxyContract === 'OptimizedTransparentProxy'
             ) {
               proxyContract = OptimizedTransparentUpgradeableProxy;
-              proxyContractType = 'transparent';
-              viaAdminContract = 'TransaparentProxyAdmin';
+              viaAdminContract = 'DefaultProxyAdmin';
             } else {
               throw new Error(
                 `no contract found for ${options.proxy.proxyContract}`
               );
             }
-          }
-        } else {
-          proxyContractType = options.proxy.proxyContract.type || 'default';
-          if (typeof options.proxy.proxyContract.artifact === 'string') {
-            proxyContract = await env.deployments.getExtendedArtifact(
-              options.proxy.proxyContract.artifact
-            );
-          } else {
-            proxyContract = options.proxy.proxyContract.artifact;
           }
         }
       }
@@ -849,15 +844,26 @@ export function addHelpers(
     }
     const proxyName = name + '_Proxy';
     const {address: owner} = getProxyOwner(options);
+    const {address: from} = getFrom(options.from);
     const argsArray = options.args ? [...options.args] : [];
 
     // --- Implementation Deployment ---
     const implementationName = name + '_Implementation';
-    const implementationOptions = {...options, value: undefined}; // to not pass value to implementation deploy
-    delete implementationOptions.proxy;
-    if (!implementationOptions.contract) {
-      implementationOptions.contract = name;
-    }
+    const implementationOptions = {
+      contract: options.contract || name,
+      from: options.from,
+      autoMine: options.autoMine,
+      estimateGasExtra: options.estimateGasExtra,
+      estimatedGasLimit: options.estimatedGasLimit,
+      gasPrice: options.gasPrice,
+      log: options.log,
+      deterministicDeployment: options.deterministicDeployment,
+      libraries: options.libraries,
+      fieldsToCompare: options.fieldsToCompare,
+      linkedData: options.linkedData,
+      args: options.args,
+    };
+
     const {artifact} = await getArtifactFromOptions(
       implementationName,
       implementationOptions
@@ -926,11 +932,8 @@ Plus they are only used when the contract is meant to be used as standalone when
         } catch (e) {}
 
         if (!proxyAdminContract) {
-          if (
-            proxyContractType === 'transparent' &&
-            viaAdminContract === 'TransaparentProxyAdmin'
-          ) {
-            proxyAdminContract = TransaparentProxyAdmin;
+          if (viaAdminContract === 'DefaultProxyAdmin') {
+            proxyAdminContract = DefaultProxyAdmin;
           } else {
             throw new Error(
               `no contract found for ${proxyAdminArtifactNameOrContract}`
@@ -939,10 +942,6 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
       } else {
         proxyAdminContract = proxyAdminArtifactNameOrContract;
-      }
-
-      if (proxyContractType === 'transparent' && !proxyAdminName) {
-        throw new Error(`Transparent proxies requires an contract for admin`);
       }
 
       if (!proxyAdminDeployed) {
@@ -978,9 +977,8 @@ Plus they are only used when the contract is meant to be used as standalone when
       implementationName,
       implementationOptions
     );
-    // --- --------------------------- ---
 
-    if (implementation.newlyDeployed) {
+    if (!oldDeployment) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
       const implementationContract = new Contract(
         implementation.address,
@@ -1005,11 +1003,8 @@ Plus they are only used when the contract is meant to be used as standalone when
         const proxyOptions = {...options}; // ensure no change
         delete proxyOptions.proxy;
         proxyOptions.contract = proxyContract;
-        proxyOptions.args =
-          proxyContractType === 'transparent'
-            ? [implementation.address, proxyAdmin, data]
-            : [implementation.address, data, proxyAdmin];
-        proxy = await _deployOne(proxyName, proxyOptions);
+        proxyOptions.args = [implementation.address, proxyAdmin, data];
+        proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
         const ownerStorage = await provider.getStorageAt(
@@ -1020,18 +1015,16 @@ Plus they are only used when the contract is meant to be used as standalone when
           BigNumber.from(ownerStorage).toHexString()
         );
 
-        const changeOwnershipMethod =
-          proxyContractType === 'transparent'
-            ? 'changeAdmin'
-            : 'transferOwnership';
-        const changeImplementationMethod =
-          proxyContractType === 'transparent'
-            ? 'upgradeToAndCall'
-            : 'changeImplementation';
+        const oldProxy = proxy.abi.find(
+          (frag: {name: string}) => frag.name === 'changeImplementation'
+        );
+        const changeImplementationMethod = oldProxy
+          ? 'changeImplementation'
+          : 'upgradeToAndCall';
 
         if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
           throw new Error(
-            `To change owner/admin, you need to call ${changeOwnershipMethod}`
+            `To change owner/admin, you need to call the proxy directly`
           );
         }
         if (currentOwner === AddressZero) {
@@ -1041,9 +1034,17 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
 
         if (proxyAdminName) {
+          if (oldProxy) {
+            throw new Error(`Old Proxy do not support Proxy Admin contracts`);
+          }
           if (!currentProxyAdminOwner) {
             throw new Error(`no currentProxyAdminOwner found in ProxyAdmin`);
           }
+
+          if (currentProxyAdminOwner.toLowerCase() !== from.toLowerCase()) {
+            throw new Error(`from != Proxy Admin Contract's owner`);
+          }
+
           let executeReceipt;
           if (updateMethod) {
             executeReceipt = await execute(
@@ -1067,6 +1068,10 @@ Plus they are only used when the contract is meant to be used as standalone when
             throw new Error(`could not execute ${changeImplementationMethod}`);
           }
         } else {
+          if (currentOwner.toLowerCase() !== from.toLowerCase()) {
+            throw new Error(`from != proxy's admin/owner`);
+          }
+
           let executeReceipt;
           if (
             changeImplementationMethod === 'upgradeToAndCall' &&
@@ -1121,8 +1126,6 @@ Plus they are only used when the contract is meant to be used as standalone when
         newlyDeployed: true,
       };
     } else {
-      const oldDeployment = await env.deployments.get(name);
-
       if (oldDeployment.implementation !== implementation.address) {
         const proxiedDeployment: DeploymentSubmission = {
           ...oldDeployment,

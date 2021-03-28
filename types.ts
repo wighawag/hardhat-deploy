@@ -88,7 +88,7 @@ export interface ProxyOptions {
   upgradeIndex?: number;
   methodName?: string;
   proxyContract?: // default to EIP173Proxy
-  string | {type: 'transparent' | 'default'; artifact: string | ArtifactData};
+  string | ArtifactData;
   viaAdminContract?:
     | string
     | {
