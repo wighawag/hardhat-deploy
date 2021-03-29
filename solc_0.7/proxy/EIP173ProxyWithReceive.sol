@@ -7,9 +7,9 @@ import "./EIP173Proxy.sol";
 contract EIP173ProxyWithReceive is EIP173Proxy {
     constructor(
         address implementationAddress,
-        bytes memory data,
-        address ownerAddress
-    ) payable EIP173Proxy(implementationAddress, data, ownerAddress) {}
+        address ownerAddress,
+        bytes memory data
+    ) payable EIP173Proxy(implementationAddress, ownerAddress, data) {}
 
     receive() external payable override {}
 }

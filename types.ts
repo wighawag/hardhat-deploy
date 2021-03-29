@@ -87,23 +87,30 @@ export interface ProxyOptions {
   owner?: Address;
   upgradeIndex?: number;
   methodName?: string;
-  proxyContract?: string; // default to EIP173Proxy
-}
-
-export interface DeployOptionsBase extends TxOptions {
-  contract?:
+  proxyContract?: // default to EIP173Proxy
+  string | ArtifactData;
+  viaAdminContract?:
     | string
     | {
-        abi: ABI;
-        bytecode: string;
-        deployedBytecode?: string;
-        metadata?: string;
-        methodIdentifiers?: any;
-        storageLayout?: any;
-        userdoc?: any;
-        devdoc?: any;
-        gasEstimates?: any;
+        name: string;
+        artifact?: string | ArtifactData;
       };
+}
+
+export type ArtifactData = {
+  abi: ABI;
+  bytecode: string;
+  deployedBytecode?: string;
+  metadata?: string;
+  methodIdentifiers?: any;
+  storageLayout?: any;
+  userdoc?: any;
+  devdoc?: any;
+  gasEstimates?: any;
+};
+
+export interface DeployOptionsBase extends TxOptions {
+  contract?: string | ArtifactData;
   args?: any[];
   fieldsToCompare?: string | string[];
   skipIfAlreadyDeployed?: boolean;
