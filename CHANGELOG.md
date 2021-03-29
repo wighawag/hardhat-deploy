@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.53
+
+### Minor Changes
+
+- Improve Proxy with support for OpenZeppelin Transparent Proxies
+
 ## 0.7.0-beta.52
 
 ### Patch Changes
