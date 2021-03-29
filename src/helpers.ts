@@ -1251,6 +1251,7 @@ Plus they are only used when the contract is meant to be used as standalone when
 
     if (options.deterministicSalt) {
       throw new Error(`diamond determinsitc deployment not implemented yet`);
+      // need to compute the resulting address accurately
     }
 
     const proxyName = name + '_DiamondProxy';
@@ -1321,8 +1322,16 @@ Plus they are only used when the contract is meant to be used as standalone when
       // TODO allow facet to be named so multiple version could coexist
       const implementation = await _deployOne(facet, {
         from: options.from,
+        autoMine: options.autoMine,
+        estimateGasExtra: options.estimateGasExtra,
+        estimatedGasLimit: options.estimatedGasLimit,
+        gasPrice: options.gasPrice,
         log: options.log,
+        // deterministicDeployment: options.deterministicDeployment, // todo ?
         libraries: options.libraries,
+        // fieldsToCompare: options.fieldsToCompare, // todo ?
+        linkedData: options.linkedData,
+        // args: options.args, // toDO ?
       });
       if (implementation.newlyDeployed) {
         // console.log(`facet ${facet} deployed at ${implementation.address}`);
@@ -1428,6 +1437,11 @@ Plus they are only used when the contract is meant to be used as standalone when
           contract: diamantaire,
           from: options.from,
           deterministicDeployment: true,
+          autoMine: options.autoMine,
+          estimateGasExtra: options.estimateGasExtra,
+          estimatedGasLimit: options.estimatedGasLimit,
+          gasPrice: options.gasPrice,
+          log: options.log,
         });
         const diamantaireContract = new Contract(
           diamantaireDeployment.address,
