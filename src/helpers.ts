@@ -31,11 +31,15 @@ import {
   ExtendedArtifact,
   FacetCutAction,
   Facet,
+  ArtifactData,
 } from '../types';
 import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
 import {mergeABIs} from './utils';
 
+import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
+import OptimizedTransparentUpgradeableProxy from '../extendedArtifacts/OptimizedTransparentUpgradeableProxy.json';
+import DefaultProxyAdmin from '../extendedArtifacts/ProxyAdmin.json';
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
@@ -660,7 +664,8 @@ export function addHelpers(
 
   async function _deployOne(
     name: string,
-    options: DeployOptions
+    options: DeployOptions,
+    failsOnExistingDeterminisitc?: boolean
   ): Promise<DeployResult> {
     const argsArray = options.args ? [...options.args] : [];
     options = {...options, args: argsArray};
@@ -673,12 +678,18 @@ export function addHelpers(
       if (diffResult.differences) {
         result = await _deploy(name, options);
       } else {
+        if (failsOnExistingDeterminisitc && options.deterministicDeployment) {
+          throw new Error(
+            `already deployed on same deterministic address: ${diffResult.address}`
+          );
+        }
         const deployment = await getDeploymentOrNUll(name);
         if (deployment) {
           if (
             options.deterministicDeployment &&
             diffResult.address &&
-            diffResult.address.toLowerCase() !== deployment.address
+            diffResult.address.toLowerCase() !==
+              deployment.address.toLowerCase()
           ) {
             const {
               artifact: linkedArtifact,
@@ -777,14 +788,19 @@ export function addHelpers(
     }
   }
 
+  // TODO rename
   async function _deployViaEIP173Proxy(
     name: string,
     options: DeployOptions
   ): Promise<DeployResult> {
     const oldDeployment = await getDeploymentOrNUll(name);
-    let updateMethod;
+    let updateMethod: string | undefined;
     let upgradeIndex;
     let proxyContract: ExtendedArtifact = eip173Proxy;
+    let viaAdminContract:
+      | string
+      | {name: string; artifact?: string | ArtifactData}
+      | undefined;
     if (typeof options.proxy === 'object') {
       upgradeIndex = options.proxy.upgradeIndex;
       updateMethod = options.proxy.methodName;
@@ -800,6 +816,16 @@ export function addHelpers(
               proxyContract = eip173ProxyWithReceive;
             } else if (options.proxy.proxyContract === 'EIP173Proxy') {
               proxyContract = eip173Proxy;
+            } else if (
+              options.proxy.proxyContract === 'OpenZeppelinTransparentProxy'
+            ) {
+              proxyContract = OpenZeppelinTransparentProxy;
+              viaAdminContract = 'DefaultProxyAdmin';
+            } else if (
+              options.proxy.proxyContract === 'OptimizedTransparentProxy'
+            ) {
+              proxyContract = OptimizedTransparentUpgradeableProxy;
+              viaAdminContract = 'DefaultProxyAdmin';
             } else {
               throw new Error(
                 `no contract found for ${options.proxy.proxyContract}`
@@ -807,6 +833,9 @@ export function addHelpers(
             }
           }
         }
+      }
+      if (options.proxy.viaAdminContract) {
+        viaAdminContract = options.proxy.viaAdminContract;
       }
     } else if (typeof options.proxy === 'string') {
       updateMethod = options.proxy;
@@ -817,15 +846,26 @@ export function addHelpers(
     }
     const proxyName = name + '_Proxy';
     const {address: owner} = getProxyOwner(options);
+    const {address: from} = getFrom(options.from);
     const argsArray = options.args ? [...options.args] : [];
 
     // --- Implementation Deployment ---
     const implementationName = name + '_Implementation';
-    const implementationOptions = {...options, value: undefined}; // to not pass value to implementation deploy
-    delete implementationOptions.proxy;
-    if (!implementationOptions.contract) {
-      implementationOptions.contract = name;
-    }
+    const implementationOptions = {
+      contract: options.contract || name,
+      from: options.from,
+      autoMine: options.autoMine,
+      estimateGasExtra: options.estimateGasExtra,
+      estimatedGasLimit: options.estimatedGasLimit,
+      gasPrice: options.gasPrice,
+      log: options.log,
+      deterministicDeployment: options.deterministicDeployment,
+      libraries: options.libraries,
+      fieldsToCompare: options.fieldsToCompare,
+      linkedData: options.linkedData,
+      args: options.args,
+    };
+
     const {artifact} = await getArtifactFromOptions(
       implementationName,
       implementationOptions
@@ -857,13 +897,90 @@ Plus they are only used when the contract is meant to be used as standalone when
         );
       }
     }
+
+    if (updateMethod) {
+      const updateMethodFound = artifact.abi.find(
+        (fragment: {type: string; inputs: any[]; name: string}) =>
+          fragment.type === 'function' && fragment.name === updateMethod
+      );
+      if (!updateMethodFound) {
+        throw new Error(`contract need to implement function ${updateMethod}`);
+      }
+    }
+
+    let proxyAdminName: string | undefined;
+    let proxyAdmin = owner;
+    let currentProxyAdminOwner: string | undefined;
+    let proxyAdminDeployed: Deployment | undefined;
+    if (viaAdminContract) {
+      let proxyAdminArtifactNameOrContract: string | ArtifactData | undefined;
+      if (typeof viaAdminContract === 'string') {
+        proxyAdminName = viaAdminContract;
+        proxyAdminArtifactNameOrContract = viaAdminContract;
+      } else {
+        proxyAdminName = viaAdminContract.name;
+        if (!viaAdminContract.artifact) {
+          proxyAdminDeployed = await env.deployments.get(proxyAdminName);
+        }
+        proxyAdminArtifactNameOrContract = viaAdminContract.artifact;
+      }
+
+      let proxyAdminContract: ExtendedArtifact | undefined;
+      if (typeof proxyAdminArtifactNameOrContract === 'string') {
+        try {
+          proxyAdminContract = await env.deployments.getExtendedArtifact(
+            proxyAdminArtifactNameOrContract
+          );
+        } catch (e) {}
+
+        if (!proxyAdminContract) {
+          if (viaAdminContract === 'DefaultProxyAdmin') {
+            proxyAdminContract = DefaultProxyAdmin;
+          } else {
+            throw new Error(
+              `no contract found for ${proxyAdminArtifactNameOrContract}`
+            );
+          }
+        }
+      } else {
+        proxyAdminContract = proxyAdminArtifactNameOrContract;
+      }
+
+      if (!proxyAdminDeployed) {
+        proxyAdminDeployed = await _deployOne(proxyAdminName, {
+          from: options.from,
+          autoMine: options.autoMine,
+          estimateGasExtra: options.estimateGasExtra,
+          estimatedGasLimit: options.estimatedGasLimit,
+          gasPrice: options.gasPrice,
+          log: options.log,
+          contract: proxyAdminContract,
+          skipIfAlreadyDeployed: true,
+          args: [owner], // TODO change ProxyAdmin implementation
+        });
+      }
+
+      proxyAdmin = proxyAdminDeployed.address;
+      currentProxyAdminOwner = (await read(proxyAdminName, 'owner')) as string;
+
+      if (currentProxyAdminOwner.toLowerCase() !== owner.toLowerCase()) {
+        throw new Error(
+          `To change owner/admin, you need to call transferOwnership on ${proxyAdminName}`
+        );
+      }
+      if (currentProxyAdminOwner === AddressZero) {
+        throw new Error(
+          `The Proxy Admin (${proxyAdminName}) belongs to no-one. The Proxy cannot be upgraded anymore`
+        );
+      }
+    }
+
     const implementation = await _deployOne(
       implementationName,
       implementationOptions
     );
-    // --- --------------------------- ---
 
-    if (implementation.newlyDeployed) {
+    if (!oldDeployment) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
       const implementationContract = new Contract(
         implementation.address,
@@ -888,26 +1005,28 @@ Plus they are only used when the contract is meant to be used as standalone when
         const proxyOptions = {...options}; // ensure no change
         delete proxyOptions.proxy;
         proxyOptions.contract = proxyContract;
-        proxyOptions.args = [implementation.address, data, owner];
-        proxy = await _deployOne(proxyName, proxyOptions);
+        proxyOptions.args = [implementation.address, proxyAdmin, data];
+        proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
-        let currentOwner: string;
+        const ownerStorage = await provider.getStorageAt(
+          proxy.address,
+          '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
+        );
+        const currentOwner = getAddress(
+          BigNumber.from(ownerStorage).toHexString()
+        );
 
-        try {
-          currentOwner = await read(proxyName, {...options}, 'owner');
-        } catch (e) {
-          const ownerStorage = await provider.getStorageAt(
-            // fallback on old proxy // TODO test
-            proxy.address,
-            '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
-          );
-          currentOwner = getAddress(BigNumber.from(ownerStorage).toHexString());
-        }
+        const oldProxy = proxy.abi.find(
+          (frag: {name: string}) => frag.name === 'changeImplementation'
+        );
+        const changeImplementationMethod = oldProxy
+          ? 'changeImplementation'
+          : 'upgradeToAndCall';
 
-        if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
+        if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
           throw new Error(
-            'To change owner, you need to call `transferOwnership`'
+            `To change owner/admin, you need to call the proxy directly`
           );
         }
         if (currentOwner === AddressZero) {
@@ -916,15 +1035,69 @@ Plus they are only used when the contract is meant to be used as standalone when
           );
         }
 
-        const executeReceipt = await execute(
-          proxyName,
-          {...options, from: currentOwner},
-          'changeImplementation',
-          implementation.address,
-          data
-        );
-        if (!executeReceipt) {
-          throw new Error('could not execute `changeImplementation`');
+        if (proxyAdminName) {
+          if (oldProxy) {
+            throw new Error(`Old Proxy do not support Proxy Admin contracts`);
+          }
+          if (!currentProxyAdminOwner) {
+            throw new Error(`no currentProxyAdminOwner found in ProxyAdmin`);
+          }
+
+          if (currentProxyAdminOwner.toLowerCase() !== from.toLowerCase()) {
+            throw new Error(`from != Proxy Admin Contract's owner`);
+          }
+
+          let executeReceipt;
+          if (updateMethod) {
+            executeReceipt = await execute(
+              proxyAdminName,
+              {...options, from: currentProxyAdminOwner},
+              'upgradeAndCall',
+              proxy.address,
+              implementation.address,
+              data
+            );
+          } else {
+            executeReceipt = await execute(
+              proxyAdminName,
+              {...options, from: currentProxyAdminOwner},
+              'upgrade',
+              proxy.address,
+              implementation.address
+            );
+          }
+          if (!executeReceipt) {
+            throw new Error(`could not execute ${changeImplementationMethod}`);
+          }
+        } else {
+          if (currentOwner.toLowerCase() !== from.toLowerCase()) {
+            throw new Error(`from != proxy's admin/owner`);
+          }
+
+          let executeReceipt;
+          if (
+            changeImplementationMethod === 'upgradeToAndCall' &&
+            !updateMethod
+          ) {
+            executeReceipt = await execute(
+              proxyName,
+              {...options, from: currentOwner},
+              'upgrade',
+              implementation.address
+            );
+          } else {
+            executeReceipt = await execute(
+              proxyName,
+              {...options, from: currentOwner},
+              changeImplementationMethod,
+              implementation.address,
+              data
+            );
+          }
+
+          if (!executeReceipt) {
+            throw new Error(`could not execute ${changeImplementationMethod}`);
+          }
         }
       }
       const proxiedDeployment: DeploymentSubmission = {
@@ -955,8 +1128,6 @@ Plus they are only used when the contract is meant to be used as standalone when
         newlyDeployed: true,
       };
     } else {
-      const oldDeployment = await env.deployments.get(name);
-
       if (oldDeployment.implementation !== implementation.address) {
         const proxiedDeployment: DeploymentSubmission = {
           ...oldDeployment,
