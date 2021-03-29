@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.54
+
+### Patch Changes
+
+- remove abi conflict checks for default transparent proxies
+
 ## 0.7.0-beta.53
 
 ### Minor Changes
