@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.55
+
+### Patch Changes
+
+- fix proxies deployment
+
 ## 0.7.0-beta.54
 
 ### Patch Changes
