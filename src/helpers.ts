@@ -981,7 +981,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       implementationOptions
     );
 
-    if (!oldDeployment) {
+    if (!oldDeployment || implementation.newlyDeployed) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
       const implementationContract = new Contract(
         implementation.address,
