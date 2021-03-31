@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.56
+
+### Patch Changes
+
+- bring back diamond support
+
 ## 0.7.0-beta.55
 
 ### Patch Changes
