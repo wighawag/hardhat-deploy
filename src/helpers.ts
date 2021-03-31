@@ -797,6 +797,7 @@ export function addHelpers(
     let updateMethod: string | undefined;
     let upgradeIndex;
     let proxyContract: ExtendedArtifact = eip173Proxy;
+    let checkABIConflict = true;
     let viaAdminContract:
       | string
       | {name: string; artifact?: string | ArtifactData}
@@ -819,11 +820,13 @@ export function addHelpers(
             } else if (
               options.proxy.proxyContract === 'OpenZeppelinTransparentProxy'
             ) {
+              checkABIConflict = false;
               proxyContract = OpenZeppelinTransparentProxy;
               viaAdminContract = 'DefaultProxyAdmin';
             } else if (
               options.proxy.proxyContract === 'OptimizedTransparentProxy'
             ) {
+              checkABIConflict = false;
               proxyContract = OptimizedTransparentUpgradeableProxy;
               viaAdminContract = 'DefaultProxyAdmin';
             } else {
@@ -876,7 +879,7 @@ export function addHelpers(
     );
     // ensure no clash
     const mergedABI = mergeABIs([proxyContract.abi, artifact.abi], {
-      check: true,
+      check: checkABIConflict, // TODO options for custom proxy ?
       skipSupportsInterface: true, // TODO options for custom proxy ?
     }).filter((v) => v.type !== 'constructor');
     mergedABI.push(proxyContractConstructor); // use proxy constructor abi
@@ -980,7 +983,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       implementationOptions
     );
 
-    if (!oldDeployment) {
+    if (!oldDeployment || implementation.newlyDeployed) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
       const implementationContract = new Contract(
         implementation.address,
