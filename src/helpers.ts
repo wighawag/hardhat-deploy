@@ -1283,7 +1283,6 @@ Plus they are only used when the contract is meant to be used as standalone when
       for (const currentFacet of currentFacets) {
         oldFacets.push(currentFacet);
 
-        // TODO check selector
         // ensure DiamondLoupeFacet, OwnershipFacet and DiamondCutFacet are kept // TODO options to delete cut them out?
         if (
           findAll(
@@ -1316,7 +1315,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           fragment.type === 'constructor'
       );
       if (constructor) {
-        throw new Error(`Facet must not have a constructor`);
+        throw new Error(`Facet with constructor not yet supported`); // TODO remove that requirement
       }
       abi = mergeABIs([abi, artifact.abi], {
         check: true,
