@@ -32,19 +32,19 @@ contract OptimizedTransparentUpgradeableProxy is UpgradeableProxy {
      * optionally initialized with `_data` as explained in {UpgradeableProxy-constructor}.
      */
     constructor(
-        address _logic,
-        address _admin,
+        address initialLogic,
+        address initialAdmin,
         bytes memory _data
-    ) payable UpgradeableProxy(_logic, _data) {
+    ) payable UpgradeableProxy(initialLogic, _data) {
         assert(_ADMIN_SLOT == bytes32(uint256(keccak256("eip1967.proxy.admin")) - 1));
         bytes32 slot = _ADMIN_SLOT;
 
-        _ADMIN = _admin;
+        _ADMIN = initialAdmin;
 
         // still store it to work with EIP-1967
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            sstore(slot, _admin)
+            sstore(slot, initialAdmin)
         }
     }
 
