@@ -170,29 +170,30 @@ export type FixtureFunc<T, O> = (
 ) => Promise<T>;
 
 export interface DeploymentsExtension {
-  deploy(name: string, options: DeployOptions): Promise<DeployResult>;
+  deploy(name: string, options: DeployOptions): Promise<DeployResult>; // deploy a contract
   diamond: {
+    // deploy diamond based contract (see section below)
     deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
   };
-  deterministic(
+  deterministic( // return the determinsitic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
     name: string,
     options: Create2DeployOptions
   ): Promise<{
     address: Address;
     deploy(): Promise<DeployResult>;
   }>;
-  fetchIfDifferent(
+  fetchIfDifferent( // return true if new compiled code is different than deployed contract
     name: string,
     options: DeployOptions
   ): Promise<{differences: boolean; address?: string}>;
-  save(name: string, deployment: DeploymentSubmission): Promise<void>;
-  get(name: string): Promise<Deployment>;
-  getOrNull(name: string): Promise<Deployment | null>;
+  save(name: string, deployment: DeploymentSubmission): Promise<void>; // low level save of deployment
+  get(name: string): Promise<Deployment>; // fetch a deployment by name, throw if not existing
+  getOrNull(name: string): Promise<Deployment | null>; // fetch deployment by name, return null if not existing
   getDeploymentsFromAddress(address: string): Promise<Deployment[]>;
-  all(): Promise<{[name: string]: Deployment}>;
-  getExtendedArtifact(name: string): Promise<ExtendedArtifact>;
-  getArtifact(name: string): Promise<Artifact>;
-  run(
+  all(): Promise<{[name: string]: Deployment}>; // return all deployments
+  getArtifact(name: string): Promise<Artifact>; // return a hardhat artifact (compiled contract without deployment)
+  getExtendedArtifact(name: string): Promise<ExtendedArtifact>; // return a extended artifact (with more info) (compiled contract without deployment)
+  run( // execute deployment scripts
     tags?: string | string[],
     options?: {
       resetMemory?: boolean;
@@ -202,24 +203,24 @@ export interface DeploymentsExtension {
       exportAll?: string;
     }
   ): Promise<{[name: string]: Deployment}>;
-  fixture(
+  fixture( // execute deployment as fixture for test // use evm_snapshot to revert back
     tags?: string | string[],
     options?: {fallbackToGlobal?: boolean; keepExistingDeployments?: boolean}
   ): Promise<{[name: string]: Deployment}>;
-  createFixture<T, O>(
+  createFixture<T, O>( // execute a function as fixture using evm_snaphost to revert back each time
     func: FixtureFunc<T, O>,
     id?: string
   ): (options?: O) => Promise<T>;
-  log(...args: any[]): void;
+  log(...args: any[]): void; // log data only ig log enabled (disabled in test fixture)
 
-  execute(
+  execute( // execute function call on contract
     name: string,
     options: TxOptions,
     methodName: string,
     ...args: any[]
   ): Promise<Receipt>;
-  rawTx(tx: SimpleTx): Promise<Receipt>;
-  catchUnknownSigner(
+  rawTx(tx: SimpleTx): Promise<Receipt>; // execute a simple transaction
+  catchUnknownSigner( // you can wrap other function with this function and it will catch failure due to missing signer with the details of the tx to be executed
     action: Promise<any> | (() => Promise<any>),
     options?: {log?: boolean}
   ): Promise<null | {
@@ -228,7 +229,7 @@ export interface DeploymentsExtension {
     value?: string;
     data?: string;
   }>;
-  read(
+  read( // make a read-only call to a contract
     name: string,
     options: CallOptions,
     methodName: string,
@@ -304,8 +305,8 @@ export interface DeploymentSubmission {
 // };
 
 export interface Deployment {
-  abi: ABI;
   address: Address;
+  abi: ABI;
   receipt?: Receipt;
   transactionHash?: string;
   history?: Deployment[];
