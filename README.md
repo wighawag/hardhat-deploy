@@ -135,6 +135,8 @@ Since `hardhat-deploy-ethers` is a fork of `@nomiclabs/hardhat-ethers` and that 
 npm install --save-dev  @nomiclabs/hardhat-ethers@npm:hardhat-deploy-ethers ethers
 ```
 
+Which means you then need to do `require("@nomiclabs/hardhat-ethers")` instead of `require("hardhat-deploy-ethers")` in your `hardhat.config.js` file.
+
 More details on `hardhat-deploy-ethers` repo : https://github.com/wighawag/hardhat-deploy-ethers#readme
 
 ### TypeScript support
