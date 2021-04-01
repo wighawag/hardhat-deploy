@@ -127,6 +127,16 @@ And add the following statement to your `hardhat.config.js`:
 require('hardhat-deploy');
 ```
 
+if you use `ethers.js` we recommend you also install `hardhat-deploy-ethers` which add extra features to access deployments as ethers contract.
+
+Since `hardhat-deploy-ethers` is a fork of `@nomiclabs/hardhat-ethers` and that other plugin might have an hardcoded dependency on `@nomiclabs/hardhat-etehrs` the best way to install `hardhat-deploy-ethers` and ensure compatibility is the following:
+
+```bash
+npm install --save-dev  @nomiclabs/hardhat-ethers@npm:hardhat-deploy-ethers ethers
+```
+
+More details on `hardhat-deploy-ethers` repo : https://github.com/wighawag/hardhat-deploy-ethers#readme
+
 ### TypeScript support
 
 With hardhat the tsconfig.json is optional.
