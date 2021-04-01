@@ -1085,7 +1085,7 @@ Plus they are only used when the contract is meant to be used as standalone when
             executeReceipt = await execute(
               proxyName,
               {...options, from: currentOwner},
-              'upgrade',
+              'upgradeTo',
               implementation.address
             );
           } else {
