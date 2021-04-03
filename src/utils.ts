@@ -320,6 +320,7 @@ function transformNamedAccounts(
             }
           } else {
             if (spec.slice(0, 2).toLowerCase() === '0x') {
+              // TODO if spec is private key, add it to privateKey protocol
               address = spec;
             } else {
               address = parseSpec(configNamedAccounts[spec]);

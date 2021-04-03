@@ -447,7 +447,11 @@ export class DeploymentsManager {
         );
       }
       const receipt = await waitForTx(this.env.network.provider, txHash, false);
-      if (receipt.contractAddress && txData.name) {
+      if (
+        (!receipt.status || receipt.status == 1) && // ensure we do not save failed deployment
+        receipt.contractAddress &&
+        txData.name
+      ) {
         await this.saveDeployment(txData.name, {
           ...txData.deployment,
           receipt,
