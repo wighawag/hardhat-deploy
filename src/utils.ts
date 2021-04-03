@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import {getAddress} from '@ethersproject/address';
+import {Wallet} from '@ethersproject/wallet';
+import {getAddress, isAddress} from '@ethersproject/address';
 import {Interface, FunctionFragment, Fragment} from '@ethersproject/abi';
 import {Artifact, HardhatRuntimeEnvironment} from 'hardhat/types';
 import {BigNumber} from '@ethersproject/bignumber';
@@ -313,6 +314,10 @@ function transformNamedAccounts(
                 address.toLowerCase()
               ] = protocolSplit[0].toLowerCase();
               // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
+            } else if (protocolSplit[0].toLowerCase() === 'privatekey') {
+              address = new Wallet(protocolSplit[1]).address;
+              addressesToProtocol[address.toLowerCase()] =
+                'privatekey://' + protocolSplit[1];
             } else {
               throw new Error(
                 `unsupported protocol ${protocolSplit[0]}:// for named accounts`
@@ -320,7 +325,11 @@ function transformNamedAccounts(
             }
           } else {
             if (spec.slice(0, 2).toLowerCase() === '0x') {
-              // TODO if spec is private key, add it to privateKey protocol
+              if (!isAddress(spec)) {
+                throw new Error(
+                  `"${spec}" is not a valid address, if you used to put privateKey there, use the "privatekey://" prefix instead`
+                );
+              }
               address = spec;
             } else {
               address = parseSpec(configNamedAccounts[spec]);

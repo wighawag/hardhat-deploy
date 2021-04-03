@@ -1212,10 +1212,15 @@ Plus they are only used when the contract is meant to be used as standalone when
         ethersSigner = provider.getSigner(from);
       } else {
         // TODO register protocol based account as availableAccounts ? if so do not else here
-        if (
-          deploymentManager.addressesToProtocol[from.toLowerCase()] === 'ledger'
-        )
-          ethersSigner = new LedgerSigner(provider);
+        const registeredProtocol =
+          deploymentManager.addressesToProtocol[from.toLowerCase()];
+        if (registeredProtocol) {
+          if (registeredProtocol === 'ledger') {
+            ethersSigner = new LedgerSigner(provider);
+          } else if (registeredProtocol.startsWith('privatekey')) {
+            ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
+          }
+        }
         hardwareWallet = 'ledger';
       }
     }
