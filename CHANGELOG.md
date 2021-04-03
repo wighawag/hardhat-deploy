@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.0-beta.58
+
+### Patch Changes
+
+- Add privatekey:// protocol for named accounts
+
 ## 0.7.0-beta.57
 
 ### Patch Changes
