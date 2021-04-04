@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.1
+
+### Patch Changes
+
+- different naming for Proxied.sol
+
 ## 0.7.0
 
 ### Minor Changes
