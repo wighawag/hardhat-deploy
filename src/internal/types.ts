@@ -25,7 +25,10 @@ export interface PartialExtension {
       exportAll?: string;
     }
   ): Promise<{[name: string]: Deployment}>;
-  fixture(tags?: string | string[]): Promise<{[name: string]: Deployment}>;
+  fixture(
+    tags?: string | string[],
+    options?: {fallbackToGlobal?: boolean; keepExistingDeployments?: boolean}
+  ): Promise<{[name: string]: Deployment}>;
   createFixture<T, O>(
     func: FixtureFunc<T, O>,
     id?: string

@@ -4,7 +4,7 @@ import * as path from 'path';
 import {Wallet} from '@ethersproject/wallet';
 import {getAddress, isAddress} from '@ethersproject/address';
 import {Interface, FunctionFragment, Fragment} from '@ethersproject/abi';
-import {Artifact, HardhatRuntimeEnvironment} from 'hardhat/types';
+import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {BigNumber} from '@ethersproject/bignumber';
 import {ExtendedArtifact, MultiExport} from '../types';
 import {Artifacts} from 'hardhat/internal/artifacts';
@@ -12,17 +12,15 @@ import murmur128 from 'murmur-128';
 import {Transaction} from '@ethersproject/transactions';
 
 let chainId: string;
-export async function getChainId(
-  hre: HardhatRuntimeEnvironment
-): Promise<string> {
+export async function getChainId(network: Network): Promise<string> {
   if (chainId) {
     return chainId;
   }
   try {
-    chainId = await hre.network.provider.send('eth_chainId');
+    chainId = await network.provider.send('eth_chainId');
   } catch (e) {
     console.log('failed to get chainId, falling back on net_version...');
-    chainId = await hre.network.provider.send('net_version');
+    chainId = await network.provider.send('net_version');
   }
 
   if (chainId.startsWith('0x')) {
@@ -423,7 +421,13 @@ function chainConfig(
 }
 
 export function processNamedAccounts(
-  hre: HardhatRuntimeEnvironment,
+  network: Network,
+  namedAccounts: {
+    [name: string]:
+      | string
+      | number
+      | {[network: string]: null | number | string};
+  },
   accounts: string[],
   chainIdGiven: string
 ): {
@@ -432,12 +436,12 @@ export function processNamedAccounts(
   unknownAccounts: string[];
   addressesToProtocol: {[address: string]: string};
 } {
-  if (hre.config.namedAccounts) {
+  if (namedAccounts) {
     return transformNamedAccounts(
-      hre.config.namedAccounts,
+      namedAccounts,
       chainIdGiven,
       accounts,
-      process.env.HARDHAT_DEPLOY_ACCOUNTS_NETWORK || hre.network.name
+      process.env.HARDHAT_DEPLOY_ACCOUNTS_NETWORK || network.name
     );
   } else {
     return {

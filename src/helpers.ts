@@ -47,11 +47,7 @@ import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
 import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
 import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
 import diamantaire from '../extendedArtifacts/Diamantaire.json';
-import {
-  Artifact,
-  EthereumProvider,
-  HardhatRuntimeEnvironment,
-} from 'hardhat/types';
+import {Artifact, EthereumProvider, Network} from 'hardhat/types';
 import {DeploymentsManager} from './DeploymentsManager';
 
 diamondBase.abi = mergeABIs(
@@ -175,9 +171,9 @@ function linkLibraries(
 }
 
 export function addHelpers(
-  env: HardhatRuntimeEnvironment,
   deploymentManager: DeploymentsManager,
-  partialExtension: PartialExtension, // TODO
+  partialExtension: PartialExtension,
+  network: Network,
   getArtifact: (name: string) => Promise<Artifact>,
   saveDeployment: (
     name: string,
@@ -199,7 +195,7 @@ export function addHelpers(
 
   async function init() {
     if (!provider) {
-      provider = new Web3Provider(fixProvider(env.network.provider));
+      provider = new Web3Provider(fixProvider(network.provider));
       try {
         const accounts = await provider.send('eth_accounts', []);
         for (const account of accounts) {
@@ -449,7 +445,7 @@ export function addHelpers(
       linkedData: options.linkedData,
     };
     if (artifactName && willSaveToDisk()) {
-      const extendedArtifact = await env.deployments.getExtendedArtifact(
+      const extendedArtifact = await partialExtension.getExtendedArtifact(
         artifactName
       );
       preDeployment = {
@@ -541,11 +537,11 @@ export function addHelpers(
   }
 
   function getDeployment(name: string): Promise<Deployment> {
-    return env.deployments.get(name);
+    return partialExtension.get(name);
   }
 
   function getDeploymentOrNUll(name: string): Promise<Deployment | null> {
-    return env.deployments.getOrNull(name);
+    return partialExtension.getOrNull(name);
   }
 
   async function fetchIfDifferent(
@@ -609,7 +605,7 @@ export function addHelpers(
       typeof options.fieldsToCompare === 'string'
         ? [options.fieldsToCompare]
         : options.fieldsToCompare || [];
-    const deployment = await env.deployments.getOrNull(name);
+    const deployment = await partialExtension.getOrNull(name);
     if (deployment) {
       if (options.skipIfAlreadyDeployed) {
         return {differences: false, address: undefined}; // TODO check receipt, see below
@@ -810,7 +806,7 @@ export function addHelpers(
       if (options.proxy.proxyContract) {
         if (typeof options.proxy.proxyContract === 'string') {
           try {
-            proxyContract = await env.deployments.getExtendedArtifact(
+            proxyContract = await partialExtension.getExtendedArtifact(
               options.proxy.proxyContract
             );
           } catch (e) {}
@@ -925,7 +921,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       } else {
         proxyAdminName = viaAdminContract.name;
         if (!viaAdminContract.artifact) {
-          proxyAdminDeployed = await env.deployments.get(proxyAdminName);
+          proxyAdminDeployed = await partialExtension.get(proxyAdminName);
         }
         proxyAdminArtifactNameOrContract = viaAdminContract.artifact;
       }
@@ -933,7 +929,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       let proxyAdminContract: ExtendedArtifact | undefined;
       if (typeof proxyAdminArtifactNameOrContract === 'string') {
         try {
-          proxyAdminContract = await env.deployments.getExtendedArtifact(
+          proxyAdminContract = await partialExtension.getExtendedArtifact(
             proxyAdminArtifactNameOrContract
           );
         } catch (e) {}
@@ -1127,7 +1123,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       }
       await saveDeployment(name, proxiedDeployment);
 
-      const deployment = await env.deployments.get(name);
+      const deployment = await partialExtension.get(name);
       return {
         ...deployment,
         newlyDeployed: true,
@@ -1152,7 +1148,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         await saveDeployment(name, proxiedDeployment);
       }
 
-      const deployment = await env.deployments.get(name);
+      const deployment = await partialExtension.get(name);
       return {
         ...deployment,
         newlyDeployed: false,
@@ -1610,13 +1606,13 @@ Plus they are only used when the contract is meant to be used as standalone when
         });
       }
 
-      const deployment = await env.deployments.get(name);
+      const deployment = await partialExtension.get(name);
       return {
         ...deployment,
         newlyDeployed: true,
       };
     } else {
-      const oldDeployment = await env.deployments.get(name);
+      const oldDeployment = await partialExtension.get(name);
 
       const proxiedDeployment: DeploymentSubmission = {
         ...oldDeployment,
@@ -1631,7 +1627,7 @@ Plus they are only used when the contract is meant to be used as standalone when
       //   : [oldDeployment];
       await saveDeployment(name, proxiedDeployment);
 
-      const deployment = await env.deployments.get(name);
+      const deployment = await partialExtension.get(name);
       return {
         ...deployment,
         newlyDeployed: false,
@@ -1779,7 +1775,7 @@ data: ${data}
     const {address: from, ethersSigner, hardwareWallet} = getFrom(options.from);
 
     let tx;
-    const deployment = await env.deployments.get(name);
+    const deployment = await partialExtension.get(name);
     const abi = deployment.abi;
     const overrides = {
       gasLimit: options.gasLimit,
@@ -1897,7 +1893,7 @@ data: ${data}
     if (ethersSigner) {
       caller = ethersSigner;
     }
-    const deployment = await env.deployments.get(name);
+    const deployment = await partialExtension.get(name);
     if (!deployment) {
       throw new Error(`no contract named "${name}"`);
     }

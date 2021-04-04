@@ -35,7 +35,7 @@ import {
 } from './utils';
 import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
-import {Artifact, HardhatRuntimeEnvironment} from 'hardhat/types';
+import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -74,8 +74,18 @@ export class DeploymentsManager {
   public impersonatedAccounts: string[];
   public addressesToProtocol: {[address: string]: string} = {};
 
-  constructor(env: HardhatRuntimeEnvironment) {
+  private network: Network;
+
+  private partialExtension: PartialExtension;
+
+  constructor(env: HardhatRuntimeEnvironment, network?: Network) {
     log('constructing DeploymentsManager');
+
+    if (!network) {
+      network = env.network;
+    }
+
+    this.network = network;
 
     this.impersonateUnknownAccounts = true;
     this.impersonatedAccounts = [];
@@ -102,7 +112,7 @@ export class DeploymentsManager {
     // TODO
     // this.env.artifacts = new HardhatDeployArtifacts(this.env.artifacts);
 
-    const partialExtension: PartialExtension = {
+    this.partialExtension = {
       save: async (
         name: string,
         deployment: DeploymentSubmission
@@ -321,10 +331,10 @@ export class DeploymentsManager {
 
     log('adding helpers');
     this.deploymentsExtension = addHelpers(
-      env,
       this,
-      partialExtension,
-      partialExtension.getArtifact,
+      this.partialExtension,
+      this.network,
+      this.partialExtension.getArtifact,
       async (
         name: string,
         deployment: DeploymentSubmission,
@@ -333,10 +343,10 @@ export class DeploymentsManager {
         if (
           artifactName &&
           this.db.writeDeploymentsToFiles &&
-          this.env.network.saveDeployments
+          this.network.saveDeployments
         ) {
           // toSave (see deployments.save function)
-          const extendedArtifact = await this.env.deployments.getExtendedArtifact(
+          const extendedArtifact = await this.partialExtension.getExtendedArtifact(
             artifactName
           );
           deployment = {
@@ -344,12 +354,10 @@ export class DeploymentsManager {
             ...extendedArtifact,
           };
         }
-        await this.env.deployments.save(name, deployment);
+        await this.partialExtension.save(name, deployment);
       },
       () => {
-        return (
-          this.db.writeDeploymentsToFiles && this.env.network.saveDeployments
-        );
+        return this.db.writeDeploymentsToFiles && this.network.saveDeployments;
       },
       this.onPendingTx.bind(this),
       async () => {
@@ -360,13 +368,13 @@ export class DeploymentsManager {
           return undefined;
         }
       },
-      partialExtension.log,
+      this.partialExtension.log,
       print
     );
   }
 
   public getChainId(): Promise<string> {
-    return getChainId(this.env);
+    return getChainId(this.network);
   }
 
   public runAsNode(enabled: boolean): void {
@@ -430,7 +438,7 @@ export class DeploymentsManager {
             (txData.name ? ` for ${txData.name} Deployment` : '')
         );
       }
-      const receipt = await waitForTx(this.env.network.provider, txHash, false);
+      const receipt = await waitForTx(this.network.provider, txHash, false);
       if (
         (!receipt.status || receipt.status == 1) && // ensure we do not save failed deployment
         receipt.contractAddress &&
@@ -459,7 +467,7 @@ export class DeploymentsManager {
   ): Promise<TransactionResponse> {
     if (
       this.db.writeDeploymentsToFiles &&
-      this.env.network.saveDeployments &&
+      this.network.saveDeployments &&
       this.db.savePendingTx
     ) {
       const deployFolderPath = path.join(
@@ -528,7 +536,7 @@ export class DeploymentsManager {
   ): Promise<{[name: string]: Deployment}> {
     let chainId: string | undefined;
     if (chainIdExpected) {
-      chainId = await getChainId(this.env);
+      chainId = await getChainId(this.network);
     }
 
     let migrations = {};
@@ -554,7 +562,7 @@ export class DeploymentsManager {
       this.deploymentFolder(),
       chainId
     );
-    const networkName = this.env.network.name;
+    const networkName = this.network.name;
     const extraDeploymentPaths =
       this.env.config.external &&
       this.env.config.external.deployments &&
@@ -598,10 +606,10 @@ export class DeploymentsManager {
       throw new Error('deployment need an ABI');
     }
 
-    const chainId = await getChainId(this.env);
+    const chainId = await getChainId(this.network);
 
     const toSave =
-      this.db.writeDeploymentsToFiles && this.env.network.saveDeployments;
+      this.db.writeDeploymentsToFiles && this.network.saveDeployments;
 
     const filepath = path.join(
       this.deploymentsPath,
@@ -692,7 +700,7 @@ export class DeploymentsManager {
       let receiptFetched;
       try {
         receiptFetched = await waitForTx(
-          this.env.network.provider,
+          this.network.provider,
           obj.transactionHash,
           true
         );
@@ -815,7 +823,7 @@ export class DeploymentsManager {
       tags = [tags];
     }
 
-    const deployPaths = this.env.network.deploy;
+    const deployPaths = this.network.deploy;
 
     await this.executeDeployScripts(deployPaths, tags);
 
@@ -1004,8 +1012,7 @@ export class DeploymentsManager {
 
             // TODO refactor to extract this whole path and folder existence stuff
             const toSave =
-              this.db.writeDeploymentsToFiles &&
-              this.env.network.saveDeployments;
+              this.db.writeDeploymentsToFiles && this.network.saveDeployments;
             if (toSave) {
               try {
                 fs.mkdirSync(this.deploymentsPath);
@@ -1048,7 +1055,7 @@ export class DeploymentsManager {
         .toString();
     } catch (e) {}
     if (!chainId) {
-      chainId = await getChainId(this.env);
+      chainId = await getChainId(this.network);
     }
 
     if (options.exportAll !== undefined) {
@@ -1079,10 +1086,10 @@ export class DeploymentsManager {
         all[chainId] = {};
       } else {
         // Ensure no past deployments are recorded
-        delete all[chainId][this.env.network.name];
+        delete all[chainId][this.network.name];
       }
-      all[chainId][this.env.network.name] = {
-        name: this.env.network.name,
+      all[chainId][this.network.name] = {
+        name: this.network.name,
         chainId,
         contracts: currentNetworkDeployments,
       };
@@ -1113,7 +1120,7 @@ export class DeploymentsManager {
         throw new Error('chainId is undefined');
       }
       const singleExport: Export = {
-        name: this.env.network.name,
+        name: this.network.name,
         chainId,
         contracts: currentNetworkDeployments,
       };
@@ -1144,7 +1151,7 @@ export class DeploymentsManager {
         }
         this.db.deploymentsLoaded = true;
         // console.log("running global fixture....");
-        await this.env.deployments.fixture(undefined, {
+        await this.partialExtension.fixture(undefined, {
           keepExistingDeployments: true, // by default reuse the existing deployments (useful for fork testing)
         });
       } else {
@@ -1158,11 +1165,11 @@ export class DeploymentsManager {
   }
 
   private async saveSnapshot(key: string, data?: any) {
-    const latestBlock = await this.env.network.provider.send(
+    const latestBlock = await this.network.provider.send(
       'eth_getBlockByNumber',
       ['latest', false]
     );
-    const snapshot = await this.env.network.provider.send('evm_snapshot', []);
+    const snapshot = await this.network.provider.send('evm_snapshot', []);
     this.db.pastFixtures[key] = {
       index: ++this.db.snapshotCounter,
       snapshot,
@@ -1185,19 +1192,16 @@ export class DeploymentsManager {
         delete this.db.pastFixtures[fixtureKey];
       }
     }
-    const success = await this.env.network.provider.send('evm_revert', [
+    const success = await this.network.provider.send('evm_revert', [
       saved.snapshot,
     ]);
     if (success) {
-      const blockRetrieved = await this.env.network.provider.send(
+      const blockRetrieved = await this.network.provider.send(
         'eth_getBlockByHash',
         [saved.blockHash, false]
       );
       if (blockRetrieved) {
-        saved.snapshot = await this.env.network.provider.send(
-          'evm_snapshot',
-          []
-        ); // it is necessary to re-snapshot it
+        saved.snapshot = await this.network.provider.send('evm_snapshot', []); // it is necessary to re-snapshot it
         this.db.deployments = {...saved.deployments};
       } else {
         // TODO or should we throw ?
@@ -1215,7 +1219,7 @@ export class DeploymentsManager {
     if (this.db.runAsNode) {
       return 'localhost';
     } else {
-      return this.env.network.name;
+      return this.network.name;
     }
   }
 
@@ -1224,21 +1228,26 @@ export class DeploymentsManager {
     unnamedAccounts: string[];
   }> {
     if (!this.db.accountsLoaded) {
-      const chainId = await getChainId(this.env);
-      const accounts = await this.env.network.provider.send('eth_accounts');
+      const chainId = await getChainId(this.network);
+      const accounts = await this.network.provider.send('eth_accounts');
       const {
         namedAccounts,
         unnamedAccounts,
         unknownAccounts,
         addressesToProtocol,
-      } = processNamedAccounts(this.env, accounts, chainId);
+      } = processNamedAccounts(
+        this.network,
+        this.env.config.namedAccounts,
+        accounts,
+        chainId
+      ); // TODO pass in network name
       if (
-        this.env.network.name === 'hardhat' &&
+        this.network.name === 'hardhat' &&
         this.impersonateUnknownAccounts &&
         !process.env.HARDHAT_DEPLOY_NO_IMPERSONATION
       ) {
         for (const address of unknownAccounts) {
-          await this.env.network.provider.request({
+          await this.network.provider.request({
             method: 'hardhat_impersonateAccount',
             params: [address],
           });
