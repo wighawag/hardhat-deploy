@@ -31,7 +31,6 @@ import chokidar from 'chokidar';
 import {submitSources} from './etherscan';
 import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
-// import {JsonRpcProvider} from '@ethersproject/providers';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
