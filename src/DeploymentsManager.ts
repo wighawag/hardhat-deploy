@@ -390,7 +390,7 @@ export class DeploymentsManager {
 
     if (this._chainId.startsWith('0x')) {
       this._chainId = BigNumber.from(this._chainId).toString();
-  }
+    }
 
     return this._chainId;
   }
@@ -783,6 +783,14 @@ export class DeploymentsManager {
     return true;
   }
 
+  private companionManagers: {[name: string]: DeploymentsManager} = {};
+  public addCompanionManager(
+    name: string,
+    networkDeploymentsManager: DeploymentsManager
+  ): void {
+    this.companionManagers[name] = networkDeploymentsManager;
+  }
+
   public async runDeploy(
     tags?: string | string[],
     options: {
@@ -808,6 +816,10 @@ export class DeploymentsManager {
       this.db.deployments = {};
       this.db.migrations = {};
       await this.deletePreviousDeployments();
+      for (const companionNetworkName of Object.keys(this.companionManagers)) {
+        const companionManager = this.companionManagers[companionNetworkName];
+        companionManager.deletePreviousDeployments();
+      }
     }
 
     await this.loadDeployments();
@@ -822,6 +834,24 @@ export class DeploymentsManager {
     }
     if (!options.deletePreviousDeployments && options.savePendingTx) {
       await this.dealWithPendingTransactions(); // TODO deal with reset ?
+    }
+
+    for (const companionNetworkName of Object.keys(this.companionManagers)) {
+      const companionManager = this.companionManagers[companionNetworkName];
+      await companionManager.loadDeployments();
+      companionManager.db.writeDeploymentsToFiles =
+        options.writeDeploymentsToFiles;
+      companionManager.db.savePendingTx = options.savePendingTx;
+      companionManager.db.logEnabled = options.log;
+      // companionManager.db.gasPrice = options.gasPrice;
+      if (options.resetMemory) {
+        log('reseting memory');
+        companionManager.db.deployments = {};
+        companionManager.db.migrations = {};
+      }
+      if (!options.deletePreviousDeployments && options.savePendingTx) {
+        await companionManager.dealWithPendingTransactions(); // TODO deal with reset ?
+      }
     }
 
     if (this.env.config.external?.contracts) {
@@ -855,6 +885,7 @@ export class DeploymentsManager {
     tags?: string[]
   ): Promise<void> {
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
+    // TODO loop over companion networks
 
     let filepaths;
     try {
