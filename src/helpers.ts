@@ -173,8 +173,7 @@ function linkLibraries(
 
   return bytecode;
 }
-let provider: Web3Provider;
-const availableAccounts: {[name: string]: boolean} = {};
+
 export function addHelpers(
   env: HardhatRuntimeEnvironment,
   deploymentManager: DeploymentsManager,
@@ -195,6 +194,9 @@ export function addHelpers(
   log: (...args: any[]) => void,
   print: (msg: string) => void
 ): DeploymentsExtension {
+  let provider: Web3Provider;
+  const availableAccounts: {[name: string]: boolean} = {};
+
   async function init() {
     if (!provider) {
       provider = new Web3Provider(fixProvider(env.network.provider));

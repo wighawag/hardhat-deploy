@@ -31,27 +31,11 @@ import {
   deleteDeployments,
   getExtendedArtifactFromFolder,
   getArtifactFromFolder,
+  recode,
 } from './utils';
 import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
 import {Artifact, HardhatRuntimeEnvironment} from 'hardhat/types';
-
-function recode(decoded: any): Transaction {
-  return {
-    from: decoded.from,
-    gasPrice: BigNumber.from(decoded.from),
-    gasLimit: BigNumber.from(decoded.gasLimit),
-    to: decoded.to,
-    value: BigNumber.from(decoded.value),
-    nonce: decoded.nonce,
-    data: decoded.data,
-    r: decoded.r,
-    s: decoded.s,
-    v: decoded.v,
-    // creates: tx.creates, // TODO test
-    chainId: decoded.chainId,
-  };
-}
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -117,10 +101,6 @@ export class DeploymentsManager {
 
     // TODO
     // this.env.artifacts = new HardhatDeployArtifacts(this.env.artifacts);
-
-    this.env.getChainId = () => {
-      return getChainId(this.env);
-    };
 
     const partialExtension: PartialExtension = {
       save: async (
@@ -383,6 +363,10 @@ export class DeploymentsManager {
       partialExtension.log,
       print
     );
+  }
+
+  public getChainId(): Promise<string> {
+    return getChainId(this.env);
   }
 
   public runAsNode(enabled: boolean): void {

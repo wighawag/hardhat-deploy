@@ -191,6 +191,9 @@ extendEnvironment((env) => {
     env.getUnnamedAccounts = deploymentsManager.getUnnamedAccounts.bind(
       deploymentsManager
     );
+    env.getChainId = () => {
+      return deploymentsManager.getChainId();
+    };
   }
   log('ready');
 });

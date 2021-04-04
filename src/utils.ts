@@ -9,6 +9,7 @@ import {BigNumber} from '@ethersproject/bignumber';
 import {ExtendedArtifact, MultiExport} from '../types';
 import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
+import {Transaction} from '@ethersproject/transactions';
 
 let chainId: string;
 export async function getChainId(
@@ -555,4 +556,21 @@ export function mergeABIs(
   }
 
   return result;
+}
+
+export function recode(decoded: any): Transaction {
+  return {
+    from: decoded.from,
+    gasPrice: BigNumber.from(decoded.from),
+    gasLimit: BigNumber.from(decoded.gasLimit),
+    to: decoded.to,
+    value: BigNumber.from(decoded.value),
+    nonce: decoded.nonce,
+    data: decoded.data,
+    r: decoded.r,
+    s: decoded.s,
+    v: decoded.v,
+    // creates: tx.creates, // TODO test
+    chainId: decoded.chainId,
+  };
 }
