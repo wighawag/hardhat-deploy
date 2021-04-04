@@ -11,25 +11,6 @@ import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
 import {Transaction} from '@ethersproject/transactions';
 
-let chainId: string;
-export async function getChainId(network: Network): Promise<string> {
-  if (chainId) {
-    return chainId;
-  }
-  try {
-    chainId = await network.provider.send('eth_chainId');
-  } catch (e) {
-    console.log('failed to get chainId, falling back on net_version...');
-    chainId = await network.provider.send('net_version');
-  }
-
-  if (chainId.startsWith('0x')) {
-    chainId = BigNumber.from(chainId).toString();
-  }
-
-  return chainId;
-}
-
 function getOldArtifactSync(
   name: string,
   folderPath: string
@@ -146,7 +127,7 @@ export function loadAllDeployments(
             undefined,
             networkChainId
           );
-          all[chainId][networkName] = {
+          all[networkChainId][networkName] = {
             name: networkName,
             chainId: networkChainId,
             contracts,

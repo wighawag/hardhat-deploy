@@ -25,7 +25,6 @@ const log = debug('hardhat:wighawag:hardhat-deploy');
 import {
   addDeployments,
   processNamedAccounts,
-  getChainId,
   loadAllDeployments,
   traverseMultipleDirectory,
   deleteDeployments,
@@ -373,8 +372,27 @@ export class DeploymentsManager {
     );
   }
 
-  public getChainId(): Promise<string> {
-    return getChainId(this.network);
+  private _chainId: string | undefined;
+  public async getChainId(): Promise<string> {
+    if (this._chainId) {
+      return this._chainId;
+    }
+    try {
+      this._chainId = await this.network.provider.send('eth_chainId');
+    } catch (e) {
+      console.log('failed to get chainId, falling back on net_version...');
+      this._chainId = await this.network.provider.send('net_version');
+    }
+
+    if (!this._chainId) {
+      throw new Error(`could not get chainId from network`);
+    }
+
+    if (this._chainId.startsWith('0x')) {
+      this._chainId = BigNumber.from(this._chainId).toString();
+  }
+
+    return this._chainId;
   }
 
   public runAsNode(enabled: boolean): void {
@@ -536,7 +554,7 @@ export class DeploymentsManager {
   ): Promise<{[name: string]: Deployment}> {
     let chainId: string | undefined;
     if (chainIdExpected) {
-      chainId = await getChainId(this.network);
+      chainId = await this.getChainId();
     }
 
     let migrations = {};
@@ -606,7 +624,7 @@ export class DeploymentsManager {
       throw new Error('deployment need an ABI');
     }
 
-    const chainId = await getChainId(this.network);
+    const chainId = await this.getChainId();
 
     const toSave =
       this.db.writeDeploymentsToFiles && this.network.saveDeployments;
@@ -1055,7 +1073,7 @@ export class DeploymentsManager {
         .toString();
     } catch (e) {}
     if (!chainId) {
-      chainId = await getChainId(this.network);
+      chainId = await this.getChainId();
     }
 
     if (options.exportAll !== undefined) {
@@ -1228,7 +1246,7 @@ export class DeploymentsManager {
     unnamedAccounts: string[];
   }> {
     if (!this.db.accountsLoaded) {
-      const chainId = await getChainId(this.network);
+      const chainId = await this.getChainId();
       const accounts = await this.network.provider.send('eth_accounts');
       const {
         namedAccounts,

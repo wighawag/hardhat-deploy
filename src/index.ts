@@ -146,42 +146,55 @@ extendConfig(
   }
 );
 
-log('start...');
-let deploymentsManager: DeploymentsManager;
-extendEnvironment((env) => {
+function networkFromConfig(
+  env: HardhatRuntimeEnvironment,
+  network: Network,
+  companion: boolean
+) {
   let live = true;
-  if (env.network.name === 'localhost' || env.network.name === 'hardhat') {
+  if (network.name === 'localhost' || network.name === 'hardhat') {
     // the 2 default network are not live network
     live = false;
   }
-  if (env.network.config.live !== undefined) {
-    live = env.network.config.live;
+  if (network.config.live !== undefined) {
+    live = network.config.live;
   }
-  env.network.live = live;
+  network.live = live;
 
   // associate tags to current network as object
-  env.network.tags = {};
-  const tags = env.network.config.tags || [];
+  network.tags = {};
+  const tags = network.config.tags || [];
   for (const tag of tags) {
-    env.network.tags[tag] = true;
+    network.tags[tag] = true;
   }
 
-  if (env.network.config.deploy) {
-    env.network.deploy = env.network.config.deploy;
+  if (network.config.deploy) {
+    network.deploy = network.config.deploy;
   } else {
-    env.network.deploy = env.config.paths.deploy;
+    network.deploy = env.config.paths.deploy;
   }
 
-  if (env.network.config.live !== undefined) {
-    live = env.network.config.live;
-  }
-
-  if (env.network.config.saveDeployments === undefined) {
-    env.network.saveDeployments = true;
+  if (companion && network.config.companionNetworks) {
+    network.companionNetworks = network.config.companionNetworks;
   } else {
-    env.network.saveDeployments = env.network.config.saveDeployments;
+    network.companionNetworks = {};
   }
 
+  if (network.config.live !== undefined) {
+    live = network.config.live;
+  }
+
+  if (network.config.saveDeployments === undefined) {
+    network.saveDeployments = true;
+  } else {
+    network.saveDeployments = network.config.saveDeployments;
+  }
+}
+
+log('start...');
+let deploymentsManager: DeploymentsManager;
+extendEnvironment((env) => {
+  networkFromConfig(env, env.network, true);
   if (deploymentsManager === undefined || env.deployments === undefined) {
     deploymentsManager = new DeploymentsManager(env);
     env.deployments = deploymentsManager.deploymentsExtension;
