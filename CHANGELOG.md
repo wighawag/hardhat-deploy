@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.0-next.0
+
+### Minor Changes
+
+- Add companion networks feature allowing to access multiple networks from same deploy script
+
 ## 0.7.0
 
 ### Minor Changes
