@@ -1,5 +1,66 @@
 # hardhat-deploy
 
+## 0.7.0
+
+### Minor Changes
+
+- 94092e7: Improve Proxy with support for OpenZeppelin Transparent Proxies
+
+### Patch Changes
+
+- 1840518: use proxy constructor abi for proxied contracts
+- c5450ee: Bumps axios from 0.19.2 to 0.21.1.
+- 7719b3f: fix proxies deployment
+- d704e1a: workaround hardhat_reset snapshot memory loss
+- d411d25: add new etherscan endpoint + allow test to access existing deployment (useful for fork testing)
+- 0a8fbc3: fix SPDX regex
+- 7ded716: fix reset on node --watch + fix msg.value for Proxy + allow receive ETH for Proxy
+- 83953c3: default to write deployment to file so can run scripts that deploy contract without losing info
+- 8a215f6: Ensure node task do not run on non-hardhat network
+- 9da5ba5: add solidity source of Proxied.sol for solidity 0.8
+- b15b50f: fix value 0
+- 9f3b98f: add env HARDHAT_DEPLOY_ACCOUNTS_NETWORK to specify a different network for named accounts
+- d6144a2: allow multiple tags for --tags + add type param for deployments.createFixture
+- 543483c: allow multiple folder for deploy script, configurable per network
+- 9698753: Add privatekey:// protocol for named accounts
+- 1b831fb: fix bug introduced in last changes : node task args were not considered
+- f8ebefd: fix supportsInterface for Proxied Contract and fix custom Proxy contract by saving the extended artifacts
+- 69be84b: node task reset deployments by default (use --no-reset to not reset)
+- 0.7.0
+- 6239f31: fix createFixture
+- 5b89a3b: log tx hash + wait for tx (where it was not) + add sourcify task (wip)
+- fc524e6: fix getUnnamedAccounts : return addresses not named in namedAccounts
+- 07d9aa4: fix proxy upgrade
+- 4ab4b32: fix types declaration not being published
+- 665b57c: Breaking change for external field: isolate external deploy script from other artifacts
+- ad70a48: allow to execute proxy deploy after deployment was made elsewhere to actualise the deployment files
+- 9bf606d: bring back diamond support
+- 4a03db2: from as privateKey fix + clear npm script cache so watch work as intended
+- 7035011: add support for ledger hardware wallet
+- 5ea8f50: fix deterministic deployment overwrite + add auto account impersonation
+- c973c7f: fix external deploy exec order + add export-artifacts task to export extended artifacts
+- e82ddb0: better message for tx that need to be executed from other account
+- 43c975c: remove new types from hardhat/types module
+  If you use typescript in your deploy script and import the `DeployFunction` type for example you ll need to update the import
+
+  from
+
+  ```
+  import {HardhatRuntimeEnvironment, DeployFunction} from 'hardhat/types';
+  ```
+
+  to
+
+  ```
+  import {HardhatRuntimeEnvironment} from 'hardhat/types';
+  import {DeployFunction} from 'hardhat-deploy/types';
+  ```
+
+- 2c7afa4: add better typing for createFixture options
+- 3f81eeb: fix determinsitic diamond redeployment + verifiability of contracts using libraries
+- b4a8037: remove abi conflict checks for default transparent proxies
+- fad474b: fix wrong link for sourcify and add binance chain for etherscan verification
+
 ## 0.7.0-beta.58
 
 ### Patch Changes
