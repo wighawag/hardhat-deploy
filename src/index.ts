@@ -29,6 +29,7 @@ import {DeploymentsManager} from './DeploymentsManager';
 import chokidar from 'chokidar';
 import {submitSources} from './etherscan';
 import {submitSourcesToSourcify} from './sourcify';
+import {Network} from 'hardhat/types/runtime';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
@@ -146,11 +147,7 @@ extendConfig(
   }
 );
 
-function networkFromConfig(
-  env: HardhatRuntimeEnvironment,
-  network: Network,
-  companion: boolean
-) {
+function networkFromConfig(env: HardhatRuntimeEnvironment, network: Network) {
   let live = true;
   if (network.name === 'localhost' || network.name === 'hardhat') {
     // the 2 default network are not live network
@@ -174,12 +171,6 @@ function networkFromConfig(
     network.deploy = env.config.paths.deploy;
   }
 
-  if (companion && network.config.companionNetworks) {
-    network.companionNetworks = network.config.companionNetworks;
-  } else {
-    network.companionNetworks = {};
-  }
-
   if (network.config.live !== undefined) {
     live = network.config.live;
   }
@@ -194,7 +185,7 @@ function networkFromConfig(
 log('start...');
 let deploymentsManager: DeploymentsManager;
 extendEnvironment((env) => {
-  networkFromConfig(env, env.network, true);
+  networkFromConfig(env, env.network);
   if (deploymentsManager === undefined || env.deployments === undefined) {
     deploymentsManager = new DeploymentsManager(env);
     env.deployments = deploymentsManager.deploymentsExtension;
