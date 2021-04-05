@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.0-next.2
+
+### Patch Changes
+
+- support self companion emulation
+
 ## 0.8.0-next.1
 
 ### Patch Changes

@@ -210,8 +210,21 @@ extendEnvironment((env) => {
       return deploymentsManager.getChainId();
     };
 
+    env.companionNetworks = {};
     for (const name of Object.keys(env.network.companionNetworks)) {
       const networkName = env.network.companionNetworks[name];
+      if (networkName === env.network.name) {
+        deploymentsManager.addCompanionManager(name, deploymentsManager);
+        const extraNetwork = {
+          deployments: deploymentsManager.deploymentsExtension,
+          getNamedAccounts: () => deploymentsManager.getNamedAccounts(),
+          getUnnamedAccounts: () => deploymentsManager.getUnnamedAccounts(),
+          getChainId: () => deploymentsManager.getChainId(),
+          provider: env.network.provider,
+        };
+        env.companionNetworks[name] = extraNetwork;
+        continue;
+      }
       const config = env.config.networks[networkName];
       if (!('url' in config) || networkName === 'hardhat') {
         throw new Error(
@@ -225,7 +238,6 @@ extendEnvironment((env) => {
         tags[tag] = true;
       }
 
-      env.companionNetworks = {};
       const network = {
         name: networkName,
         config,
