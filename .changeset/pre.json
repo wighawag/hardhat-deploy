@@ -5,6 +5,7 @@
     "hardhat-deploy": "0.7.0"
   },
   "changesets": [
-    "chilled-needles-sneeze"
+    "chilled-needles-sneeze",
+    "dirty-houses-explain"
   ]
 }

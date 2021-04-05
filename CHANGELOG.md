@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.0-next.1
+
+### Patch Changes
+
+- merge new Proxied in
+
 ## 0.8.0-next.0
 
 ### Minor Changes
