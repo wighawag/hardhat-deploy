@@ -6,6 +6,12 @@
 
 - Add companion networks feature allowing to access multiple networks from same deploy script
 
+## 0.7.1
+
+### Patch Changes
+
+- different naming for Proxied.sol
+
 ## 0.7.0
 
 ### Minor Changes
