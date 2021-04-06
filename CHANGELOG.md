@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.0-next.3
+
+### Patch Changes
+
+- merge from master fix for coverage
+
 ## 0.8.0-next.2
 
 ### Patch Changes
