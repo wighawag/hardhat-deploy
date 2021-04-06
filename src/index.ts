@@ -22,6 +22,7 @@ import {
   TASK_NODE_GET_PROVIDER,
   TASK_NODE_SERVER_READY,
 } from 'hardhat/builtin-tasks/task-names';
+import {lazyObject} from 'hardhat/plugins';
 
 import debug from 'debug';
 const log = debug('hardhat:wighawag:hardhat-deploy');
@@ -31,6 +32,7 @@ import chokidar from 'chokidar';
 import {submitSources} from './etherscan';
 import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
+import {store} from './globalStore';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
@@ -175,6 +177,7 @@ function networkFromConfig(
   } else {
     network.deploy = env.config.paths.deploy;
   }
+  store.networkDeployPaths[network.name] = network.deploy; // fallback to global store
 
   if (companion && network.config.companionNetworks) {
     network.companionNetworks = network.config.companionNetworks;
@@ -198,7 +201,10 @@ let deploymentsManager: DeploymentsManager;
 extendEnvironment((env) => {
   networkFromConfig(env, env.network, true);
   if (deploymentsManager === undefined || env.deployments === undefined) {
-    deploymentsManager = new DeploymentsManager(env);
+    deploymentsManager = new DeploymentsManager(
+      env,
+      lazyObject(() => env.network) // IMPORTANT, else other plugin cannot set env.network before end, like solidity-coverage does here in the coverage task :  https://github.com/sc-forks/solidity-coverage/blob/3c0f3a5c7db26e82974873bbf61cf462072a7c6d/plugins/resources/nomiclabs.utils.js#L93-L98
+    );
     env.deployments = deploymentsManager.deploymentsExtension;
     env.getNamedAccounts = deploymentsManager.getNamedAccounts.bind(
       deploymentsManager
@@ -220,7 +226,7 @@ extendEnvironment((env) => {
           getNamedAccounts: () => deploymentsManager.getNamedAccounts(),
           getUnnamedAccounts: () => deploymentsManager.getUnnamedAccounts(),
           getChainId: () => deploymentsManager.getChainId(),
-          provider: env.network.provider,
+          provider: lazyObject(() => env.network.provider),
         };
         env.companionNetworks[name] = extraNetwork;
         continue;
@@ -428,8 +434,10 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
       [name: string]: Deployment;
     }> | null = args.watchOnly ? null : compileAndDeploy();
     if (args.watch || args.watchOnly) {
+      const deployPaths =
+        hre.network.deploy || store.networkDeployPaths[hre.network.name]; // fallback to global store
       const watcher = chokidar.watch(
-        [hre.config.paths.sources, ...hre.network.deploy],
+        [hre.config.paths.sources, ...deployPaths],
         {
           ignored: /(^|[/\\])\../, // ignore dotfiles
           persistent: true,
@@ -562,6 +570,7 @@ task(TASK_DEPLOY, 'Deploy contracts')
       hre.network.deploy = [
         normalizePath(hre.config, args.deployScripts, args.deployScripts),
       ];
+      store.networkDeployPaths[hre.network.name] = hre.network.deploy; // fallback to global store
     }
     args.log = !args.silent;
     delete args.silent;

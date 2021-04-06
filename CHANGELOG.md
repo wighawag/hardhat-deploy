@@ -18,6 +18,12 @@
 
 - Add companion networks feature allowing to access multiple networks from same deploy script
 
+## 0.7.2
+
+### Patch Changes
+
+- lazy load hre.network to be compatible with plugin which expect to modify it before end + improve global fixture handling on load
+
 ## 0.7.1
 
 ### Patch Changes
