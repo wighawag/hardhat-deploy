@@ -35,6 +35,7 @@ import {
 import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
+import {store} from './globalStore';
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -77,12 +78,8 @@ export class DeploymentsManager {
 
   private partialExtension: PartialExtension;
 
-  constructor(env: HardhatRuntimeEnvironment, network?: Network) {
+  constructor(env: HardhatRuntimeEnvironment, network: Network) {
     log('constructing DeploymentsManager');
-
-    if (!network) {
-      network = env.network;
-    }
 
     this.network = network;
 
@@ -117,7 +114,7 @@ export class DeploymentsManager {
         deployment: DeploymentSubmission
       ): Promise<boolean> => this.saveDeployment(name, deployment),
       get: async (name: string) => {
-        await this.setup();
+        await this.setup(false);
         const deployment = this.db.deployments[name];
         if (deployment === undefined) {
           throw new Error(`No deployment found for: ${name}`);
@@ -125,7 +122,7 @@ export class DeploymentsManager {
         return deployment;
       },
       getOrNull: async (name: string) => {
-        await this.setup();
+        await this.setup(false);
         return this.db.deployments[name];
       },
       getDeploymentsFromAddress: async (address: string) => {
@@ -138,7 +135,7 @@ export class DeploymentsManager {
         return deployments;
       },
       all: async () => {
-        await this.setup();
+        await this.setup(false);
         return this.db.deployments; // TODO copy
       },
       getArtifact: async (contractName: string): Promise<Artifact> => {
@@ -255,7 +252,7 @@ export class DeploymentsManager {
           keepExistingDeployments?: boolean;
         }
       ) => {
-        await this.setup();
+        await this.setup(tags === undefined);
         options = {fallbackToGlobal: true, ...options};
         if (typeof tags === 'string') {
           tags = [tags];
@@ -390,7 +387,7 @@ export class DeploymentsManager {
 
     if (this._chainId.startsWith('0x')) {
       this._chainId = BigNumber.from(this._chainId).toString();
-  }
+    }
 
     return this._chainId;
   }
@@ -841,7 +838,8 @@ export class DeploymentsManager {
       tags = [tags];
     }
 
-    const deployPaths = this.network.deploy;
+    const deployPaths =
+      this.network.deploy || store.networkDeployPaths[this.network.name]; // fallback to global store
 
     await this.executeDeployScripts(deployPaths, tags);
 
@@ -1160,8 +1158,8 @@ export class DeploymentsManager {
     return importPaths;
   }
 
-  private async setup() {
-    if (!this.db.deploymentsLoaded) {
+  private async setup(isRunningGlobalFixture: boolean) {
+    if (!this.db.deploymentsLoaded && !isRunningGlobalFixture) {
       if (process.env.HARDHAT_DEPLOY_FIXTURE) {
         if (process.env.HARDHAT_COMPILE) {
           // console.log("compiling...");
