@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.4
+
+### Patch Changes
+
+- use peerDependencies instead of optional
+
 ## 0.7.3
 
 ### Patch Changes

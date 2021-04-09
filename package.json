@@ -1,6 +1,6 @@
 {
   "name": "hardhat-deploy",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Hardhat Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/hardhat-deploy",
   "author": "wighawag",
@@ -57,11 +57,9 @@
     "ts-node": "^8.1.0",
     "typescript": "^3.4.5"
   },
-  "optionalDependencies": {
-    "@ethersproject/hardware-wallets": "^5.0.14"
-  },
   "peerDependencies": {
-    "hardhat": "^2.0.0"
+    "hardhat": "^2.0.0",
+    "@ethersproject/hardware-wallets": "^5.0.14"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.0.2",
