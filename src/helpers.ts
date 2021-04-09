@@ -1216,6 +1216,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         if (registeredProtocol) {
           if (registeredProtocol === 'ledger') {
             if (!LedgerSigner) {
+              // eslint-disable-next-line @typescript-eslint/no-var-requires
               const hardwareWalletModule = require('@ethersproject/hardware-wallets');
               LedgerSigner = hardwareWalletModule.LedgerSigner;
             }
