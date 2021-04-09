@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.3
+
+### Patch Changes
+
+- update dependencies + make ledger support optional to not carry the heavy deps if not used
+
 ## 0.7.2
 
 ### Patch Changes
