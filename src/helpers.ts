@@ -13,7 +13,6 @@ import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
 import {zeroPad, hexlify} from '@ethersproject/bytes';
 import {Interface, FunctionFragment} from '@ethersproject/abi';
-import {LedgerSigner} from '@ethersproject/hardware-wallets';
 import {
   Deployment,
   DeployResult,
@@ -49,6 +48,8 @@ import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
 import diamantaire from '../extendedArtifacts/Diamantaire.json';
 import {Artifact, EthereumProvider, Network} from 'hardhat/types';
 import {DeploymentsManager} from './DeploymentsManager';
+
+let LedgerSigner: any; // TODO type
 
 diamondBase.abi = mergeABIs(
   [
@@ -1214,6 +1215,11 @@ Plus they are only used when the contract is meant to be used as standalone when
           deploymentManager.addressesToProtocol[from.toLowerCase()];
         if (registeredProtocol) {
           if (registeredProtocol === 'ledger') {
+            if (!LedgerSigner) {
+              // eslint-disable-next-line @typescript-eslint/no-var-requires
+              const hardwareWalletModule = require('@ethersproject/hardware-wallets');
+              LedgerSigner = hardwareWalletModule.LedgerSigner;
+            }
             ethersSigner = new LedgerSigner(provider);
           } else if (registeredProtocol.startsWith('privatekey')) {
             ethersSigner = new Wallet(registeredProtocol.substr(13), provider);

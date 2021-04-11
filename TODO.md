@@ -31,3 +31,9 @@
 - [ ] SPDX license detection regex more flexible ?
 - [ ] accept "auto" as allowed argument for `gasPrice` to make it compatible with `hre.network.config.gasPrice`
 - [ ] error on Library missing in bytecode
+- [ ] error when not finding --no-scripts as folder
+- [ ] skip on metadata not found (vyper)
+- [ ] continue even if evm_snapshot not present on fixture call
+- [ ] use "latest" nonce
+- [ ] gasprice resubmission for pending tx
+- [ ] HARDHAT_DEPLOY_LOG : enable logging via env variable

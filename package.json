@@ -58,7 +58,8 @@
     "typescript": "^3.4.5"
   },
   "peerDependencies": {
-    "hardhat": "^2.0.0"
+    "hardhat": "^2.0.0",
+    "@ethersproject/hardware-wallets": "^5.0.14"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.0.2",
@@ -67,7 +68,6 @@
     "@ethersproject/bignumber": "^5.0.5",
     "@ethersproject/bytes": "^5.0.2",
     "@ethersproject/contracts": "^5.0.2",
-    "@ethersproject/hardware-wallets": "^5.0.14",
     "@ethersproject/providers": "^5.0.5",
     "@ethersproject/solidity": "^5.0.2",
     "@ethersproject/transactions": "^5.0.2",

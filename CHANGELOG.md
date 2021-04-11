@@ -24,6 +24,18 @@
 
 - Add companion networks feature allowing to access multiple networks from same deploy script
 
+## 0.7.4
+
+### Patch Changes
+
+- use peerDependencies instead of optional
+
+## 0.7.3
+
+### Patch Changes
+
+- update dependencies + make ledger support optional to not carry the heavy deps if not used
+
 ## 0.7.2
 
 ### Patch Changes
