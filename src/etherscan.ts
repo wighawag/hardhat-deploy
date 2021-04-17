@@ -320,7 +320,7 @@ export async function submitSources(
       guid = submissionData.result;
     } else {
       logError(
-        `contract ${name} failed to submit : "${submissionData.message}"`,
+        `contract ${name} failed to submit : "${submissionData.message}" : "${submissionData.result}"`,
         submissionData
       );
       return;
