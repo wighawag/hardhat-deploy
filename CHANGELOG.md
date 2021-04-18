@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.5
+
+### Patch Changes
+
+- add etherscan config, lower solc run for etherscan compatibility, output better error for etherscan task and update deps
+
 ## 0.7.4
 
 ### Patch Changes
