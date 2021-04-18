@@ -58,20 +58,20 @@
     "typescript": "^3.4.5"
   },
   "peerDependencies": {
-    "hardhat": "^2.0.0",
-    "@ethersproject/hardware-wallets": "^5.0.14"
+    "@ethersproject/hardware-wallets": "^5.0.14",
+    "hardhat": "^2.0.0"
   },
   "dependencies": {
-    "@ethersproject/abi": "^5.0.2",
-    "@ethersproject/abstract-signer": "^5.0.2",
-    "@ethersproject/address": "^5.0.2",
-    "@ethersproject/bignumber": "^5.0.5",
-    "@ethersproject/bytes": "^5.0.2",
-    "@ethersproject/contracts": "^5.0.2",
-    "@ethersproject/providers": "^5.0.5",
-    "@ethersproject/solidity": "^5.0.2",
-    "@ethersproject/transactions": "^5.0.2",
-    "@ethersproject/wallet": "^5.0.2",
+    "@ethersproject/abi": "^5.0.0",
+    "@ethersproject/abstract-signer": "^5.0.0",
+    "@ethersproject/address": "^5.0.0",
+    "@ethersproject/bignumber": "^5.0.0",
+    "@ethersproject/bytes": "^5.0.0",
+    "@ethersproject/contracts": "^5.0.0",
+    "@ethersproject/providers": "^5.0.0",
+    "@ethersproject/solidity": "^5.0.0",
+    "@ethersproject/transactions": "^5.0.0",
+    "@ethersproject/wallet": "^5.0.0",
     "@types/qs": "^6.9.4",
     "axios": "^0.21.1",
     "chalk": "^4.1.0",
