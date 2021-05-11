@@ -737,7 +737,9 @@ export function addHelpers(
             newlyDeployed: false,
           };
         }
-        log(`reusing "${name}" at ${result.address}`);
+        if (options.log) {
+          log(`reusing "${name}" at ${result.address}`);
+        }
       }
     } else {
       result = await _deploy(name, options);
