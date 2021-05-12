@@ -710,6 +710,7 @@ export function addHelpers(
             };
           } else {
             result = deployment as DeployResult;
+            result.newlyDeployed = false;
           }
         } else {
           if (!diffResult.address) {
