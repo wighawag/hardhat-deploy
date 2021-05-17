@@ -1794,7 +1794,7 @@ data: ${data}
     };
 
     const ethersContract = new Contract(
-      deployment.address,
+      options.to || deployment.address,
       abi,
       (ethersSigner as Signer) || provider
     );
@@ -1826,7 +1826,7 @@ data: ${data}
       );
       throw new UnknownSignerError({
         from,
-        to: deployment.address,
+        to: options.to || deployment.address,
         data,
         value: options.value,
         contract: {
