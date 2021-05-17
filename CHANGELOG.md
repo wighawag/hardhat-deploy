@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.6
+
+### Patch Changes
+
+- fix vyper + fixes by @guotie
+
 ## 0.7.5
 
 ### Patch Changes
