@@ -96,7 +96,7 @@ export class DeploymentsManager {
       fixtureCounter: 0,
       snapshotCounter: 0,
       pastFixtures: {},
-      logEnabled: false,
+      logEnabled: process.env['HARDHAT_DEPLOY_LOG'] ? true : false,
       pendingTransactions: {},
       savePendingTx: false,
       gasPrice: undefined,
