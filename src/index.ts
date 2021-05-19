@@ -146,6 +146,14 @@ extendConfig(
     for (const compiler of config.solidity.compilers) {
       setupExtraSolcSettings(compiler.settings);
     }
+
+    const defaultConfig = {apiKey: ''};
+    if (userConfig.etherscan !== undefined) {
+      const customConfig = userConfig.etherscan;
+      config.etherscan = {...defaultConfig, ...customConfig};
+    } else {
+      config.etherscan = defaultConfig;
+    }
   }
 );
 
@@ -673,7 +681,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     const etherscanApiKey =
       args.apiKey ||
       process.env.ETHERSCAN_API_KEY ||
-      hre.config.etherscan?.apiKey;
+      hre.config.etherscan.apiKey;
     if (!etherscanApiKey) {
       throw new Error(
         `No Etherscan API KEY provided. Set it through command line option, in hardhat.config.ts, or by setting the "ETHERSCAN_API_KEY" env variable`

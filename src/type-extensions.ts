@@ -41,7 +41,7 @@ declare module 'hardhat/types/config' {
         deploy?: string;
       }[];
     };
-    etherscan?: {
+    etherscan: {
       apiKey: string;
     };
   }
