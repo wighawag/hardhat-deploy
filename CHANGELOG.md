@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.7
+
+### Patch Changes
+
+- fix etherscan api type + add log option via env var
+
 ## 0.7.6
 
 ### Patch Changes
