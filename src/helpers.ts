@@ -1224,13 +1224,13 @@ Plus they are only used when the contract is meant to be used as standalone when
               LedgerSigner = hardwareWalletModule.LedgerSigner;
             }
             ethersSigner = new LedgerSigner(provider);
+            hardwareWallet = 'ledger';
           } else if (registeredProtocol.startsWith('privatekey')) {
             ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
           } else if (registeredProtocol.startsWith('gnosis')) {
             ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
           }
         }
-        hardwareWallet = 'ledger';
       }
     }
 
