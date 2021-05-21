@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.8
+
+### Patch Changes
+
+- fix typing for etherscan
+
 ## 0.7.7
 
 ### Patch Changes

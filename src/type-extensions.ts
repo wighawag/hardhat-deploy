@@ -21,7 +21,7 @@ declare module 'hardhat/types/config' {
       }[];
     };
     etherscan?: {
-      apiKey: string;
+      apiKey?: string;
     };
   }
 
@@ -42,7 +42,7 @@ declare module 'hardhat/types/config' {
       }[];
     };
     etherscan: {
-      apiKey: string;
+      apiKey?: string;
     };
   }
 
