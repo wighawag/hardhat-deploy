@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.9
+
+### Patch Changes
+
+- republish
+
 ## 0.7.8
 
 ### Patch Changes
