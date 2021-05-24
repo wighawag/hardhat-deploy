@@ -670,6 +670,10 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     'force the use of the license specified by --license option'
   )
   .addFlag(
+    'sleep',
+    'sleep 500ms between each verification, so API rate limit is not exceeded'
+  )
+  .addFlag(
     'solcInput',
     'fallback on solc-input (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)'
   )
@@ -693,6 +697,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
       license: args.license,
       fallbackOnSolcInput: args.solcInput,
       forceLicense: args.forceLicense,
+      sleepBetween: args.sleep,
       // logHttpRequestOnError: args.logHttpRequestOnError
     });
   });

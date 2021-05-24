@@ -24,6 +24,10 @@ function logSuccess(...args: any[]) {
   console.log(chalk.green(...args));
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function extractOneLicenseFromSourceFile(source: string): string | undefined {
   const licenses = extractLicenseFromSources(source);
   if (licenses.length === 0) {
@@ -101,6 +105,7 @@ export async function submitSources(
     license?: string;
     fallbackOnSolcInput?: boolean;
     forceLicense?: boolean;
+    sleepBetween?: boolean;
   }
 ): Promise<void> {
   config = config || {};
@@ -108,6 +113,7 @@ export async function submitSources(
   const licenseOption = config.license;
   const forceLicense = config.forceLicense;
   const etherscanApiKey = config.etherscanApiKey;
+  const sleepBetween = config.sleepBetween;
   const chainId = await hre.getChainId();
   const all = await hre.deployments.all();
   let host: string;
@@ -403,5 +409,10 @@ export async function submitSources(
 
   for (const name of Object.keys(all)) {
     await submit(name);
+
+    if (sleepBetween) {
+      // sleep between each verification so we don't exceed the API rate limit
+      await sleep(500);
+    }
   }
 }
