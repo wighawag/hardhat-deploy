@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.10
+
+### Patch Changes
+
+- add sleep option for etherscan to not exceed api rate-limit
+
 ## 0.7.9
 
 ### Patch Changes
