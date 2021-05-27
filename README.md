@@ -384,6 +384,8 @@ hardhat --network mainnet etherscan-verify --api-key <apikey>
 
 `--solc-input`: fallback on solc-input id needed (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)
 
+`--sleep`: sleep 500ms between each verification, so API rate limit is not exceeded
+
 ---
 
 ### 5. hardhat sourcify
