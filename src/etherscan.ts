@@ -167,6 +167,7 @@ export async function submitSources(
     }
     if (contractABI && contractABI !== '') {
       log(`already verified: ${name} (${address}), skipping.`);
+      await new Promise((resolve) => setTimeout(resolve, 1 * 1000));
       return;
     }
 
