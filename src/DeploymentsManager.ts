@@ -620,6 +620,11 @@ export class DeploymentsManager {
     if (typeof deployment.abi === undefined) {
       throw new Error('deployment need an ABI');
     }
+    if (name.includes('/') || name.includes(':')) {
+      throw new Error(
+        `deployment name must not be a path or Fully Qualified Name - for such purposes consider using the "contract" field of deployment options`
+      );
+    }
 
     const chainId = await this.getChainId();
 
