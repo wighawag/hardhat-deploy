@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.7.11
+
+### Patch Changes
+
+- add polygonscan + throw error when using fully qualified name as deployment name
+
 ## 0.7.10
 
 ### Patch Changes
