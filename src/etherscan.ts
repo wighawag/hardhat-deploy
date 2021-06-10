@@ -142,6 +142,9 @@ export async function submitSources(
     case '128':
       host = 'https://api.hecoinfo.com';
       break;
+    case '137':
+      host = 'https://api.polygonscan.com';
+      break;
     case '256':
       host = 'https://api-testnet.hecoinfo.com';
       break;
