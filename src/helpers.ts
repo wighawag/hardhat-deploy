@@ -797,6 +797,7 @@ export function addHelpers(
   ): Promise<DeployResult> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let updateMethod: string | undefined;
+    let updateArgs: any[] | undefined;
     let upgradeIndex;
     let proxyContract: ExtendedArtifact = eip173Proxy;
     let checkABIConflict = true;
@@ -806,7 +807,40 @@ export function addHelpers(
       | undefined;
     if (typeof options.proxy === 'object') {
       upgradeIndex = options.proxy.upgradeIndex;
-      updateMethod = options.proxy.methodName;
+      if ('methodName' in options.proxy) {
+        updateMethod = options.proxy.methodName;
+        if ('execute' in options.proxy) {
+          throw new Error(
+            `cannot have both "methodName" and "execute" options for proxy`
+          );
+        }
+      } else if ('execute' in options.proxy && options.proxy.execute) {
+        if ('methodName' in options.proxy.execute) {
+          updateMethod = options.proxy.execute.methodName;
+          updateArgs = options.proxy.execute.args;
+          if (
+            'init' in options.proxy.execute ||
+            'onUpgrade' in options.proxy.execute
+          ) {
+            throw new Error(
+              `cannot have both "methodName" and ("onUpgrade" or "init") options for proxy.execute`
+            );
+          }
+        } else if (
+          ('init' in options.proxy.execute && options.proxy.execute.init) ||
+          ('onUpgrade' in options.proxy.execute &&
+            options.proxy.execute.onUpgrade)
+        ) {
+          if (oldDeployment) {
+            updateMethod = options.proxy.execute.onUpgrade?.methodName;
+            updateArgs = options.proxy.execute.onUpgrade?.args;
+          } else {
+            updateMethod = options.proxy.execute.init.methodName;
+            updateArgs = options.proxy.execute.init.args;
+          }
+        }
+      }
+
       if (options.proxy.proxyContract) {
         if (typeof options.proxy.proxyContract === 'string') {
           try {
@@ -852,7 +886,7 @@ export function addHelpers(
     const proxyName = name + '_Proxy';
     const {address: owner} = getProxyOwner(options);
     const {address: from} = getFrom(options.from);
-    const argsArray = options.args ? [...options.args] : [];
+    const implementationArgs = options.args ? [...options.args] : [];
 
     // --- Implementation Deployment ---
     const implementationName = name + '_Implementation';
@@ -868,11 +902,11 @@ export function addHelpers(
       libraries: options.libraries,
       fieldsToCompare: options.fieldsToCompare,
       linkedData: options.linkedData,
-      args: options.args,
+      args: implementationArgs,
     };
 
     const {artifact} = await getArtifactFromOptions(
-      implementationName,
+      name,
       implementationOptions
     );
 
@@ -890,27 +924,51 @@ export function addHelpers(
       (fragment: {type: string; inputs: any[]}) =>
         fragment.type === 'constructor'
     );
-    if (!constructor || constructor.inputs.length !== argsArray.length) {
-      delete implementationOptions.args;
-      if (constructor && constructor.inputs.length > 0) {
-        throw new Error(
-          `Proxy based contract constructor can only have either zero argument or the exact same argument as the method used for postUpgrade actions ${
-            updateMethod ? '(' + updateMethod + '}' : ''
-          }.
-Plus they are only used when the contract is meant to be used as standalone when development ends.
-`
-        );
-      }
+
+    if (
+      (!constructor && implementationArgs.length > 0) ||
+      (constructor && constructor.inputs.length !== implementationArgs.length)
+    ) {
+      throw new Error(
+        `The number of arguments passed to not match the number of argument in the implementation constructor.
+Please specify the correct number of arguments as part of the deploy options: "args"`
+      );
     }
 
     if (updateMethod) {
-      const updateMethodFound = artifact.abi.find(
+      const updateMethodFound: {
+        type: string;
+        inputs: any[];
+        name: string;
+      } = artifact.abi.find(
         (fragment: {type: string; inputs: any[]; name: string}) =>
           fragment.type === 'function' && fragment.name === updateMethod
       );
       if (!updateMethodFound) {
         throw new Error(`contract need to implement function ${updateMethod}`);
       }
+
+      if (!updateArgs) {
+        if (implementationArgs.length === updateMethodFound.inputs.length) {
+          updateArgs = implementationArgs;
+        } else {
+          throw new Error(
+            `
+If only the methodName (and no args) is specified for proxy deployment, the arguments used for the implementation contract will be reused for the update method.
+This allow your contract to both be deployed directly and deployed via proxy.
+
+Currently your contract implementation's constructor do not have the same number of arguments as the update method.
+You can either changes the contract or use the "execute" options and specify different arguments for the update method.
+Note that in this case, the contract deployment will not behave the same if deployed without proxy.
+    `
+          );
+        }
+      }
+    }
+
+    // this avoid typescript error, but should not be necessary at runtime
+    if (!updateArgs) {
+      updateArgs = implementationArgs;
     }
 
     let proxyAdminName: string | undefined;
@@ -1001,7 +1059,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         }
         const txData = await implementationContract.populateTransaction[
           updateMethod
-        ](...argsArray);
+        ](...updateArgs);
         data = txData.data || '0x';
       }
 
@@ -1116,7 +1174,7 @@ Plus they are only used when the contract is meant to be used as standalone when
         execute: updateMethod
           ? {
               methodName: updateMethod,
-              args: argsArray,
+              args: updateArgs,
             }
           : undefined,
       };
@@ -1142,7 +1200,7 @@ Plus they are only used when the contract is meant to be used as standalone when
           execute: updateMethod
             ? {
                 methodName: updateMethod,
-                args: argsArray,
+                args: updateArgs,
               }
             : undefined,
         };
