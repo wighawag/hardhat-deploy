@@ -21,6 +21,9 @@ declare module 'hardhat/types/config' {
         deploy?: string;
       }[];
     };
+    etherscan?: {
+      apiKey?: string;
+    };
   }
 
   interface HardhatConfig {
@@ -38,6 +41,9 @@ declare module 'hardhat/types/config' {
         artifacts: string;
         deploy?: string;
       }[];
+    };
+    etherscan: {
+      apiKey?: string;
     };
   }
 

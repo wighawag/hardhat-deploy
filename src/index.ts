@@ -147,6 +147,14 @@ extendConfig(
     for (const compiler of config.solidity.compilers) {
       setupExtraSolcSettings(compiler.settings);
     }
+
+    const defaultConfig = {apiKey: ''};
+    if (userConfig.etherscan !== undefined) {
+      const customConfig = userConfig.etherscan;
+      config.etherscan = {...defaultConfig, ...customConfig};
+    } else {
+      config.etherscan = defaultConfig;
+    }
   }
 );
 
@@ -730,6 +738,10 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     'force the use of the license specified by --license option'
   )
   .addFlag(
+    'sleep',
+    'sleep 500ms between each verification, so API rate limit is not exceeded'
+  )
+  .addFlag(
     'solcInput',
     'fallback on solc-input (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)'
   )
@@ -738,10 +750,13 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
   //   'log the whole http request for debugging purpose, this output your API key, so use it aknowingly'
   // )
   .setAction(async (args, hre) => {
-    const etherscanApiKey = args.apiKey || process.env.ETHERSCAN_API_KEY;
+    const etherscanApiKey =
+      args.apiKey ||
+      process.env.ETHERSCAN_API_KEY ||
+      hre.config.etherscan.apiKey;
     if (!etherscanApiKey) {
       throw new Error(
-        `No Etherscan API KEY provided. Set it through comand line option or by setting the "ETHERSCAN_API_KEY" env variable`
+        `No Etherscan API KEY provided. Set it through command line option, in hardhat.config.ts, or by setting the "ETHERSCAN_API_KEY" env variable`
       );
     }
     const solcInputsPath = await deploymentsManager.getSolcInputPath();
@@ -750,6 +765,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
       license: args.license,
       fallbackOnSolcInput: args.solcInput,
       forceLicense: args.forceLicense,
+      sleepBetween: args.sleep,
       // logHttpRequestOnError: args.logHttpRequestOnError
     });
   });

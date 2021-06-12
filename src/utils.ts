@@ -69,6 +69,10 @@ export async function getExtendedArtifactFromFolder(
         solcInput,
         solcInputHash,
       };
+    } else {
+      artifact = {
+        ...hardhatArtifact,
+      };
     }
   }
   return artifact;

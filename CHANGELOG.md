@@ -30,6 +30,48 @@
 
 - Add companion networks feature allowing to access multiple networks from same deploy script
 
+## 0.7.11
+
+### Patch Changes
+
+- add polygonscan + throw error when using fully qualified name as deployment name
+
+## 0.7.10
+
+### Patch Changes
+
+- add sleep option for etherscan to not exceed api rate-limit
+
+## 0.7.9
+
+### Patch Changes
+
+- republish
+
+## 0.7.8
+
+### Patch Changes
+
+- fix typing for etherscan
+
+## 0.7.7
+
+### Patch Changes
+
+- fix etherscan api type + add log option via env var
+
+## 0.7.6
+
+### Patch Changes
+
+- fix vyper + fixes by @guotie
+
+## 0.7.5
+
+### Patch Changes
+
+- add etherscan config, lower solc run for etherscan compatibility, output better error for etherscan task and update deps
+
 ## 0.7.4
 
 ### Patch Changes
