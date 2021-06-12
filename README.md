@@ -2,6 +2,9 @@
 
 _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Testing_
 
+> **A complete dev template using hardhat-deploy is available here** : https://github.com/wighawag/template-ethereum-contracts
+> It also contains various branches examplifying the capability of hardhat-deploy. Check it out.
+
 - [What is it for ?](#what-is-it-for-)
 - [hardhat-deploy in a nutshell](#hardhat-deploy-in-a-nutshell)
 - [Installation](#installation)
@@ -17,10 +20,11 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
     - [**Flags**](#flags-1)
   - [3. hardhat test](#3-hardhat-test)
   - [4. hardhat etherscan-verify](#4-hardhat-etherscan-verify)
-  - [5. hardhat sourcify](#5-hardhat-sourcify)
     - [**Options**](#options-2)
-  - [6. hardhat export](#6-hardhat-export)
+  - [5. hardhat sourcify](#5-hardhat-sourcify)
     - [**Options**](#options-3)
+  - [6. hardhat export](#6-hardhat-export)
+    - [**Options**](#options-4)
 - [Hardhat Environment Extensions](#hardhat-environment-extensions)
 - [Configuration](#configuration)
   - [**1. namedAccounts (ability to name addresses)**](#1-namedaccounts-ability-to-name-addresses)
@@ -36,6 +40,7 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
 - [Handling contract using libraries](#handling-contract-using-libraries)
 - [Exporting Deployments](#exporting-deployments)
 - [Deploying and Upgrading Proxies](#deploying-and-upgrading-proxies)
+- [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535)
 - [Testing Deployed Contracts](#testing-deployed-contracts)
   - [Creating Fixtures](#creating-fixtures)
 - [More Information On Hardhat Tasks](#more-information-on-hardhat-tasks)
@@ -43,10 +48,6 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
   - [**2. test task**](#2-test-task)
   - [**3. run task**](#3-run-task)
   - [**4. console task**](#4-console-task)
-- [Deploy Scripts: Tags And Dependencies](#deploy-scripts-tags-and-dependencies)
-- [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535)
-- [Testing Deployed Contracts](#testing-deployed-contracts)
-  - [Creating Fixtures](#creating-fixtures)
 - [Deploy Scripts: Tags And Dependencies](#deploy-scripts-tags-and-dependencies)
 
 ## What is it for ?
@@ -62,20 +63,21 @@ This plugin contains a lot more features too, all geared toward a better develop
 - library linking at time of deployment.
 - deterministic deployment across networks.
 - support for specific deploy script per network (L1 vs L2 for example)
+- ability to access deployment from "companion" networks
 - deployment dependency system (allowing you to only deploy what is needed).
 - deployment retrying (by saving pending tx): so you can feel confident when making a deployment that you can always recover.
 - deployments as test fixture using `evm_snapshot` to speed up testing.
 - ability to create your own test fixture that automatically benefits from `evm_snapshot`'s tests speed-up boost
 - combined with [hardhat-deploy-ethers](https://github.com/wighawag/hardhat-deploy-ethers) it has the ability to get ethers contract instance by name (like `await ethers.getContract("ContractName")`).
-- importing artifact from external sources (like npm packages), including truffle support.
-- importing deployments from external sources (like npm packages), including truffle support.
+- importing artifact from external sources (like npm packages), including [truffle](https://www.trufflesuite.com/truffle) support.
+- importing deployments from external sources (like npm packages)
 - ability to log information in `deploy` mode only (while in test the console remains clean).
 - contains helpers to read and execute transaction on deployed contract referring to them by name.
 - These helpers contains options to auto mine on dev network (to speed up test deployments).
 - save metadata of deployed contract so they can always be fully verified, via [sourcify](https://sourcify.dev) or [etherscan](https://etherscan.io).
 - ability to submit contract source to etherscan and sourcify for verification at any time. (Because **hardhat-deploy** will save all the necessary info, it can be executed at any time.)
 - support harhdat's fork feature so deployment can be accessed even when run through fork.
-- named accounts are automatically impersonnated too, so you can perform tx as if you had their private.
+- named accounts are automatically impersonnated too, so you can perform tx as if you had their private key.
 - proxy deployment with ability to upgrade them transparently, only if code changes.
 - this include support for [openzeppelin](https://openzeppelin.com) transparent proxies
 - diamond deployment with facets, allowing you to focus on what the new version will be. It will generate the diamondCut necessary to reach the new state.
@@ -110,6 +112,8 @@ This is a huge benefit for testing since you are not required to replicate the d
 You can even group deploy scripts in different sub folder and ensure they are executed in their logical order.
 
 Furthermore hardhat-deploy can also support a multi-chain settings like L1, L2 with multiple deploy folder specific to each network.
+
+**All of this can also be bundled in a npm package so user of hardhat-deploy can reuse your deployment procedure and get started integrating with your project locally.**
 
 There is a tutorial covering the basics here : https://github.com/wighawag/tutorial-hardhat-deploy
 
@@ -165,7 +169,7 @@ This repo has also some examples branch that exemplify specific features, like t
 
 ### Migrating existing deployment to hardhat-deploy
 
-(Only needed for existing project that already deployed contracts and has the deployment information available **(at minimum, address and abi)**)
+> Only needed for existing project that already deployed contracts and has the deployment information available **(at minimum, address and abi)**
 
 You might want to switch your current deployment process to use **hardhat-deploy**. In that case you probably have some deployments saved elsewhere.
 
@@ -327,13 +331,17 @@ It add similar options than the `deploy` task :
 
 `--write <boolean>`: default to true (except for hardhat network). If true, write deployments to disk (in deployments path, see [path config](#extra-paths-config)).
 
-`--forkDeployments <networkName>`: defaults to `localhost`; this option allows you to specify the network to fetch the deployment from when running in fork mode. This is necessary as hardhat fork feature does not track the fork's network: <https://github.com/nomiclabs/hardhat/issues/1164>
+`--fork-deployments <networkName>`: defaults to `localhost`; this option allows you to specify the network to fetch the deployment from when running in fork mode. This is necessary as hardhat fork feature does not track the fork's network: <https://github.com/nomiclabs/hardhat/issues/1164>.
 
-`--asNetwork <networkName`: default to `localhost` (or the value specified by `--forkDeployments` if any), this option allows you to specify the network name to be used for **hardhat-deploy** functionality, like which folder the resulting deployment should be saved to.
+> :warning: This option might be removed in the future. An alternative is to make use of environment variable like it is done in the following template's hardhat.config.ts : https://github.com/wighawag/template-ethereum-contracts
+
+`--as-network <networkName`: default to `localhost` (or the value specified by `--fork-deployments` if any), this option allows you to specify the network name to be used for **hardhat-deploy** functionality, like which folder the resulting deployment should be saved to.
+
+> :warning: This option might be removed in the future. An alternative is to make use of environment variable like it is done in the following template's hardhat.config.ts : https://github.com/wighawag/template-ethereum-contracts
 
 #### **Flags**
 
-`--noReset`: This flag prevent the reseting of the existing deployments. This is usually not desired when running the `node` task as a network is created from scratch and previous deployemnt are irrelevant.
+`--no-reset`: This flag prevent the reseting of the existing deployments. This is usually not desired when running the `node` task as a network is created from scratch and previous deployemnt are irrelevant.
 
 `--show-accounts`: this flag will output the account private keys
 
@@ -343,7 +351,7 @@ It add similar options than the `deploy` task :
 
 `--no-deploy` that discard all other options to revert to normal `hardhat node` behavior without any deployment being performed.
 
-Note that the deployments are saved as if the network name is `localhost`. This is because `hardhat node` is expected to be used as localhost: You can for example execute `hardhat --network localhost console` after `node` is running. Doing `builder --network hardhat console` would indeed not do anything useful. It still take the configuration from `hardhat` in the hardhat.config.js file though.
+> :warning: Note that the deployments are saved as if the network name is `localhost`. This is because `hardhat node` is expected to be used as localhost: You can for example execute `hardhat --network localhost console` after `node` is running. Doing `builder --network hardhat console` would indeed not do anything useful. It still take the configuration from `hardhat` in the hardhat.config.js file though.
 
 ---
 
@@ -352,6 +360,8 @@ Note that the deployments are saved as if the network name is `localhost`. This 
 ---
 
 This plugin adds a flag argument `--deploy-fixture` to the _test_ task that runs the global deployments fixture before the tests and snapshots it. This will generaly speed up the tests.
+
+> :warning: Note though that if your test behave differently whether that option is on or not, this most likely mean that your deploy scripts' tags and dependencies are not configured correctly. This is because the global fixture will ensure all contract are deployed while test will usually (for efficiency) ask for a particular tag.
 
 ---
 
@@ -376,7 +386,16 @@ hardhat --network mainnet etherscan-verify --api-key <apikey>
 
 #### **Options**
 
-`--api-key <api key>`: let you specify your etherscan api key. Alternatively, you can provide it via the env variable `ETHERSCAN_API_KEY`
+`--api-key <api key>`: let you specify your etherscan api key. Alternatively, you can provide it via the env variable `ETHERSCAN_API_KEY` or through the hardhat.config.ts etherscan field:
+
+```js
+{
+  ...
+  etherscan: {
+    apiKey: '<API key>'
+  }
+}
+```
 
 `--license <SPDX license id>`: SPDX license (useful if SPDX is not listed in the sources), need to be supported by etherscan: https://etherscan.io/contract-license-types
 
