@@ -1133,10 +1133,6 @@ Note that in this case, the contract deployment will not behave the same if depl
             throw new Error(`could not execute ${changeImplementationMethod}`);
           }
         } else {
-          if (currentOwner.toLowerCase() !== from.toLowerCase()) {
-            throw new Error(`from != proxy's admin/owner`);
-          }
-
           let executeReceipt;
           if (
             changeImplementationMethod === 'upgradeToAndCall' &&

@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.1
+
+### Patch Changes
+
+- proxy auto fallback on owner to perform upgrade tx
+
 ## 0.8.0
 
 ### Minor Changes
