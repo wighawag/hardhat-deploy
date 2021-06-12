@@ -1,5 +1,20 @@
 # hardhat-deploy
 
+## 0.8.0
+
+### Minor Changes
+
+- 74c35d7: Add companion networks feature allowing to access multiple networks from same deploy script
+
+### Patch Changes
+
+- 3e0d44d: merge new Proxied in
+- 0276a09: merge from master fix for coverage
+- 0809a58: merge fixes from 0.7
+- proxy init option + breaking change: error on non-matching arg length even if implementation constructor has no args
+- cb9f57d: support self companion emulation
+- 7ecec00: merge from 0.7.11
+
 ## 0.8.0-next.5
 
 ### Patch Changes
