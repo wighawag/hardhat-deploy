@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.0-next.5
+
+### Patch Changes
+
+- merge from 0.7.11
+
 ## 0.8.0-next.4
 
 ### Patch Changes
