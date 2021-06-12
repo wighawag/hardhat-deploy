@@ -83,10 +83,9 @@ export interface DiamondOptions extends TxOptions {
   deterministicSalt?: string;
 }
 
-export interface ProxyOptions {
+type ProxyOptionsBase = {
   owner?: Address;
   upgradeIndex?: number;
-  methodName?: string;
   proxyContract?: // default to EIP173Proxy
   string | ArtifactData;
   viaAdminContract?:
@@ -95,7 +94,29 @@ export interface ProxyOptions {
         name: string;
         artifact?: string | ArtifactData;
       };
-}
+};
+
+export type ProxyOptions =
+  | (ProxyOptionsBase & {
+      methodName?: string;
+    })
+  | (ProxyOptionsBase & {
+      execute?:
+        | {
+            methodName: string;
+            args: any[];
+          }
+        | {
+            init: {
+              methodName: string;
+              args: any[];
+            };
+            onUpgrade?: {
+              methodName: string;
+              args: any[];
+            };
+          };
+    });
 
 export type ArtifactData = {
   abi: ABI;
