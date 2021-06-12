@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.2
+
+### Patch Changes
+
+- consider global gasprice everywhere + use latest nonce (not pending)
+
 ## 0.8.1
 
 ### Patch Changes
