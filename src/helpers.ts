@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {Signer} from '@ethersproject/abstract-signer';
-import {Web3Provider, TransactionResponse} from '@ethersproject/providers';
+import {
+  Web3Provider,
+  TransactionResponse,
+  TransactionRequest,
+} from '@ethersproject/providers';
 import {getAddress} from '@ethersproject/address';
 import {
   Contract,
@@ -210,19 +214,41 @@ export function addHelpers(
     }
   }
 
-  async function setupGasPrice(overrides: any) {
-    if (!overrides.gasPrice) {
-      overrides.gasPrice = await getGasPrice();
+  async function setupGasPrice(
+    txRequestOrOverrides: TransactionRequest | PayableOverrides
+  ) {
+    if (!txRequestOrOverrides.gasPrice) {
+      txRequestOrOverrides.gasPrice = await getGasPrice();
+    }
+  }
+
+  async function setupNonce(
+    ethersSigner: Signer,
+    txRequestOrOverrides: TransactionRequest | PayableOverrides
+  ) {
+    if (
+      txRequestOrOverrides.nonce === 'pending' ||
+      txRequestOrOverrides.nonce === 'latest'
+    ) {
+      txRequestOrOverrides.nonce = await ethersSigner.getTransactionCount(
+        txRequestOrOverrides.nonce
+      );
+    } else if (!txRequestOrOverrides.nonce) {
+      txRequestOrOverrides.nonce = await ethersSigner.getTransactionCount(
+        'latest'
+      );
     }
   }
 
   async function overrideGasLimit(
-    overrides: any,
+    txRequestOrOverrides: TransactionRequest | PayableOverrides,
     options: {
       estimatedGasLimit?: number | BigNumber | string;
       estimateGasExtra?: number | BigNumber | string;
     },
-    estimate: (overrides: any) => Promise<BigNumber>
+    estimate: (
+      txRequestOrOverrides: TransactionRequest | PayableOverrides
+    ) => Promise<BigNumber>
   ) {
     const estimatedGasLimit = options.estimatedGasLimit
       ? BigNumber.from(options.estimatedGasLimit).toNumber()
@@ -230,13 +256,19 @@ export function addHelpers(
     const estimateGasExtra = options.estimateGasExtra
       ? BigNumber.from(options.estimateGasExtra).toNumber()
       : undefined;
-    if (!overrides.gasLimit) {
-      overrides.gasLimit = estimatedGasLimit;
-      overrides.gasLimit = (await estimate(overrides)).toNumber();
+    if (!txRequestOrOverrides.gasLimit) {
+      txRequestOrOverrides.gasLimit = estimatedGasLimit;
+      txRequestOrOverrides.gasLimit = (
+        await estimate(txRequestOrOverrides)
+      ).toNumber();
       if (estimateGasExtra) {
-        overrides.gasLimit = overrides.gasLimit + estimateGasExtra;
+        txRequestOrOverrides.gasLimit =
+          txRequestOrOverrides.gasLimit + estimateGasExtra;
         if (estimatedGasLimit) {
-          overrides.gasLimit = Math.min(overrides.gasLimit, estimatedGasLimit);
+          txRequestOrOverrides.gasLimit = Math.min(
+            txRequestOrOverrides.gasLimit,
+            estimatedGasLimit
+          );
         }
       }
     }
@@ -263,6 +295,7 @@ export function addHelpers(
   async function ensureCreate2DeployerReady(options: {
     from: string;
     log?: boolean;
+    gasPrice?: string | BigNumber;
   }): Promise<string> {
     const {address: from, ethersSigner, hardwareWallet} = getFrom(options.from);
     if (!ethersSigner) {
@@ -272,7 +305,6 @@ export function addHelpers(
     const code = await provider.getCode(create2DeployerAddress);
     if (code === '0x') {
       const senderAddress = '0x3fab184622dc19b6109349b94811493bf2a45362';
-      // TODO gasPrice override
 
       if (options.log || hardwareWallet) {
         print(
@@ -282,18 +314,21 @@ export function addHelpers(
           print(` (please confirm on your ${hardwareWallet})`);
         }
       }
-      const ethTx = await ethersSigner.sendTransaction({
+
+      const txRequest = {
         to: senderAddress,
         value: BigNumber.from('10000000000000000').toHexString(),
-      });
+        gasPrice: options.gasPrice,
+      };
+      await setupGasPrice(txRequest);
+      await setupNonce(ethersSigner, txRequest);
+
+      const ethTx = await ethersSigner.sendTransaction(txRequest);
       if (options.log || hardwareWallet) {
         log(` (tx: ${ethTx.hash})...`);
       }
       await ethTx.wait();
 
-      // await provider.send("eth_sendTransaction", [{
-      //   from
-      // }]);
       if (options.log || hardwareWallet) {
         print(
           `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)`
@@ -412,6 +447,7 @@ export function addHelpers(
       ethersSigner.estimateGas(newOverrides)
     );
     await setupGasPrice(unsignedTx);
+    await setupNonce(ethersSigner, unsignedTx);
 
     if (options.log || hardwareWallet) {
       print(`deploying "${name}"`);
@@ -424,14 +460,6 @@ export function addHelpers(
     if (options.log || hardwareWallet) {
       print(` (tx: ${tx.hash})...`);
     }
-
-    // await overrideGasLimit(overrides, options, newOverrides =>
-    //   ethersSigner.estimateGas(newOverrides)
-    // );
-    // await setupGasPrice(overrides);
-    // console.log({ args, overrides });
-    // const ethersContract = await factory.deploy(...args, overrides);
-    // let tx = ethersContract.deployTransaction;
 
     if (options.autoMine) {
       try {
@@ -515,6 +543,12 @@ export function addHelpers(
       nonce: options.nonce,
     };
 
+    await overrideGasLimit(overrides, options, (newOverrides) =>
+      ethersSigner.estimateGas(newOverrides)
+    );
+    await setupGasPrice(overrides);
+    await setupNonce(ethersSigner, overrides);
+
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
 
     if (typeof unsignedTx.data !== 'string') {
@@ -578,6 +612,11 @@ export function addHelpers(
         value: options.value,
         nonce: options.nonce,
       };
+      await overrideGasLimit(overrides, options, (newOverrides) =>
+        ethersSigner.estimateGas(newOverrides)
+      );
+      await setupGasPrice(overrides);
+      await setupNonce(ethersSigner, overrides);
 
       const unsignedTx = factory.getDeployTransaction(...argArray, overrides);
       if (typeof unsignedTx.data === 'string') {
@@ -642,6 +681,10 @@ export function addHelpers(
           value: options.value,
           from: options.from,
         };
+
+        await overrideGasLimit(newTransaction, options, (newOverrides) =>
+          provider.estimateGas(newOverrides)
+        );
 
         for (const field of fieldsToCompareArray) {
           if (typeof (newTransaction as any)[field] === 'undefined') {
@@ -1736,11 +1779,18 @@ Note that in this case, the contract deployment will not behave the same if depl
       const transactionData = {
         to: tx.to,
         gasLimit: tx.gasLimit,
-        gasPrice: tx.gasPrice ? BigNumber.from(tx.gasPrice) : undefined, // TODO cinfig
+        gasPrice: tx.gasPrice ? BigNumber.from(tx.gasPrice) : undefined,
         value: tx.value ? BigNumber.from(tx.value) : undefined,
         nonce: tx.nonce,
         data: tx.data,
       };
+
+      await overrideGasLimit(transactionData, tx, (newOverrides) =>
+        ethersSigner.estimateGas(newOverrides)
+      );
+      await setupGasPrice(transactionData);
+      await setupNonce(ethersSigner, transactionData);
+
       if (hardwareWallet) {
         log(` please confirm on your ${hardwareWallet}`);
       }
@@ -1901,6 +1951,7 @@ data: ${data}
         );
       });
       await setupGasPrice(overrides);
+      await setupNonce(ethersSigner, overrides);
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
       tx = await ethersContract.functions[methodName](...ethersArgs);
     }

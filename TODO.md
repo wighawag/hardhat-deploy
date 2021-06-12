@@ -1,39 +1,24 @@
-- [ ] test (--dry-run) option to have deployments.run without effect + allow access to existing deployment : useful for populating data
-- [ ] ganache fork when running test against live network
-- [x] helpers tx : check num of argument (deploy)
-- [ ] support test batteries
-- [ ] support generator from (like templates for --export ?)
+- [ ] use "latest" nonce
+- [ ] gasprice resubmission for pending tx
+- [ ] HARDHAT_DEPLOY_LOG : enable logging via env variable
 - [ ] --pendingtx : wait | reset | false | interactive
-- [ ] add --deploy option to run task ?
+- [ ] execute conditionals : if/unless
+- [ ] pause option on unknown signer
+
+- [ ] support generator from (like templates for --export ?)
 - [ ] library name vs <path>:<name> and error out if ambiguity (when using only name)
 - [ ] libraries : address should not need to be address, they could be names of deployments or {address}
 - [ ] fix error with proxy constructor, the check use the number of argument given instead of the abi
 - [ ] fix issue with fixture reading deployments in hardhat folder: fixture should not read
 - [ ] add configuration field for network based configuration ? or at least expose the chainIfNetworkConfig expansion function
-- [ ] sourcify-upload (https://verification.komputing.org/server)
 - [ ] ipfs-upload
 - [ ] add ability to specify metadata in `imports` artifacts
-- [x] deployments.getByAddress(<address>) // getByAddressOrNull(<address>)
+- [ ] deployments.getByAddress(<address>) // getByAddressOrNull(<address>)
 - [ ] hard fail when no metadata : as this indicate the contract is actually no more part of the compilation unit, and should be discarded
-- [x] ensure recursive folder for `deploy` folder (up to user to use `test` tags or the folder act as tag ?)
 - [ ] exclude tag options
-- [x] tests should use tags (by default, it reuse global tag (if present), but option to not reuse global tag)
-- [x] hardhat test option to first run global tag (or use a env variable, ckeck what hardhat does with hardhat test)
-- [x] executeOrDisplay vs execute({skipUnknownSigner})
-- [x] use script.id for migrations (throw if return true and no id provided)
-- [x] tags for network config =>
-      ~~- [ ] network tags can be used in namedAccounts too--~~
-- [ ] check clash on proxy
-- [ ] rename SemiTransparentProxy and TransparentProxy
 - [ ] hre.run("deploy:before-deploy") in the runDeploy for deploymentManager
-- [x] fix doc on gas vs gasLimit
-- [x] fix issues with hardhat_reset
 - [ ] SPDX license detection regex more flexible ?
 - [ ] accept "auto" as allowed argument for `gasPrice` to make it compatible with `hre.network.config.gasPrice`
 - [ ] error on Library missing in bytecode
 - [ ] error when not finding --no-scripts as folder
-- [ ] skip on metadata not found (vyper)
 - [ ] continue even if evm_snapshot not present on fixture call
-- [ ] use "latest" nonce
-- [ ] gasprice resubmission for pending tx
-- [ ] HARDHAT_DEPLOY_LOG : enable logging via env variable
