@@ -1,5 +1,3 @@
-- [x] use "latest" nonce
-- [x] gasprice resubmission for pending tx
 - [ ] --pendingtx : wait | reset | false | interactive
 - [ ] execute conditionals : if/unless
 - [ ] pause option on unknown signer : check once done and repeat if needed
