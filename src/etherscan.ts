@@ -143,7 +143,7 @@ export async function submitSources(
       host = 'https://api.hecoinfo.com';
       break;
     case '137':
-      host = "https://api.polygonscan.com";
+      host = 'https://api.polygonscan.com';
       break;
     case '256':
       host = 'https://api-testnet.hecoinfo.com';
@@ -198,9 +198,8 @@ export async function submitSources(
     const contractNamePath = `${contractFilepath}:${contractName}`;
 
     const contractSourceFile = metadata.sources[contractFilepath].content;
-    const sourceLicenseType = extractOneLicenseFromSourceFile(
-      contractSourceFile
-    );
+    const sourceLicenseType =
+      extractOneLicenseFromSourceFile(contractSourceFile);
 
     let license = licenseOption;
     if (!sourceLicenseType) {

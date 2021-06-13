@@ -174,13 +174,11 @@ export class DeploymentsManager {
           }
           return artifactFromFolder as Artifact;
         }
-        let artifact:
-          | Artifact
-          | ExtendedArtifact
-          | undefined = await getArtifactFromFolder(
-          contractName,
-          this.env.config.paths.artifacts
-        );
+        let artifact: Artifact | ExtendedArtifact | undefined =
+          await getArtifactFromFolder(
+            contractName,
+            this.env.config.paths.artifacts
+          );
         if (artifact) {
           return artifact as Artifact;
         }
@@ -212,12 +210,11 @@ export class DeploymentsManager {
           }
           return artifactFromFolder as ExtendedArtifact;
         }
-        let artifact:
-          | ExtendedArtifact
-          | undefined = await getExtendedArtifactFromFolder(
-          contractName,
-          this.env.config.paths.artifacts
-        );
+        let artifact: ExtendedArtifact | undefined =
+          await getExtendedArtifactFromFolder(
+            contractName,
+            this.env.config.paths.artifacts
+          );
         if (artifact) {
           return artifact;
         }
@@ -365,9 +362,8 @@ export class DeploymentsManager {
           this.network.saveDeployments
         ) {
           // toSave (see deployments.save function)
-          const extendedArtifact = await this.partialExtension.getExtendedArtifact(
-            artifactName
-          );
+          const extendedArtifact =
+            await this.partialExtension.getExtendedArtifact(artifactName);
           deployment = {
             ...deployment,
             ...extendedArtifact,
@@ -747,7 +743,7 @@ export class DeploymentsManager {
 
       fs.writeFileSync(filepath, JSON.stringify(obj, null, '  '));
 
-      if (deployment.solcInputHash) {
+      if (deployment.solcInputHash && deployment.solcInput) {
         const solcInputsFolderpath = path.join(
           this.deploymentsPath,
           this.deploymentFolder(),

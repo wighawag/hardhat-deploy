@@ -214,12 +214,10 @@ extendEnvironment((env) => {
       lazyObject(() => env.network) // IMPORTANT, else other plugin cannot set env.network before end, like solidity-coverage does here in the coverage task :  https://github.com/sc-forks/solidity-coverage/blob/3c0f3a5c7db26e82974873bbf61cf462072a7c6d/plugins/resources/nomiclabs.utils.js#L93-L98
     );
     env.deployments = deploymentsManager.deploymentsExtension;
-    env.getNamedAccounts = deploymentsManager.getNamedAccounts.bind(
-      deploymentsManager
-    );
-    env.getUnnamedAccounts = deploymentsManager.getUnnamedAccounts.bind(
-      deploymentsManager
-    );
+    env.getNamedAccounts =
+      deploymentsManager.getNamedAccounts.bind(deploymentsManager);
+    env.getUnnamedAccounts =
+      deploymentsManager.getUnnamedAccounts.bind(deploymentsManager);
     env.getChainId = () => {
       return deploymentsManager.getChainId();
     };

@@ -294,9 +294,8 @@ function transformNamedAccounts(
           if (protocolSplit.length > 1) {
             if (protocolSplit[0].toLowerCase() === 'ledger') {
               address = protocolSplit[1];
-              addressesToProtocol[
-                address.toLowerCase()
-              ] = protocolSplit[0].toLowerCase();
+              addressesToProtocol[address.toLowerCase()] =
+                protocolSplit[0].toLowerCase();
               // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
             } else if (protocolSplit[0].toLowerCase() === 'privatekey') {
               address = new Wallet(protocolSplit[1]).address;

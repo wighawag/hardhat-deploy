@@ -816,10 +816,8 @@ export function addHelpers(
             diffResult.address.toLowerCase() !==
               deployment.address.toLowerCase()
           ) {
-            const {
-              artifact: linkedArtifact,
-              artifactName,
-            } = await getLinkedArtifact(name, options);
+            const {artifact: linkedArtifact, artifactName} =
+              await getLinkedArtifact(name, options);
 
             // receipt missing
             const newDeployment = {
@@ -845,10 +843,8 @@ export function addHelpers(
             );
           }
 
-          const {
-            artifact: linkedArtifact,
-            artifactName,
-          } = await getLinkedArtifact(name, options);
+          const {artifact: linkedArtifact, artifactName} =
+            await getLinkedArtifact(name, options);
 
           // receipt missing
           const newDeployment = {
@@ -1354,15 +1350,19 @@ Note that in this case, the contract deployment will not behave the same if depl
     return getFrom(address);
   }
 
-  function getOptionalFrom(
-    from?: string
-  ): {address?: Address; ethersSigner?: Signer; hardwareWallet?: string} {
+  function getOptionalFrom(from?: string): {
+    address?: Address;
+    ethersSigner?: Signer;
+    hardwareWallet?: string;
+  } {
     return _getFrom(from, true);
   }
 
-  function getFrom(
-    from?: string
-  ): {address: Address; ethersSigner?: Signer; hardwareWallet?: string} {
+  function getFrom(from?: string): {
+    address: Address;
+    ethersSigner?: Signer;
+    hardwareWallet?: string;
+  } {
     return _getFrom(from, false) as {
       address: Address;
       ethersSigner?: Signer;
@@ -1437,7 +1437,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     options: DiamondOptions
   ): Promise<DeployResult> {
     const oldDeployment = await getDeploymentOrNUll(name);
-    let proxy;
+    let proxy: Deployment | undefined;
     const deployResult = _checkUpgradeIndex(
       oldDeployment,
       options.upgradeIndex
@@ -1995,8 +1995,8 @@ data: ${data}
       );
     }
 
-    const numArguments = ethersContract.interface.getFunction(methodName).inputs
-      .length;
+    const numArguments =
+      ethersContract.interface.getFunction(methodName).inputs.length;
     if (args.length !== numArguments) {
       throw new Error(
         `expected ${numArguments} arguments for method "${methodName}", got ${args.length}`
