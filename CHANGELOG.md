@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.3
+
+### Patch Changes
+
+- handle pending transactions
+
 ## 0.8.2
 
 ### Patch Changes
