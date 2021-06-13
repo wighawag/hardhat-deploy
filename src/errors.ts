@@ -4,7 +4,7 @@ export class UnknownSignerError extends Error {
   constructor(
     public data: {
       from: string;
-      to: string;
+      to?: string;
       data?: string;
       value?: string | BigNumber;
       contract?: {name: string; method: string; args: unknown[]};

@@ -133,7 +133,6 @@ export type ArtifactData = {
 export interface DeployOptionsBase extends TxOptions {
   contract?: string | ArtifactData;
   args?: any[];
-  fieldsToCompare?: string | string[];
   skipIfAlreadyDeployed?: boolean;
   linkedData?: any; // JSONable ?
   libraries?: Libraries;
