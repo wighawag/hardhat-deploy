@@ -550,7 +550,7 @@ export function mergeABIs(
 export function recode(decoded: any): Transaction {
   return {
     from: decoded.from,
-    gasPrice: BigNumber.from(decoded.from),
+    gasPrice: BigNumber.from(decoded.gasPrice),
     gasLimit: BigNumber.from(decoded.gasLimit),
     to: decoded.to,
     value: BigNumber.from(decoded.value),

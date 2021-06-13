@@ -38,7 +38,8 @@ import {
 } from '../types';
 import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
-import {mergeABIs} from './utils';
+import {mergeABIs, recode} from './utils';
+import fs from 'fs-extra';
 
 import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
 import OptimizedTransparentUpgradeableProxy from '../extendedArtifacts/OptimizedTransparentUpgradeableProxy.json';
@@ -52,6 +53,11 @@ import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
 import diamantaire from '../extendedArtifacts/Diamantaire.json';
 import {Artifact, EthereumProvider, Network} from 'hardhat/types';
 import {DeploymentsManager} from './DeploymentsManager';
+import enquirer from 'enquirer';
+import {
+  parse as parseTransaction,
+  Transaction,
+} from '@ethersproject/transactions';
 
 let LedgerSigner: any; // TODO type
 
@@ -64,6 +70,48 @@ diamondBase.abi = mergeABIs(
   ],
   {check: false, skipSupportsInterface: false}
 );
+
+async function handleSpecificErrors<T>(p: Promise<T>): Promise<T> {
+  let result: T;
+  try {
+    result = await p;
+  } catch (e) {
+    if (
+      typeof e.message === 'string' &&
+      e.message.indexOf('already known') !== -1
+    ) {
+      console.log(
+        `
+Exact same transaction already in the pool, node reject duplicates.
+You'll need to wait the tx resolve, or increase the gas price via --gasprice
+        `
+      );
+      throw new Error(
+        'Exact same transaction already in the pool, node reject duplicates'
+      );
+      // console.log(
+      //   `\nExact same transaction already in the pool, node reject duplicates, waiting for it instead...\n`
+      // );
+      // const signedTx = await ethersSigner.signTransaction(unsignedTx);
+      // const decoded = parseTransaction(signedTx);
+      // if (!decoded.hash) {
+      //   throw new Error(
+      //     'tx with same hash already in the pool, failed to decode to get the hash'
+      //   );
+      // }
+      // const txHash = decoded.hash;
+      // tx = Object.assign(decoded as TransactionResponse, {
+      //   wait: (confirmations: number) =>
+      //     provider.waitForTransaction(txHash, confirmations),
+      //   confirmations: 0,
+      // });
+    } else {
+      console.error(e.message, JSON.stringify(e), e);
+      throw e;
+    }
+  }
+  return result;
+}
 
 function fixProvider(providerGiven: any): any {
   // alow it to be used by ethers without any change
@@ -194,11 +242,40 @@ export function addHelpers(
   getGasPrice: () => Promise<BigNumber | undefined>,
   log: (...args: any[]) => void,
   print: (msg: string) => void
-): DeploymentsExtension {
+): {
+  extension: DeploymentsExtension;
+  utils: {
+    dealWithPendingTransactions: (
+      pendingTxs: {
+        [txHash: string]: {
+          name: string;
+          deployment?: any;
+          rawTx: string;
+          decoded: {
+            from: string;
+            gasPrice: string;
+            gasLimit: string;
+            to: string;
+            value: string;
+            nonce: number;
+            data: string;
+            r: string;
+            s: string;
+            v: number;
+            // creates: tx.creates, // TODO test
+            chainId: number;
+          };
+        };
+      },
+      pendingTxPath: string,
+      globalGasPrice: string | undefined
+    ) => Promise<void>;
+  };
+} {
   let provider: Web3Provider;
   const availableAccounts: {[name: string]: boolean} = {};
 
-  async function init() {
+  async function init(): Promise<Web3Provider> {
     if (!provider) {
       provider = new Web3Provider(fixProvider(network.provider));
       try {
@@ -212,6 +289,7 @@ export function addHelpers(
         }
       } catch (e) {}
     }
+    return provider;
   }
 
   async function setupGasPrice(
@@ -323,10 +401,13 @@ export function addHelpers(
       await setupGasPrice(txRequest);
       await setupNonce(ethersSigner, txRequest);
 
-      const ethTx = await ethersSigner.sendTransaction(txRequest);
+      let ethTx = await handleSpecificErrors(
+        ethersSigner.sendTransaction(txRequest)
+      );
       if (options.log || hardwareWallet) {
         log(` (tx: ${ethTx.hash})...`);
       }
+      ethTx = await onPendingTx(ethTx);
       await ethTx.wait();
 
       if (options.log || hardwareWallet) {
@@ -455,7 +536,9 @@ export function addHelpers(
         print(` (please confirm on your ${hardwareWallet})`);
       }
     }
-    let tx = await ethersSigner.sendTransaction(unsignedTx);
+    let tx = await handleSpecificErrors(
+      ethersSigner.sendTransaction(unsignedTx)
+    );
 
     if (options.log || hardwareWallet) {
       print(` (tx: ${tx.hash})...`);
@@ -1794,7 +1877,9 @@ Note that in this case, the contract deployment will not behave the same if depl
       if (hardwareWallet) {
         log(` please confirm on your ${hardwareWallet}`);
       }
-      let pendingTx = await ethersSigner.sendTransaction(transactionData);
+      let pendingTx = await handleSpecificErrors(
+        ethersSigner.sendTransaction(transactionData)
+      );
       pendingTx = await onPendingTx(pendingTx);
       if (tx.autoMine) {
         try {
@@ -1953,7 +2038,9 @@ data: ${data}
       await setupGasPrice(overrides);
       await setupNonce(ethersSigner, overrides);
       const ethersArgs = args ? args.concat([overrides]) : [overrides];
-      tx = await ethersContract.functions[methodName](...ethersArgs);
+      tx = await handleSpecificErrors(
+        ethersContract.functions[methodName](...ethersArgs)
+      );
     }
     tx = await onPendingTx(tx);
 
@@ -2064,6 +2151,215 @@ data: ${data}
     deterministic,
   };
 
+  const utils = {
+    dealWithPendingTransactions: async (
+      pendingTxs: {
+        [txHash: string]: {
+          name: string;
+          deployment?: any;
+          rawTx: string;
+          decoded: {
+            from: string;
+            gasPrice: string;
+            gasLimit: string;
+            to: string;
+            value: string;
+            nonce: number;
+            data: string;
+            r: string;
+            s: string;
+            v: number;
+            // creates: tx.creates, // TODO test
+            chainId: number;
+          };
+        };
+      },
+      pendingTxPath: string,
+      globalGasPrice: string | undefined
+    ) => {
+      await init();
+      const txHashes = Object.keys(pendingTxs);
+      for (const txHash of txHashes) {
+        let tx: Transaction | undefined;
+        const txData = pendingTxs[txHash];
+        if (txData.rawTx || txData.decoded) {
+          if (txData.rawTx) {
+            tx = parseTransaction(txData.rawTx);
+          } else {
+            tx = recode(txData.decoded);
+          }
+          // alternative add options to deploy task to delete pending tx, combined with --gasprice this would work (except for timing edge case)
+        } else {
+          console.error(`no access to raw data for tx ${txHash}`);
+        }
+
+        const txFromPeers = await network.provider.send(
+          'eth_getTransactionByHash',
+          [txHash]
+        );
+
+        let newGasPriceS = globalGasPrice;
+        if (!newGasPriceS) {
+          newGasPriceS = await network.provider.send('eth_gasPrice', []);
+        }
+        const newGasPrice = BigNumber.from(newGasPriceS);
+
+        const choices = ['skip (forget tx)'];
+        if (!txFromPeers) {
+          if (tx) {
+            choices.unshift('broadcast again');
+          }
+          console.log(`transaction ${txHash} cannot be found among peers`);
+        } else {
+          choices.unshift('continue waiting');
+          if (tx) {
+            console.log(
+              `transaction ${txHash} still pending... It used a gas price of ${tx.gasPrice.toString()} wei, current gas price is ${newGasPrice.toString()} wei`
+            );
+          } else {
+            console.log(`transaction ${txHash} still pending...`);
+          }
+        }
+
+        if (tx && tx.gasPrice.lt(newGasPrice)) {
+          choices.unshift('increase gas');
+        }
+
+        const prompt = new (enquirer as any).Select({
+          name: 'action',
+          message: 'Choose what to do with the pending transaction:',
+          choices,
+        });
+
+        const answer = await prompt.run();
+        let txHashToWait: string | undefined;
+        if (answer !== 'skip (forget tx)') {
+          if (answer === 'continue waiting') {
+            console.log('waiting for transaction...');
+            txHashToWait = txHash;
+          } else if (answer === 'broadcast again') {
+            if (!tx) {
+              throw new Error(`cannot resubmit a tx if info not available`);
+            }
+
+            if (txData.rawTx) {
+              const tx = await handleSpecificErrors(
+                provider.sendTransaction(txData.rawTx)
+              );
+              txHashToWait = tx.hash;
+              if (tx.hash !== txHash) {
+                console.error('non mathcing tx hashes after resubmitting...');
+              }
+              console.log('waiting for newly broadcasted tx ...');
+            } else {
+              console.log('resigning the tx...');
+              const {ethersSigner, hardwareWallet} = getFrom(tx.from);
+              if (!ethersSigner) {
+                throw new Error('no signer for ' + tx.from);
+              }
+
+              const txReq = await handleSpecificErrors(
+                ethersSigner.sendTransaction({
+                  to: tx.to,
+                  from: tx.from,
+                  nonce: tx.nonce,
+
+                  gasLimit: tx.gasLimit,
+                  gasPrice: tx.gasPrice,
+
+                  data: tx.data,
+                  value: tx.value,
+                  chainId: tx.chainId,
+                  type: tx.type === null ? undefined : tx.type,
+                  accessList: tx.accessList,
+                })
+              );
+              txHashToWait = txReq.hash;
+              if (txReq.hash !== txHash) {
+                delete pendingTxs[txHash];
+                if (Object.keys(pendingTxs).length === 0) {
+                  fs.removeSync(pendingTxPath);
+                } else {
+                  fs.writeFileSync(
+                    pendingTxPath,
+                    JSON.stringify(pendingTxs, null, '  ')
+                  );
+                }
+                await onPendingTx(txReq);
+                console.error('non mathcing tx hashes after resubmitting...');
+              }
+            }
+          } else if (answer === 'increase gas') {
+            if (!tx) {
+              throw new Error(`cannot resubmit a tx if info not available`);
+            }
+            const {ethersSigner, hardwareWallet} = getFrom(tx.from);
+            if (!ethersSigner) {
+              throw new Error('no signer for ' + tx.from);
+            }
+
+            const txReq = await handleSpecificErrors(
+              ethersSigner.sendTransaction({
+                to: tx.to,
+                from: tx.from,
+                nonce: tx.nonce,
+
+                gasLimit: tx.gasLimit,
+                gasPrice: newGasPrice,
+
+                data: tx.data,
+                value: tx.value,
+                chainId: tx.chainId,
+                type: tx.type === null ? undefined : tx.type,
+                accessList: tx.accessList,
+              })
+            );
+            txHashToWait = txReq.hash;
+            delete pendingTxs[txHash];
+            if (Object.keys(pendingTxs).length === 0) {
+              fs.removeSync(pendingTxPath);
+            } else {
+              fs.writeFileSync(
+                pendingTxPath,
+                JSON.stringify(pendingTxs, null, '  ')
+              );
+            }
+            await onPendingTx(txReq);
+            console.log('new transaction submitted, waiting...');
+          }
+        }
+
+        if (txHashToWait) {
+          const receipt = await waitForTx(
+            network.provider,
+            txHashToWait,
+            false
+          );
+          if (
+            (!receipt.status || receipt.status == 1) && // ensure we do not save failed deployment
+            receipt.contractAddress &&
+            txData.name
+          ) {
+            await saveDeployment(txData.name, {
+              ...txData.deployment,
+              receipt,
+            });
+          }
+        }
+
+        delete pendingTxs[txHash];
+        if (Object.keys(pendingTxs).length === 0) {
+          fs.removeSync(pendingTxPath);
+        } else {
+          fs.writeFileSync(
+            pendingTxPath,
+            JSON.stringify(pendingTxs, null, '  ')
+          );
+        }
+      }
+    },
+  };
+
   // ////////// Backward compatible for transition: //////////////////
   (extension as any).call = (
     options: any,
@@ -2106,7 +2402,7 @@ data: ${data}
   };
   // ////////////////////////////////////////////////////////////////////
 
-  return extension;
+  return {extension, utils};
 }
 
 function pause(duration: number): Promise<void> {

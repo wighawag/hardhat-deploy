@@ -1,9 +1,8 @@
-- [ ] use "latest" nonce
-- [ ] gasprice resubmission for pending tx
-- [ ] HARDHAT_DEPLOY_LOG : enable logging via env variable
+- [x] use "latest" nonce
+- [x] gasprice resubmission for pending tx
 - [ ] --pendingtx : wait | reset | false | interactive
 - [ ] execute conditionals : if/unless
-- [ ] pause option on unknown signer
+- [ ] pause option on unknown signer : check once done and repeat if needed
 
 - [ ] support generator from (like templates for --export ?)
 - [ ] library name vs <path>:<name> and error out if ambiguity (when using only name)

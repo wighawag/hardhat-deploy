@@ -14,10 +14,6 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import {BigNumber} from '@ethersproject/bignumber';
-import {
-  parse as parseTransaction,
-  Transaction,
-} from '@ethersproject/transactions';
 
 import debug from 'debug';
 const log = debug('hardhat:wighawag:hardhat-deploy');
@@ -30,7 +26,6 @@ import {
   deleteDeployments,
   getExtendedArtifactFromFolder,
   getArtifactFromFolder,
-  recode,
 } from './utils';
 import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
@@ -77,6 +72,34 @@ export class DeploymentsManager {
   private network: Network;
 
   private partialExtension: PartialExtension;
+
+  private utils: {
+    dealWithPendingTransactions: (
+      pendingTxs: {
+        [txHash: string]: {
+          name: string;
+          deployment?: any;
+          rawTx: string;
+          decoded: {
+            from: string;
+            gasPrice: string;
+            gasLimit: string;
+            to: string;
+            value: string;
+            nonce: number;
+            data: string;
+            r: string;
+            s: string;
+            v: number;
+            // creates: tx.creates, // TODO test
+            chainId: number;
+          };
+        };
+      },
+      pendingTxPath: string,
+      globalGasPrice: string | undefined
+    ) => Promise<void>;
+  };
 
   constructor(env: HardhatRuntimeEnvironment, network: Network) {
     log('constructing DeploymentsManager');
@@ -326,7 +349,7 @@ export class DeploymentsManager {
     };
 
     log('adding helpers');
-    this.deploymentsExtension = addHelpers(
+    const helpers = addHelpers(
       this,
       this.partialExtension,
       this.network,
@@ -367,6 +390,9 @@ export class DeploymentsManager {
       this.partialExtension.log,
       print
     );
+
+    this.deploymentsExtension = helpers.extension;
+    this.utils = helpers.utils;
   }
 
   private _chainId: string | undefined;
@@ -426,51 +452,11 @@ export class DeploymentsManager {
     try {
       pendingTxs = JSON.parse(fs.readFileSync(pendingTxPath).toString());
     } catch (e) {}
-    const txHashes = Object.keys(pendingTxs);
-    for (const txHash of txHashes) {
-      const txData = pendingTxs[txHash];
-      if (txData.rawTx || txData.decoded) {
-        let tx: Transaction;
-        if (txData.rawTx) {
-          tx = parseTransaction(txData.rawTx);
-        } else {
-          tx = recode(txData.decoded);
-        }
-        if (this.db.gasPrice) {
-          if (tx.gasPrice.lt(this.db.gasPrice)) {
-            // TODO
-            console.log('TODO : resubmit tx with higher gas price');
-            console.log(tx);
-          }
-        }
-        // alternative add options to deploy task to delete pending tx, combined with --gasprice this would work (except for timing edge case)
-      } else {
-        console.error(`no access to raw data for tx ${txHash}`);
-      }
-      if (this.db.logEnabled) {
-        console.log(
-          `waiting for tx ${txHash}` +
-            (txData.name ? ` for ${txData.name} Deployment` : '')
-        );
-      }
-      const receipt = await waitForTx(this.network.provider, txHash, false);
-      if (
-        (!receipt.status || receipt.status == 1) && // ensure we do not save failed deployment
-        receipt.contractAddress &&
-        txData.name
-      ) {
-        await this.saveDeployment(txData.name, {
-          ...txData.deployment,
-          receipt,
-        });
-      }
-      delete pendingTxs[txHash];
-      if (Object.keys(pendingTxs).length === 0) {
-        fs.removeSync(pendingTxPath);
-      } else {
-        fs.writeFileSync(pendingTxPath, JSON.stringify(pendingTxs, null, '  '));
-      }
-    }
+    await this.utils.dealWithPendingTransactions(
+      pendingTxs,
+      pendingTxPath,
+      this.db.gasPrice
+    );
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
