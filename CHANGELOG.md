@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.6
+
+### Patch Changes
+
+- rework the unknown signer case
+
 ## 0.8.5
 
 ### Patch Changes
