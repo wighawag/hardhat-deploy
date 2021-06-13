@@ -332,14 +332,6 @@ It add similar options than the `deploy` task :
 
 `--write <boolean>`: default to true (except for hardhat network). If true, write deployments to disk (in deployments path, see [path config](#extra-paths-config)).
 
-`--fork-deployments <networkName>`: defaults to `localhost`; this option allows you to specify the network to fetch the deployment from when running in fork mode. This is necessary as hardhat fork feature does not track the fork's network: <https://github.com/nomiclabs/hardhat/issues/1164>.
-
-> :warning: This option might be removed in the future. An alternative is to make use of environment variable like it is done in the following template's hardhat.config.ts : https://github.com/wighawag/template-ethereum-contracts
-
-`--as-network <networkName`: default to `localhost` (or the value specified by `--fork-deployments` if any), this option allows you to specify the network name to be used for **hardhat-deploy** functionality, like which folder the resulting deployment should be saved to.
-
-> :warning: This option might be removed in the future. An alternative is to make use of environment variable like it is done in the following template's hardhat.config.ts : https://github.com/wighawag/template-ethereum-contracts
-
 #### **Flags**
 
 `--no-reset`: This flag prevent the reseting of the existing deployments. This is usually not desired when running the `node` task as a network is created from scratch and previous deployemnt are irrelevant.

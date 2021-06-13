@@ -7,3 +7,5 @@ node_modules/
 package.json
 solc_0.7/diamond/*
 solc_0.7/openzeppelin/*
+solc_0.7/proxy/Proxy.sol
+.yalc/

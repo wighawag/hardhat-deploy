@@ -2258,6 +2258,10 @@ data: ${data}
                 throw new Error('no signer for ' + tx.from);
               }
 
+              if (hardwareWallet) {
+                print(` (please confirm on your ${hardwareWallet})`);
+              }
+
               const txReq = await handleSpecificErrors(
                 ethersSigner.sendTransaction({
                   to: tx.to,
@@ -2296,6 +2300,10 @@ data: ${data}
             const {ethersSigner, hardwareWallet} = getFrom(tx.from);
             if (!ethersSigner) {
               throw new Error('no signer for ' + tx.from);
+            }
+
+            if (hardwareWallet) {
+              print(` (please confirm on your ${hardwareWallet})`);
             }
 
             const txReq = await handleSpecificErrors(

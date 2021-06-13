@@ -10,6 +10,7 @@ import {
   EthereumProvider,
   Artifact,
   BuildInfo,
+  NetworkConfig,
 } from 'hardhat/types';
 import {createProvider} from 'hardhat/internal/core/providers/construction'; // TODO harhdat argument types not from internal
 import {Deployment, ExtendedArtifact} from '../types';
@@ -33,6 +34,7 @@ import {submitSources} from './etherscan';
 import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
 import {store} from './globalStore';
+import {getDeployPaths, getNetworkName} from './utils';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
@@ -158,20 +160,44 @@ extendConfig(
   }
 );
 
+function createNetworkFromConfig(
+  env: HardhatRuntimeEnvironment,
+  networkName: string,
+  config: NetworkConfig
+): Network {
+  const tags: {[tag: string]: boolean} = {};
+  const tagsCollected = config.tags || [];
+  for (const tag of tagsCollected) {
+    tags[tag] = true;
+  }
+
+  const network = {
+    name: networkName,
+    config,
+    live: config.live,
+    saveDeployments: config.saveDeployments,
+    tags,
+    deploy: config.deploy || env.config.paths.deploy,
+    companionNetworks: {},
+  };
+  networkFromConfig(env, network as Network, false);
+  return network as Network;
+}
+
 function networkFromConfig(
   env: HardhatRuntimeEnvironment,
   network: Network,
   companion: boolean
 ) {
   let live = true;
-  if (network.name === 'localhost' || network.name === 'hardhat') {
+  const networkName = network.name; // cannot use fork here as this could be set via task, T
+  if (networkName === 'localhost' || networkName === 'hardhat') {
     // the 2 default network are not live network
     live = false;
   }
   if (network.config.live !== undefined) {
     live = network.config.live;
   }
-  network.live = live;
 
   // associate tags to current network as object
   network.tags = {};
@@ -185,7 +211,6 @@ function networkFromConfig(
   } else {
     network.deploy = env.config.paths.deploy;
   }
-  store.networkDeployPaths[network.name] = network.deploy; // fallback to global store
 
   if (companion && network.config.companionNetworks) {
     network.companionNetworks = network.config.companionNetworks;
@@ -196,6 +221,8 @@ function networkFromConfig(
   if (network.config.live !== undefined) {
     live = network.config.live;
   }
+
+  network.live = live;
 
   if (network.config.saveDeployments === undefined) {
     network.saveDeployments = true;
@@ -222,9 +249,22 @@ extendEnvironment((env) => {
       return deploymentsManager.getChainId();
     };
 
+    for (const networkName of Object.keys(env.config.networks)) {
+      const config = env.config.networks[networkName];
+      if (!('url' in config) || networkName === 'hardhat') {
+        continue;
+      }
+      store.networks[networkName] = createNetworkFromConfig(
+        env,
+        networkName,
+        config
+      );
+    }
+
     env.companionNetworks = {};
     for (const name of Object.keys(env.network.companionNetworks)) {
       const networkName = env.network.companionNetworks[name];
+      // TODO Fork case ?
       if (networkName === env.network.name) {
         deploymentsManager.addCompanionManager(name, deploymentsManager);
         const extraNetwork = {
@@ -244,28 +284,16 @@ extendEnvironment((env) => {
         );
       }
 
-      const tags: {[tag: string]: boolean} = {};
-      const tagsCollected = config.tags || [];
-      for (const tag of tagsCollected) {
-        tags[tag] = true;
+      const network = store.networks[networkName];
+      if (!network) {
+        throw new Error(`no network named ${networkName}`);
       }
-
-      const network = {
-        name: networkName,
+      network.provider = createProvider(
+        networkName,
         config,
-        provider: createProvider(
-          networkName,
-          config,
-          env.config.paths,
-          env.artifacts
-        ),
-        live: config.live,
-        saveDeployments: config.saveDeployments,
-        tags,
-        deploy: config.deploy || env.config.paths.deploy,
-        companionNetworks: {},
-      };
-      networkFromConfig(env, network, false);
+        env.config.paths,
+        env.artifacts
+      );
       const networkDeploymentsManager = new DeploymentsManager(env, network);
       deploymentsManager.addCompanionManager(name, networkDeploymentsManager);
       const extraNetwork = {
@@ -418,17 +446,6 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
       );
     }
 
-    if (
-      nodeTaskArgs.forkDeployments &&
-      nodeTaskArgs.forkDeployments !== 'localhost'
-    ) {
-      // copy existing deployment from specified netwotk into localhost deployment folder
-      fs.copy(
-        path.join(hre.config.paths.deployments, nodeTaskArgs.forkDeployments),
-        path.join(hre.config.paths.deployments, 'localhost')
-      );
-    }
-
     async function compileAndDeploy() {
       if (!args.noCompile) {
         await hre.run('compile');
@@ -440,8 +457,7 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
       [name: string]: Deployment;
     }> | null = args.watchOnly ? null : compileAndDeploy();
     if (args.watch || args.watchOnly) {
-      const deployPaths =
-        hre.network.deploy || store.networkDeployPaths[hre.network.name]; // fallback to global store
+      const deployPaths = getDeployPaths(hre.network);
       const watcher = chokidar.watch(
         [hre.config.paths.sources, ...deployPaths],
         {
@@ -576,7 +592,9 @@ task(TASK_DEPLOY, 'Deploy contracts')
       hre.network.deploy = [
         normalizePath(hre.config, args.deployScripts, args.deployScripts),
       ];
-      store.networkDeployPaths[hre.network.name] = hre.network.deploy; // fallback to global store
+      if (store.networks[getNetworkName(hre.network)]) {
+        store.networks[getNetworkName(hre.network)].deploy = hre.network.deploy; // fallback to global store
+      }
     }
     args.log = !args.silent;
     delete args.silent;
@@ -629,18 +647,6 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
     undefined,
     types.string
   )
-  .addOptionalParam(
-    'forkDeployments',
-    'this will use deployment from the named network, default to "localhost"',
-    'localhost',
-    types.string
-  )
-  .addOptionalParam(
-    'asNetwork',
-    'network name to be used, default to "localhost" (or to `--fork-deployments` value)',
-    undefined,
-    types.string
-  )
   // TODO --unlock-accounts
   .addFlag('noReset', 'do not delete deployments files already present')
   .addFlag('noImpersonation', 'do not impersonate unknown accounts')
@@ -663,6 +669,8 @@ you can specifiy hardhat via "--network hardhat"
       );
     }
 
+    deploymentsManager.runAsNode(true);
+
     // console.log('node', args);
     await runSuper(args);
   });
@@ -670,6 +678,11 @@ you can specifiy hardhat via "--network hardhat"
 subtask(TASK_NODE_GET_PROVIDER).setAction(
   async (args, hre, runSuper): Promise<EthereumProvider> => {
     const provider = await runSuper(args);
+
+    if (!nodeTaskArgs.noReset) {
+      await deploymentsManager.deletePreviousDeployments('localhost');
+    }
+
     if (nodeTaskArgs.noDeploy) {
       // console.log('skip');
       return provider;
@@ -677,23 +690,23 @@ subtask(TASK_NODE_GET_PROVIDER).setAction(
     // console.log('enabling logging');
     await enableProviderLogging(provider, false);
 
-    // TODO add another optional param that can change the network name : `--as-network` ?
-    if (
-      isHardhatEVM(hre) ||
-      nodeTaskArgs.forkDeployments ||
-      nodeTaskArgs.asNetwork
-    ) {
-      // TODO what about accounts and other config.networks[name] ?
-      hre.network.name =
-        nodeTaskArgs.asNetwork || nodeTaskArgs.forkDeployments || 'localhost'; // Ensure it use same config as network
+    const networkName = getNetworkName(hre.network);
+    if (networkName !== hre.network.name) {
+      console.log(`copying ${networkName}'s deployment to localhost...`);
+      // copy existing deployment from specified netwotk into localhost deployment folder
+      fs.copy(
+        path.join(hre.config.paths.deployments, networkName),
+        path.join(hre.config.paths.deployments, 'localhost')
+      );
     }
+
     nodeTaskArgs.log = !nodeTaskArgs.silent;
     delete nodeTaskArgs.silent;
     nodeTaskArgs.pendingtx = false;
     await hre.run(TASK_DEPLOY_MAIN, {
       ...nodeTaskArgs,
       watch: false,
-      reset: !nodeTaskArgs.noReset,
+      reset: false,
     });
 
     await enableProviderLogging(provider, true);

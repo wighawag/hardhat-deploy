@@ -26,6 +26,8 @@ import {
   deleteDeployments,
   getExtendedArtifactFromFolder,
   getArtifactFromFolder,
+  getNetworkName,
+  getDeployPaths,
 } from './utils';
 import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
@@ -391,11 +393,28 @@ export class DeploymentsManager {
     this.utils = helpers.utils;
   }
 
+  private networkWasSetup = false;
+  public setupNetwork(): void {
+    if (this.networkWasSetup) {
+      return;
+    }
+    // reassign network variables based on fork name if any;
+    const networkName = this.getNetworkName();
+    if (networkName !== this.network.name) {
+      const networkObject = store.networks[networkName];
+      this.env.network.live = networkObject.live;
+      this.env.network.tags = networkObject.tags;
+      this.env.network.deploy = networkObject.deploy;
+    }
+    this.networkWasSetup = true;
+  }
+
   private _chainId: string | undefined;
   public async getChainId(): Promise<string> {
     if (this._chainId) {
       return this._chainId;
     }
+    this.setupNetwork();
     try {
       this._chainId = await this.network.provider.send('eth_chainId');
     } catch (e) {
@@ -553,13 +572,16 @@ export class DeploymentsManager {
     } catch (e) {}
     this.db.migrations = migrations;
     // console.log({ migrations: this.db.migrations });
+
+    const networkName = this.getDeploymentNetworkName();
+
     addDeployments(
       this.db,
       this.deploymentsPath,
       this.deploymentFolder(),
-      chainId
+      networkName === this.network.name ? chainId : undefined // fork mode, we do not care about chainId ?
     );
-    const networkName = this.network.name;
+
     const extraDeploymentPaths =
       this.env.config.external &&
       this.env.config.external.deployments &&
@@ -795,6 +817,7 @@ export class DeploymentsManager {
     }
   ): Promise<{[name: string]: Deployment}> {
     log('runDeploy');
+    this.setupNetwork();
     if (options.deletePreviousDeployments) {
       log('deleting previous deployments');
       this.db.deployments = {};
@@ -855,8 +878,7 @@ export class DeploymentsManager {
       tags = [tags];
     }
 
-    const deployPaths =
-      this.network.deploy || store.networkDeployPaths[this.network.name]; // fallback to global store
+    const deployPaths = getDeployPaths(this.network);
 
     await this.executeDeployScripts(deployPaths, tags);
 
@@ -1121,10 +1143,10 @@ export class DeploymentsManager {
         all[chainId] = {};
       } else {
         // Ensure no past deployments are recorded
-        delete all[chainId][this.network.name];
+        delete all[chainId][this.getDeploymentNetworkName()];
       }
-      all[chainId][this.network.name] = {
-        name: this.network.name,
+      all[chainId][this.getDeploymentNetworkName()] = {
+        name: this.getDeploymentNetworkName(),
         chainId,
         contracts: currentNetworkDeployments,
       };
@@ -1155,7 +1177,7 @@ export class DeploymentsManager {
         throw new Error('chainId is undefined');
       }
       const singleExport: Export = {
-        name: this.network.name,
+        name: this.getDeploymentNetworkName(),
         chainId,
         contracts: currentNetworkDeployments,
       };
@@ -1178,6 +1200,7 @@ export class DeploymentsManager {
   }
 
   private async setup(isRunningGlobalFixture: boolean) {
+    this.setupNetwork();
     if (!this.db.deploymentsLoaded && !isRunningGlobalFixture) {
       if (process.env.HARDHAT_DEPLOY_FIXTURE) {
         if (process.env.HARDHAT_COMPILE) {
@@ -1250,12 +1273,19 @@ export class DeploymentsManager {
     this.impersonateUnknownAccounts = false;
   }
 
-  private deploymentFolder(): string {
+  private getNetworkName(): string {
+    return getNetworkName(this.network);
+  }
+
+  private getDeploymentNetworkName(): string {
     if (this.db.runAsNode) {
       return 'localhost';
-    } else {
-      return this.network.name;
     }
+    return getNetworkName(this.network);
+  }
+
+  private deploymentFolder(): string {
+    return this.getDeploymentNetworkName();
   }
 
   private async setupAccounts(): Promise<{

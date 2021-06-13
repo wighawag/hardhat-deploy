@@ -10,6 +10,7 @@ import {ExtendedArtifact, MultiExport} from '../types';
 import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
 import {Transaction} from '@ethersproject/transactions';
+import {store} from './globalStore';
 
 function getOldArtifactSync(
   name: string,
@@ -425,7 +426,7 @@ export function processNamedAccounts(
       namedAccounts,
       chainIdGiven,
       accounts,
-      process.env.HARDHAT_DEPLOY_ACCOUNTS_NETWORK || network.name
+      process.env.HARDHAT_DEPLOY_ACCOUNTS_NETWORK || getNetworkName(network)
     );
   } else {
     return {
@@ -481,6 +482,25 @@ export const traverse = function (
   });
   return result;
 };
+
+export function getNetworkName(network: Network): string {
+  if (process.env['HARDHAT_DEPLOY_FORK']) {
+    return process.env['HARDHAT_DEPLOY_FORK'];
+  }
+  if ('forking' in network.config && (network.config.forking as any)?.network) {
+    return (network.config.forking as any)?.network;
+  }
+  return network.name;
+}
+
+export function getDeployPaths(network: Network): string[] {
+  const networkName = getNetworkName(network);
+  if (networkName === network.name) {
+    return network.deploy || store.networks[networkName]?.deploy; // fallback to global store
+  } else {
+    return store.networks[networkName]?.deploy; // skip network.deploy
+  }
+}
 
 export function mergeABIs(
   abis: any[][],
@@ -546,6 +566,7 @@ export function mergeABIs(
   return result;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function recode(decoded: any): Transaction {
   return {
     from: decoded.from,
