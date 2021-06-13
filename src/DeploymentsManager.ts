@@ -402,9 +402,11 @@ export class DeploymentsManager {
     const networkName = this.getNetworkName();
     if (networkName !== this.network.name) {
       const networkObject = store.networks[networkName];
-      this.env.network.live = networkObject.live;
-      this.env.network.tags = networkObject.tags;
-      this.env.network.deploy = networkObject.deploy;
+      if (networkObject) {
+        this.env.network.live = networkObject.live;
+        this.env.network.tags = networkObject.tags;
+        this.env.network.deploy = networkObject.deploy;
+      }
     }
     this.networkWasSetup = true;
   }
