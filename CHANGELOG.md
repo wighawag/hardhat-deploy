@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.5
+
+### Patch Changes
+
+- Revamp the fork handling
+
 ## 0.8.4
 
 ### Patch Changes
