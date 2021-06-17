@@ -29,6 +29,11 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
 - [Configuration](#configuration)
   - [**1. namedAccounts (ability to name addresses)**](#1-namedaccounts-ability-to-name-addresses)
   - [**2. extra hardhat.config networks' options**](#2-extra-hardhatconfig-networks-options)
+    - [`live`](#live)
+    - [`saveDeployments`](#savedeployments)
+    - [`tags`](#tags)
+    - [`deploy`](#deploy)
+    - [`companionNetworks`](#companionnetworks)
   - [**3. extra hardhat.config paths' options**](#3-extra-hardhatconfig-paths-options)
   - [Importing deployment from other projects (with truffle support)](#importing-deployment-from-other-projects-with-truffle-support)
   - [Access to Artifacts (non-deployed contract code and abi)](#access-to-artifacts-non-deployed-contract-code-and-abi)
@@ -352,7 +357,7 @@ It add similar options than the `deploy` task :
 
 ---
 
-This plugin adds a flag argument `--deploy-fixture` to the _test_ task that runs the global deployments fixture before the tests and snapshots it. This will generaly speed up the tests.
+This plugin adds a flag argument `--deploy-fixture` to the _test_ task which if enabled will run the global deployments fixture before the tests and snapshots it. This will generaly speed up the tests as further test will be able to revert back to the full deployment.
 
 > :warning: Note though that if your test behave differently whether that option is on or not, this most likely mean that your deploy scripts' tags and dependencies are not configured correctly. This is because the global fixture will ensure all contract are deployed while test will usually (for efficiency) ask for a particular tag.
 
@@ -498,13 +503,19 @@ This allows you to have meaningful names in your tests while the addresses match
 
 ---
 
-**hardhat-deploy** add 4 new fields to `networks` configuration
+**hardhat-deploy** add 5 new fields to `networks` configuration
 
-`live` : this is not used internally but is useful to perform action on a network whether it is a live network (rinkeby, mainnet, etc) or a temporary one (localhost, hardhat). The default is true (except for localhost and hardhat where the default is false).
+#### `live`
 
-`saveDeployments`: this tell whether **hardhat-deploy** should save the deployments to disk or not. Default to true, except for the hardhat network.
+this is not used internally but is useful to perform action on a network whether it is a live network (rinkeby, mainnet, etc) or a temporary one (localhost, hardhat). The default is true (except for localhost and hardhat where the default is false).
 
-`tags`: network can have tags to represent them. The config is an array and at runtime the hre.network.tags is an object whose fields (the tags) are set to true.
+#### `saveDeployments`
+
+this tell whether **hardhat-deploy** should save the deployments to disk or not. Default to true, except for the hardhat network.
+
+#### `tags`
+
+network can have tags to represent them. The config is an array and at runtime the hre.network.tags is an object whose fields (the tags) are set to true.
 
 This is useful to conidtionaly operate on network based on their use case.
 
@@ -532,11 +543,64 @@ Example:
 }
 ```
 
-`deploy`: the deploy field override the paths.deploy option and let you define a set of folder containing the deploy scripts to be executed for this network.
+#### `deploy`
+
+the deploy field override the paths.deploy option and let you define a set of folder containing the deploy scripts to be executed for this network.
 
 You can thus have one network that will be executing L1 deployment and other L2 deployments, etc...
 
 You could also have a folder that deploy contracts that are live on mainnet but that you need to replicate for your test or local network.
+
+#### `companionNetworks`
+
+the companionNetworks field is an object whose key is any name you desire and the value is the name of a network that will be accessible inside the deploy script. For example:
+
+```js
+{
+  ...
+  networks: {
+    optimism: {
+      url: 'http://127.0.0.1:8545',
+      ovm: true,
+      companionNetworks: {
+        l1: 'localhost',
+      },
+    }
+  }
+  ...
+}
+```
+
+By using name you can have the same deploy script used in different set of network.
+
+For your test you could have the companion networks pointing to the same hardhat network, for test deployment, you could have rinkeby acting like your l2 while goerli act as your l1.
+
+An example repo that show case a multi-network setup with optimism can be found here : https://github.com/wighawag/template-ethereum-contracts/tree/examples/optimism
+
+deploy script can then access the network and its deployment as follow :
+
+```js
+module.exports = async ({
+  getNamedAccounts,
+  deployments,
+  getChainId,
+  getUnnamedAccounts,
+}) => {
+  const {deploy} = deployments;
+  const {deployer} = await getNamedAccounts();
+
+  const OVM_L1ERC20Gateway = await hre.companionNetworks['l1'].deployments.get(
+    'OVM_L1ERC20Gateway'
+  ); // layer 1
+
+  await execute(
+    'SimpleERC20_OVM',
+    {from: deployer, log: true},
+    'init',
+    OVM_L1ERC20Gateway.address
+  );
+};
+```
 
 ---
 
