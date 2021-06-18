@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.8
+
+### Patch Changes
+
+- remove error when from !+ proxyAdminOwner
+
 ## 0.8.7
 
 ### Patch Changes
