@@ -1189,10 +1189,6 @@ Note that in this case, the contract deployment will not behave the same if depl
             throw new Error(`no currentProxyAdminOwner found in ProxyAdmin`);
           }
 
-          if (currentProxyAdminOwner.toLowerCase() !== from.toLowerCase()) {
-            throw new Error(`from != Proxy Admin Contract's owner`);
-          }
-
           let executeReceipt;
           if (updateMethod) {
             executeReceipt = await execute(
