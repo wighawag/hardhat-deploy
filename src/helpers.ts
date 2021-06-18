@@ -1100,8 +1100,9 @@ Note that in this case, the contract deployment will not behave the same if depl
           gasPrice: options.gasPrice,
           log: options.log,
           contract: proxyAdminContract,
+          deterministicDeployment: options.deterministicDeployment,
           skipIfAlreadyDeployed: true,
-          args: [owner], // TODO change ProxyAdmin implementation
+          args: [owner],
         });
       }
 
