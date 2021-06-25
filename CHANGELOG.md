@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.9
+
+### Patch Changes
+
+- tags consider for external deploy scripts
+
 ## 0.8.8
 
 ### Patch Changes

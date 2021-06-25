@@ -863,21 +863,21 @@ export class DeploymentsManager {
       }
     }
 
+    if (tags !== undefined && typeof tags === 'string') {
+      tags = [tags];
+    }
+
     if (this.env.config.external?.contracts) {
       for (const externalContracts of this.env.config.external.contracts) {
         if (externalContracts.deploy) {
           this.db.onlyArtifacts = externalContracts.artifacts;
           try {
-            await this.executeDeployScripts([externalContracts.deploy]);
+            await this.executeDeployScripts([externalContracts.deploy], tags);
           } finally {
             this.db.onlyArtifacts = undefined;
           }
         }
       }
-    }
-
-    if (tags !== undefined && typeof tags === 'string') {
-      tags = [tags];
     }
 
     const deployPaths = getDeployPaths(this.network);
