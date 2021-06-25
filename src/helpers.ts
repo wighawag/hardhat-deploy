@@ -886,7 +886,11 @@ export function addHelpers(
     let checkABIConflict = true;
     let viaAdminContract:
       | string
-      | {name: string; artifact?: string | ArtifactData}
+      | {
+          name: string;
+          artifact?: string | ArtifactData;
+          args?: any[];
+        }
       | undefined;
     if (typeof options.proxy === 'object') {
       upgradeIndex = options.proxy.upgradeIndex;
@@ -1065,9 +1069,16 @@ Note that in this case, the contract deployment will not behave the same if depl
       } else {
         proxyAdminName = viaAdminContract.name;
         if (!viaAdminContract.artifact) {
-          proxyAdminDeployed = await partialExtension.get(proxyAdminName);
+          try {
+            proxyAdminDeployed = await partialExtension.get(proxyAdminName);
+          } catch (e) {
+            console.log(
+              `ProxyAdmin deploy not found - Deploying new ProxyAdmin: ${proxyAdminName}`
+            );
+          }
         }
-        proxyAdminArtifactNameOrContract = viaAdminContract.artifact;
+        proxyAdminArtifactNameOrContract =
+          viaAdminContract.artifact || viaAdminContract.name;
       }
 
       let proxyAdminContract: ExtendedArtifact | undefined;
@@ -1092,6 +1103,12 @@ Note that in this case, the contract deployment will not behave the same if depl
       }
 
       if (!proxyAdminDeployed) {
+        const args =
+          typeof options?.proxy === 'object' &&
+          typeof options.proxy.viaAdminContract === 'object'
+            ? options.proxy.viaAdminContract?.args || [owner]
+            : [owner];
+
         proxyAdminDeployed = await _deployOne(proxyAdminName, {
           from: options.from,
           autoMine: options.autoMine,
@@ -1102,7 +1119,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           contract: proxyAdminContract,
           deterministicDeployment: options.deterministicDeployment,
           skipIfAlreadyDeployed: true,
-          args: [owner],
+          args,
         });
       }
 
