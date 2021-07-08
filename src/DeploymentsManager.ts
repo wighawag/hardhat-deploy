@@ -500,7 +500,7 @@ export class DeploymentsManager {
         ? undefined
         : {
             from: tx.from,
-            gasPrice: tx.gasPrice.toString(),
+            gasPrice: tx.gasPrice?.toString(),
             gasLimit: tx.gasLimit.toString(),
             to: tx.to,
             value: tx.value.toString(),

@@ -2174,14 +2174,14 @@ data: ${data}
           choices.unshift('continue waiting');
           if (tx) {
             console.log(
-              `transaction ${txHash} still pending... It used a gas price of ${tx.gasPrice.toString()} wei, current gas price is ${newGasPrice.toString()} wei`
+              `transaction ${txHash} still pending... It used a gas price of ${tx.gasPrice?.toString()} wei, current gas price is ${newGasPrice.toString()} wei`
             );
           } else {
             console.log(`transaction ${txHash} still pending...`);
           }
         }
 
-        if (tx && tx.gasPrice.lt(newGasPrice)) {
+        if (tx && tx.gasPrice?.lt(newGasPrice)) {
           choices.unshift('increase gas');
         }
 
