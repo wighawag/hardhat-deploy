@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.8.10
+
+### Patch Changes
+
+- add mumbai for polygonscan
+
 ## 0.8.9
 
 ### Patch Changes
