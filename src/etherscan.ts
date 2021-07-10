@@ -148,6 +148,9 @@ export async function submitSources(
     case '256':
       host = 'https://api-testnet.hecoinfo.com';
       break;
+    case '80001':
+      host = 'https://api-testnet.polygonscan.com';
+      break;         
     default:
       return logError(`Network with chainId: ${chainId} not supported`);
   }
