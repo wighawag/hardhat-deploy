@@ -1071,11 +1071,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         if (!viaAdminContract.artifact) {
           try {
             proxyAdminDeployed = await partialExtension.get(proxyAdminName);
-          } catch (e) {
-            console.log(
-              `ProxyAdmin deploy not found - Deploying new ProxyAdmin: ${proxyAdminName}`
-            );
-          }
+          } catch (e) {}
         }
         proxyAdminArtifactNameOrContract =
           viaAdminContract.artifact || viaAdminContract.name;
