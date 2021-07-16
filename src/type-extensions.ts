@@ -90,6 +90,10 @@ declare module 'hardhat/types/config' {
     deployments: string;
     imports: string;
   }
+  
+  interface HardhatNetworkForkingUserConfig {
+    network?: string;
+  }
 }
 
 declare module 'hardhat/types/runtime' {
