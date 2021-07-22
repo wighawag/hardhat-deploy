@@ -63,6 +63,11 @@ import {
   getVersion,
   getUnlinkedBytecode,
   withValidationDefaults,
+  Manifest,
+  getImplementationAddress,
+  getStorageLayoutForAddress,
+  assertStorageUpgradeSafe,
+  getStorageLayout,
 } from '@openzeppelin/upgrades-core';
 import {readValidations} from '@openzeppelin/hardhat-upgrades/dist/utils/validations';
 import {readv} from 'fs';
@@ -1147,6 +1152,22 @@ Note that in this case, the contract deployment will not behave the same if depl
       implementationOptions
     );
 
+    if (implementation.bytecode === undefined)
+      throw Error('No bytecode for implementation');
+
+    // ----------------------------------------------------- //
+    // VALIDATE CONTRACT IS SAFE USING openzeppelin-upgrades //
+    // ----------------------------------------------------- //
+    const requiredOpts = withValidationDefaults({});
+    // @ts-expect-error `hre` is actually defined globally
+    const validations = await readValidations(hre);
+    const unlinkedBytecode = getUnlinkedBytecode(
+      validations,
+      implementation.bytecode
+    );
+    const version = getVersion(unlinkedBytecode, implementation.bytecode);
+    assertUpgradeSafe(validations, version, requiredOpts);
+
     if (!oldDeployment || implementation.newlyDeployed) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
       const implementationContract = new Contract(
@@ -1175,8 +1196,41 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxyOptions.args = [implementation.address, proxyAdmin, data];
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
+
+        const manifest = await Manifest.forNetwork(provider);
+        await manifest.addProxy({
+          address: proxy.address,
+          txHash: proxy.transactionHash,
+          kind: 'transparent',
+        });
+
+        await manifest.lockedRun(async () => {
+          const manifestData = await manifest.read();
+          console.log('implementation', implementation);
+          const layout = getStorageLayout(validations, version);
+          manifestData.impls[version.linkedWithoutMetadata] = {
+            address: implementation.address,
+            txHash: implementation.transactionHash,
+            layout,
+          };
+          await manifest.write(manifestData);
+        });
       } else {
         console.log('Changing');
+
+        const manifest = await Manifest.forNetwork(provider);
+        const currentImplAddress = await getImplementationAddress(
+          provider,
+          proxy.address
+        );
+        const currentLayout = await getStorageLayoutForAddress(
+          manifest,
+          validations,
+          currentImplAddress
+        );
+        const layout = getStorageLayout(validations, version);
+        assertStorageUpgradeSafe(currentLayout, layout, requiredOpts);
+
         const ownerStorage = await provider.getStorageAt(
           proxy.address,
           '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
@@ -1225,25 +1279,6 @@ Note that in this case, the contract deployment will not behave the same if depl
             console.log('Traditional upgrade');
             console.log('Deploy result', deployResult);
             console.log('old', oldDeployment);
-
-            if (implementation.bytecode === undefined)
-              throw Error('No bytecode for implementation');
-
-            // ----------------------------------------------------- //
-            // VALIDATE CONTRACT IS SAFE USING openzeppelin-upgrades //
-            // ----------------------------------------------------- //
-            const requiredOpts = withValidationDefaults({});
-            // @ts-expect-error `hre` is actually defined globally
-            const validations = await readValidations(hre);
-            const unlinkedBytecode = getUnlinkedBytecode(
-              validations,
-              implementation.bytecode
-            );
-            const version = getVersion(
-              unlinkedBytecode,
-              implementation.bytecode
-            );
-            assertUpgradeSafe(validations, version, requiredOpts);
 
             executeReceipt = await execute(
               proxyAdminName,
