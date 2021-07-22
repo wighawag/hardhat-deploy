@@ -21,18 +21,11 @@ export const openzeppelin_assertIsValidUpgrade = async (
   proxyAddress: Address,
   newImplementation: {bytecode?: string}
 ): Promise<undefined> => {
-  if (newImplementation.bytecode === undefined)
-    throw Error('No bytecode for implementation');
+  const {version: newVersion, validations} = await getVersionAndValidations(
+    newImplementation
+  );
 
   const manifest = await Manifest.forNetwork(provider);
-
-  // @ts-expect-error `hre` is actually defined globally
-  const validations = await readValidations(hre);
-  const unlinkedBytecode = getUnlinkedBytecode(
-    validations,
-    newImplementation.bytecode
-  );
-  const newVersion = getVersion(unlinkedBytecode, newImplementation.bytecode);
 
   const newStorageLayout = getStorageLayout(validations, newVersion);
   const oldStorageLayout = await getStorageLayoutForAddress(
@@ -54,17 +47,8 @@ export const openzeppelin_assertIsValidUpgrade = async (
 export const openzeppelin_assertIsValidImplementation = async (implementation: {
   bytecode?: string;
 }): Promise<undefined> => {
-  if (implementation.bytecode === undefined)
-    throw Error('No bytecode for implementation');
-
   const requiredOpts = withValidationDefaults({});
-  // @ts-expect-error `hre` is actually defined globally
-  const validations = await readValidations(hre);
-  const unlinkedBytecode = getUnlinkedBytecode(
-    validations,
-    implementation.bytecode
-  );
-  const version = getVersion(unlinkedBytecode, implementation.bytecode);
+  const {version, validations} = await getVersionAndValidations(implementation);
 
   // This will throw an error if the implementation is invalid.
   assertUpgradeSafe(validations, version, requiredOpts);
@@ -77,8 +61,7 @@ export const openzeppelin_saveDeploymentManifest = async (
   proxy: Deployment,
   implementation: Deployment
 ): Promise<undefined> => {
-  if (implementation.bytecode === undefined)
-    throw Error('No bytecode for implementation');
+  const {version, validations} = await getVersionAndValidations(implementation);
 
   const manifest = await Manifest.forNetwork(provider);
   await manifest.addProxy({
@@ -86,14 +69,6 @@ export const openzeppelin_saveDeploymentManifest = async (
     txHash: proxy.transactionHash,
     kind: 'transparent',
   });
-
-  // @ts-expect-error `hre` is actually defined globally
-  const validations = await readValidations(hre);
-  const unlinkedBytecode = getUnlinkedBytecode(
-    validations,
-    implementation.bytecode
-  );
-  const version = getVersion(unlinkedBytecode, implementation.bytecode);
 
   await manifest.lockedRun(async () => {
     const manifestData = await manifest.read();
@@ -108,4 +83,24 @@ export const openzeppelin_saveDeploymentManifest = async (
   });
 
   return;
+};
+
+const getVersionAndValidations = async (implementation: {
+  bytecode?: string;
+}) => {
+  if (implementation.bytecode === undefined)
+    throw Error('No bytecode for implementation');
+
+  // @ts-expect-error `hre` is actually defined globally
+  const validations = await readValidations(hre);
+  const unlinkedBytecode = getUnlinkedBytecode(
+    validations,
+    implementation.bytecode
+  );
+  const version = getVersion(unlinkedBytecode, implementation.bytecode);
+
+  return {
+    version,
+    validations,
+  };
 };

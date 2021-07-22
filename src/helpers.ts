@@ -1014,6 +1014,10 @@ export function addHelpers(
       implementationOptions
     );
 
+    await openzeppelin_assertIsValidImplementation({
+      bytecode: artifact.bytecode,
+    });
+
     const proxyContractConstructor = proxyContract.abi.find(
       (v) => v.type === 'constructor'
     );
@@ -1156,8 +1160,6 @@ Note that in this case, the contract deployment will not behave the same if depl
       implementationName,
       implementationOptions
     );
-
-    await openzeppelin_assertIsValidImplementation(implementation);
 
     if (!oldDeployment || implementation.newlyDeployed) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
