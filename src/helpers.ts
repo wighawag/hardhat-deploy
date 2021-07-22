@@ -62,6 +62,7 @@ import {
   assertUpgradeSafe,
   getVersion,
   getUnlinkedBytecode,
+  withValidationDefaults,
 } from '@openzeppelin/upgrades-core';
 import {readValidations} from '@openzeppelin/hardhat-upgrades/dist/utils/validations';
 import {readv} from 'fs';
@@ -1227,8 +1228,30 @@ Note that in this case, the contract deployment will not behave the same if depl
 
             // Get storage layout of all previously deployed contracts here
 
+            const requiredOpts = withValidationDefaults({});
+
+            console.log('OPTS', requiredOpts);
+
+            console.log('implementation', implementation);
+
+            if (implementation.bytecode === undefined)
+              throw Error('No bytecode for implementation');
+
             // @ts-ignore
             const validations = await readValidations(hre);
+            const unlinkedBytecode = getUnlinkedBytecode(
+              validations,
+              implementation.bytecode
+            );
+            const version = getVersion(
+              unlinkedBytecode,
+              implementation.bytecode
+            );
+
+            assertUpgradeSafe(validations, version, requiredOpts);
+
+            console.log('unlinked', unlinkedBytecode);
+            console.log('version', version);
 
             executeReceipt = await execute(
               proxyAdminName,
