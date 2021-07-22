@@ -9,13 +9,12 @@ import {
   getUnlinkedBytecode,
   getVersion,
   Manifest,
-  ProxyDeployment,
-  ValidationData,
-  Version,
   withValidationDefaults,
 } from '@openzeppelin/upgrades-core';
 import {Address, Deployment} from '../types';
 
+// Checks the old implementation against the new implementation and
+// ensures that it's valid.
 export const openzeppelin_assertIsValidUpgrade = async (
   provider: Web3Provider,
   proxyAddress: Address,
@@ -26,7 +25,6 @@ export const openzeppelin_assertIsValidUpgrade = async (
   );
 
   const manifest = await Manifest.forNetwork(provider);
-
   const newStorageLayout = getStorageLayout(validations, newVersion);
   const oldStorageLayout = await getStorageLayoutForAddress(
     manifest,
@@ -44,6 +42,7 @@ export const openzeppelin_assertIsValidUpgrade = async (
   return;
 };
 
+// Checks the contract is a valid implementation (e.g. no `constructor` etc.)
 export const openzeppelin_assertIsValidImplementation = async (implementation: {
   bytecode?: string;
 }): Promise<undefined> => {
@@ -56,6 +55,9 @@ export const openzeppelin_assertIsValidImplementation = async (implementation: {
   return;
 };
 
+// Appends the implementation to the implementation history of the proxy.
+// Used for comparison against future implementations to ensure they are
+// compatible with eachother in `openzeppelin_assertIsValidUpgrade()`.
 export const openzeppelin_saveDeploymentManifest = async (
   provider: Web3Provider,
   proxy: Deployment,

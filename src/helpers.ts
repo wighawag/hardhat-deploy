@@ -1189,12 +1189,6 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxyOptions.args = [implementation.address, proxyAdmin, data];
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
-
-        await openzeppelin_saveDeploymentManifest(
-          provider,
-          proxy,
-          implementation
-        );
       } else {
         await openzeppelin_assertIsValidUpgrade(
           provider,
@@ -1289,6 +1283,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           }
         }
       }
+
       const proxiedDeployment: DeploymentSubmission = {
         ...proxyContract,
         receipt: proxy.receipt,
@@ -1309,7 +1304,13 @@ Note that in this case, the contract deployment will not behave the same if depl
           ? proxiedDeployment.history.concat([oldDeployment])
           : [oldDeployment];
       }
+
       await saveDeployment(name, proxiedDeployment);
+      await openzeppelin_saveDeploymentManifest(
+        provider,
+        proxy,
+        implementation
+      );
 
       const deployment = await partialExtension.get(name);
       return {
