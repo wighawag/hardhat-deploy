@@ -1226,18 +1226,14 @@ Note that in this case, the contract deployment will not behave the same if depl
             console.log('Deploy result', deployResult);
             console.log('old', oldDeployment);
 
-            // Get storage layout of all previously deployed contracts here
-
-            const requiredOpts = withValidationDefaults({});
-
-            console.log('OPTS', requiredOpts);
-
-            console.log('implementation', implementation);
-
             if (implementation.bytecode === undefined)
               throw Error('No bytecode for implementation');
 
-            // @ts-ignore
+            // ----------------------------------------------------- //
+            // VALIDATE CONTRACT IS SAFE USING openzeppelin-upgrades //
+            // ----------------------------------------------------- //
+            const requiredOpts = withValidationDefaults({});
+            // @ts-expect-error `hre` is actually defined globally
             const validations = await readValidations(hre);
             const unlinkedBytecode = getUnlinkedBytecode(
               validations,
@@ -1247,11 +1243,7 @@ Note that in this case, the contract deployment will not behave the same if depl
               unlinkedBytecode,
               implementation.bytecode
             );
-
             assertUpgradeSafe(validations, version, requiredOpts);
-
-            console.log('unlinked', unlinkedBytecode);
-            console.log('version', version);
 
             executeReceipt = await execute(
               proxyAdminName,
