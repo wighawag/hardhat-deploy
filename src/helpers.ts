@@ -58,6 +58,13 @@ import {
   parse as parseTransaction,
   Transaction,
 } from '@ethersproject/transactions';
+import {
+  assertUpgradeSafe,
+  getVersion,
+  getUnlinkedBytecode,
+} from '@openzeppelin/upgrades-core';
+import {readValidations} from '@openzeppelin/hardhat-upgrades/dist/utils/validations';
+import {readv} from 'fs';
 
 let LedgerSigner: any; // TODO type
 
@@ -1168,6 +1175,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
+        console.log('Changing');
         const ownerStorage = await provider.getStorageAt(
           proxy.address,
           '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
@@ -1213,6 +1221,15 @@ Note that in this case, the contract deployment will not behave the same if depl
               data
             );
           } else {
+            console.log('Traditional upgrade');
+            console.log('Deploy result', deployResult);
+            console.log('old', oldDeployment);
+
+            // Get storage layout of all previously deployed contracts here
+
+            // @ts-ignore
+            const validations = await readValidations(hre);
+
             executeReceipt = await execute(
               proxyAdminName,
               {...options, from: currentProxyAdminOwner},

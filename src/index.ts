@@ -22,6 +22,8 @@ import {
   TASK_TEST,
   TASK_NODE_GET_PROVIDER,
   TASK_NODE_SERVER_READY,
+  TASK_COMPILE_SOLIDITY_COMPILE,
+  TASK_COMPILE_SOLIDITY,
 } from 'hardhat/builtin-tasks/task-names';
 import {lazyObject} from 'hardhat/plugins';
 
@@ -35,6 +37,7 @@ import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
 import {store} from './globalStore';
 import {getDeployPaths, getNetworkName} from './utils';
+import {SolcInput} from '@openzeppelin/upgrades-core';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
@@ -736,50 +739,42 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
   }
 });
 
-task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
-  .addOptionalParam('apiKey', 'etherscan api key', undefined, types.string)
-  .addOptionalParam(
-    'license',
-    'SPDX license (useful if SPDX is not listed in the sources), need to be supported by etherscan: https://etherscan.io/contract-license-types',
-    undefined,
-    types.string
-  )
-  .addFlag(
-    'forceLicense',
-    'force the use of the license specified by --license option'
-  )
-  .addFlag(
-    'sleep',
-    'sleep 500ms between each verification, so API rate limit is not exceeded'
-  )
-  .addFlag(
-    'solcInput',
-    'fallback on solc-input (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)'
-  )
-  // .addFlag(
-  //   'logHttpRequestOnError',
-  //   'log the whole http request for debugging purpose, this output your API key, so use it aknowingly'
-  // )
-  .setAction(async (args, hre) => {
-    const etherscanApiKey =
-      args.apiKey ||
-      process.env.ETHERSCAN_API_KEY ||
-      hre.config.etherscan.apiKey;
-    if (!etherscanApiKey) {
-      throw new Error(
-        `No Etherscan API KEY provided. Set it through command line option, in hardhat.config.ts, or by setting the "ETHERSCAN_API_KEY" env variable`
-      );
+subtask(
+  TASK_COMPILE_SOLIDITY,
+  async (args: {force: boolean}, hre, runSuper) => {
+    console.log('NELLO');
+    return runSuper({...args, force: true});
+  }
+);
+
+subtask(
+  TASK_COMPILE_SOLIDITY_COMPILE,
+  async (args: {input: SolcInput}, hre, runSuper) => {
+    const {validate, solcInputOutputDecoder} = await import(
+      '@openzeppelin/upgrades-core'
+    );
+
+    const {writeValidations} = await import(
+      '@openzeppelin/hardhat-upgrades/dist/utils/validations'
+    );
+
+    // TODO: patch input
+    const {output, solcBuild} = await runSuper();
+    console.log('output', output);
+
+    const {isFullSolcOutput} = await import(
+      '@openzeppelin/hardhat-upgrades/dist/utils/is-full-solc-output'
+    );
+
+    if (isFullSolcOutput(output)) {
+      const decodeSrc = solcInputOutputDecoder(args.input, output);
+      const validations = validate(output, decodeSrc);
+      await writeValidations(hre, validations);
     }
-    const solcInputsPath = await deploymentsManager.getSolcInputPath();
-    await submitSources(hre, solcInputsPath, {
-      etherscanApiKey,
-      license: args.license,
-      fallbackOnSolcInput: args.solcInput,
-      forceLicense: args.forceLicense,
-      sleepBetween: args.sleep,
-      // logHttpRequestOnError: args.logHttpRequestOnError
-    });
-  });
+
+    return {output, solcBuild};
+  }
+);
 
 task(
   TASK_SOURCIFY,
