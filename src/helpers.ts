@@ -71,6 +71,11 @@ import {
 } from '@openzeppelin/upgrades-core';
 import {readValidations} from '@openzeppelin/hardhat-upgrades/dist/utils/validations';
 import {readv} from 'fs';
+import {
+  openzeppelin_assertIsValidImplementation,
+  openzeppelin_assertIsValidUpgrade,
+  openzeppelin_saveDeploymentManifest,
+} from './openzeppelin-upgrade-validation';
 
 let LedgerSigner: any; // TODO type
 
@@ -1152,21 +1157,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       implementationOptions
     );
 
-    if (implementation.bytecode === undefined)
-      throw Error('No bytecode for implementation');
-
-    // ----------------------------------------------------- //
-    // VALIDATE CONTRACT IS SAFE USING openzeppelin-upgrades //
-    // ----------------------------------------------------- //
-    const requiredOpts = withValidationDefaults({});
-    // @ts-expect-error `hre` is actually defined globally
-    const validations = await readValidations(hre);
-    const unlinkedBytecode = getUnlinkedBytecode(
-      validations,
-      implementation.bytecode
-    );
-    const version = getVersion(unlinkedBytecode, implementation.bytecode);
-    assertUpgradeSafe(validations, version, requiredOpts);
+    await openzeppelin_assertIsValidImplementation(implementation);
 
     if (!oldDeployment || implementation.newlyDeployed) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
@@ -1197,39 +1188,17 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
 
-        const manifest = await Manifest.forNetwork(provider);
-        await manifest.addProxy({
-          address: proxy.address,
-          txHash: proxy.transactionHash,
-          kind: 'transparent',
-        });
-
-        await manifest.lockedRun(async () => {
-          const manifestData = await manifest.read();
-          console.log('implementation', implementation);
-          const layout = getStorageLayout(validations, version);
-          manifestData.impls[version.linkedWithoutMetadata] = {
-            address: implementation.address,
-            txHash: implementation.transactionHash,
-            layout,
-          };
-          await manifest.write(manifestData);
-        });
-      } else {
-        console.log('Changing');
-
-        const manifest = await Manifest.forNetwork(provider);
-        const currentImplAddress = await getImplementationAddress(
+        await openzeppelin_saveDeploymentManifest(
           provider,
-          proxy.address
+          proxy,
+          implementation
         );
-        const currentLayout = await getStorageLayoutForAddress(
-          manifest,
-          validations,
-          currentImplAddress
+      } else {
+        await openzeppelin_assertIsValidUpgrade(
+          provider,
+          proxy.address,
+          implementation
         );
-        const layout = getStorageLayout(validations, version);
-        assertStorageUpgradeSafe(currentLayout, layout, requiredOpts);
 
         const ownerStorage = await provider.getStorageAt(
           proxy.address,
