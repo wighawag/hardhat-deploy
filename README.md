@@ -983,13 +983,13 @@ Furthermore as hardhat support multiple network configuration for the same netwo
 
 As mentioned above, the deploy function can also deploy a contract through a proxy. It can be done without modification of the contract as long as its number of constructor arguments matches the proxy initialization/update function.
 
-The default Proxy is both ERC-1967 and ERC-173 Compliant, but other proxy can be specified, like openzeppelin transparent proxies.
+The default Proxy is both ERC-1967 and ERC-173 Compliant, but other proxy can be specified, like openzeppelin transparent proxies. The implementations that go alongside the proxies are passed through open zeppelin's [upgrades-plugin](https://github.com/OpenZeppelin/openzeppelin-upgrades) validation. This prevents [storage collisions](https://docs.openzeppelin.com/upgrades-plugins/1.x/faq#what-does-it-mean-for-an-implementation-to-be-compatible) and other [proxy related errors](https://docs.openzeppelin.com/upgrades-plugins/1.x/faq#what-does-it-mean-for-a-contract-to-be-upgrade-safe).
 
 Code for the default Proxy can be found [here](solc_0.7/proxy/EIP173Proxy.sol).
 
 To perform such proxy deployment, you just need to invoke the deploy function with the following options : `{..., proxy: true}`
 
-See example :
+For example:
 
 ```js
 module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
@@ -1002,10 +1002,33 @@ module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
 };
 ```
 
-You can also set it to `proxy: "<upgradeMethodName>"` in which case the function `<upgradeMethodName>` will be executed upon upgrade.
-the `args` field will be then used for that function instead of the contructor. It is also possible to then have a constructor with the same arguments and have the proxy be disabled. It can be useful if you want to have your contract as upgradeable in a test network but be non-upgradeable on the mainnet.
+Then to upgrade the contract you just call `deploy` again:
 
-See example :
+```js
+module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
+  const {deploy} = deployments;
+  const {deployer} = await getNamedAccounts();
+
+  // Deploy the first implementation for "Greeter" here
+  await deploy('Greeter', {
+    contract: 'GreeterImpl1',
+    from: deployer,
+    proxy: true,
+  });
+
+  // Then upgrade the contract here by deploying against "Greeter" again
+  await deploy('Greeter', {
+    contract: 'GreeterImpl2',
+    from: deployer,
+    proxy: true,
+  });
+};
+```
+
+You can also set the proxy field to `proxy: "<upgradeMethodName>"` in which case the function `<upgradeMethodName>` will be executed upon upgrade.
+The `args` field will be then used for that function instead of the contructor. It is also possible to then have a constructor with the same arguments and have the proxy be disabled. It can be useful if you want to have your contract as upgradeable in a test network but be non-upgradeable on the mainnet.
+
+For example:
 
 ```js
 module.exports = async ({
@@ -1024,9 +1047,9 @@ module.exports = async ({
 };
 ```
 
-The proxy option can also be an object which can set the specific owner that the proxy is going to be managed by.
+The proxy field can also be an object which can set the specific owner that the proxy is going to be managed by.
 
-See example:
+For example:
 
 ```js
 module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
@@ -1045,11 +1068,11 @@ module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
 
 Note that for the second invokation, this deployment will not be executed from the specified `from: deployer` as otherwise these tx will always fails. It will instead be automatically executed from the proxy's current owner (in that case : `greeterOwner`)
 
-Now, it is likely you do not want to locally handle the private key / mnemonic of the account that manage the proxy or it could even be that the `greeterOwner` in question is a multi sig. As such that second invocation will throw an error as it cannot find a local signer for it.
+Now, it is likely you do not want to locally handle the private key / mnemonic of the account that manages the proxy or it could even be that the `greeterOwner` in question is a multi sig. As such that second invocation will throw an error as it cannot find a local signer for it.
 
-The error will output the necessary information to upgrade the contract but `hardhat-deploy` comes also with a utility function for such case: `deployments.catchUnknwonSigner` which will catch the error and output to the console the necessary information while continuing to next step.
+The error will output the necessary information to upgrade the contract but `hardhat-deploy` comes also with a utility function for such case: `deployments.catchUnknownSigner` which will catch the error and output to the console the necessary information while continuing to next step.
 
-Here is the full example :
+Here is the full example:
 
 ```js
 module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
