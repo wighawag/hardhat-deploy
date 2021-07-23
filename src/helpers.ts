@@ -59,19 +59,6 @@ import {
   Transaction,
 } from '@ethersproject/transactions';
 import {
-  assertUpgradeSafe,
-  getVersion,
-  getUnlinkedBytecode,
-  withValidationDefaults,
-  Manifest,
-  getImplementationAddress,
-  getStorageLayoutForAddress,
-  assertStorageUpgradeSafe,
-  getStorageLayout,
-} from '@openzeppelin/upgrades-core';
-import {readValidations} from '@openzeppelin/hardhat-upgrades/dist/utils/validations';
-import {readv} from 'fs';
-import {
   openzeppelin_assertIsValidImplementation,
   openzeppelin_assertIsValidUpgrade,
   openzeppelin_saveDeploymentManifest,
