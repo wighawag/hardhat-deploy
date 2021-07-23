@@ -740,14 +740,6 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
 });
 
 subtask(
-  TASK_COMPILE_SOLIDITY,
-  async (args: {force: boolean}, hre, runSuper) => {
-    console.log('NELLO');
-    return runSuper({...args, force: true});
-  }
-);
-
-subtask(
   TASK_COMPILE_SOLIDITY_COMPILE,
   async (args: {input: SolcInput}, hre, runSuper) => {
     const {validate, solcInputOutputDecoder} = await import(
