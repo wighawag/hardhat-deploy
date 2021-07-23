@@ -1,8 +1,10 @@
 import {Web3Provider} from '@ethersproject/providers';
 import {readValidations} from '@openzeppelin/hardhat-upgrades/dist/utils/validations';
+import path from 'path';
 import {
   assertStorageUpgradeSafe,
   assertUpgradeSafe,
+  getChainId,
   getImplementationAddress,
   getStorageLayout,
   getStorageLayoutForAddress,
@@ -80,7 +82,6 @@ export const openzeppelin_saveDeploymentManifest = async (
       txHash: implementation.transactionHash,
       layout,
     };
-
     await manifest.write(manifestData);
   });
 

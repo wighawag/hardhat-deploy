@@ -1241,10 +1241,6 @@ Note that in this case, the contract deployment will not behave the same if depl
               data
             );
           } else {
-            console.log('Traditional upgrade');
-            console.log('Deploy result', deployResult);
-            console.log('old', oldDeployment);
-
             executeReceipt = await execute(
               proxyAdminName,
               {...options, from: currentProxyAdminOwner},

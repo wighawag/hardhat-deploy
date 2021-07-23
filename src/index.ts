@@ -753,19 +753,16 @@ subtask(
     const {validate, solcInputOutputDecoder} = await import(
       '@openzeppelin/upgrades-core'
     );
-
     const {writeValidations} = await import(
       '@openzeppelin/hardhat-upgrades/dist/utils/validations'
     );
 
     // TODO: patch input
     const {output, solcBuild} = await runSuper();
-    console.log('output', output);
 
     const {isFullSolcOutput} = await import(
       '@openzeppelin/hardhat-upgrades/dist/utils/is-full-solc-output'
     );
-
     if (isFullSolcOutput(output)) {
       const decodeSrc = solcInputOutputDecoder(args.input, output);
       const validations = validate(output, decodeSrc);
