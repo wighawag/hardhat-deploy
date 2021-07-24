@@ -349,7 +349,7 @@ It add similar options than the `deploy` task :
 
 `--no-deploy` that discard all other options to revert to normal `hardhat node` behavior without any deployment being performed.
 
-> :warning: Note that the deployments are saved as if the network name is `localhost`. This is because `hardhat node` is expected to be used as localhost: You can for example execute `hardhat --network localhost console` after `node` is running. Doing `builder --network hardhat console` would indeed not do anything useful. It still take the configuration from `hardhat` in the hardhat.config.js file though.
+> :warning: Note that the deployments are saved as if the network name is `localhost`. This is because `hardhat node` is expected to be used as localhost: You can for example execute `hardhat --network localhost console` after `node` is running. Doing `hardhat --network hardhat console` would indeed not do anything useful. It still take the configuration from `hardhat` in the hardhat.config.js file though.
 
 ---
 
