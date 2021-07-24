@@ -58,7 +58,7 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
 
 ## What is it for ?
 
-This [hardhat](https://hardhat.dev) plugin adds a mechanism to deploy contracts to any network, keeping track of them and replicating the same environment for testing.
+This [hardhat](https://hardhat.org) plugin adds a mechanism to deploy contracts to any network, keeping track of them and replicating the same environment for testing.
 
 It also adds a mechanism to associate names to addresses, so test and deployment scripts can be reconfigured by simply changing the address a name points to, allowing different configurations per network. This also results in much clearer tests and deployment scripts (no more `accounts[0]` in your code).
 
