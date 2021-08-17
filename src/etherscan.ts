@@ -145,12 +145,21 @@ export async function submitSources(
     case '137':
       host = 'https://api.polygonscan.com';
       break;
+    case '250':
+      host = 'https://api.ftmscan.com';
+      break;
+    case '70':
+      host = 'https://api.hooscan.com';
+      break;
     case '256':
       host = 'https://api-testnet.hecoinfo.com';
       break;
     case '80001':
       host = 'https://api-testnet.polygonscan.com';
-      break;         
+      break; 
+    case '4002':
+      host = 'https://api-testnet.ftmscan.com';
+      break;
     default:
       return logError(`Network with chainId: ${chainId} not supported`);
   }
