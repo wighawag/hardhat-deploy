@@ -1,14 +1,16 @@
 language: node_js
 
+cache: yarn
+
 node_js:
   - '14'
 
 install:
-  - npm install
+  - yarn
 
 script:
-  - npm run build
-  - npm run lint
+  - yarn build
+  - yarn lint
 
 branches:
   only:
