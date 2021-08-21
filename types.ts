@@ -151,6 +151,8 @@ export interface CallOptions {
   from?: string;
   gasLimit?: string | number | BigNumber;
   gasPrice?: string | BigNumber;
+  maxFeePerGas?: string | BigNumber;
+  maxPriorityFeePerGas?: string | BigNumber;
   value?: string | BigNumber;
   nonce?: string | number | BigNumber;
   to?: string; // TODO make to and data part of a `SimpleCallOptions` interface

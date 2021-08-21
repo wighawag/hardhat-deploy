@@ -83,7 +83,7 @@ async function handleSpecificErrors<T>(p: Promise<T>): Promise<T> {
       console.log(
         `
 Exact same transaction already in the pool, node reject duplicates.
-You'll need to wait the tx resolve, or increase the gas price via --gasprice
+You'll need to wait the tx resolve, or increase the gas price via --gasprice (this will use old tx type)
         `
       );
       throw new Error(
@@ -253,7 +253,9 @@ export function addHelpers(
           rawTx: string;
           decoded: {
             from: string;
-            gasPrice: string;
+            gasPrice?: string;
+            maxFeePerGas?: string;
+            maxPriorityFeePerGas?: string;
             gasLimit: string;
             to: string;
             value: string;
@@ -376,6 +378,8 @@ export function addHelpers(
     from: string;
     log?: boolean;
     gasPrice?: string | BigNumber;
+    maxFeePerGas?: string | BigNumber;
+    maxPriorityFeePerGas?: string | BigNumber;
   }): Promise<string> {
     const {
       address: from,
@@ -392,6 +396,8 @@ export function addHelpers(
         to: senderAddress,
         value: BigNumber.from('10000000000000000').toHexString(),
         gasPrice: options.gasPrice,
+        maxFeePerGas: options.maxFeePerGas,
+        maxPriorityFeePerGas: options.maxPriorityFeePerGas,
       };
       await setupGasPrice(txRequest);
       await setupNonce(from, txRequest);
@@ -497,6 +503,8 @@ export function addHelpers(
     const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
       gasPrice: options.gasPrice,
+      maxFeePerGas: options.maxFeePerGas,
+      maxPriorityFeePerGas: options.maxPriorityFeePerGas,
       value: options.value,
       nonce: options.nonce,
     };
@@ -980,6 +988,8 @@ export function addHelpers(
       estimateGasExtra: options.estimateGasExtra,
       estimatedGasLimit: options.estimatedGasLimit,
       gasPrice: options.gasPrice,
+      maxFeePerGas: options.maxFeePerGas,
+      maxPriorityFeePerGas: options.maxPriorityFeePerGas,
       log: options.log,
       deterministicDeployment: options.deterministicDeployment,
       libraries: options.libraries,
@@ -1098,6 +1108,8 @@ Note that in this case, the contract deployment will not behave the same if depl
           estimateGasExtra: options.estimateGasExtra,
           estimatedGasLimit: options.estimatedGasLimit,
           gasPrice: options.gasPrice,
+          maxFeePerGas: options.maxFeePerGas,
+          maxPriorityFeePerGas: options.maxPriorityFeePerGas,
           log: options.log,
           contract: proxyAdminContract,
           deterministicDeployment: options.deterministicDeployment,
@@ -1159,9 +1171,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           proxy.address,
           '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
         );
-        const currentOwner = getAddress(
-          `0x${ownerStorage.substr(-40)}`
-        );
+        const currentOwner = getAddress(`0x${ownerStorage.substr(-40)}`);
 
         const oldProxy = proxy.abi.find(
           (frag: {name: string}) => frag.name === 'changeImplementation'
@@ -1477,6 +1487,8 @@ Note that in this case, the contract deployment will not behave the same if depl
         estimateGasExtra: options.estimateGasExtra,
         estimatedGasLimit: options.estimatedGasLimit,
         gasPrice: options.gasPrice,
+        maxFeePerGas: options.maxFeePerGas,
+        maxPriorityFeePerGas: options.maxPriorityFeePerGas,
         log: options.log,
         // deterministicDeployment: options.deterministicDeployment, // todo ?
         libraries: options.libraries,
@@ -1592,6 +1604,8 @@ Note that in this case, the contract deployment will not behave the same if depl
           estimateGasExtra: options.estimateGasExtra,
           estimatedGasLimit: options.estimatedGasLimit,
           gasPrice: options.gasPrice,
+          maxFeePerGas: options.maxFeePerGas,
+          maxPriorityFeePerGas: options.maxPriorityFeePerGas,
           log: options.log,
         });
         const diamantaireContract = new Contract(
@@ -1816,6 +1830,12 @@ Note that in this case, the contract deployment will not behave the same if depl
       to: tx.to,
       gasLimit: tx.gasLimit,
       gasPrice: tx.gasPrice ? BigNumber.from(tx.gasPrice) : undefined,
+      maxFeePerGas: tx.maxFeePerGas
+        ? BigNumber.from(tx.maxFeePerGas)
+        : undefined,
+      maxPriorityFeePerGas: tx.maxPriorityFeePerGas
+        ? BigNumber.from(tx.maxPriorityFeePerGas)
+        : undefined,
       value: tx.value ? BigNumber.from(tx.value) : undefined,
       nonce: tx.nonce,
       data: tx.data,
@@ -1944,6 +1964,12 @@ data: ${data}
     const overrides = {
       gasLimit: options.gasLimit,
       gasPrice: options.gasPrice ? BigNumber.from(options.gasPrice) : undefined, // TODO cinfig
+      maxFeePerGas: options.maxFeePerGas
+        ? BigNumber.from(options.maxFeePerGas)
+        : undefined,
+      maxPriorityFeePerGas: options.maxPriorityFeePerGas
+        ? BigNumber.from(options.maxPriorityFeePerGas)
+        : undefined,
       value: options.value ? BigNumber.from(options.value) : undefined,
       nonce: options.nonce,
     };
@@ -2064,6 +2090,12 @@ data: ${data}
     const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
       gasPrice: options.gasPrice ? BigNumber.from(options.gasPrice) : undefined, // TODO cinfig
+      maxFeePerGas: options.maxFeePerGas
+        ? BigNumber.from(options.maxFeePerGas)
+        : undefined,
+      maxPriorityFeePerGas: options.maxPriorityFeePerGas
+        ? BigNumber.from(options.maxPriorityFeePerGas)
+        : undefined,
       value: options.value ? BigNumber.from(options.value) : undefined,
       nonce: options.nonce,
     };
@@ -2120,7 +2152,9 @@ data: ${data}
           rawTx: string;
           decoded: {
             from: string;
-            gasPrice: string;
+            gasPrice?: string;
+            maxFeePerGas?: string | BigNumber;
+            maxPriorityFeePerGas?: string | BigNumber;
             gasLimit: string;
             to: string;
             value: string;
@@ -2158,11 +2192,33 @@ data: ${data}
           [txHash]
         );
 
+        let feeHistory:
+          | {
+              baseFeePerGas: string[];
+              gasUsedRatio?: number[]; // not documented on https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=false&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
+              oldestBlock: number;
+              reward: string[][];
+            }
+          | undefined = undefined;
         let newGasPriceS = globalGasPrice;
         if (!newGasPriceS) {
           newGasPriceS = await network.provider.send('eth_gasPrice', []);
+          try {
+            feeHistory = await network.provider.send('eth_feeHistory', [
+              4,
+              'latest',
+              [25, 75],
+            ]);
+          } catch (e) {}
         }
         const newGasPrice = BigNumber.from(newGasPriceS);
+
+        let newBaseFee: BigNumber | undefined = undefined;
+        if (feeHistory) {
+          newBaseFee = BigNumber.from(
+            feeHistory.baseFeePerGas[feeHistory.baseFeePerGas.length - 1]
+          );
+        }
 
         const choices = ['skip (forget tx)'];
         if (!txFromPeers) {
@@ -2174,15 +2230,27 @@ data: ${data}
           choices.unshift('continue waiting');
           if (tx) {
             console.log(
-              `transaction ${txHash} still pending... It used a gas price of ${tx.gasPrice.toString()} wei, current gas price is ${newGasPrice.toString()} wei`
+              `transaction ${txHash} still pending... It used a gas pricing config of ${
+                tx.gasPrice
+                  ? `(gasPrice: ${tx.gasPrice.toString()} wei)`
+                  : tx.maxPriorityFeePerGas || tx.maxPriorityFeePerGas
+                  ? `maxPriorityFeePerGas: ${tx.maxPriorityFeePerGas?.toString()} maxFeePerGas: ${tx.maxFeePerGas?.toString()}`
+                  : ``
+              } ,
+              current gas price is ${newGasPrice.toString()} wei
+              ${newBaseFee ? `new baseFee is ${newBaseFee.toString()}` : ''}
+              `
             );
           } else {
             console.log(`transaction ${txHash} still pending...`);
           }
         }
 
-        if (tx && tx.gasPrice.lt(newGasPrice)) {
+        if (tx && tx.gasPrice && tx.gasPrice.lt(newGasPrice)) {
           choices.unshift('increase gas');
+        } else if (tx && (tx.maxFeePerGas || tx.maxPriorityFeePerGas)) {
+          // choices.unshift(); // TODO
+          console.log('TODO handle EIP1559 gas pricing increase');
         }
 
         const prompt = new (enquirer as any).Select({
@@ -2230,6 +2298,8 @@ data: ${data}
 
                   gasLimit: tx.gasLimit,
                   gasPrice: tx.gasPrice,
+                  maxFeePerGas: tx.maxFeePerGas,
+                  maxPriorityFeePerGas: tx.maxPriorityFeePerGas,
 
                   data: tx.data,
                   value: tx.value,
@@ -2273,7 +2343,7 @@ data: ${data}
                 nonce: tx.nonce,
 
                 gasLimit: tx.gasLimit,
-                gasPrice: newGasPrice,
+                gasPrice: newGasPrice, // TODO EIP1559
 
                 data: tx.data,
                 value: tx.value,

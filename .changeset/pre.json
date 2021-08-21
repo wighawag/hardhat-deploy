@@ -1,0 +1,10 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "hardhat-deploy": "0.8.11"
+  },
+  "changesets": [
+    "cyan-seas-protect"
+  ]
+}

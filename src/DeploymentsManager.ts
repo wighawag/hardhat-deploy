@@ -84,7 +84,9 @@ export class DeploymentsManager {
           rawTx: string;
           decoded: {
             from: string;
-            gasPrice: string;
+            gasPrice?: string;
+            maxFeePerGas?: string;
+            maxPriorityFeePerGas?: string;
             gasLimit: string;
             to: string;
             value: string;
@@ -447,7 +449,9 @@ export class DeploymentsManager {
         rawTx: string;
         decoded: {
           from: string;
-          gasPrice: string;
+          gasPrice?: string;
+          maxFeePerGas?: string;
+          maxPriorityFeePerGas?: string;
           gasLimit: string;
           to: string;
           value: string;
@@ -500,7 +504,9 @@ export class DeploymentsManager {
         ? undefined
         : {
             from: tx.from,
-            gasPrice: tx.gasPrice.toString(),
+            gasPrice: tx.gasPrice?.toString(),
+            maxFeePerGas: tx.maxFeePerGas?.toString(),
+            maxPriorityFeePerGas: tx.maxPriorityFeePerGas?.toString(),
             gasLimit: tx.gasLimit.toString(),
             to: tx.to,
             value: tx.value.toString(),
