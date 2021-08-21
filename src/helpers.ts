@@ -58,6 +58,11 @@ import {
   parse as parseTransaction,
   Transaction,
 } from '@ethersproject/transactions';
+import {
+  openzeppelin_assertIsValidImplementation,
+  openzeppelin_assertIsValidUpgrade,
+  openzeppelin_saveDeploymentManifest,
+} from './openzeppelin-upgrade-validation';
 
 let LedgerSigner: any; // TODO type
 
@@ -886,7 +891,11 @@ export function addHelpers(
     let checkABIConflict = true;
     let viaAdminContract:
       | string
-      | {name: string; artifact?: string | ArtifactData}
+      | {
+          name: string;
+          artifact?: string | ArtifactData;
+          args?: any[];
+        }
       | undefined;
     if (typeof options.proxy === 'object') {
       upgradeIndex = options.proxy.upgradeIndex;
@@ -992,6 +1001,10 @@ export function addHelpers(
       implementationOptions
     );
 
+    await openzeppelin_assertIsValidImplementation({
+      bytecode: artifact.bytecode,
+    });
+
     const proxyContractConstructor = proxyContract.abi.find(
       (v) => v.type === 'constructor'
     );
@@ -1065,9 +1078,12 @@ Note that in this case, the contract deployment will not behave the same if depl
       } else {
         proxyAdminName = viaAdminContract.name;
         if (!viaAdminContract.artifact) {
-          proxyAdminDeployed = await partialExtension.get(proxyAdminName);
+          try {
+            proxyAdminDeployed = await partialExtension.get(proxyAdminName);
+          } catch (e) {}
         }
-        proxyAdminArtifactNameOrContract = viaAdminContract.artifact;
+        proxyAdminArtifactNameOrContract =
+          viaAdminContract.artifact || viaAdminContract.name;
       }
 
       let proxyAdminContract: ExtendedArtifact | undefined;
@@ -1092,6 +1108,12 @@ Note that in this case, the contract deployment will not behave the same if depl
       }
 
       if (!proxyAdminDeployed) {
+        const args =
+          typeof options?.proxy === 'object' &&
+          typeof options.proxy.viaAdminContract === 'object'
+            ? options.proxy.viaAdminContract?.args || [owner]
+            : [owner];
+
         proxyAdminDeployed = await _deployOne(proxyAdminName, {
           from: options.from,
           autoMine: options.autoMine,
@@ -1102,7 +1124,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           contract: proxyAdminContract,
           deterministicDeployment: options.deterministicDeployment,
           skipIfAlreadyDeployed: true,
-          args: [owner],
+          args,
         });
       }
 
@@ -1155,6 +1177,12 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
+        await openzeppelin_assertIsValidUpgrade(
+          provider,
+          proxy.address,
+          implementation
+        );
+
         const ownerStorage = await provider.getStorageAt(
           proxy.address,
           '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
@@ -1238,6 +1266,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           }
         }
       }
+
       const proxiedDeployment: DeploymentSubmission = {
         ...proxyContract,
         receipt: proxy.receipt,
@@ -1258,7 +1287,13 @@ Note that in this case, the contract deployment will not behave the same if depl
           ? proxiedDeployment.history.concat([oldDeployment])
           : [oldDeployment];
       }
+
       await saveDeployment(name, proxiedDeployment);
+      await openzeppelin_saveDeploymentManifest(
+        provider,
+        proxy,
+        implementation
+      );
 
       const deployment = await partialExtension.get(name);
       return {

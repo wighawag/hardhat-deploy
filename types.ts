@@ -93,6 +93,7 @@ type ProxyOptionsBase = {
     | {
         name: string;
         artifact?: string | ArtifactData;
+        args: any[];
       };
 };
 
