@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.0
+
+### Minor Changes
+
+- f96f725: EIP-1559
+
 ## 0.9.0-next.0
 
 ### Minor Changes
