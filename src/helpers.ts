@@ -1018,7 +1018,7 @@ export function addHelpers(
     );
 
     if (
-      (!constructor && implementationArgs.length > 0) ||
+      (!constructor && !options.proxy && implementationArgs.length > 0) ||
       (constructor && constructor.inputs.length !== implementationArgs.length)
     ) {
       throw new Error(
