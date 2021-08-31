@@ -1190,11 +1190,11 @@ Note that if you want to deploy 2 diamonds with same owner, you'll need 2 differ
 
 ## Testing Deployed Contracts
 
-You can continue using the usual test task :
+You can continue using the usual test task:
 
 `hardhat test`
 
-Tests can then use the `hre.deployments.fixture` function to run the deployment for the test and snapshot it so that tests don't need to perform all the deployments transaction every time, they simply reuse the snapshot for every test (this leverages `evm_snapshot` and `evm_revert` provided by both `hardhat` and `ganache`). You can for example set them in a `beaforeEach`.
+Tests can use the `hre.deployments.fixture` function to run the deployment and snapshot it so that tests don't need to perform all the deployment transactions every time. They can simply reuse the snapshot for every test (this leverages `evm_snapshot` and `evm_revert` provided by both `hardhat` and `ganache`). You can for example set them in a `beforeEach`.
 
 Here is an example of a test :
 
