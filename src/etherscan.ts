@@ -160,6 +160,9 @@ export async function submitSources(
     case '4002':
       host = 'https://api-testnet.ftmscan.com';
       break;
+    case '42161':
+      host = 'https://api.arbiscan.io'
+      break;
     default:
       return logError(`Network with chainId: ${chainId} not supported`);
   }
