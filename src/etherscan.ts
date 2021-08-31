@@ -159,6 +159,7 @@ export async function submitSources(
       break; 
     case '4002':
       host = 'https://api-testnet.ftmscan.com';
+      break;
     case '42161':
       host = 'https://api.arbiscan.io'
       break;
