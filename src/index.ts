@@ -385,6 +385,13 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     undefined,
     types.string
   )
+  .addOptionalParam('maxfee', 'max fee per gas', undefined, types.string)
+  .addOptionalParam(
+    'priorityfee',
+    'max priority fee per gas',
+    undefined,
+    types.string
+  )
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
   .setAction(async (args) => {
@@ -401,6 +408,8 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       exportAll: args.exportAll,
       savePendingTx: args.pendingtx,
       gasPrice: args.gasprice,
+      maxFeePerGas: args.maxfee,
+      maxPriorityFeePerGas: args.priorityfee,
     });
   });
 
@@ -428,6 +437,13 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
   .addOptionalParam(
     'gasprice',
     'gas price to use for transactions',
+    undefined,
+    types.string
+  )
+  .addOptionalParam('maxfee', 'max fee per gas', undefined, types.string)
+  .addOptionalParam(
+    'priorityfee',
+    'max priority fee per gas',
     undefined,
     types.string
   )
@@ -572,6 +588,13 @@ task(TASK_DEPLOY, 'Deploy contracts')
     undefined,
     types.string
   )
+  .addOptionalParam('maxfee', 'max fee per gas', undefined, types.string)
+  .addOptionalParam(
+    'priorityfee',
+    'max priority fee per gas',
+    undefined,
+    types.string
+  )
   .addOptionalParam(
     'deployScripts',
     'override deploy script folder path',
@@ -644,6 +667,13 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   .addOptionalParam(
     'gasprice',
     'gas price to use for transactions',
+    undefined,
+    types.string
+  )
+  .addOptionalParam('maxfee', 'max fee per gas', undefined, types.string)
+  .addOptionalParam(
+    'priorityfee',
+    'max priority fee per gas',
     undefined,
     types.string
   )

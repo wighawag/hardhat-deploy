@@ -59,6 +59,8 @@ export class DeploymentsManager {
     pendingTransactions: {[hash: string]: any};
     savePendingTx: boolean;
     gasPrice?: string;
+    maxFeePerGas?: string;
+    maxPriorityFeePerGas?: string;
     migrations: {[id: string]: number};
     onlyArtifacts?: string;
     runAsNode: boolean;
@@ -381,11 +383,20 @@ export class DeploymentsManager {
       this.onPendingTx.bind(this),
       async () => {
         // TODO extraGasPrice ?
+        let gasPrice: BigNumber | undefined;
+        let maxFeePerGas: BigNumber | undefined;
+        let maxPriorityFeePerGas: BigNumber | undefined;
         if (this.db.gasPrice) {
-          return BigNumber.from(this.db.gasPrice);
+          gasPrice = BigNumber.from(this.db.gasPrice);
         } else {
-          return undefined;
+          if (this.db.maxFeePerGas) {
+            maxFeePerGas = BigNumber.from(this.db.maxFeePerGas);
+          }
+          if (this.db.maxPriorityFeePerGas) {
+            maxPriorityFeePerGas = BigNumber.from(this.db.maxPriorityFeePerGas);
+          }
         }
+        return {gasPrice, maxFeePerGas, maxPriorityFeePerGas};
       },
       this.partialExtension.log,
       print
@@ -816,6 +827,8 @@ export class DeploymentsManager {
       export?: string;
       exportAll?: string;
       gasPrice?: string;
+      maxFeePerGas?: string;
+      maxPriorityFeePerGas?: string;
     } = {
       log: false,
       resetMemory: true,
@@ -842,6 +855,8 @@ export class DeploymentsManager {
     this.db.savePendingTx = options.savePendingTx;
     this.db.logEnabled = options.log;
     this.db.gasPrice = options.gasPrice;
+    this.db.maxFeePerGas = options.maxFeePerGas;
+    this.db.maxPriorityFeePerGas = options.maxPriorityFeePerGas;
     if (options.resetMemory) {
       log('reseting memory');
       this.db.deployments = {};

@@ -239,7 +239,11 @@ export function addHelpers(
     name?: string,
     data?: any
   ) => Promise<TransactionResponse>,
-  getGasPrice: () => Promise<BigNumber | undefined>,
+  getGasPrice: () => Promise<{
+    gasPrice: BigNumber | undefined;
+    maxFeePerGas: BigNumber | undefined;
+    maxPriorityFeePerGas: BigNumber | undefined;
+  }>,
   log: (...args: any[]) => void,
   print: (msg: string) => void
 ): {
@@ -297,8 +301,16 @@ export function addHelpers(
   async function setupGasPrice(
     txRequestOrOverrides: TransactionRequest | PayableOverrides
   ) {
+    const gasPriceSetup = await getGasPrice();
     if (!txRequestOrOverrides.gasPrice) {
-      txRequestOrOverrides.gasPrice = await getGasPrice();
+      txRequestOrOverrides.gasPrice = gasPriceSetup.gasPrice;
+    }
+    if (!txRequestOrOverrides.maxFeePerGas) {
+      txRequestOrOverrides.maxFeePerGas = gasPriceSetup.maxFeePerGas;
+    }
+    if (!txRequestOrOverrides.maxPriorityFeePerGas) {
+      txRequestOrOverrides.maxPriorityFeePerGas =
+        gasPriceSetup.maxPriorityFeePerGas;
     }
   }
 
@@ -2250,7 +2262,8 @@ data: ${data}
           choices.unshift('increase gas');
         } else if (tx && (tx.maxFeePerGas || tx.maxPriorityFeePerGas)) {
           // choices.unshift(); // TODO
-          console.log('TODO handle EIP1559 gas pricing increase');
+          // console.log('TODO handle EIP1559 gas pricing increase');
+          choices.unshift('increase gas');
         }
 
         const prompt = new (enquirer as any).Select({
@@ -2336,6 +2349,21 @@ data: ${data}
               print(` (please confirm on your ${hardwareWallet})`);
             }
 
+            const gasPriceSetup = await getGasPrice();
+            const maxFeePerGas = gasPriceSetup.maxFeePerGas;
+            const maxPriorityFeePerGas = gasPriceSetup.maxPriorityFeePerGas;
+            let gasPrice: BigNumber | undefined;
+            if (!maxFeePerGas && !maxPriorityFeePerGas) {
+              gasPrice = gasPriceSetup.gasPrice;
+              if (gasPrice) {
+                console.log('using legacy gasPrice with gasprice passed in');
+              }
+            }
+            // if (!gasPrice && !maxFeePerGas && !maxPriorityFeePerGas) {
+            //   console.log('using legacy gasPrice, TODO handle auto pricing')
+            //   gasPrice = newGasPrice;
+            // }
+
             const txReq = await handleSpecificErrors(
               ethersSigner.sendTransaction({
                 to: tx.to,
@@ -2343,7 +2371,9 @@ data: ${data}
                 nonce: tx.nonce,
 
                 gasLimit: tx.gasLimit,
-                gasPrice: newGasPrice, // TODO EIP1559
+                gasPrice,
+                maxFeePerGas,
+                maxPriorityFeePerGas,
 
                 data: tx.data,
                 value: tx.value,
@@ -2363,7 +2393,7 @@ data: ${data}
               );
             }
             await onPendingTx(txReq);
-            console.log('new transaction submitted, waiting...');
+            console.log(`new transaction submitted, waiting... ${txReq.hash}`);
           }
         }
 
