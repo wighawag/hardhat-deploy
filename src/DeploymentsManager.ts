@@ -937,7 +937,10 @@ export class DeploymentsManager {
       } catch (e) {
         // console.error("require failed", e);
         throw new Error(
-          'ERROR processing skip func of ' + filepath + ':\n' + (e.stack || e)
+          'ERROR processing skip func of ' +
+            filepath +
+            ':\n' +
+            ((e as any).stack || e)
         );
       }
       // console.log("get tags if any for " + scriptFilePath);
@@ -1043,7 +1046,7 @@ export class DeploymentsManager {
               'ERROR processing skip func of ' +
                 deployScript.filePath +
                 ':\n' +
-                (e.stack || e)
+                ((e as any).stack || e)
             );
           }
           log(`checking skip for ${deployScript.filePath} complete`);
@@ -1059,7 +1062,7 @@ export class DeploymentsManager {
               'ERROR processing ' +
                 deployScript.filePath +
                 ':\n' +
-                (e.stack || e)
+                ((e as any).stack || e)
             );
           }
           log(`executing ${deployScript.filePath} complete`);
@@ -1117,7 +1120,8 @@ export class DeploymentsManager {
         .readFileSync(
           path.join(this.deploymentsPath, this.deploymentFolder(), '.chainId')
         )
-        .toString();
+        .toString()
+        .trim();
     } catch (e) {}
     if (!chainId) {
       chainId = await this.getChainId();

@@ -77,8 +77,8 @@ async function handleSpecificErrors<T>(p: Promise<T>): Promise<T> {
     result = await p;
   } catch (e) {
     if (
-      typeof e.message === 'string' &&
-      e.message.indexOf('already known') !== -1
+      typeof (e as any).message === 'string' &&
+      (e as any).message.indexOf('already known') !== -1
     ) {
       console.log(
         `
@@ -106,7 +106,7 @@ You'll need to wait the tx resolve, or increase the gas price via --gasprice (th
       //   confirmations: 0,
       // });
     } else {
-      console.error(e.message, JSON.stringify(e), e);
+      console.error((e as any).message, JSON.stringify(e), e);
       throw e;
     }
   }
