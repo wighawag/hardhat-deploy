@@ -1,5 +1,12 @@
 # hardhat-deploy
 
+## 0.9.1
+
+### Patch Changes
+
+- support eip-1559 for pending tx retry and add command line arg to specify globally the maxfee / priorityfee
+  support for arbiscan
+
 ## 0.9.0
 
 ### Minor Changes
