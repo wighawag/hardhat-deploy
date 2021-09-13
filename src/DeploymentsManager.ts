@@ -1084,7 +1084,7 @@ export class DeploymentsManager {
           if (result && typeof result === 'boolean') {
             if (!deployScript.func.id) {
               throw new Error(
-                `${deployScript.filePath} return true to not be eecuted again, but does not provide an id. the script function need to have the field "id" to be set`
+                `${deployScript.filePath} return true to not be executed again, but does not provide an id. the script function needs to have the field "id" to be set`
               );
             }
             this.db.migrations[deployScript.func.id] = Math.floor(
