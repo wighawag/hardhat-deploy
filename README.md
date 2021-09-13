@@ -1080,8 +1080,9 @@ type ProxyOptionsBase = {
   viaAdminContract?: // allow to specify a contract that act as a middle man to perform upgrades. Useful and Recommended for Transparent Proxies
   | string
     | {
-        name: string;
-        artifact?: string | ArtifactData;
+        name: string; // Custom name - If no artifact name is specified, it will also act as the artifact name
+        artifact?: string | ArtifactData; // Custom artifact name
+        args?: any[]; // Arguments that will be passed to the AdminContract constructor
       };
 };
 
