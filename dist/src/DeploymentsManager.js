@@ -348,27 +348,28 @@ class DeploymentsManager {
         await this.setupAccounts();
         return this.db.unnamedAccounts;
     }
-    async getDeterministicDeploymentFactoryAddress() {
-        var _a, _b;
+    async getDeterminisityDeploymentInfo() {
         const chainId = await this.getChainId();
-        return ((_b = (_a = this.env.config.deterministicDeployment) === null || _a === void 0 ? void 0 : _a[chainId]) === null || _b === void 0 ? void 0 : _b.factory) ||
+        const config = this.env.config.deterministicDeployment;
+        return (typeof config == "function") ? config(chainId) : config === null || config === void 0 ? void 0 : config[chainId];
+    }
+    async getDeterministicDeploymentFactoryAddress() {
+        const info = await this.getDeterminisityDeploymentInfo();
+        return (info === null || info === void 0 ? void 0 : info.factory) ||
             "0x4e59b44847b379578588920ca78fbf26c0b4956c";
     }
     async getDeterministicDeploymentFactoryDeployer() {
-        var _a, _b;
-        const chainId = await this.getChainId();
-        return ((_b = (_a = this.env.config.deterministicDeployment) === null || _a === void 0 ? void 0 : _a[chainId]) === null || _b === void 0 ? void 0 : _b.deployer) ||
+        const info = await this.getDeterminisityDeploymentInfo();
+        return (info === null || info === void 0 ? void 0 : info.deployer) ||
             "0x3fab184622dc19b6109349b94811493bf2a45362";
     }
     async getDeterministicDeploymentFactoryFunding() {
-        var _a, _b;
-        const chainId = await this.getChainId();
-        return bignumber_1.BigNumber.from(((_b = (_a = this.env.config.deterministicDeployment) === null || _a === void 0 ? void 0 : _a[chainId]) === null || _b === void 0 ? void 0 : _b.funding) || "10000000000000000");
+        const info = await this.getDeterminisityDeploymentInfo();
+        return bignumber_1.BigNumber.from((info === null || info === void 0 ? void 0 : info.funding) || "10000000000000000");
     }
     async getDeterministicDeploymentFactoryDeploymentTx() {
-        var _a, _b;
-        const chainId = await this.getChainId();
-        return ((_b = (_a = this.env.config.deterministicDeployment) === null || _a === void 0 ? void 0 : _a[chainId]) === null || _b === void 0 ? void 0 : _b.signedTx) ||
+        const info = await this.getDeterminisityDeploymentInfo();
+        return (info === null || info === void 0 ? void 0 : info.signedTx) ||
             "0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222";
     }
     async loadDeployments(chainIdExpected = true) {

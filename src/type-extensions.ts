@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import 'hardhat/types/runtime';
 import 'hardhat/types/config';
-import {Address, DeploymentsExtension} from '../types';
+import {Address, DeploymentsExtension, DeterministicDeploymentInfo} from '../types';
 import {EthereumProvider} from 'hardhat/types';
 
 declare module 'hardhat/types/config' {
@@ -41,14 +41,9 @@ declare module 'hardhat/types/config' {
         | number
         | {[network: string]: null | number | string};
     };
-    deterministicDeployment?: {
-      [network: string]: {
-        factory: string,
-        deployer: string,
-        funding: string,
-        signedTx: string,
-      }
-    };
+    deterministicDeployment?: ({
+      [network: string]: DeterministicDeploymentInfo
+    }) | ((network: string) => DeterministicDeploymentInfo);
     external?: {
       deployments?: {
         [networkName: string]: string[];

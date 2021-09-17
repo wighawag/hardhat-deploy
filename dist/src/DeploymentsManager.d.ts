@@ -27,6 +27,7 @@ export declare class DeploymentsManager {
         [name: string]: string;
     }>;
     getUnnamedAccounts(): Promise<string[]>;
+    private getDeterminisityDeploymentInfo;
     getDeterministicDeploymentFactoryAddress(): Promise<string>;
     getDeterministicDeploymentFactoryDeployer(): Promise<string>;
     getDeterministicDeploymentFactoryFunding(): Promise<BigNumber>;
