@@ -11,7 +11,7 @@ declare module 'hardhat/types/config' {
         };
         deterministicDeployment?: ({
             [network: string]: DeterministicDeploymentInfo;
-        }) | ((network: string) => DeterministicDeploymentInfo);
+        }) | ((network: string) => DeterministicDeploymentInfo | undefined);
         external?: {
             deployments?: {
                 [networkName: string]: string[];
@@ -33,7 +33,7 @@ declare module 'hardhat/types/config' {
         };
         deterministicDeployment?: ({
             [network: string]: DeterministicDeploymentInfo;
-        }) | ((network: string) => DeterministicDeploymentInfo);
+        }) | ((network: string) => DeterministicDeploymentInfo | undefined);
         external?: {
             deployments?: {
                 [networkName: string]: string[];
