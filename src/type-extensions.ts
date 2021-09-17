@@ -12,6 +12,14 @@ declare module 'hardhat/types/config' {
         | number
         | {[network: string]: null | number | string};
     };
+    deterministicDeployment?: {
+      [network: string]: {
+        factory: string,
+        deployer: string,
+        funding: string,
+        signedTx: string,
+      }
+    };
     external?: {
       deployments?: {
         [networkName: string]: string[];
@@ -32,6 +40,14 @@ declare module 'hardhat/types/config' {
         | string
         | number
         | {[network: string]: null | number | string};
+    };
+    deterministicDeployment?: {
+      [network: string]: {
+        factory: string,
+        deployer: string,
+        funding: string,
+        signedTx: string,
+      }
     };
     external?: {
       deployments?: {

@@ -399,14 +399,15 @@ export function addHelpers(
       hardwareWallet,
       unknown,
     } = getFrom(options.from);
-    const create2DeployerAddress = '0x4e59b44847b379578588920ca78fbf26c0b4956c';
+    const create2DeployerAddress = await deploymentManager.getDeterministicDeploymentFactoryAddress();
     const code = await provider.getCode(create2DeployerAddress);
     if (code === '0x') {
-      const senderAddress = '0x3fab184622dc19b6109349b94811493bf2a45362';
+      const senderAddress = await deploymentManager.getDeterministicDeploymentFactoryDeployer();
 
+      // TODO: calculate required funds
       const txRequest = {
         to: senderAddress,
-        value: BigNumber.from('10000000000000000').toHexString(),
+        value: (await deploymentManager.getDeterministicDeploymentFactoryFunding()).toHexString(),
         gasPrice: options.gasPrice,
         maxFeePerGas: options.maxFeePerGas,
         maxPriorityFeePerGas: options.maxPriorityFeePerGas,
@@ -448,7 +449,7 @@ export function addHelpers(
         }
       }
       const deployTx = await provider.sendTransaction(
-        '0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222'
+        await deploymentManager.getDeterministicDeploymentFactoryDeploymentTx()
       );
       if (options.log || hardwareWallet) {
         log(` (tx: ${deployTx.hash})...`);
@@ -671,7 +672,7 @@ export function addHelpers(
     } else {
       return {
         address: getCreate2Address(
-          '0x4e59b44847b379578588920ca78fbf26c0b4956c',
+          await deploymentManager.getDeterministicDeploymentFactoryAddress(),
           options.salt
             ? hexlify(zeroPad(options.salt, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000',
@@ -724,8 +725,7 @@ export function addHelpers(
           typeof options.deterministicDeployment === 'string'
             ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        const create2DeployerAddress =
-          '0x4e59b44847b379578588920ca78fbf26c0b4956c';
+        const create2DeployerAddress = await deploymentManager.getDeterministicDeploymentFactoryAddress();
         const create2Address = getCreate2Address(
           create2DeployerAddress,
           create2Salt,
