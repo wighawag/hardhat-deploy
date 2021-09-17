@@ -9,14 +9,9 @@ declare module 'hardhat/types/config' {
                 [network: string]: null | number | string;
             };
         };
-        deterministicDeployment?: {
-            [network: string]: {
-                factory: string;
-                deployer: string;
-                funding: string;
-                signedTx: string;
-            };
-        };
+        deterministicDeployment?: ({
+            [network: string]: DeterministicDeploymentInfo;
+        }) | ((network: string) => DeterministicDeploymentInfo);
         external?: {
             deployments?: {
                 [networkName: string]: string[];
