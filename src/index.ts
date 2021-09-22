@@ -553,6 +553,10 @@ task(TASK_TEST, 'Runs mocha tests')
     if (args.noImpersonation) {
       deploymentsManager.disableAutomaticImpersonation();
     }
+    // Create a snapshot to revert to
+    await hre.deployments.fixture([], {
+      keepExistingDeployments: true, // by default reuse the existing deployments (useful for fork testing)
+    });
     if (args.deployFixture || process.env.HARDHAT_DEPLOY_FIXTURE) {
       if (!args.noCompile) {
         await hre.run('compile');
