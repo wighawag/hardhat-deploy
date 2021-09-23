@@ -165,6 +165,7 @@ export interface TxOptions extends CallOptions {
   autoMine?: boolean;
   estimatedGasLimit?: string | number | BigNumber;
   estimateGasExtra?: string | number | BigNumber;
+  waitConfirmations?: number
 }
 
 export interface Execute extends TxOptions {

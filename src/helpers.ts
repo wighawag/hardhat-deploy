@@ -606,7 +606,7 @@ export function addHelpers(
       };
     }
     tx = await onPendingTx(tx, name, preDeployment);
-    const receipt = await tx.wait();
+    const receipt = await tx.wait(options.waitConfirmations);
     const address =
       options.deterministicDeployment && create2Address
         ? create2Address
@@ -1007,6 +1007,7 @@ export function addHelpers(
       libraries: options.libraries,
       linkedData: options.linkedData,
       args: implementationArgs,
+      waitConfirmations: options.waitConfirmations
     };
 
     const {artifact} = await getArtifactFromOptions(
@@ -1127,6 +1128,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           deterministicDeployment: options.deterministicDeployment,
           skipIfAlreadyDeployed: true,
           args: [owner],
+          waitConfirmations: options.waitConfirmations
         });
       }
 
