@@ -897,7 +897,8 @@ export interface DeployOptions = {
   estimateGasExtra?: string | number | BigNumber; // this option allow you to add a gas buffer on top of the estimation
 
   autoMine?: boolean; // this force a evm_mine to be executed. this is useful to speed deployment on test network that allow to specify a block delay (ganache for example). This option basically skip the delay by force mining.
-  deterministicDeployment? boolean | string; // if true, it will deploy the contract at a deterministic address based on bytecode and constuctor arguments. The address will be the same across all network. It use create2 opcode for that, if it is a string, the string will be used as the salt.
+  deterministicDeployment? boolean | string; // if true, it will deploy the contract at a deterministic address based on bytecode and constructor arguments. The address will be the same across all network. It use create2 opcode for that, if it is a string, the string will be used as the salt.
+  waitConfirmations?: number; // number of the confirmations to wait after the transactions is included in the chain
 };
 ```
 
