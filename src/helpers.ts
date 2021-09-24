@@ -1007,7 +1007,8 @@ export function addHelpers(
       libraries: options.libraries,
       linkedData: options.linkedData,
       args: implementationArgs,
-      waitConfirmations: options.waitConfirmations
+      skipIfAlreadyDeployed: options.skipIfAlreadyDeployed,
+      waitConfirmations: options.waitConfirmations,
     };
 
     const {artifact} = await getArtifactFromOptions(
@@ -1128,7 +1129,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           deterministicDeployment: options.deterministicDeployment,
           skipIfAlreadyDeployed: true,
           args: [owner],
-          waitConfirmations: options.waitConfirmations
+          waitConfirmations: options.waitConfirmations,
         });
       }
 
@@ -1176,6 +1177,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       if (!proxy) {
         const proxyOptions = {...options}; // ensure no change
         delete proxyOptions.proxy;
+        delete proxyOptions.libraries;
         proxyOptions.contract = proxyContract;
         proxyOptions.args = [implementation.address, proxyAdmin, data];
         proxy = await _deployOne(proxyName, proxyOptions, true);
