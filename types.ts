@@ -349,3 +349,10 @@ export interface Deployment {
   storageLayout?: any;
   gasEstimates?: any;
 }
+
+export interface DeterministicDeploymentInfo {
+  factory: string,
+  deployer: string,
+  funding: string,
+  signedTx: string,
+}
