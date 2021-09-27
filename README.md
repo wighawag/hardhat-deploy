@@ -633,6 +633,49 @@ The `imports` folder is expected to contains artifacts that were pre-compiled. U
 
 ---
 
+---
+
+### **4. deterministicDeployment (ability to specify a deployment factory)**
+
+---
+
+This plugin extends the `HardhatConfig`'s object with an optional `deterministicDeployment` field.
+
+`deterministicDeployment` allows you to associate information that are used on each network for deterministic deployment. The information for each deterministic deployment consist out of a `factory`, a `deployer`, the required `funding` and a `signedTx` to deploy the factory. The default deterministic deployment used is the [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy). The factory expects a 32 bytes `salt` concatenated with the deployment data (see [EIP-1014](https://eips.ethereum.org/EIPS/eip-1014) for more information on these parameters).
+
+Using the `deterministicDeployment` it is possible to define a different setup for the deterministic deployment. One use case for this is the deterministic deployment on networks that required replay protection (such as Celo or Avalanche). The [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy) can only be deployed on networks that don't enforce replay protection, therefore on other networks an alternative library has to be used. An example for this would be the [Safe Singleton Factory](https://github.com/gnosis/safe-singleton-factory) that is an adjusted version of the [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy) that contains signed transactions that include replay protection.
+
+The information can be defined either as an object
+
+
+```js
+{
+    deterministicDeployment: {
+      "4": {
+        factory: "<factory_address>",
+        deployer: "<deployer_address>",
+        funding: "<required_funding_in_wei>",
+        signedTx: "<raw_signed_tx>",
+      }
+    }
+}
+```
+
+or as an function that returns the information for the deterministic deployment 
+
+```js
+{
+    deterministicDeployment: (network: string) => {
+      return {
+        factory: "<factory_address>",
+        deployer: "<deployer_address>",
+        funding: "<required_funding_in_wei>",
+        signedTx: "<raw_signed_tx>",
+      }
+    }
+}
+```
+
 ### Importing deployment from other projects (with truffle support)
 
 `hardhat-deploy` also add the `external` field to `HardhatConfig`
@@ -897,7 +940,8 @@ export interface DeployOptions = {
   estimateGasExtra?: string | number | BigNumber; // this option allow you to add a gas buffer on top of the estimation
 
   autoMine?: boolean; // this force a evm_mine to be executed. this is useful to speed deployment on test network that allow to specify a block delay (ganache for example). This option basically skip the delay by force mining.
-  deterministicDeployment? boolean | string; // if true, it will deploy the contract at a deterministic address based on bytecode and constuctor arguments. The address will be the same across all network. It use create2 opcode for that, if it is a string, the string will be used as the salt.
+  deterministicDeployment? boolean | string; // if true, it will deploy the contract at a deterministic address based on bytecode and constructor arguments. The address will be the same across all network. It use create2 opcode for that, if it is a string, the string will be used as the salt.
+  waitConfirmations?: number; // number of the confirmations to wait after the transactions is included in the chain
 };
 ```
 

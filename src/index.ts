@@ -110,6 +110,8 @@ extendConfig(
       config.namedAccounts = {};
     }
 
+    config.deterministicDeployment = userConfig.deterministicDeployment;
+
     if (userConfig.external) {
       if (!config.external) {
         config.external = {};
