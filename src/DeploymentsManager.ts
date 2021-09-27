@@ -567,33 +567,35 @@ export class DeploymentsManager {
     return this.db.unnamedAccounts;
   }
 
-  private async getDeterminisityDeploymentInfo(): Promise<DeterministicDeploymentInfo | undefined> {
-    const chainId = await this.getChainId()
-    const config = this.env.config.deterministicDeployment
-    return (typeof config == "function") ? config(chainId) : config?.[chainId] 
+  private async getDeterminisityDeploymentInfo(): Promise<
+    DeterministicDeploymentInfo | undefined
+  > {
+    const chainId = await this.getChainId();
+    const config = this.env.config.deterministicDeployment;
+    return typeof config == 'function' ? config(chainId) : config?.[chainId];
   }
 
   public async getDeterministicDeploymentFactoryAddress(): Promise<string> {
-    const info = await this.getDeterminisityDeploymentInfo()
-    return info?.factory || 
-      "0x4e59b44847b379578588920ca78fbf26c0b4956c"
+    const info = await this.getDeterminisityDeploymentInfo();
+    return info?.factory || '0x4e59b44847b379578588920ca78fbf26c0b4956c';
   }
 
   public async getDeterministicDeploymentFactoryDeployer(): Promise<string> {
-    const info = await this.getDeterminisityDeploymentInfo()
-    return info?.deployer || 
-      "0x3fab184622dc19b6109349b94811493bf2a45362"
+    const info = await this.getDeterminisityDeploymentInfo();
+    return info?.deployer || '0x3fab184622dc19b6109349b94811493bf2a45362';
   }
 
   public async getDeterministicDeploymentFactoryFunding(): Promise<BigNumber> {
-    const info = await this.getDeterminisityDeploymentInfo()
-    return BigNumber.from(info?.funding || "10000000000000000")
+    const info = await this.getDeterminisityDeploymentInfo();
+    return BigNumber.from(info?.funding || '10000000000000000');
   }
 
   public async getDeterministicDeploymentFactoryDeploymentTx(): Promise<string> {
-    const info = await this.getDeterminisityDeploymentInfo()
-    return info?.signedTx || 
-      "0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222"
+    const info = await this.getDeterminisityDeploymentInfo();
+    return (
+      info?.signedTx ||
+      '0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222'
+    );
   }
 
   public async loadDeployments(
@@ -1207,7 +1209,13 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       };
-      fs.writeFileSync(options.exportAll, JSON.stringify(all, null, '  ')); // TODO remove bytecode ?
+      const splitted = options.exportAll.split(',');
+      for (const split of splitted) {
+        if (split) {
+          fs.writeFileSync(split, JSON.stringify(all, null, '  ')); // TODO remove bytecode ?
+        }
+      }
+
       log('export-all complete');
     }
 
@@ -1238,10 +1246,12 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       };
-      fs.writeFileSync(
-        options.export,
-        JSON.stringify(singleExport, null, '  ')
-      ); // TODO remove bytecode ?
+      const splitted = options.export.split(',');
+      for (const split of splitted) {
+        if (split) {
+          fs.writeFileSync(split, JSON.stringify(singleExport, null, '  ')); // TODO remove bytecode ?
+        }
+      }
       log('single export complete');
     }
   }

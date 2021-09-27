@@ -1,5 +1,16 @@
 # hardhat-deploy
 
+## 0.9.2
+
+### Patch Changes
+
+- - fix diamantaire diamonds constructor args generation
+  - Allow to define custom deterministic deployment information
+  - Skip Implementation deployment if already deployed
+  - Delete libraries link from proxy deploymen
+  - Add option to wait for specific number of confirmation when deploy a contract
+  - allow multiple export files by separating via commas
+
 ## 0.9.1
 
 ### Patch Changes
