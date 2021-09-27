@@ -1485,7 +1485,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         (fragment: {type: string; inputs: any[]}) =>
           fragment.type === 'constructor'
       );
-      if (constructor) {
+      if (constructor && constructor.inputs.length > 0) {
         throw new Error(`Facet with constructor not yet supported`); // TODO remove that requirement
       }
       abi = mergeABIs([abi, artifact.abi], {
@@ -1663,11 +1663,44 @@ Note that in this case, the contract deployment will not behave the same if depl
           }
         }
 
+        // this is with the default Diamantaire based on create2
+        const builtinDiamondCut = [
+          {
+            // DiamondCutFacet
+            facetAddress: '0x35d80a53f7be635f75152221d4d71cd4dcb07e5c',
+            action: 0,
+            functionSelectors: ['0x1f931c1c'],
+          },
+          {
+            // DiamondLoupeFacet
+            facetAddress: '0xc1bbdf9f8c0b6ae0b4d35e9a778080b691a72a3e',
+            action: 0,
+            functionSelectors: [
+              '0xadfca15e',
+              '0x7a0ed627',
+              '0xcdffacc6',
+              '0x52ef6b2c',
+              '0x01ffc9a7',
+            ],
+          },
+          {
+            // OwnershipFacet
+            facetAddress: '0xcfEe10af6C7A91863c2bbDbCCA3bCB5064A447BE',
+            action: 0,
+            functionSelectors: ['0xf2fde38b', '0x8da5cb5b'],
+          },
+        ];
+
+        const diamondConstructorArgs = [
+          builtinDiamondCut,
+          {owner: diamantaireDeployment.address},
+        ];
+
         if (expectedAddress && deterministicDiamondAlreadyDeployed) {
           proxy = {
             ...diamondBase,
             address: expectedAddress,
-            args: [diamantaireDeployment.address],
+            args: diamondConstructorArgs,
           };
           await saveDeployment(proxyName, proxy);
         } else {
@@ -1717,7 +1750,7 @@ Note that in this case, the contract deployment will not behave the same if depl
             address: proxyAddress,
             receipt: createReceipt,
             transactionHash: createReceipt.transactionHash,
-            args: [diamantaireDeployment.address],
+            args: diamondConstructorArgs,
           };
           await saveDeployment(proxyName, proxy);
         }
