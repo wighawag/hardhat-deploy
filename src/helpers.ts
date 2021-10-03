@@ -35,6 +35,7 @@ import {
   FacetCutAction,
   Facet,
   ArtifactData,
+  ABI,
 } from '../types';
 import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
@@ -399,15 +400,19 @@ export function addHelpers(
       hardwareWallet,
       unknown,
     } = getFrom(options.from);
-    const create2DeployerAddress = await deploymentManager.getDeterministicDeploymentFactoryAddress();
+    const create2DeployerAddress =
+      await deploymentManager.getDeterministicDeploymentFactoryAddress();
     const code = await provider.getCode(create2DeployerAddress);
     if (code === '0x') {
-      const senderAddress = await deploymentManager.getDeterministicDeploymentFactoryDeployer();
+      const senderAddress =
+        await deploymentManager.getDeterministicDeploymentFactoryDeployer();
 
       // TODO: calculate required funds
       const txRequest = {
         to: senderAddress,
-        value: (await deploymentManager.getDeterministicDeploymentFactoryFunding()).toHexString(),
+        value: (
+          await deploymentManager.getDeterministicDeploymentFactoryFunding()
+        ).toHexString(),
         gasPrice: options.gasPrice,
         maxFeePerGas: options.maxFeePerGas,
         maxPriorityFeePerGas: options.maxPriorityFeePerGas,
@@ -637,53 +642,154 @@ export function addHelpers(
     options: Create2DeployOptions
   ): Promise<{
     address: Address;
+    implementationAddress?: Address;
     deploy: () => Promise<DeployResult>;
   }> {
     options = {...options}; // ensure no change
-    // TODO refactor to share that code:
-    const args: any[] = options.args ? [...options.args] : [];
     await init();
-    const {ethersSigner, unknown, address: from} = getFrom(options.from);
 
-    const artifactInfo = await getArtifactFromOptions(name, options);
-    const {artifact} = artifactInfo;
-    const abi = artifact.abi;
-    const byteCode = linkLibraries(artifact, options.libraries);
-    const factory = new ContractFactory(abi, byteCode, ethersSigner);
-
-    const numArguments = factory.interface.deploy.inputs.length;
-    if (args.length !== numArguments) {
-      throw new Error(
-        `expected ${numArguments} constructor arguments, got ${args.length}`
-      );
-    }
-
-    const unsignedTx = factory.getDeployTransaction(...args);
-
-    if (unknown) {
-      throw new UnknownSignerError({
-        from,
-        ...JSON.parse(JSON.stringify(unsignedTx)),
+    const deployFunction = () =>
+      deploy(name, {
+        ...options,
+        deterministicDeployment: options.salt || true,
       });
-    }
+    if (options.proxy) {
+      /* eslint-disable prefer-const */
+      let {
+        viaAdminContract,
+        proxyAdminDeployed,
+        proxyAdminName,
+        proxyAdminContract,
+        owner,
+        proxyAdmin,
+        currentProxyAdminOwner,
+        artifact,
+        implementationArgs,
+        implementationName,
+        implementationOptions,
+        proxyName,
+        proxyContract,
+        mergedABI,
+        updateMethod,
+        updateArgs,
+      } = await _getProxyInfo(name, options);
+      /* eslint-enable prefer-const */
 
-    if (typeof unsignedTx.data !== 'string') {
-      throw new Error('unsigned tx data as bytes not supported');
-    } else {
+      const {address: implementationAddress} = await deterministic(
+        implementationName,
+        {...implementationOptions, salt: options.salt}
+      );
+
+      const implementationContract = new Contract(
+        implementationAddress,
+        artifact.abi
+      );
+
+      let data = '0x';
+      if (updateMethod) {
+        updateArgs = updateArgs || [];
+        if (!implementationContract[updateMethod]) {
+          throw new Error(
+            `contract need to implement function ${updateMethod}`
+          );
+        }
+        const txData = await implementationContract.populateTransaction[
+          updateMethod
+        ](...updateArgs);
+        data = txData.data || '0x';
+      }
+
+      if (viaAdminContract) {
+        if (!proxyAdminName) {
+          throw new Error(
+            `no proxy admin name even though viaAdminContract is not undefined`
+          );
+        }
+
+        if (!proxyAdminDeployed) {
+          const {address: proxyAdminAddress} = await deterministic(
+            proxyAdminName,
+            {
+              from: options.from,
+              autoMine: options.autoMine,
+              estimateGasExtra: options.estimateGasExtra,
+              estimatedGasLimit: options.estimatedGasLimit,
+              gasPrice: options.gasPrice,
+              maxFeePerGas: options.maxFeePerGas,
+              maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+              log: options.log,
+              contract: proxyAdminContract,
+              salt: options.salt,
+              skipIfAlreadyDeployed: true,
+              args: [owner],
+              waitConfirmations: options.waitConfirmations,
+            }
+          );
+          proxyAdmin = proxyAdminAddress;
+        } else {
+          proxyAdmin = proxyAdminDeployed.address;
+        }
+      }
+
+      const proxyOptions = {...options}; // ensure no change
+      delete proxyOptions.proxy;
+      delete proxyOptions.libraries;
+      proxyOptions.contract = proxyContract;
+      proxyOptions.args = [implementationAddress, proxyAdmin, data];
+      const {address: proxyAddress} = await deterministic(proxyName, {
+        ...proxyOptions,
+        salt: options.salt,
+      });
+
       return {
-        address: getCreate2Address(
-          await deploymentManager.getDeterministicDeploymentFactoryAddress(),
-          options.salt
-            ? hexlify(zeroPad(options.salt, 32))
-            : '0x0000000000000000000000000000000000000000000000000000000000000000',
-          unsignedTx.data
-        ),
-        deploy: () =>
-          deploy(name, {
-            ...options,
-            deterministicDeployment: options.salt || true,
-          }),
+        address: proxyAddress,
+        implementationAddress,
+        deploy: deployFunction,
       };
+    } else {
+      const args: any[] = options.args ? [...options.args] : [];
+      const {ethersSigner, unknown, address: from} = getFrom(options.from);
+
+      const artifactInfo = await getArtifactFromOptions(name, options);
+      const {artifact} = artifactInfo;
+      const abi = artifact.abi;
+      const byteCode = linkLibraries(artifact, options.libraries);
+      const factory = new ContractFactory(abi, byteCode, ethersSigner);
+
+      const numArguments = factory.interface.deploy.inputs.length;
+      if (args.length !== numArguments) {
+        throw new Error(
+          `expected ${numArguments} constructor arguments, got ${args.length}`
+        );
+      }
+
+      const unsignedTx = factory.getDeployTransaction(...args);
+
+      if (unknown) {
+        throw new UnknownSignerError({
+          from,
+          ...JSON.parse(JSON.stringify(unsignedTx)),
+        });
+      }
+
+      if (typeof unsignedTx.data !== 'string') {
+        throw new Error('unsigned tx data as bytes not supported');
+      } else {
+        return {
+          address: getCreate2Address(
+            await deploymentManager.getDeterministicDeploymentFactoryAddress(),
+            options.salt
+              ? hexlify(zeroPad(options.salt, 32))
+              : '0x0000000000000000000000000000000000000000000000000000000000000000',
+            unsignedTx.data
+          ),
+          deploy: () =>
+            deploy(name, {
+              ...options,
+              deterministicDeployment: options.salt || true,
+            }),
+        };
+      }
     }
   }
 
@@ -725,7 +831,8 @@ export function addHelpers(
           typeof options.deterministicDeployment === 'string'
             ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        const create2DeployerAddress = await deploymentManager.getDeterministicDeploymentFactoryAddress();
+        const create2DeployerAddress =
+          await deploymentManager.getDeterministicDeploymentFactoryAddress();
         const create2Address = getCreate2Address(
           create2DeployerAddress,
           create2Salt,
@@ -893,11 +1000,32 @@ export function addHelpers(
     }
   }
 
-  // TODO rename
-  async function _deployViaEIP173Proxy(
+  async function _getProxyInfo(
     name: string,
     options: DeployOptions
-  ): Promise<DeployResult> {
+  ): Promise<{
+    viaAdminContract:
+      | string
+      | {name: string; artifact?: string | ArtifactData}
+      | undefined;
+    proxyAdminName: string | undefined;
+    proxyAdminDeployed: Deployment | undefined;
+    proxyAdmin: string;
+    proxyAdminContract: ExtendedArtifact | undefined;
+    owner: string;
+    currentProxyAdminOwner: string | undefined;
+    artifact: ExtendedArtifact;
+    implementationArgs: any[];
+    implementationName: string;
+    implementationOptions: DeployOptions;
+    mergedABI: ABI;
+    proxyName: string;
+    proxyContract: ExtendedArtifact;
+    oldDeployment: Deployment | null;
+    updateMethod: string | undefined;
+    updateArgs: any[];
+    upgradeIndex: number | undefined;
+  }> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let updateMethod: string | undefined;
     let updateArgs: any[] | undefined;
@@ -982,10 +1110,7 @@ export function addHelpers(
     } else if (typeof options.proxy === 'string') {
       updateMethod = options.proxy;
     }
-    const deployResult = _checkUpgradeIndex(oldDeployment, upgradeIndex);
-    if (deployResult) {
-      return deployResult;
-    }
+
     const proxyName = name + '_Proxy';
     const {address: owner} = getProxyOwner(options);
     const {address: from} = getFrom(options.from);
@@ -1078,9 +1203,10 @@ Note that in this case, the contract deployment will not behave the same if depl
     }
 
     let proxyAdminName: string | undefined;
-    let proxyAdmin = owner;
+    const proxyAdmin = owner;
     let currentProxyAdminOwner: string | undefined;
     let proxyAdminDeployed: Deployment | undefined;
+    let proxyAdminContract: ExtendedArtifact | undefined;
     if (viaAdminContract) {
       let proxyAdminArtifactNameOrContract: string | ArtifactData | undefined;
       if (typeof viaAdminContract === 'string') {
@@ -1094,7 +1220,6 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxyAdminArtifactNameOrContract = viaAdminContract.artifact;
       }
 
-      let proxyAdminContract: ExtendedArtifact | undefined;
       if (typeof proxyAdminArtifactNameOrContract === 'string') {
         try {
           proxyAdminContract = await partialExtension.getExtendedArtifact(
@@ -1114,7 +1239,69 @@ Note that in this case, the contract deployment will not behave the same if depl
       } else {
         proxyAdminContract = proxyAdminArtifactNameOrContract;
       }
+    }
 
+    return {
+      proxyName,
+      proxyContract,
+      mergedABI,
+      viaAdminContract,
+      proxyAdminDeployed,
+      proxyAdminName,
+      proxyAdminContract,
+      owner,
+      proxyAdmin,
+      currentProxyAdminOwner,
+      artifact,
+      implementationArgs,
+      implementationName,
+      implementationOptions,
+      oldDeployment,
+      updateMethod,
+      updateArgs,
+      upgradeIndex,
+    };
+  }
+
+  // TODO rename
+  async function _deployViaEIP173Proxy(
+    name: string,
+    options: DeployOptions
+  ): Promise<DeployResult> {
+    /* eslint-disable prefer-const */
+    let {
+      oldDeployment,
+      updateMethod,
+      updateArgs,
+      upgradeIndex,
+      viaAdminContract,
+      proxyAdminDeployed,
+      proxyAdminName,
+      proxyAdminContract,
+      owner,
+      proxyAdmin,
+      currentProxyAdminOwner,
+      artifact,
+      implementationArgs,
+      implementationName,
+      implementationOptions,
+      proxyName,
+      proxyContract,
+      mergedABI,
+    } = await _getProxyInfo(name, options);
+    /* eslint-enable prefer-const */
+
+    const deployResult = _checkUpgradeIndex(oldDeployment, upgradeIndex);
+    if (deployResult) {
+      return deployResult;
+    }
+
+    if (viaAdminContract) {
+      if (!proxyAdminName) {
+        throw new Error(
+          `no proxy admin name even though viaAdminContract is not undefined`
+        );
+      }
       if (!proxyAdminDeployed) {
         proxyAdminDeployed = await _deployOne(proxyAdminName, {
           from: options.from,

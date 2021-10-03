@@ -165,7 +165,7 @@ export interface TxOptions extends CallOptions {
   autoMine?: boolean;
   estimatedGasLimit?: string | number | BigNumber;
   estimateGasExtra?: string | number | BigNumber;
-  waitConfirmations?: number
+  waitConfirmations?: number;
 }
 
 export interface Execute extends TxOptions {
@@ -203,6 +203,7 @@ export interface DeploymentsExtension {
     options: Create2DeployOptions
   ): Promise<{
     address: Address;
+    implementationAddress?: Address;
     deploy(): Promise<DeployResult>;
   }>;
   fetchIfDifferent( // return true if new compiled code is different than deployed contract
@@ -351,8 +352,8 @@ export interface Deployment {
 }
 
 export interface DeterministicDeploymentInfo {
-  factory: string,
-  deployer: string,
-  funding: string,
-  signedTx: string,
+  factory: string;
+  deployer: string;
+  funding: string;
+  signedTx: string;
 }

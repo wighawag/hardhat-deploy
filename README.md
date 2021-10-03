@@ -35,6 +35,7 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
     - [`deploy`](#deploy)
     - [`companionNetworks`](#companionnetworks)
   - [**3. extra hardhat.config paths' options**](#3-extra-hardhatconfig-paths-options)
+  - [**4. deterministicDeployment (ability to specify a deployment factory)**](#4-deterministicdeployment-ability-to-specify-a-deployment-factory)
   - [Importing deployment from other projects (with truffle support)](#importing-deployment-from-other-projects-with-truffle-support)
   - [Access to Artifacts (non-deployed contract code and abi)](#access-to-artifacts-non-deployed-contract-code-and-abi)
 - [How to Deploy Contracts](#how-to-deploy-contracts)
@@ -647,7 +648,6 @@ Using the `deterministicDeployment` it is possible to define a different setup f
 
 The information can be defined either as an object
 
-
 ```js
 {
     deterministicDeployment: {
@@ -661,18 +661,18 @@ The information can be defined either as an object
 }
 ```
 
-or as an function that returns the information for the deterministic deployment 
+or as an function that returns the information for the deterministic deployment
 
 ```js
 {
-    deterministicDeployment: (network: string) => {
-      return {
-        factory: "<factory_address>",
-        deployer: "<deployer_address>",
-        funding: "<required_funding_in_wei>",
-        signedTx: "<raw_signed_tx>",
-      }
-    }
+  deterministicDeployment: (network: string) => {
+    return {
+      factory: '<factory_address>',
+      deployer: '<deployer_address>',
+      funding: '<required_funding_in_wei>',
+      signedTx: '<raw_signed_tx>',
+    };
+  };
 }
 ```
 
@@ -841,6 +841,7 @@ export interface DeploymentsExtension {
     options: Create2DeployOptions
   ): Promise<{
     address: Address;
+    implementationAddress?: Address;
     deploy(): Promise<DeployResult>;
   }>;
   fetchIfDifferent( // return true if new compiled code is different than deployed contract
