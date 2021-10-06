@@ -1161,8 +1161,8 @@ it matches:
 
 - `EIP173ProxyWithReceive`: Same as above except that the proxy contains a receive hook to accept empty ETH payment.
 
-- `OpenZeppelinTransparentProxy`: Use Openzeppelin Transparent Proxy (slightly modified as openzeppelin's one hardcode the msg.sender as first owner, see code [here](solc_0.7/openzeppelin/proxy/TransparentUpgradeableProxy.sol))
-  When this option is chosen, the `DefaultProxyAdmin` is also used as admin since Transparent Proxy kind of need an intermediarry contract for administration. This can be configured via the `viaAdminContract` option
+- `OpenZeppelinTransparentProxy`: Use Openzeppelin Transparent Proxy (copied from openzeppelin repo, see code [here](solc_0.7/openzeppelin/proxy/TransparentUpgradeableProxy.sol))
+  When this option is chosen, the `DefaultProxyAdmin` is also used as admin since Transparent Proxy kind of need an intermediarry contract for administration. This can be configured via the `viaAdminContract` option. Note that the DefaultProxyAdmin is slightly different than the one used by openzeppelin as it allow you to set a different owner than msg.sender on first deploy, something openzeppelin version do not allow, see : https://github.com/OpenZeppelin/openzeppelin-contracts/issues/2639
 
 - `OptimizedTransparentProxy`: This contract is similar to above, except that it is optimized to not require storage read for the admin on every call.
 
