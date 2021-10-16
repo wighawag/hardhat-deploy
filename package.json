@@ -1,6 +1,6 @@
 {
   "name": "hardhat-deploy",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Hardhat Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/hardhat-deploy",
   "author": "wighawag",
@@ -67,6 +67,7 @@
     "@ethersproject/address": "^5.4.0",
     "@ethersproject/bignumber": "^5.4.1",
     "@ethersproject/bytes": "^5.4.0",
+    "@ethersproject/constants": "^5.4.0",
     "@ethersproject/contracts": "^5.4.1",
     "@ethersproject/providers": "^5.4.4",
     "@ethersproject/solidity": "^5.4.0",

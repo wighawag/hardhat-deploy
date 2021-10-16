@@ -1,6 +1,7 @@
 - [ ] --pendingtx : wait | reset | false | interactive
 - [ ] execute conditionals : if/unless
 - [ ] pause option on unknown signer : check once done and repeat if needed
+- [ ] automine as global option
 
 - [ ] support generator from (like templates for --export ?)
 - [ ] library name vs <path>:<name> and error out if ambiguity (when using only name)
