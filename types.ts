@@ -85,6 +85,7 @@ export interface DiamondOptions extends TxOptions {
 
 type ProxyOptionsBase = {
   owner?: Address;
+  performUpgrade?: boolean;
   upgradeIndex?: number;
   proxyContract?: // default to EIP173Proxy
   string | ArtifactData;
