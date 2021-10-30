@@ -1681,7 +1681,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       }
       abi = mergeABIs([abi, artifact.abi], {
         check: true,
-        skipSupportsInterface: false,
+        skipSupportsInterface: true,
       });
       // TODO allow facet to be named so multiple version could coexist
       const implementation = await _deployOne(facet, {
