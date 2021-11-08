@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.5
+
+### Patch Changes
+
+- add etherscan for avalanche
+
 ## 0.9.4
 
 ### Patch Changes
