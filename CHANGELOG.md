@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.6
+
+### Patch Changes
+
+- if deployment's tx is not found, error out to prevent redeployment by mistake
+
 ## 0.9.5
 
 ### Patch Changes

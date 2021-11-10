@@ -854,12 +854,15 @@ export function addHelpers(
         return {differences: false, address: undefined}; // TODO check receipt, see below
       }
       // TODO transactionReceipt + check for status
+      let transactionDetailsAvailable = false;
       let transaction;
       if (deployment.receipt) {
+        transactionDetailsAvailable = !!deployment.receipt.transactionHash;
         transaction = await provider.getTransaction(
           deployment.receipt.transactionHash
         );
       } else if (deployment.transactionHash) {
+        transactionDetailsAvailable = true;
         transaction = await provider.getTransaction(deployment.transactionHash);
       }
 
@@ -876,6 +879,17 @@ export function addHelpers(
           return {differences: true, address: deployment.address};
         }
         return {differences: false, address: deployment.address};
+      } else {
+        if (transactionDetailsAvailable) {
+          throw new Error(
+            `cannot get the transaction for ${name}'s previous deployment, please check your node synced status.`
+          );
+        } else {
+          console.error(
+            `no transaction details found for ${name}'s previous deployment, if the deployment is t be discarded, please delete the file`
+          );
+          return {differences: false, address: deployment.address};
+        }
       }
     }
     return {differences: true, address: undefined};
