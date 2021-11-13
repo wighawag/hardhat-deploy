@@ -8,6 +8,7 @@ import {
 } from '../../types';
 
 export interface PartialExtension {
+  saveDotFile(name: string, content: string): Promise<void>;
   save(name: string, deployment: DeploymentSubmission): Promise<void>;
   get(name: string): Promise<Deployment>;
   getOrNull(name: string): Promise<Deployment | null>;

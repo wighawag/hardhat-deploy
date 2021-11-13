@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.7
+
+### Patch Changes
+
+- more etherscan-verify destination + saveDotFile
+
 ## 0.9.6
 
 ### Patch Changes

@@ -139,6 +139,8 @@ export class DeploymentsManager {
     // this.env.artifacts = new HardhatDeployArtifacts(this.env.artifacts);
 
     this.partialExtension = {
+      saveDotFile: async (name: string, content: string): Promise<void> =>
+        this.saveDotFile(name, content),
       save: async (
         name: string,
         deployment: DeploymentSubmission
@@ -658,6 +660,35 @@ export class DeploymentsManager {
       this.deploymentFolder(),
       'solcInputs'
     );
+  }
+
+  public async saveDotFile(name: string, content: string): Promise<void> {
+    if (!name.startsWith('.')) {
+      throw new Error(
+        `file to save need to start with a dot to ensure it is not considered a deployment`
+      );
+    }
+
+    const toSave =
+      this.db.writeDeploymentsToFiles && this.network.saveDeployments;
+
+    if (toSave) {
+      const chainId = await this.getChainId();
+      const deployFolderpath = path.join(
+        this.deploymentsPath,
+        this.deploymentFolder()
+      );
+
+      const filepath = path.join(deployFolderpath, name);
+      fs.ensureDirSync(deployFolderpath);
+      const chainIdFilepath = path.join(deployFolderpath, '.chainId');
+      if (!fs.existsSync(chainIdFilepath)) {
+        fs.writeFileSync(chainIdFilepath, chainId);
+      }
+      const folderPath = path.dirname(filepath);
+      fs.ensureDirSync(folderPath);
+      fs.writeFileSync(filepath, content);
+    }
   }
 
   public async saveDeployment(
