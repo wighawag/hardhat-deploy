@@ -210,8 +210,12 @@ export interface DeploymentsExtension {
     name: string,
     options: DeployOptions
   ): Promise<{differences: boolean; address?: string}>;
+
   saveDotFile(name: string, content: string): Promise<void>;
+  deleteDotFile(name: string): Promise<void>;
+
   save(name: string, deployment: DeploymentSubmission): Promise<void>; // low level save of deployment
+  delete(name: string): Promise<void>;
   get(name: string): Promise<Deployment>; // fetch a deployment by name, throw if not existing
   getOrNull(name: string): Promise<Deployment | null>; // fetch deployment by name, return null if not existing
   getDeploymentsFromAddress(address: string): Promise<Deployment[]>;

@@ -9,7 +9,11 @@ import {
 
 export interface PartialExtension {
   saveDotFile(name: string, content: string): Promise<void>;
+  deleteDotFile(name: string): Promise<void>;
+
   save(name: string, deployment: DeploymentSubmission): Promise<void>;
+  delete(name: string): Promise<void>;
+
   get(name: string): Promise<Deployment>;
   getOrNull(name: string): Promise<Deployment | null>;
   getDeploymentsFromAddress(address: string): Promise<Deployment[]>;

@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.8
+
+### Patch Changes
+
+- add wau to delete deployment and dotFIles
+
 ## 0.9.7
 
 ### Patch Changes

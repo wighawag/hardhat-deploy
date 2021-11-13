@@ -141,10 +141,14 @@ export class DeploymentsManager {
     this.partialExtension = {
       saveDotFile: async (name: string, content: string): Promise<void> =>
         this.saveDotFile(name, content),
+      deleteDotFile: async (name: string): Promise<void> =>
+        this.deleteDotFile(name),
       save: async (
         name: string,
         deployment: DeploymentSubmission
       ): Promise<boolean> => this.saveDeployment(name, deployment),
+      delete: async (name: string): Promise<void> =>
+        this.deleteDeployment(name),
       get: async (name: string) => {
         await this.setup(false);
         const deployment = this.db.deployments[name];
@@ -662,6 +666,24 @@ export class DeploymentsManager {
     );
   }
 
+  public async deleteDotFile(name: string): Promise<void> {
+    const toSave =
+      this.db.writeDeploymentsToFiles && this.network.saveDeployments;
+
+    if (toSave) {
+      // do not delete if not save mode
+      const deployFolderpath = path.join(
+        this.deploymentsPath,
+        this.deploymentFolder()
+      );
+      const filepath = path.join(deployFolderpath, name);
+
+      try {
+        fs.unlinkSync(filepath);
+      } catch (e) {}
+    }
+  }
+
   public async saveDotFile(name: string, content: string): Promise<void> {
     if (!name.startsWith('.')) {
       throw new Error(
@@ -691,10 +713,36 @@ export class DeploymentsManager {
     }
   }
 
+  public async deleteDeployment(name: string): Promise<void> {
+    delete this.db.deployments[name];
+
+    const toSave =
+      this.db.writeDeploymentsToFiles && this.network.saveDeployments;
+
+    if (toSave) {
+      // do not delete if not save mode
+      const filepath = path.join(
+        this.deploymentsPath,
+        this.deploymentFolder(),
+        name + '.json'
+      );
+
+      try {
+        fs.unlinkSync(filepath);
+      } catch (e) {}
+    }
+  }
+
   public async saveDeployment(
     name: string,
     deployment: DeploymentSubmission
   ): Promise<boolean> {
+    if (name.includes('/') || name.includes(':')) {
+      throw new Error(
+        `deployment name must not be a path or Fully Qualified Name - for such purposes consider using the "contract" field of deployment options`
+      );
+    }
+
     if (
       typeof deployment.address === undefined &&
       !deployment.receipt?.contractAddress
