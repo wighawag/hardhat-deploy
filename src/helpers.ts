@@ -300,18 +300,19 @@ export function addHelpers(
   }
 
   async function setupGasPrice(
-    txRequestOrOverrides: TransactionRequest | PayableOverrides
+    txRequestOrOverrides: TransactionRequest | PayableOverrides,
+    pre_eip1559?: DeployOptions['pre_eip1559']
   ) {
     const gasPriceSetup = await getGasPrice();
-    if (!txRequestOrOverrides.gasPrice) {
-      txRequestOrOverrides.gasPrice = gasPriceSetup.gasPrice;
-    }
-    if (!txRequestOrOverrides.maxFeePerGas) {
+    if (!txRequestOrOverrides.maxFeePerGas && !pre_eip1559) {
       txRequestOrOverrides.maxFeePerGas = gasPriceSetup.maxFeePerGas;
     }
-    if (!txRequestOrOverrides.maxPriorityFeePerGas) {
+    if (!txRequestOrOverrides.maxPriorityFeePerGas && !pre_eip1559) {
       txRequestOrOverrides.maxPriorityFeePerGas =
         gasPriceSetup.maxPriorityFeePerGas;
+    }
+    if (!txRequestOrOverrides.gasPrice) {
+      txRequestOrOverrides.gasPrice = gasPriceSetup.gasPrice;
     }
   }
 
@@ -387,25 +388,16 @@ export function addHelpers(
     );
   }
 
-  async function ensureCreate2DeployerReady(options: {
-    from: string;
-    log?: boolean;
-    gasPrice?: string | BigNumber;
-    maxFeePerGas?: string | BigNumber;
-    maxPriorityFeePerGas?: string | BigNumber;
-  }): Promise<string> {
-    const {
-      address: from,
-      ethersSigner,
-      hardwareWallet,
-      unknown,
-    } = getFrom(options.from);
-    const create2DeployerAddress =
-      await deploymentManager.getDeterministicDeploymentFactoryAddress();
+  async function ensureCreate2DeployerReady(
+    options: DeployOptions
+  ): Promise<string> {
+    const {address: from, ethersSigner, hardwareWallet, unknown} = getFrom(
+      options.from
+    );
+    const create2DeployerAddress = await deploymentManager.getDeterministicDeploymentFactoryAddress();
     const code = await provider.getCode(create2DeployerAddress);
     if (code === '0x') {
-      const senderAddress =
-        await deploymentManager.getDeterministicDeploymentFactoryDeployer();
+      const senderAddress = await deploymentManager.getDeterministicDeploymentFactoryDeployer();
 
       // TODO: calculate required funds
       const txRequest = {
@@ -417,8 +409,14 @@ export function addHelpers(
         maxFeePerGas: options.maxFeePerGas,
         maxPriorityFeePerGas: options.maxPriorityFeePerGas,
       };
-      await setupGasPrice(txRequest);
+      await setupGasPrice(txRequest, options.pre_eip1559);
       await setupNonce(from, txRequest);
+
+      // remove undefined keys
+      Object.keys(txRequest).forEach(
+        //@ts-expect-error
+        (key: string) => txRequest[key] === undefined && delete txRequest[key]
+      );
 
       if (unknown) {
         throw new UnknownSignerError({
@@ -506,12 +504,9 @@ export function addHelpers(
   ): Promise<DeployResult> {
     const args: any[] = options.args ? [...options.args] : [];
     await init();
-    const {
-      address: from,
-      ethersSigner,
-      hardwareWallet,
-      unknown,
-    } = getFrom(options.from);
+    const {address: from, ethersSigner, hardwareWallet, unknown} = getFrom(
+      options.from
+    );
 
     const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(
       name,
@@ -540,6 +535,12 @@ export function addHelpers(
     }
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
 
+    // remove undefined keys
+    Object.keys(unsignedTx).forEach(
+      //@ts-expect-error
+      (key: string) => unsignedTx[key] === undefined && delete unsignedTx[key]
+    );
+
     let create2Address;
     if (options.deterministicDeployment) {
       if (typeof unsignedTx.data === 'string') {
@@ -566,8 +567,14 @@ export function addHelpers(
     await overrideGasLimit(unsignedTx, options, (newOverrides) =>
       ethersSigner.estimateGas(newOverrides)
     );
-    await setupGasPrice(unsignedTx);
+    await setupGasPrice(unsignedTx, options.pre_eip1559);
     await setupNonce(from, unsignedTx);
+
+    // remove undefined keys
+    Object.keys(unsignedTx).forEach(
+      //@ts-expect-error
+      (key) => unsignedTx[key] === undefined && delete unsignedTx[key]
+    );
 
     if (unknown) {
       throw new UnknownSignerError({
@@ -677,7 +684,10 @@ export function addHelpers(
 
       const {address: implementationAddress} = await deterministic(
         implementationName,
-        {...implementationOptions, salt: options.salt}
+        {
+          ...implementationOptions,
+          salt: options.salt,
+        }
       );
 
       const implementationContract = new Contract(
@@ -831,8 +841,7 @@ export function addHelpers(
           typeof options.deterministicDeployment === 'string'
             ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        const create2DeployerAddress =
-          await deploymentManager.getDeterministicDeploymentFactoryAddress();
+        const create2DeployerAddress = await deploymentManager.getDeterministicDeploymentFactoryAddress();
         const create2Address = getCreate2Address(
           create2DeployerAddress,
           create2Salt,
@@ -920,8 +929,10 @@ export function addHelpers(
           diffResult.address &&
           diffResult.address.toLowerCase() !== deployment.address.toLowerCase()
         ) {
-          const {artifact: linkedArtifact, artifactName} =
-            await getLinkedArtifact(name, options);
+          const {
+            artifact: linkedArtifact,
+            artifactName,
+          } = await getLinkedArtifact(name, options);
 
           // receipt missing
           const newDeployment = {
@@ -947,8 +958,10 @@ export function addHelpers(
           );
         }
 
-        const {artifact: linkedArtifact, artifactName} =
-          await getLinkedArtifact(name, options);
+        const {
+          artifact: linkedArtifact,
+          artifactName,
+        } = await getLinkedArtifact(name, options);
 
         // receipt missing
         const newDeployment = {
@@ -1534,7 +1547,9 @@ Note that in this case, the contract deployment will not behave the same if depl
     return getFrom(address);
   }
 
-  function getOptionalFrom(from?: string): {
+  function getOptionalFrom(
+    from?: string
+  ): {
     address?: Address;
     ethersSigner?: Signer;
     hardwareWallet?: string;
@@ -1549,7 +1564,9 @@ Note that in this case, the contract deployment will not behave the same if depl
     return getFrom(from);
   }
 
-  function getFrom(from: string): {
+  function getFrom(
+    from: string
+  ): {
     address: Address;
     ethersSigner: Signer;
     hardwareWallet?: string;
@@ -2069,12 +2086,9 @@ Note that in this case, the contract deployment will not behave the same if depl
   async function rawTx(tx: SimpleTx): Promise<Receipt> {
     tx = {...tx};
     await init();
-    const {
-      address: from,
-      ethersSigner,
-      hardwareWallet,
-      unknown,
-    } = getFrom(tx.from);
+    const {address: from, ethersSigner, hardwareWallet, unknown} = getFrom(
+      tx.from
+    );
 
     const transactionData = {
       to: tx.to,
@@ -2096,6 +2110,12 @@ Note that in this case, the contract deployment will not behave the same if depl
     );
     await setupGasPrice(transactionData);
     await setupNonce(from, transactionData);
+
+    // remove undefined keys
+    Object.keys(transactionData).forEach(
+      // @ts-expect-error
+      (key) => transactionData[key] === undefined && delete transactionData[key]
+    );
 
     if (unknown) {
       throw new UnknownSignerError({
@@ -2201,12 +2221,9 @@ data: ${data}
   ): Promise<Receipt> {
     options = {...options}; // ensure no change
     await init();
-    const {
-      address: from,
-      ethersSigner,
-      hardwareWallet,
-      unknown,
-    } = getFrom(options.from);
+    const {address: from, ethersSigner, hardwareWallet, unknown} = getFrom(
+      options.from
+    );
 
     let tx;
     const deployment = await partialExtension.get(name);
@@ -2231,8 +2248,8 @@ data: ${data}
       );
     }
 
-    const numArguments =
-      ethersContract.interface.getFunction(methodName).inputs.length;
+    const numArguments = ethersContract.interface.getFunction(methodName).inputs
+      .length;
     if (args.length !== numArguments) {
       throw new Error(
         `expected ${numArguments} arguments for method "${methodName}", got ${args.length}`

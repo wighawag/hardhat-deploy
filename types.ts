@@ -137,6 +137,7 @@ export interface DeployOptionsBase extends TxOptions {
   linkedData?: any; // JSONable ?
   libraries?: Libraries;
   proxy?: boolean | string | ProxyOptions; // TODO support different type of proxies ?
+  pre_eip1559?: boolean;
 }
 
 export interface DeployOptions extends DeployOptionsBase {
