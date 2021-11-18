@@ -31,7 +31,7 @@ import {
   Create2DeployOptions,
   FacetCut,
   DeploymentSubmission,
-  ExtendedArtifact,
+  ExtendedArtifactData,
   FacetCutAction,
   Facet,
   ArtifactData,
@@ -464,46 +464,29 @@ export function addHelpers(
     return create2DeployerAddress;
   }
 
-  async function getArtifactFromOptions(
-    name: string,
-    options: DeployOptions
-  ): Promise<{
-    artifact: Artifact;
-    artifactName?: string;
-  }> {
+  async function getArtifactFromOptions(options: DeployOptions): Promise<Artifact> {
     let artifact: Artifact;
-    let artifactName: string | undefined;
+    const artifactName = options.name;
+
     if (options.contract) {
-      if (typeof options.contract === 'string') {
-        artifactName = options.contract;
-        artifact = await getArtifact(artifactName);
-      } else {
-        artifact = options.contract as Artifact; // TODO better handling
-      }
-    } else {
-      artifactName = name;
+      artifact = options.contract as Artifact;
+    } else  {
       artifact = await getArtifact(artifactName);
     }
-    return {artifact, artifactName};
+
+    artifact.contractName = artifactName;
+
+    return artifact;
   }
 
-  async function getLinkedArtifact(
-    name: string,
-    options: DeployOptions
-  ): Promise<{artifact: Artifact; artifactName: string | undefined}> {
+  async function getLinkedArtifact(options: DeployOptions): Promise<Artifact> {
     // TODO get linked artifact
-    const {artifact, artifactName} = await getArtifactFromOptions(
-      name,
-      options
-    );
+    const artifact = await getArtifactFromOptions(options);
     const byteCode = linkLibraries(artifact, options.libraries);
-    return {artifact: {...artifact, bytecode: byteCode}, artifactName};
+    return {...artifact, bytecode: byteCode} as Artifact;
   }
 
-  async function _deploy(
-    name: string,
-    options: DeployOptions
-  ): Promise<DeployResult> {
+  async function _deploy(options: DeployOptions): Promise<DeployResult> {
     const args: any[] = options.args ? [...options.args] : [];
     await init();
     const {
@@ -513,10 +496,7 @@ export function addHelpers(
       unknown,
     } = getFrom(options.from);
 
-    const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(
-      name,
-      options
-    );
+    const linkedArtifact = await getLinkedArtifact(options);
 
     const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
@@ -577,7 +557,7 @@ export function addHelpers(
     }
 
     if (options.log || hardwareWallet) {
-      print(`deploying "${name}"`);
+      print(`deploying "${options.name}"`);
       if (hardwareWallet) {
         print(` (please confirm on your ${hardwareWallet})`);
       }
@@ -602,16 +582,16 @@ export function addHelpers(
       args,
       linkedData: options.linkedData,
     };
-    if (artifactName && willSaveToDisk()) {
+    if (linkedArtifact.contractName && willSaveToDisk()) {
       const extendedArtifact = await partialExtension.getExtendedArtifact(
-        artifactName
+        linkedArtifact.contractName
       );
       preDeployment = {
         ...extendedArtifact,
         ...preDeployment,
       };
     }
-    tx = await onPendingTx(tx, name, preDeployment);
+    tx = await onPendingTx(tx, options.name, preDeployment);
     const receipt = await tx.wait(options.waitConfirmations);
     const address =
       options.deterministicDeployment && create2Address
@@ -624,7 +604,7 @@ export function addHelpers(
       transactionHash: receipt.transactionHash,
       libraries: options.libraries,
     };
-    await saveDeployment(name, deployment);
+    await saveDeployment(options.name, deployment);
     if (options.log || hardwareWallet) {
       print(
         `: deployed at ${deployment.address} with ${receipt?.gasUsed} gas\n`
@@ -645,15 +625,16 @@ export function addHelpers(
     implementationAddress?: Address;
     deploy: () => Promise<DeployResult>;
   }> {
-    options = {...options}; // ensure no change
+    const deployOptions = {
+      ...options, // ensure no change
+      name: name,
+      deterministicDeployment: options.salt || true,
+    } as DeployOptions;
     await init();
 
     const deployFunction = () =>
-      deploy(name, {
-        ...options,
-        deterministicDeployment: options.salt || true,
-      });
-    if (options.proxy) {
+      deploy(deployOptions);
+    if (deployOptions.proxy) {
       /* eslint-disable prefer-const */
       let {
         viaAdminContract,
@@ -672,7 +653,7 @@ export function addHelpers(
         mergedABI,
         updateMethod,
         updateArgs,
-      } = await _getProxyInfo(name, options);
+      } = await _getProxyInfo(deployOptions);
       /* eslint-enable prefer-const */
 
       const {address: implementationAddress} = await deterministic(
@@ -750,8 +731,7 @@ export function addHelpers(
       const args: any[] = options.args ? [...options.args] : [];
       const {ethersSigner, unknown, address: from} = getFrom(options.from);
 
-      const artifactInfo = await getArtifactFromOptions(name, options);
-      const {artifact} = artifactInfo;
+      const artifact = await getArtifactFromOptions(deployOptions);
       const abi = artifact.abi;
       const byteCode = linkLibraries(artifact, options.libraries);
       const factory = new ContractFactory(abi, byteCode, ethersSigner);
@@ -784,8 +764,8 @@ export function addHelpers(
             unsignedTx.data
           ),
           deploy: () =>
-            deploy(name, {
-              ...options,
+            deploy({
+              ...deployOptions,
               deterministicDeployment: options.salt || true,
             }),
         };
@@ -801,10 +781,7 @@ export function addHelpers(
     return partialExtension.getOrNull(name);
   }
 
-  async function fetchIfDifferent(
-    name: string,
-    options: DeployOptions
-  ): Promise<{differences: boolean; address?: string}> {
+  async function fetchIfDifferent(options: DeployOptions): Promise<{differences: boolean; address?: string}> {
     options = {...options}; // ensure no change
     const argArray = options.args ? [...options.args] : [];
     await init();
@@ -812,8 +789,7 @@ export function addHelpers(
     if (options.deterministicDeployment) {
       const {ethersSigner} = getFrom(options.from);
 
-      const artifactInfo = await getArtifactFromOptions(name, options);
-      const {artifact} = artifactInfo;
+      const artifact = await getArtifactFromOptions(options);
       const abi = artifact.abi;
       const byteCode = linkLibraries(artifact, options.libraries);
       const factory = new ContractFactory(abi, byteCode, ethersSigner);
@@ -848,7 +824,7 @@ export function addHelpers(
         throw new Error('unsigned tx data as bytes not supported');
       }
     }
-    const deployment = await partialExtension.getOrNull(name);
+    const deployment = await partialExtension.getOrNull(options.name);
     if (deployment) {
       if (options.skipIfAlreadyDeployed) {
         return {differences: false, address: undefined}; // TODO check receipt, see below
@@ -868,7 +844,7 @@ export function addHelpers(
 
       if (transaction) {
         const {ethersSigner} = await getFrom(options.from);
-        const {artifact} = await getArtifactFromOptions(name, options);
+        const artifact = await getArtifactFromOptions(options);
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact, options.libraries);
         const factory = new ContractFactory(abi, byteCode, ethersSigner);
@@ -882,11 +858,11 @@ export function addHelpers(
       } else {
         if (transactionDetailsAvailable) {
           throw new Error(
-            `cannot get the transaction for ${name}'s previous deployment, please check your node synced status.`
+            `cannot get the transaction for ${options.name}'s previous deployment, please check your node synced status.`
           );
         } else {
           console.error(
-            `no transaction details found for ${name}'s previous deployment, if the deployment is t be discarded, please delete the file`
+            `no transaction details found for ${options.name}'s previous deployment, if the deployment is t be discarded, please delete the file`
           );
           return {differences: false, address: deployment.address};
         }
@@ -896,7 +872,6 @@ export function addHelpers(
   }
 
   async function _deployOne(
-    name: string,
     options: DeployOptions,
     failsOnExistingDeterminisitc?: boolean
   ): Promise<DeployResult> {
@@ -904,24 +879,23 @@ export function addHelpers(
     options = {...options, args: argsArray};
 
     let result: DeployResult;
-    const diffResult = await fetchIfDifferent(name, options);
+    const diffResult = await fetchIfDifferent(options);
     if (diffResult.differences) {
-      result = await _deploy(name, options);
+      result = await _deploy(options);
     } else {
       if (failsOnExistingDeterminisitc && options.deterministicDeployment) {
         throw new Error(
           `already deployed on same deterministic address: ${diffResult.address}`
         );
       }
-      const deployment = await getDeploymentOrNUll(name);
+      const deployment = await getDeploymentOrNUll(options.name);
       if (deployment) {
         if (
           options.deterministicDeployment &&
           diffResult.address &&
           diffResult.address.toLowerCase() !== deployment.address.toLowerCase()
         ) {
-          const {artifact: linkedArtifact, artifactName} =
-            await getLinkedArtifact(name, options);
+          const linkedArtifact = await getLinkedArtifact(options);
 
           // receipt missing
           const newDeployment = {
@@ -931,7 +905,7 @@ export function addHelpers(
             libraries: options.libraries,
             args: argsArray,
           };
-          await saveDeployment(name, newDeployment, artifactName);
+          await saveDeployment(options.name, newDeployment, linkedArtifact.contractName);
           result = {
             ...newDeployment,
             newlyDeployed: false,
@@ -947,8 +921,7 @@ export function addHelpers(
           );
         }
 
-        const {artifact: linkedArtifact, artifactName} =
-          await getLinkedArtifact(name, options);
+        const linkedArtifact = await getLinkedArtifact(options);
 
         // receipt missing
         const newDeployment = {
@@ -958,14 +931,14 @@ export function addHelpers(
           libraries: options.libraries,
           args: argsArray,
         };
-        await saveDeployment(name, newDeployment, artifactName);
+        await saveDeployment(options.name, newDeployment, linkedArtifact.contractName);
         result = {
           ...newDeployment,
           newlyDeployed: false,
         };
       }
       if (options.log) {
-        log(`reusing "${name}" at ${result.address}`);
+        log(`reusing "${options.name}" at ${result.address}`);
       }
     }
 
@@ -1015,7 +988,6 @@ export function addHelpers(
   }
 
   async function _getProxyInfo(
-    name: string,
     options: DeployOptions
   ): Promise<{
     viaAdminContract:
@@ -1025,26 +997,26 @@ export function addHelpers(
     proxyAdminName: string | undefined;
     proxyAdminDeployed: Deployment | undefined;
     proxyAdmin: string;
-    proxyAdminContract: ExtendedArtifact | undefined;
+    proxyAdminContract: ExtendedArtifactData | undefined;
     owner: string;
     currentProxyAdminOwner: string | undefined;
-    artifact: ExtendedArtifact;
+    artifact: ExtendedArtifactData;
     implementationArgs: any[];
     implementationName: string;
     implementationOptions: DeployOptions;
     mergedABI: ABI;
     proxyName: string;
-    proxyContract: ExtendedArtifact;
+    proxyContract: ExtendedArtifactData;
     oldDeployment: Deployment | null;
     updateMethod: string | undefined;
     updateArgs: any[];
     upgradeIndex: number | undefined;
   }> {
-    const oldDeployment = await getDeploymentOrNUll(name);
+    const oldDeployment = await getDeploymentOrNUll(options.name);
     let updateMethod: string | undefined;
     let updateArgs: any[] | undefined;
     let upgradeIndex;
-    let proxyContract: ExtendedArtifact = eip173Proxy;
+    let proxyContract: ExtendedArtifactData = eip173Proxy;
     let checkABIConflict = true;
     let viaAdminContract:
       | string
@@ -1125,15 +1097,18 @@ export function addHelpers(
       updateMethod = options.proxy;
     }
 
-    const proxyName = name + '_Proxy';
+    const proxyName = options.name + '_Proxy';
     const {address: owner} = getProxyOwner(options);
     const {address: from} = getFrom(options.from);
     const implementationArgs = options.args ? [...options.args] : [];
 
     // --- Implementation Deployment ---
-    const implementationName = name + '_Implementation';
+    const implementationName = options.name + '_Implementation';
+    //TODO: This is odd. `name: options.name` should probably be `name: implementationName`,
+    // but to preserve the previous logic I kept it the same
     const implementationOptions = {
-      contract: options.contract || name,
+      name: options.name,
+      contract: options.contract,
       from: options.from,
       autoMine: options.autoMine,
       estimateGasExtra: options.estimateGasExtra,
@@ -1150,10 +1125,7 @@ export function addHelpers(
       waitConfirmations: options.waitConfirmations,
     };
 
-    const {artifact} = await getArtifactFromOptions(
-      name,
-      implementationOptions
-    );
+    const artifact = await getArtifactFromOptions(implementationOptions);
 
     const proxyContractConstructor = proxyContract.abi.find(
       (v) => v.type === 'constructor'
@@ -1220,7 +1192,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     const proxyAdmin = owner;
     let currentProxyAdminOwner: string | undefined;
     let proxyAdminDeployed: Deployment | undefined;
-    let proxyAdminContract: ExtendedArtifact | undefined;
+    let proxyAdminContract: ExtendedArtifactData | undefined;
     if (viaAdminContract) {
       let proxyAdminArtifactNameOrContract: string | ArtifactData | undefined;
       if (typeof viaAdminContract === 'string') {
@@ -1278,10 +1250,7 @@ Note that in this case, the contract deployment will not behave the same if depl
   }
 
   // TODO rename
-  async function _deployViaEIP173Proxy(
-    name: string,
-    options: DeployOptions
-  ): Promise<DeployResult> {
+  async function _deployViaEIP173Proxy(options: DeployOptions): Promise<DeployResult> {
     /* eslint-disable prefer-const */
     let {
       oldDeployment,
@@ -1302,7 +1271,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       proxyName,
       proxyContract,
       mergedABI,
-    } = await _getProxyInfo(name, options);
+    } = await _getProxyInfo(options);
     /* eslint-enable prefer-const */
 
     const deployResult = _checkUpgradeIndex(oldDeployment, upgradeIndex);
@@ -1317,7 +1286,8 @@ Note that in this case, the contract deployment will not behave the same if depl
         );
       }
       if (!proxyAdminDeployed) {
-        proxyAdminDeployed = await _deployOne(proxyAdminName, {
+        proxyAdminDeployed = await _deployOne({
+          name: proxyAdminName,
           from: options.from,
           autoMine: options.autoMine,
           estimateGasExtra: options.estimateGasExtra,
@@ -1349,10 +1319,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       }
     }
 
-    const implementation = await _deployOne(
-      implementationName,
-      implementationOptions
-    );
+    const implementation = await _deployOne(implementationOptions);
 
     if (!oldDeployment || implementation.newlyDeployed) {
       // console.log(`implementation deployed at ${implementation.address} for ${implementation.receipt.gasUsed}`);
@@ -1381,7 +1348,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         delete proxyOptions.libraries;
         proxyOptions.contract = proxyContract;
         proxyOptions.args = [implementation.address, proxyAdmin, data];
-        proxy = await _deployOne(proxyName, proxyOptions, true);
+        proxy = await _deployOne(proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
         const ownerStorage = await provider.getStorageAt(
@@ -1485,9 +1452,9 @@ Note that in this case, the contract deployment will not behave the same if depl
           ? proxiedDeployment.history.concat([oldDeployment])
           : [oldDeployment];
       }
-      await saveDeployment(name, proxiedDeployment);
+      await saveDeployment(options.name, proxiedDeployment);
 
-      const deployment = await partialExtension.get(name);
+      const deployment = await partialExtension.get(options.name);
       return {
         ...deployment,
         newlyDeployed: true,
@@ -1509,10 +1476,10 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxiedDeployment.history = proxiedDeployment.history
           ? proxiedDeployment.history.concat([oldDeployment])
           : [oldDeployment];
-        await saveDeployment(name, proxiedDeployment);
+        await saveDeployment(options.name, proxiedDeployment);
       }
 
-      const deployment = await partialExtension.get(name);
+      const deployment = await partialExtension.get(options.name);
       return {
         ...deployment,
         newlyDeployed: false,
@@ -1615,10 +1582,9 @@ Note that in this case, the contract deployment will not behave the same if depl
   }
 
   async function _deployViaDiamondProxy(
-    name: string,
     options: DiamondOptions
   ): Promise<DeployResult> {
-    const oldDeployment = await getDeploymentOrNUll(name);
+    const oldDeployment = await getDeploymentOrNUll(options.name);
     let proxy: Deployment | undefined;
     const deployResult = _checkUpgradeIndex(
       oldDeployment,
@@ -1633,7 +1599,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       // need to compute the resulting address accurately
     }
 
-    const proxyName = name + '_DiamondProxy';
+    const proxyName = options.name + '_DiamondProxy';
     const {address: owner, hardwareWallet} = getDiamondOwner(options);
     const newSelectors: string[] = [];
     const facetSnapshot: Facet[] = [];
@@ -1685,20 +1651,8 @@ Note that in this case, the contract deployment will not behave the same if depl
     let abi: any[] = diamondBase.abi.concat([]);
     const facetCuts: FacetCut[] = [];
     for (const facet of options.facets) {
-      const artifact = await getArtifact(facet); // TODO getArtifactFromOptions( // allowing to pass bytecode / abi
-      const constructor = artifact.abi.find(
-        (fragment: {type: string; inputs: any[]}) =>
-          fragment.type === 'constructor'
-      );
-      if (constructor && constructor.inputs.length > 0) {
-        throw new Error(`Facet with constructor not yet supported`); // TODO remove that requirement
-      }
-      abi = mergeABIs([abi, artifact.abi], {
-        check: true,
-        skipSupportsInterface: false,
-      });
-      // TODO allow facet to be named so multiple version could coexist
-      const implementation = await _deployOne(facet, {
+      let artifact: Artifact;
+      const deployOptions = {
         from: options.from,
         autoMine: options.autoMine,
         estimateGasExtra: options.estimateGasExtra,
@@ -1712,7 +1666,32 @@ Note that in this case, the contract deployment will not behave the same if depl
         // fieldsToCompare: options.fieldsToCompare, // todo ?
         linkedData: options.linkedData,
         // args: options.args, // toDO ?
+      } as DeployOptions;
+
+      if (typeof facet === 'string') {
+        deployOptions.name = facet;
+        artifact = await getArtifact(facet);
+      } else {
+        deployOptions.name = facet.contractName;
+        deployOptions.contract = facet as ArtifactData;
+        artifact = await getArtifactFromOptions(deployOptions);
+      }
+
+      //TODO: remove constructor restriction
+      const constructor = artifact.abi.find(
+        (fragment: {type: string; inputs: any[]}) =>
+          fragment.type === 'constructor'
+      );
+      if (constructor && constructor.inputs.length > 0) {
+        throw new Error(`Facet with constructor not yet supported`); // TODO remove that requirement
+      }
+
+      abi = mergeABIs([abi, artifact.abi], {
+        check: true,
+        skipSupportsInterface: false,
       });
+      // TODO allow facet to be named so multiple version could coexist
+      const implementation = await _deployOne(deployOptions);
       if (implementation.newlyDeployed) {
         // console.log(`facet ${facet} deployed at ${implementation.address}`);
         const newFacet = {
@@ -1722,7 +1701,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
       } else {
-        const oldImpl = await getDeployment(facet);
+        const oldImpl = await getDeployment(deployOptions.name);
         const newFacet = {
           facetAddress: oldImpl.address,
           functionSelectors: sigsFromABI(oldImpl.abi),
@@ -1813,7 +1792,8 @@ Note that in this case, the contract deployment will not behave the same if depl
         // ensure a Diamantaire exists on the network :
         const diamantaireName = 'Diamantaire';
         let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
-        diamantaireDeployment = await _deployOne(diamantaireName, {
+        diamantaireDeployment = await _deployOne({
+          name: diamantaireName,
           contract: diamantaire,
           from: options.from,
           deterministicDeployment: true,
@@ -1960,7 +1940,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           await saveDeployment(proxyName, proxy);
         }
 
-        await saveDeployment(name, {
+        await saveDeployment(options.name, {
           ...diamondBase,
           args: proxy.args,
           address: proxy.address,
@@ -1974,7 +1954,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         });
       } else {
         if (!oldDeployment) {
-          throw new Error(`Cannot find Deployment for ${name}`);
+          throw new Error(`Cannot find Deployment for ${options.name}`);
         }
         const currentOwner = await read(proxyName, 'owner');
         if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
@@ -1989,7 +1969,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         }
 
         const executeReceipt = await execute(
-          name,
+          options.name,
           {...options, from: currentOwner},
           'diamondCut',
           facetCuts,
@@ -2001,7 +1981,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         if (!executeReceipt) {
           throw new Error('failed to execute');
         }
-        await saveDeployment(name, {
+        await saveDeployment(options.name, {
           receipt: executeReceipt,
           transactionHash: executeReceipt.transactionHash,
           history: oldDeployment.history
@@ -2016,13 +1996,13 @@ Note that in this case, the contract deployment will not behave the same if depl
         });
       }
 
-      const deployment = await partialExtension.get(name);
+      const deployment = await partialExtension.get(options.name);
       return {
         ...deployment,
         newlyDeployed: true,
       };
     } else {
-      const oldDeployment = await partialExtension.get(name);
+      const oldDeployment = await partialExtension.get(options.name);
 
       const proxiedDeployment: DeploymentSubmission = {
         ...oldDeployment,
@@ -2035,9 +2015,9 @@ Note that in this case, the contract deployment will not behave the same if depl
       // proxiedDeployment.history = proxiedDeployment.history
       //   ? proxiedDeployment.history.concat([oldDeployment])
       //   : [oldDeployment];
-      await saveDeployment(name, proxiedDeployment);
+      await saveDeployment(options.name, proxiedDeployment);
 
-      const deployment = await partialExtension.get(name);
+      const deployment = await partialExtension.get(options.name);
       return {
         ...deployment,
         newlyDeployed: false,
@@ -2046,24 +2026,22 @@ Note that in this case, the contract deployment will not behave the same if depl
   }
 
   async function deploy(
-    name: string,
     options: DeployOptions
   ): Promise<DeployResult> {
     options = {...options}; // ensure no change
     await init();
     if (!options.proxy) {
-      return _deployOne(name, options);
+      return _deployOne(options);
     }
-    return _deployViaEIP173Proxy(name, options);
+    return _deployViaEIP173Proxy(options);
   }
 
   async function diamond(
-    name: string,
     options: DiamondOptions
   ): Promise<DeployResult> {
     options = {...options}; // ensure no change
     await init();
-    return _deployViaDiamondProxy(name, options);
+    return _deployViaDiamondProxy(options);
   }
 
   async function rawTx(tx: SimpleTx): Promise<Receipt> {
@@ -2695,14 +2673,13 @@ data: ${data}
   };
 
   (extension as any).deployIfDifferent = (
-    name: string,
     options: DeployOptions,
     contractName: string,
     ...args: any[]
   ): Promise<DeployResult> => {
-    options.contract = contractName;
+    options.name = contractName;
     options.args = args;
-    return deploy(name, options);
+    return deploy(options);
   };
   // ////////////////////////////////////////////////////////////////////
 

@@ -8,22 +8,6 @@ import {
 } from 'hardhat/types';
 import type {BigNumber} from '@ethersproject/bignumber';
 
-export type ExtendedArtifact = {
-  abi: any[];
-  bytecode: string; // "0x"-prefixed hex string
-  deployedBytecode?: string; // "0x"-prefixed hex string
-  metadata?: string;
-  linkReferences?: LinkReferences;
-  deployedLinkReferences?: LinkReferences;
-  solcInput?: string;
-  solcInputHash?: string;
-  userdoc?: any;
-  devdoc?: any;
-  methodIdentifiers?: any;
-  storageLayout?: any;
-  evm?: any;
-};
-
 export interface DeployFunction {
   (env: HardhatRuntimeEnvironment): Promise<void | boolean>;
   skip?: (env: HardhatRuntimeEnvironment) => Promise<boolean>;
@@ -68,8 +52,10 @@ export type Receipt = {
   confirmations?: number;
 };
 
-export type DiamondFacets = Array<string>; // TODO support Object for facet : {contract} // could be deploymentNames too ? or {abi,address}
+// export type DiamondFacets = Array<string> | Array<ArtifactData>;
+export type DiamondFacets = Array<string | Artifact>;
 export interface DiamondOptions extends TxOptions {
+  name: string;
   owner?: Address;
   facets: DiamondFacets;
   log?: boolean;
@@ -118,20 +104,30 @@ export type ProxyOptions =
           };
     });
 
-export type ArtifactData = {
+export interface ArtifactData {
   abi: ABI;
-  bytecode: string;
-  deployedBytecode?: string;
+  bytecode: string; // "0x"-prefixed hex string
+  deployedBytecode?: string; // "0x"-prefixed hex string
   metadata?: string;
   methodIdentifiers?: any;
   storageLayout?: any;
   userdoc?: any;
   devdoc?: any;
   gasEstimates?: any;
-};
+}
+
+export interface ExtendedArtifactData extends ArtifactData {
+  linkReferences?: LinkReferences;
+  deployedLinkReferences?: LinkReferences;
+  solcInput?: string;
+  solcInputHash?: string;
+  evm?: any;
+}
 
 export interface DeployOptionsBase extends TxOptions {
-  contract?: string | ArtifactData;
+  //TODO: Probably need an optional contractName here
+  // contractName?: string;
+  contract?: ArtifactData;
   args?: any[];
   skipIfAlreadyDeployed?: boolean;
   linkedData?: any; // JSONable ?
@@ -140,6 +136,7 @@ export interface DeployOptionsBase extends TxOptions {
 }
 
 export interface DeployOptions extends DeployOptionsBase {
+  name: string;
   deterministicDeployment?: boolean | string;
 }
 
@@ -193,10 +190,10 @@ export type FixtureFunc<T, O> = (
 ) => Promise<T>;
 
 export interface DeploymentsExtension {
-  deploy(name: string, options: DeployOptions): Promise<DeployResult>; // deploy a contract
+  deploy(options: DeployOptions): Promise<DeployResult>; // deploy a contract
   diamond: {
     // deploy diamond based contract (see section below)
-    deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
+    deploy(options: DiamondOptions): Promise<DeployResult>;
   };
   deterministic( // return the determinsitic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
     name: string,
@@ -207,7 +204,6 @@ export interface DeploymentsExtension {
     deploy(): Promise<DeployResult>;
   }>;
   fetchIfDifferent( // return true if new compiled code is different than deployed contract
-    name: string,
     options: DeployOptions
   ): Promise<{differences: boolean; address?: string}>;
   save(name: string, deployment: DeploymentSubmission): Promise<void>; // low level save of deployment
@@ -216,7 +212,7 @@ export interface DeploymentsExtension {
   getDeploymentsFromAddress(address: string): Promise<Deployment[]>;
   all(): Promise<{[name: string]: Deployment}>; // return all deployments
   getArtifact(name: string): Promise<Artifact>; // return a hardhat artifact (compiled contract without deployment)
-  getExtendedArtifact(name: string): Promise<ExtendedArtifact>; // return a extended artifact (with more info) (compiled contract without deployment)
+  getExtendedArtifact(name: string): Promise<ExtendedArtifactData>; // return a extended artifact (with more info) (compiled contract without deployment)
   run( // execute deployment scripts
     tags?: string | string[],
     options?: {

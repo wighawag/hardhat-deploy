@@ -13,7 +13,7 @@ import {
   NetworkConfig,
 } from 'hardhat/types';
 import {createProvider} from 'hardhat/internal/core/providers/construction'; // TODO harhdat argument types not from internal
-import {Deployment, ExtendedArtifact} from '../types';
+import {Deployment, ExtendedArtifactData} from '../types';
 import {extendEnvironment, task, subtask, extendConfig} from 'hardhat/config';
 import {HARDHAT_NETWORK_NAME, HardhatPluginError} from 'hardhat/plugins';
 import * as types from 'hardhat/internal/core/params/argumentTypes'; // TODO harhdat argument types not from internal
@@ -910,7 +910,7 @@ task('export-artifacts')
       }
       // -----------------------------------------
 
-      const extendedArtifact: ExtendedArtifact = {
+      const extendedArtifact: ExtendedArtifactData = {
         ...artifact,
         ...output,
       };

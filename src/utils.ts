@@ -6,7 +6,7 @@ import {getAddress, isAddress} from '@ethersproject/address';
 import {Interface, FunctionFragment, Fragment} from '@ethersproject/abi';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {BigNumber} from '@ethersproject/bignumber';
-import {ExtendedArtifact, MultiExport} from '../types';
+import {ExtendedArtifactData, MultiExport} from '../types';
 import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
 import {Transaction} from '@ethersproject/transactions';
@@ -15,7 +15,7 @@ import {store} from './globalStore';
 function getOldArtifactSync(
   name: string,
   folderPath: string
-): ExtendedArtifact | undefined {
+): ExtendedArtifactData | undefined {
   const oldArtifactPath = path.join(folderPath, name + '.json');
   let artifact;
   if (fs.existsSync(oldArtifactPath)) {
@@ -31,7 +31,7 @@ function getOldArtifactSync(
 export async function getArtifactFromFolder(
   name: string,
   folderPath: string
-): Promise<Artifact | ExtendedArtifact | undefined> {
+): Promise<Artifact | ExtendedArtifactData | undefined> {
   const artifacts = new Artifacts(folderPath);
   let artifact = getOldArtifactSync(name, folderPath);
   if (!artifact) {
@@ -50,7 +50,7 @@ export async function getArtifactFromFolder(
 export async function getExtendedArtifactFromFolder(
   name: string,
   folderPath: string
-): Promise<ExtendedArtifact | undefined> {
+): Promise<ExtendedArtifactData | undefined> {
   const artifacts = new Artifacts(folderPath);
   let artifact = getOldArtifactSync(name, folderPath);
   if (!artifact && (await artifacts.artifactExists(name))) {

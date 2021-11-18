@@ -4,7 +4,7 @@ import {
   Deployment,
   FixtureFunc,
   DeploymentSubmission,
-  ExtendedArtifact,
+  ExtendedArtifactData,
 } from '../../types';
 
 export interface PartialExtension {
@@ -13,7 +13,7 @@ export interface PartialExtension {
   getOrNull(name: string): Promise<Deployment | null>;
   getDeploymentsFromAddress(address: string): Promise<Deployment[]>;
   all(): Promise<{[name: string]: Deployment}>;
-  getExtendedArtifact(name: string): Promise<ExtendedArtifact>;
+  getExtendedArtifact(name: string): Promise<ExtendedArtifactData>;
   getArtifact(name: string): Promise<Artifact>;
   run(
     tags?: string | string[],

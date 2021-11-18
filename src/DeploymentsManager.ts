@@ -8,7 +8,7 @@ import {
   Export,
   DeterministicDeploymentInfo,
 } from '../types';
-import {ExtendedArtifact} from '../types';
+import {ExtendedArtifactData} from '../types';
 import {PartialExtension} from './internal/types';
 
 import fs from 'fs-extra';
@@ -181,7 +181,7 @@ export class DeploymentsManager {
           }
           return artifactFromFolder as Artifact;
         }
-        let artifact: Artifact | ExtendedArtifact | undefined =
+        let artifact: Artifact | ExtendedArtifactData | undefined =
           await getArtifactFromFolder(
             contractName,
             this.env.config.paths.artifacts
@@ -204,7 +204,7 @@ export class DeploymentsManager {
       },
       getExtendedArtifact: async (
         contractName: string
-      ): Promise<ExtendedArtifact> => {
+      ): Promise<ExtendedArtifactData> => {
         if (this.db.onlyArtifacts) {
           const artifactFromFolder = await getExtendedArtifactFromFolder(
             contractName,
@@ -215,9 +215,9 @@ export class DeploymentsManager {
               `cannot find artifact "${contractName}" from folder ${this.db.onlyArtifacts}`
             );
           }
-          return artifactFromFolder as ExtendedArtifact;
+          return artifactFromFolder as ExtendedArtifactData;
         }
-        let artifact: ExtendedArtifact | undefined =
+        let artifact: ExtendedArtifactData | undefined =
           await getExtendedArtifactFromFolder(
             contractName,
             this.env.config.paths.artifacts
