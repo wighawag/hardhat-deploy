@@ -139,6 +139,8 @@ export class DeploymentsManager {
     // this.env.artifacts = new HardhatDeployArtifacts(this.env.artifacts);
 
     this.partialExtension = {
+      readDotFile: async (name: string): Promise<string> =>
+        this.readDotFile(name),
       saveDotFile: async (name: string, content: string): Promise<void> =>
         this.saveDotFile(name, content),
       deleteDotFile: async (name: string): Promise<void> =>
@@ -682,6 +684,22 @@ export class DeploymentsManager {
         fs.unlinkSync(filepath);
       } catch (e) {}
     }
+  }
+
+  public async readDotFile(name: string): Promise<string> {
+    if (!name.startsWith('.')) {
+      throw new Error(
+        `file to save need to start with a dot to ensure it is not considered a deployment`
+      );
+    }
+
+    const deployFolderpath = path.join(
+      this.deploymentsPath,
+      this.deploymentFolder()
+    );
+
+    const filepath = path.join(deployFolderpath, name);
+    return fs.readFileSync(filepath).toString();
   }
 
   public async saveDotFile(name: string, content: string): Promise<void> {

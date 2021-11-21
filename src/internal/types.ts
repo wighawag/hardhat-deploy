@@ -8,6 +8,7 @@ import {
 } from '../../types';
 
 export interface PartialExtension {
+  readDotFile(name: string): Promise<string>;
   saveDotFile(name: string, content: string): Promise<void>;
   deleteDotFile(name: string): Promise<void>;
 

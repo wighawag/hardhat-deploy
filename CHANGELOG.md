@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.9
+
+### Patch Changes
+
+- add readDotFile
+
 ## 0.9.8
 
 ### Patch Changes
