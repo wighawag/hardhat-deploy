@@ -211,6 +211,7 @@ export interface DeploymentsExtension {
     options: DeployOptions
   ): Promise<{differences: boolean; address?: string}>;
 
+  readDotFile(name: string): Promise<string>;
   saveDotFile(name: string, content: string): Promise<void>;
   deleteDotFile(name: string): Promise<void>;
 

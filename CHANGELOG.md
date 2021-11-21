@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.10
+
+### Patch Changes
+
+- fix forgot to add readDotFile to types
+
 ## 0.9.9
 
 ### Patch Changes
