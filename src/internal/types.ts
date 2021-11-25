@@ -40,4 +40,6 @@ export interface PartialExtension {
     id?: string
   ): (options?: O) => Promise<T>;
   log(...args: unknown[]): void;
+
+  getNetworkName(): string;
 }

@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.11
+
+### Patch Changes
+
+- add getNetworkName() which return the forked name if any
+
 ## 0.9.10
 
 ### Patch Changes

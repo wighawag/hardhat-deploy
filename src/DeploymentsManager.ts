@@ -148,7 +148,9 @@ export class DeploymentsManager {
       save: async (
         name: string,
         deployment: DeploymentSubmission
-      ): Promise<boolean> => this.saveDeployment(name, deployment),
+      ): Promise<void> => {
+        this.saveDeployment(name, deployment);
+      },
       delete: async (name: string): Promise<void> =>
         this.deleteDeployment(name),
       get: async (name: string) => {
@@ -352,7 +354,10 @@ export class DeploymentsManager {
           console.log(...args);
         }
       },
-    } as any;
+      getNetworkName() {
+        return this.getNetworkName();
+      },
+    } as PartialExtension;
 
     const print = (msg: string) => {
       if (this.db.logEnabled) {

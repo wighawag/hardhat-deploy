@@ -243,6 +243,8 @@ export interface DeploymentsExtension {
   ): (options?: O) => Promise<T>;
   log(...args: any[]): void; // log data only ig log enabled (disabled in test fixture)
 
+  getNetworkName(): string;
+
   execute( // execute function call on contract
     name: string,
     options: TxOptions,
