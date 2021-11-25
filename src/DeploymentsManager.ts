@@ -354,9 +354,7 @@ export class DeploymentsManager {
           console.log(...args);
         }
       },
-      getNetworkName() {
-        return this.getNetworkName();
-      },
+      getNetworkName: () => this.getNetworkName(),
     } as PartialExtension;
 
     const print = (msg: string) => {

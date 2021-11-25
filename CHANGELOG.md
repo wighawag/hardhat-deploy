@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.12
+
+### Patch Changes
+
+- fix getNetworkName
+
 ## 0.9.11
 
 ### Patch Changes
