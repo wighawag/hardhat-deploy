@@ -1292,7 +1292,7 @@ const setupTest = deployments.createFixture(async ({deployments, getNamedAccount
       TokenContract
     }
   };
-};
+});
 describe("Token", () => {
   it("testing 1 2 3", async function() {
     const {tokenOwner} = await setupTest()
