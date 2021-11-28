@@ -1467,7 +1467,7 @@ export class DeploymentsManager {
     return this.getDeploymentNetworkName();
   }
 
-  private async setupAccounts(): Promise<{
+  public async setupAccounts(): Promise<{
     namedAccounts: {[name: string]: string};
     unnamedAccounts: string[];
   }> {

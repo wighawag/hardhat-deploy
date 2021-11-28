@@ -284,6 +284,7 @@ export function addHelpers(
 
   async function init(): Promise<Web3Provider> {
     if (!provider) {
+      await deploymentManager.setupAccounts();
       provider = new Web3Provider(fixProvider(network.provider));
       try {
         const accounts = await provider.send('eth_accounts', []);

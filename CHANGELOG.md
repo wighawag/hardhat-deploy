@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.14
+
+### Patch Changes
+
+- always setup accounts, was only doing it when loading unnamed or named accounts
+
 ## 0.9.13
 
 ### Patch Changes
