@@ -244,6 +244,7 @@ export interface DeploymentsExtension {
   log(...args: any[]): void; // log data only ig log enabled (disabled in test fixture)
 
   getNetworkName(): string;
+  getGasUsed(): number;
 
   execute( // execute function call on contract
     name: string,

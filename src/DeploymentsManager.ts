@@ -39,6 +39,7 @@ export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
 
   private db: {
+    gasUsed: BigNumber;
     accountsLoaded: boolean;
     namedAccounts: {[name: string]: string};
     unnamedAccounts: string[];
@@ -116,6 +117,7 @@ export class DeploymentsManager {
     this.impersonateUnknownAccounts = true;
     this.impersonatedAccounts = [];
     this.db = {
+      gasUsed: BigNumber.from(0),
       accountsLoaded: false,
       namedAccounts: {},
       unnamedAccounts: [],
@@ -355,6 +357,7 @@ export class DeploymentsManager {
         }
       },
       getNetworkName: () => this.getNetworkName(),
+      getGasUsed: () => this.db.gasUsed.toNumber(),
     } as PartialExtension;
 
     const print = (msg: string) => {
@@ -562,6 +565,14 @@ export class DeploymentsManager {
             JSON.stringify(this.db.pendingTransactions, null, '  ')
           );
         }
+        this.db.gasUsed = this.db.gasUsed.add(receipt.gasUsed);
+        return receipt;
+      };
+    } else {
+      const wait = tx.wait.bind(tx);
+      tx.wait = async () => {
+        const receipt = await wait();
+        this.db.gasUsed = this.db.gasUsed.add(receipt.gasUsed);
         return receipt;
       };
     }
@@ -983,6 +994,7 @@ export class DeploymentsManager {
     }
 
     await this.loadDeployments();
+    this.db.gasUsed = BigNumber.from(0);
     this.db.writeDeploymentsToFiles = options.writeDeploymentsToFiles;
     this.db.savePendingTx = options.savePendingTx;
     this.db.logEnabled = options.log;

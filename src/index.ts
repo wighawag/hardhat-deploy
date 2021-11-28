@@ -396,12 +396,13 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
   )
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
-  .setAction(async (args) => {
+  .addFlag('reportGas', 'report gas use')
+  .setAction(async (args, hre) => {
     let tags = args.tags;
     if (typeof tags === 'string') {
       tags = tags.split(',');
     }
-    return deploymentsManager.runDeploy(tags, {
+    await deploymentsManager.runDeploy(tags, {
       log: args.log,
       resetMemory: false,
       deletePreviousDeployments: args.reset,
@@ -413,6 +414,9 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       maxFeePerGas: args.maxfee,
       maxPriorityFeePerGas: args.priorityfee,
     });
+    if (args.reportGas) {
+      console.log(`total gas used: ${hre.deployments.getGasUsed()}`);
+    }
   });
 
 subtask(TASK_DEPLOY_MAIN, 'deploy')
@@ -457,6 +461,7 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
     'watchOnly',
     'do not actually deploy, just watch and deploy if changes occurs'
   )
+  .addFlag('reportGas', 'report gas use')
   .setAction(async (args, hre) => {
     if (args.reset) {
       await deploymentsManager.deletePreviousDeployments(
@@ -608,6 +613,7 @@ task(TASK_DEPLOY, 'Deploy contracts')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('silent', 'whether to remove log')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
+  .addFlag('reportGas', 'report gas use')
   .setAction(async (args, hre) => {
     if (args.noImpersonation) {
       deploymentsManager.disableAutomaticImpersonation();

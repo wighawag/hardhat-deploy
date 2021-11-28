@@ -42,4 +42,5 @@ export interface PartialExtension {
   log(...args: unknown[]): void;
 
   getNetworkName(): string;
+  getGasUsed(): number;
 }

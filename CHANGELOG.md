@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.13
+
+### Patch Changes
+
+- add --report-gas
+
 ## 0.9.12
 
 ### Patch Changes
