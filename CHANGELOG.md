@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.16
+
+### Patch Changes
+
+- cleanup overrides for ethers
+
 ## 0.9.15
 
 ### Patch Changes
