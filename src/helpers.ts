@@ -990,7 +990,10 @@ export function addHelpers(
           'upgradeIndex === 1 : expects Deployments to already exists'
         );
       }
-      if (oldDeployment.history && oldDeployment.history.length > 0) {
+      if (
+        (oldDeployment.history && oldDeployment.history.length > 0) ||
+        (oldDeployment.numDeployments && oldDeployment.numDeployments > 1)
+      ) {
         return {...oldDeployment, newlyDeployed: false};
       }
     } else {
@@ -999,10 +1002,21 @@ export function addHelpers(
           `upgradeIndex === ${upgradeIndex} : expects Deployments to already exists`
         );
       }
+
       if (!oldDeployment.history) {
-        throw new Error(
-          `upgradeIndex > 1 : expects Deployments history to exists`
-        );
+        if (oldDeployment.numDeployments && oldDeployment.numDeployments > 1) {
+          if (oldDeployment.numDeployments > upgradeIndex) {
+            return {...oldDeployment, newlyDeployed: false};
+          } else if (oldDeployment.numDeployments < upgradeIndex) {
+            throw new Error(
+              `upgradeIndex === ${upgradeIndex} : expects Deployments numDeployments to be at least ${upgradeIndex}`
+            );
+          }
+        } else {
+          throw new Error(
+            `upgradeIndex > 1 : expects Deployments history to exists, or numDeployments to be greater than 1`
+          );
+        }
       } else if (oldDeployment.history.length > upgradeIndex - 1) {
         return {...oldDeployment, newlyDeployed: false};
       } else if (oldDeployment.history.length < upgradeIndex - 1) {
@@ -1482,9 +1496,12 @@ Note that in this case, the contract deployment will not behave the same if depl
           : undefined,
       };
       if (oldDeployment) {
-        proxiedDeployment.history = proxiedDeployment.history
-          ? proxiedDeployment.history.concat([oldDeployment])
-          : [oldDeployment];
+        // TODO reenable history with options
+        if (oldDeployment.history) {
+          proxiedDeployment.history = proxiedDeployment.history
+            ? proxiedDeployment.history.concat([oldDeployment])
+            : [oldDeployment];
+        }
       }
       await saveDeployment(name, proxiedDeployment);
 
@@ -1507,9 +1524,13 @@ Note that in this case, the contract deployment will not behave the same if depl
               }
             : undefined,
         };
-        proxiedDeployment.history = proxiedDeployment.history
-          ? proxiedDeployment.history.concat([oldDeployment])
-          : [oldDeployment];
+
+        // TODO reenable history with options
+        if (oldDeployment.history) {
+          proxiedDeployment.history = proxiedDeployment.history
+            ? proxiedDeployment.history.concat([oldDeployment])
+            : [oldDeployment];
+        }
         await saveDeployment(name, proxiedDeployment);
       }
 
@@ -2002,19 +2023,26 @@ Note that in this case, the contract deployment will not behave the same if depl
         if (!executeReceipt) {
           throw new Error('failed to execute');
         }
-        await saveDeployment(name, {
+
+        const diamondDeployment: DeploymentSubmission = {
           receipt: executeReceipt,
           transactionHash: executeReceipt.transactionHash,
-          history: oldDeployment.history
-            ? oldDeployment.history.concat(oldDeployment)
-            : [oldDeployment],
           linkedData: options.linkedData,
           address: proxy.address,
           abi,
           facets: facetSnapshot,
           diamondCut: facetCuts,
           execute: options.execute,
-        });
+        };
+
+        // TODO reenable history with options
+        if (oldDeployment.history) {
+          diamondDeployment.history = diamondDeployment.history
+            ? diamondDeployment.history.concat([oldDeployment])
+            : [oldDeployment];
+        }
+
+        await saveDeployment(name, diamondDeployment);
       }
 
       const deployment = await partialExtension.get(name);

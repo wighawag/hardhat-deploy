@@ -343,6 +343,8 @@ export interface Deployment {
   receipt?: Receipt;
   transactionHash?: string;
   history?: Deployment[];
+  numDeployments?: number;
+  previousDeployment?: Deployment;
   implementation?: string;
   args?: any[];
   linkedData?: any;
