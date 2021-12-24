@@ -300,6 +300,27 @@ export function addHelpers(
     return provider;
   }
 
+  function cleanupOverrides<T extends PayableOverrides>(
+    txRequestOrOverrides: T
+  ): T {
+    if (txRequestOrOverrides.maxFeePerGas === undefined) {
+      delete txRequestOrOverrides.maxFeePerGas;
+    }
+
+    if (txRequestOrOverrides.maxPriorityFeePerGas === undefined) {
+      delete txRequestOrOverrides.maxPriorityFeePerGas;
+    }
+
+    if (txRequestOrOverrides.gasPrice === undefined) {
+      delete txRequestOrOverrides.gasPrice;
+    }
+
+    if (txRequestOrOverrides.value === undefined) {
+      delete txRequestOrOverrides.value;
+    }
+    return txRequestOrOverrides;
+  }
+
   async function setupGasPrice(
     txRequestOrOverrides: TransactionRequest | PayableOverrides
   ) {
@@ -314,6 +335,7 @@ export function addHelpers(
       txRequestOrOverrides.maxPriorityFeePerGas =
         gasPriceSetup.maxPriorityFeePerGas;
     }
+    cleanupOverrides(txRequestOrOverrides);
   }
 
   async function setupNonce(
@@ -2378,6 +2400,7 @@ data: ${data}
       value: options.value ? BigNumber.from(options.value) : undefined,
       nonce: options.nonce,
     };
+    cleanupOverrides(overrides);
     const ethersContract = new Contract(
       deployment.address,
       abi,
@@ -2571,22 +2594,24 @@ data: ${data}
               }
 
               const txReq = await handleSpecificErrors(
-                ethersSigner.sendTransaction({
-                  to: tx.to,
-                  from: tx.from,
-                  nonce: tx.nonce,
+                ethersSigner.sendTransaction(
+                  cleanupOverrides({
+                    to: tx.to,
+                    from: tx.from,
+                    nonce: tx.nonce,
 
-                  gasLimit: tx.gasLimit,
-                  gasPrice: tx.gasPrice,
-                  maxFeePerGas: tx.maxFeePerGas,
-                  maxPriorityFeePerGas: tx.maxPriorityFeePerGas,
+                    gasLimit: tx.gasLimit,
+                    gasPrice: tx.gasPrice,
+                    maxFeePerGas: tx.maxFeePerGas,
+                    maxPriorityFeePerGas: tx.maxPriorityFeePerGas,
 
-                  data: tx.data,
-                  value: tx.value,
-                  chainId: tx.chainId,
-                  type: tx.type === null ? undefined : tx.type,
-                  accessList: tx.accessList,
-                })
+                    data: tx.data,
+                    value: tx.value,
+                    chainId: tx.chainId,
+                    type: tx.type === null ? undefined : tx.type,
+                    accessList: tx.accessList,
+                  })
+                )
               );
               txHashToWait = txReq.hash;
               if (txReq.hash !== txHash) {
@@ -2632,22 +2657,24 @@ data: ${data}
             // }
 
             const txReq = await handleSpecificErrors(
-              ethersSigner.sendTransaction({
-                to: tx.to,
-                from: tx.from,
-                nonce: tx.nonce,
+              ethersSigner.sendTransaction(
+                cleanupOverrides({
+                  to: tx.to,
+                  from: tx.from,
+                  nonce: tx.nonce,
 
-                gasLimit: tx.gasLimit,
-                gasPrice,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
+                  gasLimit: tx.gasLimit,
+                  gasPrice,
+                  maxFeePerGas,
+                  maxPriorityFeePerGas,
 
-                data: tx.data,
-                value: tx.value,
-                chainId: tx.chainId,
-                type: tx.type === null ? undefined : tx.type,
-                accessList: tx.accessList,
-              })
+                  data: tx.data,
+                  value: tx.value,
+                  chainId: tx.chainId,
+                  type: tx.type === null ? undefined : tx.type,
+                  accessList: tx.accessList,
+                })
+              )
             );
             txHashToWait = txReq.hash;
             delete pendingTxs[txHash];
