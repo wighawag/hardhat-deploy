@@ -201,6 +201,10 @@ function networkFromConfig(
     live = network.config.live;
   }
 
+  if (network.config.etherscan !== undefined) {
+    network.etherscan = network.config.etherscan;
+  }
+
   // associate tags to current network as object
   network.tags = {};
   const tags = network.config.tags || [];
@@ -802,7 +806,8 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     const etherscanApiKey =
       args.apiKey ||
       process.env.ETHERSCAN_API_KEY ||
-      hre.config.etherscan.apiKey;
+      hre.network.etherscan?.apiKey ||
+      hre.config.etherscan?.apiKey;
     if (!etherscanApiKey) {
       throw new Error(
         `No Etherscan API KEY provided. Set it through command line option, in hardhat.config.ts, or by setting the "ETHERSCAN_API_KEY" env variable`
