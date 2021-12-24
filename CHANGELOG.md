@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.18
+
+### Patch Changes
+
+- allow etherscan api key config per network
+
 ## 0.9.17
 
 ### Patch Changes
