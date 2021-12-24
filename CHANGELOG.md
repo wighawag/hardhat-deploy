@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.17
+
+### Patch Changes
+
+- support @anders-t/ethers-ledger for ledger support
+
 ## 0.9.16
 
 ### Patch Changes
