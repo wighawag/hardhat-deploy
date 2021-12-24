@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.15
+
+### Patch Changes
+
+- use numDeployments instead of history to not have deployment file grow in size too much
+
 ## 0.9.14
 
 ### Patch Changes
