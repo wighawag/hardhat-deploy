@@ -1620,9 +1620,28 @@ Note that in this case, the contract deployment will not behave the same if depl
         if (registeredProtocol) {
           if (registeredProtocol === 'ledger') {
             if (!LedgerSigner) {
-              // eslint-disable-next-line @typescript-eslint/no-var-requires
-              const hardwareWalletModule = require('@ethersproject/hardware-wallets');
-              LedgerSigner = hardwareWalletModule.LedgerSigner;
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              let error: any | undefined;
+              try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const hardwareWalletModule = require('@ethersproject/hardware-wallets');
+                LedgerSigner = hardwareWalletModule.LedgerSigner;
+              } catch (e) {
+                error = e;
+                try {
+                  // eslint-disable-next-line @typescript-eslint/no-var-requires
+                  const hardwareWalletModule = require('@anders-t/ethers-ledger');
+                  LedgerSigner = hardwareWalletModule.LedgerSigner;
+                  error = undefined;
+                } catch (e) {}
+              }
+
+              if (error) {
+                console.error(
+                  `failed to loader hardhware wallet module for ledger, you can either use "@ethersproject/hardware-wallets" which as time of writing does not work or use "@anders-t/ethers-ledger."`
+                );
+                throw error;
+              }
             }
             ethersSigner = new LedgerSigner(provider);
             hardwareWallet = 'ledger';
