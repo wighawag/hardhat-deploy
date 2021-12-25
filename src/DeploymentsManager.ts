@@ -861,7 +861,6 @@ export class DeploymentsManager {
       : undefined;
     if (oldDeployment) {
       numDeployments = (oldDeployment.numDeployments || 1) + 1;
-      delete oldDeployment.previousDeployment;
       if (!deployment.history) {
         delete oldDeployment.history;
       }
@@ -876,7 +875,6 @@ export class DeploymentsManager {
         receipt: actualReceipt,
         args: actualArgs,
         numDeployments,
-        previousDeployment: oldDeployment,
         linkedData: deployment.linkedData,
         solcInputHash: deployment.solcInputHash,
         metadata: deployment.metadata,
@@ -895,10 +893,6 @@ export class DeploymentsManager {
         gasEstimates: deployment.gasEstimates, // TODO double check : use evm field ?
       })
     );
-    if (obj.previousDeployment === undefined) {
-      delete obj.previousDeployment;
-    }
-
     this.db.deployments[name] = obj;
     if (obj.address === undefined && obj.transactionHash !== undefined) {
       let receiptFetched;

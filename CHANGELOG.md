@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.19
+
+### Patch Changes
+
+- remove previousDeployment saving
+
 ## 0.9.18
 
 ### Patch Changes
