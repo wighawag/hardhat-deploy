@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.20
+
+### Patch Changes
+
+- throw if multiple artifact with same not-fully qualified exist from hardhat artifacts
+
 ## 0.9.19
 
 ### Patch Changes
