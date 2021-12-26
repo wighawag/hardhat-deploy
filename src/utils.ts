@@ -11,6 +11,7 @@ import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
 import {Transaction} from '@ethersproject/transactions';
 import {store} from './globalStore';
+import {ERRORS} from 'hardhat/internal/core/errors-list';
 
 function getOldArtifactSync(
   name: string,
@@ -37,7 +38,11 @@ export async function getArtifactFromFolder(
   if (!artifact) {
     try {
       artifact = artifacts.readArtifactSync(name);
-    } catch (e) {}
+    } catch (e) {
+      if (e.number && e.number == ERRORS.ARTIFACTS.MULTIPLE_FOUND.number) {
+        throw e;
+      }
+    }
   }
   return artifact;
 }
