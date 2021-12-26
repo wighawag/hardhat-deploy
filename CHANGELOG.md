@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.22
+
+### Patch Changes
+
+- ensure dir exist for exports
+
 ## 0.9.21
 
 ### Patch Changes

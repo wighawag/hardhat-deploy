@@ -1336,6 +1336,7 @@ export class DeploymentsManager {
       const splitted = options.exportAll.split(',');
       for (const split of splitted) {
         if (split) {
+          fs.ensureDirSync(path.dirname(split));
           fs.writeFileSync(split, JSON.stringify(all, null, '  ')); // TODO remove bytecode ?
         }
       }
@@ -1373,6 +1374,7 @@ export class DeploymentsManager {
       const splitted = options.export.split(',');
       for (const split of splitted) {
         if (split) {
+          fs.ensureDirSync(path.dirname(split));
           fs.writeFileSync(split, JSON.stringify(singleExport, null, '  ')); // TODO remove bytecode ?
         }
       }
