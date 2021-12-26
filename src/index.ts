@@ -694,7 +694,6 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
   .addFlag('noImpersonation', 'do not impersonate unknown accounts')
   .addFlag('silent', 'whether to renove log')
   .addFlag('noDeploy', 'do not deploy')
-  .addFlag('showAccounts', 'display account addresses and private keys')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .setAction(async (args, hre, runSuper) => {
     if (args.noImpersonation) {
@@ -758,16 +757,7 @@ subtask(TASK_NODE_GET_PROVIDER).setAction(
 );
 
 subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
-  if (nodeTaskArgs.showAccounts) {
-    await runSuper(args);
-  } else {
-    console.log(
-      chalk.green(
-        `Started HTTP and WebSocket JSON-RPC server at http://${args.address}:${args.port}/`
-      )
-    );
-    console.log();
-  }
+  await runSuper(args);
 
   if (nodeTaskArgs.watch) {
     await hre.run(TASK_DEPLOY_MAIN, {
