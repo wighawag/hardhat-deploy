@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.21
+
+### Patch Changes
+
+- remove showAccount as now hardhta-deploy hide it by default unless it is the default test mnemonic, use latest hardhat as peer deps
+
 ## 0.9.20
 
 ### Patch Changes
