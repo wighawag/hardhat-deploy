@@ -12,6 +12,7 @@ import murmur128 from 'murmur-128';
 import {Transaction} from '@ethersproject/transactions';
 import {store} from './globalStore';
 import {ERRORS} from 'hardhat/internal/core/errors-list';
+import {HardhatError} from 'hardhat/internal/core/errors';
 
 function getOldArtifactSync(
   name: string,
@@ -39,7 +40,11 @@ export async function getArtifactFromFolder(
     try {
       artifact = artifacts.readArtifactSync(name);
     } catch (e) {
-      if (e.number && e.number == ERRORS.ARTIFACTS.MULTIPLE_FOUND.number) {
+      const hardhatError = e as HardhatError;
+      if (
+        hardhatError.number &&
+        hardhatError.number == ERRORS.ARTIFACTS.MULTIPLE_FOUND.number
+      ) {
         throw e;
       }
     }
