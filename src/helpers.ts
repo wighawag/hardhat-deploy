@@ -1076,6 +1076,7 @@ export function addHelpers(
     updateMethod: string | undefined;
     updateArgs: any[];
     upgradeIndex: number | undefined;
+    performUpgrade: boolean;
   }> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let updateMethod: string | undefined;
@@ -1087,6 +1088,8 @@ export function addHelpers(
       | string
       | {name: string; artifact?: string | ArtifactData}
       | undefined;
+    let performUpgrade = true;
+
     if (typeof options.proxy === 'object') {
       upgradeIndex = options.proxy.upgradeIndex;
       if ('methodName' in options.proxy) {
@@ -1157,6 +1160,9 @@ export function addHelpers(
       }
       if (options.proxy.viaAdminContract) {
         viaAdminContract = options.proxy.viaAdminContract;
+      }
+      if (options.proxy.performUpgrade !== undefined) {
+        performUpgrade = options.proxy.performUpgrade;
       }
     } else if (typeof options.proxy === 'string') {
       updateMethod = options.proxy;
@@ -1311,6 +1317,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       updateMethod,
       updateArgs,
       upgradeIndex,
+      performUpgrade,
     };
   }
 
@@ -1339,6 +1346,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       proxyName,
       proxyContract,
       mergedABI,
+      performUpgrade,
     } = await _getProxyInfo(name, options);
     /* eslint-enable prefer-const */
 
@@ -1445,60 +1453,66 @@ Note that in this case, the contract deployment will not behave the same if depl
           );
         }
 
-        if (proxyAdminName) {
-          if (oldProxy) {
-            throw new Error(`Old Proxy do not support Proxy Admin contracts`);
-          }
-          if (!currentProxyAdminOwner) {
-            throw new Error(`no currentProxyAdminOwner found in ProxyAdmin`);
-          }
+        if (performUpgrade) {
+          if (proxyAdminName) {
+            if (oldProxy) {
+              throw new Error(`Old Proxy do not support Proxy Admin contracts`);
+            }
+            if (!currentProxyAdminOwner) {
+              throw new Error(`no currentProxyAdminOwner found in ProxyAdmin`);
+            }
 
-          let executeReceipt;
-          if (updateMethod) {
-            executeReceipt = await execute(
-              proxyAdminName,
-              {...options, from: currentProxyAdminOwner},
-              'upgradeAndCall',
-              proxy.address,
-              implementation.address,
-              data
-            );
+            let executeReceipt;
+            if (updateMethod) {
+              executeReceipt = await execute(
+                proxyAdminName,
+                {...options, from: currentProxyAdminOwner},
+                'upgradeAndCall',
+                proxy.address,
+                implementation.address,
+                data
+              );
+            } else {
+              executeReceipt = await execute(
+                proxyAdminName,
+                {...options, from: currentProxyAdminOwner},
+                'upgrade',
+                proxy.address,
+                implementation.address
+              );
+            }
+            if (!executeReceipt) {
+              throw new Error(
+                `could not execute ${changeImplementationMethod}`
+              );
+            }
           } else {
-            executeReceipt = await execute(
-              proxyAdminName,
-              {...options, from: currentProxyAdminOwner},
-              'upgrade',
-              proxy.address,
-              implementation.address
-            );
-          }
-          if (!executeReceipt) {
-            throw new Error(`could not execute ${changeImplementationMethod}`);
-          }
-        } else {
-          let executeReceipt;
-          if (
-            changeImplementationMethod === 'upgradeToAndCall' &&
-            !updateMethod
-          ) {
-            executeReceipt = await execute(
-              proxyName,
-              {...options, from: currentOwner},
-              'upgradeTo',
-              implementation.address
-            );
-          } else {
-            executeReceipt = await execute(
-              proxyName,
-              {...options, from: currentOwner},
-              changeImplementationMethod,
-              implementation.address,
-              data
-            );
-          }
+            let executeReceipt;
+            if (
+              changeImplementationMethod === 'upgradeToAndCall' &&
+              !updateMethod
+            ) {
+              executeReceipt = await execute(
+                proxyName,
+                {...options, from: currentOwner},
+                'upgradeTo',
+                implementation.address
+              );
+            } else {
+              executeReceipt = await execute(
+                proxyName,
+                {...options, from: currentOwner},
+                changeImplementationMethod,
+                implementation.address,
+                data
+              );
+            }
 
-          if (!executeReceipt) {
-            throw new Error(`could not execute ${changeImplementationMethod}`);
+            if (!executeReceipt) {
+              throw new Error(
+                `could not execute ${changeImplementationMethod}`
+              );
+            }
           }
         }
       }
