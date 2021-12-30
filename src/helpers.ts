@@ -1072,6 +1072,7 @@ export function addHelpers(
     mergedABI: ABI;
     proxyName: string;
     proxyContract: ExtendedArtifact;
+    proxyArgsTemplate: any[];
     oldDeployment: Deployment | null;
     updateMethod: string | undefined;
     updateArgs: any[];
@@ -1088,7 +1089,11 @@ export function addHelpers(
       | string
       | {name: string; artifact?: string | ArtifactData}
       | undefined;
+    let proxyArgsTemplate = ['{implementation}', '{admin}', '{data}'];
     if (typeof options.proxy === 'object') {
+      if (options.proxy.proxyArgs) {
+        proxyArgsTemplate = options.proxy.proxyArgs;
+      }
       upgradeIndex = options.proxy.upgradeIndex;
       if (options.proxy.implementationName) {
         implementationName = options.proxy.implementationName;
@@ -1151,6 +1156,9 @@ export function addHelpers(
               checkABIConflict = false;
               proxyContract = OptimizedTransparentUpgradeableProxy;
               viaAdminContract = 'DefaultProxyAdmin';
+              // } else if (options.proxy.proxyContract === 'UUPS') {
+              //   checkABIConflict = true;
+              //   proxyContract = UUPSProxy;
             } else {
               throw new Error(
                 `no contract found for ${options.proxy.proxyContract}`
@@ -1298,6 +1306,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     return {
       proxyName,
       proxyContract,
+      proxyArgsTemplate,
       mergedABI,
       viaAdminContract,
       proxyAdminDeployed,
@@ -1317,8 +1326,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     };
   }
 
-  // TODO rename
-  async function _deployViaEIP173Proxy(
+  async function _deployViaProxy(
     name: string,
     options: DeployOptions
   ): Promise<DeployResult> {
@@ -1335,12 +1343,11 @@ Note that in this case, the contract deployment will not behave the same if depl
       owner,
       proxyAdmin,
       currentProxyAdminOwner,
-      artifact,
-      implementationArgs,
       implementationName,
       implementationOptions,
       proxyName,
       proxyContract,
+      proxyArgsTemplate,
       mergedABI,
     } = await _getProxyInfo(name, options);
     /* eslint-enable prefer-const */
@@ -1420,7 +1427,22 @@ Note that in this case, the contract deployment will not behave the same if depl
         delete proxyOptions.proxy;
         delete proxyOptions.libraries;
         proxyOptions.contract = proxyContract;
-        proxyOptions.args = [implementation.address, proxyAdmin, data];
+
+        const proxyArgs = [];
+        for (let i = 0; i < proxyArgsTemplate.length; i++) {
+          const argValue = proxyArgsTemplate[i];
+          if (argValue === '{implementation}') {
+            proxyArgs.push(implementation.address);
+          } else if (argValue === '{admin}') {
+            proxyArgs.push(proxyAdmin);
+          } else if (argValue === '{data}') {
+            proxyArgs.push(data);
+          } else {
+            proxyArgs.push(argValue);
+          }
+        }
+        proxyOptions.args = proxyArgs; //  [implementation.address, proxyAdmin, data]
+
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
@@ -1439,7 +1461,7 @@ Note that in this case, the contract deployment will not behave the same if depl
 
         if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
           throw new Error(
-            `To change owner/admin, you need to call the proxy directly`
+            `To change owner/admin, you need to call the proxy directly, it currently is ${currentOwner}`
           );
         }
         if (currentOwner === AddressZero) {
@@ -1485,14 +1507,14 @@ Note that in this case, the contract deployment will not behave the same if depl
             !updateMethod
           ) {
             executeReceipt = await execute(
-              proxyName,
+              name,
               {...options, from: currentOwner},
               'upgradeTo',
               implementation.address
             );
           } else {
             executeReceipt = await execute(
-              proxyName,
+              name,
               {...options, from: currentOwner},
               changeImplementationMethod,
               implementation.address,
@@ -2127,7 +2149,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     if (!options.proxy) {
       return _deployOne(name, options);
     }
-    return _deployViaEIP173Proxy(name, options);
+    return _deployViaProxy(name, options);
   }
 
   async function diamond(

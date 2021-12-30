@@ -88,6 +88,7 @@ type ProxyOptionsBase = {
   upgradeIndex?: number;
   proxyContract?: // default to EIP173Proxy
   string | ArtifactData;
+  proxyArgs?: any[]; // default to ["{implementation}", "{admin}", "{data}"]
   viaAdminContract?:
     | string
     | {
