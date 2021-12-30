@@ -1078,6 +1078,7 @@ export function addHelpers(
     upgradeIndex: number | undefined;
   }> {
     const oldDeployment = await getDeploymentOrNUll(name);
+    let implementationName = name + '_Implementation';
     let updateMethod: string | undefined;
     let updateArgs: any[] | undefined;
     let upgradeIndex;
@@ -1089,6 +1090,9 @@ export function addHelpers(
       | undefined;
     if (typeof options.proxy === 'object') {
       upgradeIndex = options.proxy.upgradeIndex;
+      if (options.proxy.implementationName) {
+        implementationName = options.proxy.implementationName;
+      }
       if ('methodName' in options.proxy) {
         updateMethod = options.proxy.methodName;
         if ('execute' in options.proxy) {
@@ -1168,7 +1172,6 @@ export function addHelpers(
     const implementationArgs = options.args ? [...options.args] : [];
 
     // --- Implementation Deployment ---
-    const implementationName = name + '_Implementation';
     const implementationOptions = {
       contract: options.contract || name,
       from: options.from,

@@ -94,6 +94,7 @@ type ProxyOptionsBase = {
         name: string;
         artifact?: string | ArtifactData;
       };
+  implementationName?: string;
 };
 
 export type ProxyOptions =
