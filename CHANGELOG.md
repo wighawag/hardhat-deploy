@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.23
+
+### Patch Changes
+
+- support proxyArgs for UUPS + allow to specify implementationName to reuse implementation across multiple proxies
+
 ## 0.9.22
 
 ### Patch Changes
