@@ -1079,6 +1079,7 @@ export function addHelpers(
     upgradeIndex: number | undefined;
   }> {
     const oldDeployment = await getDeploymentOrNUll(name);
+    let contractName = options.contract;
     let implementationName = name + '_Implementation';
     let updateMethod: string | undefined;
     let updateArgs: any[] | undefined;
@@ -1097,6 +1098,14 @@ export function addHelpers(
       upgradeIndex = options.proxy.upgradeIndex;
       if (options.proxy.implementationName) {
         implementationName = options.proxy.implementationName;
+        if (implementationName === name) {
+          throw new Error(
+            `"implementationName" cannot be equal to the deployment's name (${name}) as this is used for the proxy itself.`
+          );
+        }
+        if (!contractName) {
+          contractName = implementationName;
+        }
       }
       if ('methodName' in options.proxy) {
         updateMethod = options.proxy.methodName;
@@ -1181,7 +1190,7 @@ export function addHelpers(
 
     // --- Implementation Deployment ---
     const implementationOptions = {
-      contract: options.contract || name,
+      contract: contractName || name,
       from: options.from,
       autoMine: options.autoMine,
       estimateGasExtra: options.estimateGasExtra,
