@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.26
+
+### Patch Changes
+
+- adding onlyOwner for Diamond
+
 ## 0.9.25
 
 ### Patch Changes
