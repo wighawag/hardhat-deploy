@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.25
+
+### Patch Changes
+
+- add facet options
+
 ## 0.9.24
 
 ### Patch Changes
