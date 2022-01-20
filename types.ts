@@ -68,8 +68,16 @@ export type Receipt = {
   confirmations?: number;
 };
 
-export type DiamondFacets = Array<string>; // TODO support Object for facet : {contract} // could be deploymentNames too ? or {abi,address}
+export type FacetOptions = {
+  name?: string;
+  contract?: string | ArtifactData;
+  args?: any[];
+  linkedData?: any; // JSONable ?
+  libraries?: Libraries;
+};
+export type DiamondFacets = Array<string> | Array<FacetOptions>; // TODO support Object for facet : {contract} // could be deploymentNames too ? or {abi,address}
 export interface DiamondOptions extends TxOptions {
+  // TODO specify own diamond code : https://github.com/wighawag/hardhat-deploy/issues/153
   owner?: Address;
   facets: DiamondFacets;
   log?: boolean;
@@ -77,10 +85,13 @@ export interface DiamondOptions extends TxOptions {
   linkedData?: any; // JSONable ?
   upgradeIndex?: number;
   execute?: {
+    // TODO separate init from eexecute + add support for executing external address (the latter require new diamond code to allow to do it at first deployment (init))
+    // issue : https://github.com/wighawag/hardhat-deploy/issues/233
     methodName: string;
     args: any[];
   };
   deterministicSalt?: string;
+  facetsArgs?: any[];
 }
 
 type ProxyOptionsBase = {
@@ -163,7 +174,7 @@ export interface CallOptions {
 
 export interface TxOptions extends CallOptions {
   from: string;
-  log?: boolean;
+  log?: boolean; // TODO string (for comment in log)
   autoMine?: boolean;
   estimatedGasLimit?: string | number | BigNumber;
   estimateGasExtra?: string | number | BigNumber;

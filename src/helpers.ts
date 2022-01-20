@@ -881,9 +881,11 @@ export function addHelpers(
       let transaction;
       if (deployment.receipt) {
         transactionDetailsAvailable = !!deployment.receipt.transactionHash;
-        transaction = await provider.getTransaction(
-          deployment.receipt.transactionHash
-        );
+        if (transactionDetailsAvailable) {
+          transaction = await provider.getTransaction(
+            deployment.receipt.transactionHash
+          );
+        }
       } else if (deployment.transactionHash) {
         transactionDetailsAvailable = true;
         transaction = await provider.getTransaction(deployment.transactionHash);
@@ -1782,20 +1784,65 @@ Note that in this case, the contract deployment will not behave the same if depl
     let abi: any[] = diamondBase.abi.concat([]);
     const facetCuts: FacetCut[] = [];
     for (const facet of options.facets) {
-      const artifact = await getArtifact(facet); // TODO getArtifactFromOptions( // allowing to pass bytecode / abi
+      let facetName;
+      let artifact;
+      let linkedData = options.linkedData;
+      let libraries = options.libraries;
+      let facetArgs = options.facetsArgs;
+      let argsSpecific = false;
+      if (typeof facet === 'string') {
+        artifact = await getArtifact(facet);
+        facetName = facet;
+      } else {
+        if (facet.linkedData) {
+          linkedData = facet.linkedData;
+        }
+        if (facet.libraries) {
+          libraries = facet.libraries;
+        }
+        if (facet.args) {
+          facetArgs = facet.args;
+          argsSpecific = true;
+        }
+        if (facet.contract) {
+          if (typeof facet.contract === 'string') {
+            artifact = await getArtifact(facet.contract);
+          } else {
+            artifact = facet.contract;
+          }
+        } else {
+          if (!facet.name) {
+            throw new Error(
+              `no name , not contract is specified for facet, cannot proceed`
+            );
+          }
+          artifact = await getArtifact(facet.name);
+        }
+
+        facetName = facet.name;
+        if (!facetName) {
+          if (typeof facet.contract === 'string') {
+            facetName = name + '_facet_' + facet.contract;
+          } else {
+            throw new Error(`facet has no name, please specify one`);
+          }
+        }
+      }
       const constructor = artifact.abi.find(
         (fragment: {type: string; inputs: any[]}) =>
           fragment.type === 'constructor'
       );
-      if (constructor && constructor.inputs.length > 0) {
-        throw new Error(`Facet with constructor not yet supported`); // TODO remove that requirement
+      if ((!argsSpecific && !constructor) || constructor.inputs.length === 0) {
+        // reset args for case where facet do not expect any and there was no specific args set on it
+        facetArgs = [];
       }
       abi = mergeABIs([abi, artifact.abi], {
         check: true,
         skipSupportsInterface: false,
       });
       // TODO allow facet to be named so multiple version could coexist
-      const implementation = await _deployOne(facet, {
+      const implementation = await _deployOne(facetName, {
+        contract: artifact,
         from: options.from,
         autoMine: options.autoMine,
         estimateGasExtra: options.estimateGasExtra,
@@ -1805,10 +1852,9 @@ Note that in this case, the contract deployment will not behave the same if depl
         maxPriorityFeePerGas: options.maxPriorityFeePerGas,
         log: options.log,
         // deterministicDeployment: options.deterministicDeployment, // todo ?
-        libraries: options.libraries,
-        // fieldsToCompare: options.fieldsToCompare, // todo ?
-        linkedData: options.linkedData,
-        // args: options.args, // toDO ?
+        libraries,
+        linkedData,
+        args: facetArgs,
       });
       if (implementation.newlyDeployed) {
         // console.log(`facet ${facet} deployed at ${implementation.address}`);
@@ -1819,7 +1865,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
       } else {
-        const oldImpl = await getDeployment(facet);
+        const oldImpl = await getDeployment(facetName);
         const newFacet = {
           facetAddress: oldImpl.address,
           functionSelectors: sigsFromABI(oldImpl.abi),
