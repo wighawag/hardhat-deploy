@@ -1791,7 +1791,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       let facetArgs = options.facetsArgs;
       let argsSpecific = false;
       if (typeof facet === 'string') {
-        artifact = await getArtifact(facet);
+        artifact = await partialExtension.getExtendedArtifact(facet);
         facetName = facet;
       } else {
         if (facet.linkedData) {
@@ -1806,7 +1806,9 @@ Note that in this case, the contract deployment will not behave the same if depl
         }
         if (facet.contract) {
           if (typeof facet.contract === 'string') {
-            artifact = await getArtifact(facet.contract);
+            artifact = await partialExtension.getExtendedArtifact(
+              facet.contract
+            );
           } else {
             artifact = facet.contract;
           }
@@ -1816,7 +1818,7 @@ Note that in this case, the contract deployment will not behave the same if depl
               `no name , not contract is specified for facet, cannot proceed`
             );
           }
-          artifact = await getArtifact(facet.name);
+          artifact = await partialExtension.getExtendedArtifact(facet.name);
         }
 
         facetName = facet.name;
