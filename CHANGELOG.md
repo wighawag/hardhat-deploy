@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.27
+
+### Patch Changes
+
+- fix facet artifact metadata missing
+
 ## 0.9.26
 
 ### Patch Changes
