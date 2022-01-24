@@ -1943,11 +1943,20 @@ Note that in this case, the contract deployment will not behave the same if depl
 
     let data = '0x';
     if (options.execute) {
-      const diamondContract = new Contract(
+      let executeContractABI;
+      if (options.execute.contractAddress) {
+        const artifact = await partialExtension.getExtendedArtifact(
+            options.execute.contractAddress
+        );
+        executeContractABI = artifact.abi;
+      } else {
+        executeContractABI = abi;
+      }
+      const executeContract = new Contract(
         '0x0000000000000000000000000000000000000001',
-        abi
+        executeContractABI
       );
-      const txData = await diamondContract.populateTransaction[
+      const txData = await executeContract.populateTransaction[
         options.execute.methodName
       ](...options.execute.args);
       data = txData.data || '0x';

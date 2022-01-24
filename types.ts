@@ -85,8 +85,7 @@ export interface DiamondOptions extends TxOptions {
   linkedData?: any; // JSONable ?
   upgradeIndex?: number;
   execute?: {
-    // TODO separate init from eexecute + add support for executing external address (the latter require new diamond code to allow to do it at first deployment (init))
-    // issue : https://github.com/wighawag/hardhat-deploy/issues/233
+    contractAddress?: string;
     methodName: string;
     args: any[];
   };
