@@ -117,16 +117,16 @@ extendConfig(
         config.external = {};
       }
       if (userConfig.external.contracts) {
-        const externalContracts: {artifacts: string; deploy?: string}[] = [];
+        const externalContracts: {artifacts: string[]; deploy?: string}[] = [];
         config.external.contracts = externalContracts;
         for (const userDefinedExternalContracts of userConfig.external
           .contracts) {
+          const userArtifacts =
+            typeof userDefinedExternalContracts.artifacts === 'string'
+              ? [userDefinedExternalContracts.artifacts]
+              : userDefinedExternalContracts.artifacts;
           externalContracts.push({
-            artifacts: normalizePath(
-              config,
-              userDefinedExternalContracts.artifacts,
-              userDefinedExternalContracts.artifacts
-            ),
+            artifacts: userArtifacts.map((v) => normalizePath(config, v, v)),
             deploy: userDefinedExternalContracts.deploy
               ? normalizePath(
                   config,

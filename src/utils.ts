@@ -30,26 +30,30 @@ function getOldArtifactSync(
   return artifact;
 }
 
-export async function getArtifactFromFolder(
+export async function getArtifactFromFolders(
   name: string,
-  folderPath: string
+  folderPaths: string[]
 ): Promise<Artifact | ExtendedArtifact | undefined> {
-  const artifacts = new Artifacts(folderPath);
-  let artifact = getOldArtifactSync(name, folderPath);
-  if (!artifact) {
-    try {
-      artifact = artifacts.readArtifactSync(name);
-    } catch (e) {
-      const hardhatError = e as HardhatError;
-      if (
-        hardhatError.number &&
-        hardhatError.number == ERRORS.ARTIFACTS.MULTIPLE_FOUND.number
-      ) {
-        throw e;
+  for (const onepath of folderPaths) {
+    const artifacts = new Artifacts(onepath);
+    let artifact = getOldArtifactSync(name, onepath);
+    if (!artifact) {
+      try {
+        artifact = artifacts.readArtifactSync(name);
+      } catch (e) {
+        const hardhatError = e as HardhatError;
+        if (
+          hardhatError.number &&
+          hardhatError.number == ERRORS.ARTIFACTS.MULTIPLE_FOUND.number
+        ) {
+          throw e;
+        }
       }
     }
+    if (artifact) {
+      return artifact;
+    }
   }
-  return artifact;
 }
 
 // TODO
@@ -57,39 +61,45 @@ export async function getArtifactFromFolder(
 // const buildInfoCache
 // const hashCache: Record<string, string> = {};
 
-export async function getExtendedArtifactFromFolder(
+export async function getExtendedArtifactFromFolders(
   name: string,
-  folderPath: string
+  folderPaths: string[]
 ): Promise<ExtendedArtifact | undefined> {
-  const artifacts = new Artifacts(folderPath);
-  let artifact = getOldArtifactSync(name, folderPath);
-  if (!artifact && (await artifacts.artifactExists(name))) {
-    const hardhatArtifact: Artifact = await artifacts.readArtifact(name);
-    // check if name is already a fullyQualifiedName
-    let fullyQualifiedName = name;
-    let contractName = name;
-    if (!fullyQualifiedName.includes(':')) {
-      fullyQualifiedName = `${hardhatArtifact.sourceName}:${name}`;
-    } else {
-      contractName = fullyQualifiedName.split(':')[1];
+  for (const folderPath of folderPaths) {
+    const artifacts = new Artifacts(folderPath);
+    let artifact = getOldArtifactSync(name, folderPath);
+    if (!artifact && (await artifacts.artifactExists(name))) {
+      const hardhatArtifact: Artifact = await artifacts.readArtifact(name);
+      // check if name is already a fullyQualifiedName
+      let fullyQualifiedName = name;
+      let contractName = name;
+      if (!fullyQualifiedName.includes(':')) {
+        fullyQualifiedName = `${hardhatArtifact.sourceName}:${name}`;
+      } else {
+        contractName = fullyQualifiedName.split(':')[1];
+      }
+      const buildInfo = await artifacts.getBuildInfo(fullyQualifiedName);
+      if (buildInfo) {
+        const solcInput = JSON.stringify(buildInfo.input, null, '  ');
+        const solcInputHash = Buffer.from(murmur128(solcInput)).toString('hex');
+        artifact = {
+          ...hardhatArtifact,
+          ...buildInfo.output.contracts[hardhatArtifact.sourceName][
+            contractName
+          ],
+          solcInput,
+          solcInputHash,
+        };
+      } else {
+        artifact = {
+          ...hardhatArtifact,
+        };
+      }
     }
-    const buildInfo = await artifacts.getBuildInfo(fullyQualifiedName);
-    if (buildInfo) {
-      const solcInput = JSON.stringify(buildInfo.input, null, '  ');
-      const solcInputHash = Buffer.from(murmur128(solcInput)).toString('hex');
-      artifact = {
-        ...hardhatArtifact,
-        ...buildInfo.output.contracts[hardhatArtifact.sourceName][contractName],
-        solcInput,
-        solcInputHash,
-      };
-    } else {
-      artifact = {
-        ...hardhatArtifact,
-      };
+    if (artifact) {
+      return artifact;
     }
   }
-  return artifact;
 }
 
 export function loadAllDeployments(

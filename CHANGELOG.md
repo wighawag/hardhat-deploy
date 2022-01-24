@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.9.28
+
+### Patch Changes
+
+- support multiple artifacts folder for external deploy script
+
 ## 0.9.27
 
 ### Patch Changes
