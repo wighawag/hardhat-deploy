@@ -1944,9 +1944,9 @@ Note that in this case, the contract deployment will not behave the same if depl
     let data = '0x';
     if (options.execute) {
       let executeContractABI;
-      if (options.execute.contractAddress) {
+      if (options.execute.contractName) {
         const artifact = await partialExtension.getExtendedArtifact(
-            options.execute.contractAddress
+            options.execute.contractName
         );
         executeContractABI = artifact.abi;
       } else {

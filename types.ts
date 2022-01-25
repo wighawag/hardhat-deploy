@@ -85,7 +85,7 @@ export interface DiamondOptions extends TxOptions {
   linkedData?: any; // JSONable ?
   upgradeIndex?: number;
   execute?: {
-    contractAddress?: string;
+    contract?: string;
     methodName: string;
     args: any[];
   };
