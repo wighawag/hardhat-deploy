@@ -544,8 +544,8 @@ export class DeploymentsManager {
       );
       // await new Promise(r => setTimeout(r, 20000));
       const wait = tx.wait.bind(tx);
-      tx.wait = async () => {
-        const receipt = await wait();
+      tx.wait = async (confirmations?: number) => {
+        const receipt = await wait(confirmations);
         // console.log("checking pending tx...");
         delete this.db.pendingTransactions[tx.hash];
         if (Object.keys(this.db.pendingTransactions).length === 0) {
@@ -561,8 +561,8 @@ export class DeploymentsManager {
       };
     } else {
       const wait = tx.wait.bind(tx);
-      tx.wait = async () => {
-        const receipt = await wait();
+      tx.wait = async (confirmations?: number) => {
+        const receipt = await wait(confirmations);
         this.db.gasUsed = this.db.gasUsed.add(receipt.gasUsed);
         return receipt;
       };
