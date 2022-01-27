@@ -106,6 +106,7 @@ export async function submitSources(
     fallbackOnSolcInput?: boolean;
     forceLicense?: boolean;
     sleepBetween?: boolean;
+    apiURL?: string;
   }
 ): Promise<void> {
   config = config || {};
@@ -114,75 +115,79 @@ export async function submitSources(
   const forceLicense = config.forceLicense;
   const etherscanApiKey = config.etherscanApiKey;
   const sleepBetween = config.sleepBetween;
-  const chainId = await hre.getChainId();
   const all = await hre.deployments.all();
-  let host: string;
-  switch (chainId) {
-    case '1':
-      host = 'https://api.etherscan.io';
-      break;
-    case '3':
-      host = 'https://api-ropsten.etherscan.io';
-      break;
-    case '4':
-      host = 'https://api-rinkeby.etherscan.io';
-      break;
-    case '5':
-      host = 'https://api-goerli.etherscan.io';
-      break;
-    case '10':
-      host = 'https://api-optimistic.etherscan.io';
-      break;
-    case '42':
-      host = 'https://api-kovan.etherscan.io';
-      break;
-    case '97':
-      host = 'https://api-testnet.bscscan.com';
-      break;
-    case '56':
-      host = 'https://api.bscscan.com';
-      break;
-    case '69':
-      host = 'https://api-kovan-optimistic.etherscan.io';
-      break;
-    case '70':
-      host = 'https://api.hooscan.com';
-      break;
-    case '128':
-      host = 'https://api.hecoinfo.com';
-      break;
-    case '137':
-      host = 'https://api.polygonscan.com';
-      break;
-    case '250':
-      host = 'https://api.ftmscan.com';
-      break;
-    case '256':
-      host = 'https://api-testnet.hecoinfo.com';
-      break;
-    case '1285':
-      host = 'https://api-moonriver.moonscan.io';
-      break;
-    case '80001':
-      host = 'https://api-testnet.polygonscan.com';
-      break; 
-    case '4002':
-      host = 'https://api-testnet.ftmscan.com';
-      break;
-    case '42161':
-      host = 'https://api.arbiscan.io'
-      break;
-    case '421611':
-      host = 'https://api-testnet.arbiscan.io'
-      break;
-    case '43113':
-      host = 'https://api-testnet.snowtrace.io'
-      break;
-    case '43114':
-      host = 'https://api.snowtrace.io'
-      break;
-    default:
-      return logError(`Network with chainId: ${chainId} not supported`);
+  let host = config.apiURL;
+  if (!host) {
+    const chainId = await hre.getChainId();
+    switch (chainId) {
+      case '1':
+        host = 'https://api.etherscan.io';
+        break;
+      case '3':
+        host = 'https://api-ropsten.etherscan.io';
+        break;
+      case '4':
+        host = 'https://api-rinkeby.etherscan.io';
+        break;
+      case '5':
+        host = 'https://api-goerli.etherscan.io';
+        break;
+      case '10':
+        host = 'https://api-optimistic.etherscan.io';
+        break;
+      case '42':
+        host = 'https://api-kovan.etherscan.io';
+        break;
+      case '97':
+        host = 'https://api-testnet.bscscan.com';
+        break;
+      case '56':
+        host = 'https://api.bscscan.com';
+        break;
+      case '69':
+        host = 'https://api-kovan-optimistic.etherscan.io';
+        break;
+      case '70':
+        host = 'https://api.hooscan.com';
+        break;
+      case '128':
+        host = 'https://api.hecoinfo.com';
+        break;
+      case '137':
+        host = 'https://api.polygonscan.com';
+        break;
+      case '250':
+        host = 'https://api.ftmscan.com';
+        break;
+      case '256':
+        host = 'https://api-testnet.hecoinfo.com';
+        break;
+      case '1285':
+        host = 'https://api-moonriver.moonscan.io';
+        break;
+      case '80001':
+        host = 'https://api-testnet.polygonscan.com';
+        break;
+      case '4002':
+        host = 'https://api-testnet.ftmscan.com';
+        break;
+      case '42161':
+        host = 'https://api.arbiscan.io';
+        break;
+      case '421611':
+        host = 'https://api-testnet.arbiscan.io';
+        break;
+      case '43113':
+        host = 'https://api-testnet.snowtrace.io';
+        break;
+      case '43114':
+        host = 'https://api.snowtrace.io';
+        break;
+      default:
+        return logError(
+          `Network with chainId: ${chainId} not supported. You can specify the url manually via --api-url <url>.`
+        );
+    }
   }
 
   async function submit(name: string, useSolcInput?: boolean) {
@@ -384,11 +389,17 @@ export async function submitSources(
         }
       );
       const {data: statusData} = statusResponse;
-      if (statusData.status === '1') {
-        return 'success';
-      }
+
+      // blockscout seems to return status == 1 in case of failure
+      // so we check string first
       if (statusData.result === 'Pending in queue') {
         return undefined;
+      }
+      if (statusData.result !== 'Fail - Unable to verify') {
+        if (statusData.status === '1') {
+          // console.log(statusData);
+          return 'success';
+        }
       }
       logError(
         `Failed to verify contract ${name}: ${statusData.message}, ${statusData.result}`

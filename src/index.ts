@@ -788,6 +788,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     'solcInput',
     'fallback on solc-input (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)'
   )
+  .addFlag('apiURL', 'specify the url manually')
   // .addFlag(
   //   'logHttpRequestOnError',
   //   'log the whole http request for debugging purpose, this output your API key, so use it aknowingly'
