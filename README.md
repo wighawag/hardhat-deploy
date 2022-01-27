@@ -446,6 +446,8 @@ One of the following options need to be set for this task to have any effects :
 `--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
 This last option has some limitations, when combined with the use of external deployments (see [Configuration](#configuration)). If such external deployments were using older version of **hardhat-deploy** or truffle, the chainId might be missing. In order for these to be exported, the hardhat network config need to explicity state the chainId in the `networks` config of `hardhat.config.js`.
 
+With both `--export` and `--export-all`, using the special `<filepath>` value of `-` will output to `STDOUT` rather than writing a normal file.
+
 ---
 
 ---

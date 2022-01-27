@@ -93,6 +93,9 @@ function getLicenseType(license: string): undefined | number {
     if (license === 'AGPL-3.0') {
       return 13;
     }
+    if (license === 'BUSL-1.1') {
+      return 14;
+    }
   })();
   return licenseType;
 }

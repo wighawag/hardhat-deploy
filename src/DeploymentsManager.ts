@@ -1324,13 +1324,8 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       };
-      const splitted = options.exportAll.split(',');
-      for (const split of splitted) {
-        if (split) {
-          fs.ensureDirSync(path.dirname(split));
-          fs.writeFileSync(split, JSON.stringify(all, null, '  ')); // TODO remove bytecode ?
-        }
-      }
+      const out = JSON.stringify(all, null, '  ');
+      this._writeExports(options.exportAll, out);
 
       log('export-all complete');
     }
@@ -1362,14 +1357,24 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       };
-      const splitted = options.export.split(',');
-      for (const split of splitted) {
-        if (split) {
-          fs.ensureDirSync(path.dirname(split));
-          fs.writeFileSync(split, JSON.stringify(singleExport, null, '  ')); // TODO remove bytecode ?
-        }
-      }
+      const out = JSON.stringify(singleExport, null, '  ');
+      this._writeExports(options.export, out);
       log('single export complete');
+    }
+  }
+
+  private _writeExports(dests: string, output: string) {
+    const splitted = dests.split(',');
+    for (const split of splitted) {
+      if (!split) {
+        continue;
+      }
+      if (split === '-') {
+        process.stdout.write(output);
+      } else {
+        fs.ensureDirSync(path.dirname(split));
+        fs.writeFileSync(split, output); // TODO remove bytecode ?
+      }
     }
   }
 
