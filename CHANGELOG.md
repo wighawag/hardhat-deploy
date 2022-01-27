@@ -1,5 +1,14 @@
 # hardhat-deploy
 
+## 0.9.29
+
+### Patch Changes
+
+- - allow exporting to STDOUT via special - filepath
+  - add BUSL-1.1 license support at Etherscan verification tool
+  - fix waitConfirmations
+  - add --api-url for etherscan-verify
+
 ## 0.9.28
 
 ### Patch Changes
