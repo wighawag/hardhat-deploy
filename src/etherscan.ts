@@ -28,6 +28,19 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function writeRequestIfRequested(
+  write: boolean,
+  name: string,
+  request: string
+) {
+  if (write) {
+    try {
+      fs.mkdirSync('etherscan_requests');
+    } catch (e) {}
+    fs.writeFileSync(`etherscan_requests/${name}.json`, request);
+  }
+}
+
 function extractOneLicenseFromSourceFile(source: string): string | undefined {
   const licenses = extractLicenseFromSources(source);
   if (licenses.length === 0) {
@@ -110,6 +123,7 @@ export async function submitSources(
     forceLicense?: boolean;
     sleepBetween?: boolean;
     apiUrl?: string;
+    writePostDataOnError?: boolean;
   }
 ): Promise<void> {
   config = config || {};
@@ -356,11 +370,12 @@ export async function submitSources(
       licenseType,
     };
 
+    const formDataAsString = qs.stringify(postData);
     const submissionResponse = await axios.request({
       url: `${host}/api`,
       method: 'POST',
       headers: {'content-type': 'application/x-www-form-urlencoded'},
-      data: qs.stringify(postData),
+      data: formDataAsString,
     });
     const {data: submissionData} = submissionResponse;
 
@@ -372,10 +387,20 @@ export async function submitSources(
         `contract ${name} failed to submit : "${submissionData.message}" : "${submissionData.result}"`,
         submissionData
       );
+      writeRequestIfRequested(
+        config?.writePostDataOnError || false,
+        name,
+        formDataAsString
+      );
       return;
     }
     if (!guid) {
       logError(`contract submission for ${name} failed to return a guid`);
+      writeRequestIfRequested(
+        config?.writePostDataOnError || false,
+        name,
+        formDataAsString
+      );
       return;
     }
 
@@ -443,6 +468,12 @@ export async function submitSources(
     }
 
     if (result === 'failure') {
+      writeRequestIfRequested(
+        config?.writePostDataOnError || false,
+        name,
+        formDataAsString
+      );
+
       if (!useSolcInput && fallbackOnSolcInput) {
         logInfo(
           'Falling back on solcInput. etherscan seems to sometime require full solc-input with all source files, even though this should not be needed. See https://github.com/ethereum/solidity/issues/9573'
