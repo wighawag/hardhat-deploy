@@ -109,7 +109,7 @@ export async function submitSources(
     fallbackOnSolcInput?: boolean;
     forceLicense?: boolean;
     sleepBetween?: boolean;
-    apiURL?: string;
+    apiUrl?: string;
   }
 ): Promise<void> {
   config = config || {};
@@ -119,7 +119,7 @@ export async function submitSources(
   const etherscanApiKey = config.etherscanApiKey;
   const sleepBetween = config.sleepBetween;
   const all = await hre.deployments.all();
-  let host = config.apiURL;
+  let host = config.apiUrl;
   if (!host) {
     const chainId = await hre.getChainId();
     switch (chainId) {

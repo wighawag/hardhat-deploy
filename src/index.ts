@@ -152,12 +152,18 @@ extendConfig(
       setupExtraSolcSettings(compiler.settings);
     }
 
-    const defaultConfig = {apiKey: ''};
-    if (userConfig.etherscan !== undefined) {
-      const customConfig = userConfig.etherscan;
-      config.etherscan = {...defaultConfig, ...customConfig};
+    const defaultConfig = {};
+    if (userConfig.verify !== undefined) {
+      const customConfig = userConfig.verify;
+      config.verify = {...defaultConfig, ...customConfig};
     } else {
-      config.etherscan = defaultConfig;
+      config.verify = defaultConfig;
+      // backward compatibility for runtime (js)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((userConfig as any).etherscan) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        config.verify.etherscan = (userConfig as any).etherscan;
+      }
     }
   }
 );
@@ -201,8 +207,15 @@ function networkFromConfig(
     live = network.config.live;
   }
 
-  if (network.config.etherscan !== undefined) {
-    network.etherscan = network.config.etherscan;
+  if (network.config.verify !== undefined) {
+    network.verify = network.config.verify;
+  } else {
+    // backward compatibility for runtime (js)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((network.config as any).etherscan) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      network.verify = {etherscan: (network.config as any).etherscan};
+    }
   }
 
   // associate tags to current network as object
@@ -776,6 +789,12 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     undefined,
     types.string
   )
+  .addOptionalParam(
+    'apiUrl',
+    'specify the url manually',
+    undefined,
+    types.string
+  )
   .addFlag(
     'forceLicense',
     'force the use of the license specified by --license option'
@@ -788,7 +807,6 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     'solcInput',
     'fallback on solc-input (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)'
   )
-  .addFlag('apiURL', 'specify the url manually')
   // .addFlag(
   //   'logHttpRequestOnError',
   //   'log the whole http request for debugging purpose, this output your API key, so use it aknowingly'
@@ -797,8 +815,8 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     const etherscanApiKey =
       args.apiKey ||
       process.env.ETHERSCAN_API_KEY ||
-      hre.network.etherscan?.apiKey ||
-      hre.config.etherscan?.apiKey;
+      hre.network.verify?.etherscan?.apiKey ||
+      hre.config.verify?.etherscan?.apiKey;
     if (!etherscanApiKey) {
       throw new Error(
         `No Etherscan API KEY provided. Set it through command line option, in hardhat.config.ts, or by setting the "ETHERSCAN_API_KEY" env variable`
@@ -811,6 +829,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
       fallbackOnSolcInput: args.solcInput,
       forceLicense: args.forceLicense,
       sleepBetween: args.sleep,
+      apiUrl: args.apiUrl || hre.network.verify?.etherscan?.apiUrl,
       // logHttpRequestOnError: args.logHttpRequestOnError
     });
   });

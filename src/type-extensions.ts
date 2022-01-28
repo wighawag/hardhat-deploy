@@ -30,9 +30,7 @@ declare module 'hardhat/types/config' {
         deploy?: string;
       }[];
     };
-    etherscan?: {
-      apiKey?: string;
-    };
+    verify?: {etherscan?: {apiKey?: string}};
   }
 
   interface HardhatConfig {
@@ -56,9 +54,7 @@ declare module 'hardhat/types/config' {
         deploy?: string;
       }[];
     };
-    etherscan: {
-      apiKey?: string;
-    };
+    verify: {etherscan?: {apiKey?: string}};
   }
 
   interface HardhatNetworkUserConfig {
@@ -67,7 +63,7 @@ declare module 'hardhat/types/config' {
     tags?: string[];
     deploy?: string | string[];
     companionNetworks?: {[name: string]: string};
-    etherscan?: {apiKey?: string};
+    verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
   }
 
   interface HttpNetworkUserConfig {
@@ -76,7 +72,7 @@ declare module 'hardhat/types/config' {
     tags?: string[];
     deploy?: string | string[];
     companionNetworks?: {[name: string]: string};
-    etherscan?: {apiKey?: string};
+    verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
   }
 
   interface ProjectPathsUserConfig {
@@ -91,7 +87,7 @@ declare module 'hardhat/types/config' {
     tags: string[];
     deploy?: string[];
     companionNetworks: {[name: string]: string};
-    etherscan?: {apiKey?: string};
+    verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
   }
 
   interface HttpNetworkConfig {
@@ -100,7 +96,7 @@ declare module 'hardhat/types/config' {
     tags: string[];
     deploy?: string[];
     companionNetworks: {[name: string]: string};
-    etherscan?: {apiKey?: string};
+    verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
   }
 
   interface ProjectPathsConfig {
@@ -137,6 +133,6 @@ declare module 'hardhat/types/runtime' {
     tags: Record<string, boolean>;
     deploy: string[];
     companionNetworks: {[name: string]: string};
-    etherscan?: {apiKey?: string};
+    verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
   }
 }

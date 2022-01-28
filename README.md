@@ -381,18 +381,40 @@ This task will also attempt to automatically find the SPDX license in the source
 To execute that task, you need to specifiy the network to run against :
 
 ```bash
-hardhat --network mainnet etherscan-verify --api-key <apikey>
+hardhat --network mainnet etherscan-verify [--api-key <apikey>] [--apiurl <url>]
 ```
 
 #### **Options**
 
-`--api-key <api key>`: let you specify your etherscan api key. Alternatively, you can provide it via the env variable `ETHERSCAN_API_KEY` or through the hardhat.config.ts etherscan field:
+Note that harhdat-deploy now use a different config format to not conflict with `hardhat-etherscan`
+
+`--api-key <api key>`: let you specify your etherscan api key. Alternatively, you can provide it via the env variable `ETHERSCAN_API_KEY` or through the hardhat.config.ts verify field:
 
 ```js
 {
   ...
-  etherscan: {
-    apiKey: '<API key>'
+  verify: {
+    etherscan: {
+      apiKey: '<API key>'
+    }
+  }
+}
+```
+
+`--api-url <url>`: let you specify your etherscan url to submit the source to. Can also be configured per network in `hardhat.config.js`:
+
+```js
+{
+  ...
+  networks: {
+    mynetwork: {
+      ...
+      verify: {
+        etherscan: {
+          apiUrl: 'http://mynetwork.xyz'
+        }
+      }
+    }
   }
 }
 ```
