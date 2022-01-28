@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.10.0
+
+### Minor Changes
+
+- etherscan config updates: use verify + add optin to set apiURL
+
 ## 0.9.29
 
 ### Patch Changes
