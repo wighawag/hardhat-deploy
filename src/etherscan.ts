@@ -31,13 +31,23 @@ function sleep(ms: number) {
 function writeRequestIfRequested(
   write: boolean,
   name: string,
-  request: string
+  request: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  postData: any
 ) {
   if (write) {
     try {
       fs.mkdirSync('etherscan_requests');
     } catch (e) {}
-    fs.writeFileSync(`etherscan_requests/${name}.json`, request);
+    fs.writeFileSync(`etherscan_requests/${name}.formdata`, request);
+    fs.writeFileSync(
+      `etherscan_requests/${name}.json`,
+      JSON.stringify(postData)
+    );
+    fs.writeFileSync(
+      `etherscan_requests/${name}_multi-source.json`,
+      postData.sourceCode
+    );
   }
 }
 
@@ -390,7 +400,8 @@ export async function submitSources(
       writeRequestIfRequested(
         config?.writePostDataOnError || false,
         name,
-        formDataAsString
+        formDataAsString,
+        postData
       );
       return;
     }
@@ -399,7 +410,8 @@ export async function submitSources(
       writeRequestIfRequested(
         config?.writePostDataOnError || false,
         name,
-        formDataAsString
+        formDataAsString,
+        postData
       );
       return;
     }
@@ -471,7 +483,8 @@ export async function submitSources(
       writeRequestIfRequested(
         config?.writePostDataOnError || false,
         name,
-        formDataAsString
+        formDataAsString,
+        postData
       );
 
       if (!useSolcInput && fallbackOnSolcInput) {

@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.10.2
+
+### Patch Changes
+
+- more debugging output for etherscan
+
 ## 0.10.1
 
 ### Patch Changes
