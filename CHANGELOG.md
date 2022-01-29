@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.10.3
+
+### Patch Changes
+
+- 42e5330: export option for etherscan request, now even with no error
+
 ## 0.10.2
 
 ### Patch Changes
