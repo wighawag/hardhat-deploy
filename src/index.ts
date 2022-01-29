@@ -808,8 +808,8 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     'fallback on solc-input (useful when etherscan fails on the minimum sources, see https://github.com/ethereum/solidity/issues/9573)'
   )
   .addFlag(
-    'writePostDataOnError',
-    'on error, write the post data on file, for debugging purpose'
+    'writePostData',
+    'write the post data on file in "etherscan_requests/<network>" folder, for debugging purpose'
   )
   .setAction(async (args, hre) => {
     const etherscanApiKey =
@@ -830,7 +830,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
       forceLicense: args.forceLicense,
       sleepBetween: args.sleep,
       apiUrl: args.apiUrl || hre.network.verify?.etherscan?.apiUrl,
-      writePostDataOnError: args.writePostDataOnError,
+      writePostData: args.writePostData,
     });
   });
 

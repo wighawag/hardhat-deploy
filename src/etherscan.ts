@@ -30,6 +30,7 @@ function sleep(ms: number) {
 
 function writeRequestIfRequested(
   write: boolean,
+  networkName: string,
   name: string,
   request: string,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -39,13 +40,14 @@ function writeRequestIfRequested(
     try {
       fs.mkdirSync('etherscan_requests');
     } catch (e) {}
-    fs.writeFileSync(`etherscan_requests/${name}.formdata`, request);
+    const folder = `etherscan_requests/${networkName}`;
+    try {
+      fs.mkdirSync(folder);
+    } catch (e) {}
+    fs.writeFileSync(`${folder}/${name}.formdata`, request);
+    fs.writeFileSync(`${folder}/${name}.json`, JSON.stringify(postData));
     fs.writeFileSync(
-      `etherscan_requests/${name}.json`,
-      JSON.stringify(postData)
-    );
-    fs.writeFileSync(
-      `etherscan_requests/${name}_multi-source.json`,
+      `${folder}/${name}_multi-source.json`,
       postData.sourceCode
     );
   }
@@ -133,7 +135,7 @@ export async function submitSources(
     forceLicense?: boolean;
     sleepBetween?: boolean;
     apiUrl?: string;
-    writePostDataOnError?: boolean;
+    writePostData?: boolean;
   }
 ): Promise<void> {
   config = config || {};
@@ -143,6 +145,7 @@ export async function submitSources(
   const etherscanApiKey = config.etherscanApiKey;
   const sleepBetween = config.sleepBetween;
   const all = await hre.deployments.all();
+  const networkName = hre.network.name;
   let host = config.apiUrl;
   if (!host) {
     const chainId = await hre.getChainId();
@@ -176,6 +179,9 @@ export async function submitSources(
         break;
       case '70':
         host = 'https://api.hooscan.com';
+        break;
+      case '77':
+        host = 'https://blockscout.com/poa/sokol';
         break;
       case '128':
         host = 'https://api.hecoinfo.com';
@@ -398,7 +404,8 @@ export async function submitSources(
         submissionData
       );
       writeRequestIfRequested(
-        config?.writePostDataOnError || false,
+        config?.writePostData || false,
+        networkName,
         name,
         formDataAsString,
         postData
@@ -408,7 +415,8 @@ export async function submitSources(
     if (!guid) {
       logError(`contract submission for ${name} failed to return a guid`);
       writeRequestIfRequested(
-        config?.writePostDataOnError || false,
+        config?.writePostData || false,
+        networkName,
         name,
         formDataAsString,
         postData
@@ -480,23 +488,31 @@ export async function submitSources(
     }
 
     if (result === 'failure') {
-      writeRequestIfRequested(
-        config?.writePostDataOnError || false,
-        name,
-        formDataAsString,
-        postData
-      );
-
       if (!useSolcInput && fallbackOnSolcInput) {
         logInfo(
           'Falling back on solcInput. etherscan seems to sometime require full solc-input with all source files, even though this should not be needed. See https://github.com/ethereum/solidity/issues/9573'
         );
         await submit(name, true);
       } else {
+        writeRequestIfRequested(
+          config?.writePostData || false,
+          networkName,
+          name,
+          formDataAsString,
+          postData
+        );
         logInfo(
           'Etherscan sometime fails to verify when only metadata sources are given. See https://github.com/ethereum/solidity/issues/9573. You can add the option --solc-input to try with full solc-input sources. This will include all contract source in the etherscan result, even the one not relevant to the contract being verified'
         );
       }
+    } else {
+      writeRequestIfRequested(
+        config?.writePostData || false,
+        networkName,
+        name,
+        formDataAsString,
+        postData
+      );
     }
   }
 
