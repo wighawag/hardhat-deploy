@@ -1313,17 +1313,17 @@ export class DeploymentsManager {
           linkedData: deployment.linkedData,
         };
       }
+      const currentNetwork = this.getDeploymentNetworkName();
       if (all[chainId] === undefined) {
-        all[chainId] = {};
+        all[chainId] = [];
       } else {
-        // Ensure no past deployments are recorded
-        delete all[chainId][this.getDeploymentNetworkName()];
+        all[chainId] = all[chainId].filter((v) => v.name !== currentNetwork);
       }
-      all[chainId][this.getDeploymentNetworkName()] = {
-        name: this.getDeploymentNetworkName(),
+      all[chainId].push({
+        name: currentNetwork,
         chainId,
         contracts: currentNetworkDeployments,
-      };
+      });
       const out = JSON.stringify(all, null, '  ');
       this._writeExports(options.exportAll, out);
 

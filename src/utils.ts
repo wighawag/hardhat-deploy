@@ -6,7 +6,7 @@ import {getAddress, isAddress} from '@ethersproject/address';
 import {Interface, FunctionFragment, Fragment} from '@ethersproject/abi';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {BigNumber} from '@ethersproject/bignumber';
-import {ExtendedArtifact, MultiExport} from '../types';
+import {Export, ExtendedArtifact, MultiExport} from '../types';
 import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
 import {Transaction} from '@ethersproject/transactions';
@@ -108,6 +108,7 @@ export function loadAllDeployments(
   onlyABIAndAddress?: boolean,
   externalDeployments?: {[networkName: string]: string[]}
 ): MultiExport {
+  const networksFound: {[networkName: string]: Export} = {};
   const all: MultiExport = {}; // TODO any is chainConfig
   fs.readdirSync(deploymentsPath).forEach((fileName) => {
     const fPath = path.resolve(deploymentsPath, fileName);
@@ -127,18 +128,20 @@ export function loadAllDeployments(
       }
 
       if (!all[chainIdFound]) {
-        all[chainIdFound] = {};
+        all[chainIdFound] = [];
       }
       const contracts = loadDeployments(
         deploymentsPath,
         fileName,
         onlyABIAndAddress
       );
-      all[chainIdFound][name] = {
+      const network = {
         name,
         chainId: chainIdFound,
         contracts,
       };
+      networksFound[name] = network;
+      all[chainIdFound].push(network);
     }
   });
 
@@ -155,11 +158,23 @@ export function loadAllDeployments(
             undefined,
             networkChainId
           );
-          all[networkChainId][networkName] = {
-            name: networkName,
-            chainId: networkChainId,
-            contracts,
-          };
+          const networkExist = networksFound[networkName];
+          if (networkExist) {
+            if (networkChainId !== networkExist.chainId) {
+              throw new Error(
+                `mismatch between external deployment network ${networkName} chainId: ${networkChainId} vs existing chainId: ${networkExist.chainId}`
+              );
+            }
+            networkExist.contracts = {...contracts, ...networkExist.contracts};
+          } else {
+            const network = {
+              name: networkName,
+              chainId: networkChainId,
+              contracts,
+            };
+            networksFound[networkName] = network;
+            all[networkChainId].push(network);
+          }
         } else {
           console.warn(
             `export-all limitation: attempting to load external deployments from ${folderPath} without chainId info. Please set the chainId in the network config for ${networkName}`
