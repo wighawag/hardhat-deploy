@@ -5,6 +5,7 @@
     "hardhat-deploy": "0.10.4"
   },
   "changesets": [
+    "mighty-dodos-peel",
     "seven-llamas-mix"
   ]
 }
