@@ -1910,6 +1910,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       const selectorsToReplace: string[] = [];
 
       for (const selector of newFacet.functionSelectors) {
+        // TODO fix in master >0 to transform into >= 0
         if (oldSelectors.indexOf(selector) >= 0) {
           if (
             oldSelectorsFacetAddress[selector].toLowerCase() !==
