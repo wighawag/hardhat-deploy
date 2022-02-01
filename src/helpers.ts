@@ -1993,6 +1993,7 @@ Note that in this case, the contract deployment will not behave the same if depl
             {
               from: options.from,
               contract: options.execute.contract.artifact,
+              args: options.execute.contract.args,
               autoMine: options.autoMine,
               estimateGasExtra: options.estimateGasExtra,
               estimatedGasLimit: options.estimatedGasLimit,
