@@ -1958,7 +1958,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     }
 
     let executeData = '0x';
-    let executeAddress: string | undefined;
+    let executeAddress = '0x0000000000000000000000000000000000000000';
     if (options.execute) {
       let addressSpecified: string | undefined;
       let executionContract = new Contract(
@@ -2012,7 +2012,10 @@ Note that in this case, the contract deployment will not behave the same if depl
         options.execute.methodName
       ](...options.execute.args);
       executeData = txData.data || '0x';
-      executeAddress = addressSpecified || facetFound;
+      executeAddress =
+        addressSpecified ||
+        facetFound ||
+        '0x0000000000000000000000000000000000000000';
     }
 
     if (changesDetected) {
@@ -2093,17 +2096,17 @@ Note that in this case, the contract deployment will not behave the same if depl
 
         // TODO option to add more to the list
         // else mechanism to set it up differently ? LoupeFacet without supportsInterface
-        const interfaceList = ['0x']; // TODO
+        const interfaceList = ['0x48e2b093'];
         if (options.defaultCutFacet) {
-          interfaceList.push('0x'); // TODO
+          interfaceList.push('0x1f931c1c');
         }
         if (options.defaultOwnershipFacet) {
-          interfaceList.push('0x'); // TODO
+          interfaceList.push('0x7f5828d0');
         }
 
         if (initializationsArgIndex >= 0 || erc165InitArgIndex >= 0) {
           const diamondERC165InitDeployment = await _deployOne(
-            '_DiamondERC165Init',
+            '_DefaultDiamondERC165Init',
             {
               from: options.from,
               deterministicDeployment: true,
@@ -2155,10 +2158,12 @@ Note that in this case, the contract deployment will not behave the same if depl
 
         if (executeData) {
           if (initializationsArgIndex >= 0) {
-            diamondConstructorArgs[initializationsArgIndex].push({
-              initContract: executeAddress,
-              initData: executeData,
-            });
+            if (executeData !== '0x') {
+              diamondConstructorArgs[initializationsArgIndex].push({
+                initContract: executeAddress,
+                initData: executeData,
+              });
+            }
           } else {
             if (initArgIndex >= 0) {
               diamondConstructorArgs[initArgIndex] = {
@@ -2243,6 +2248,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           await _deployViaDiamondProxy(name, options); // this would not recurse again as the name and proxyName are now saved
         } else {
           proxy = await _deployOne(proxyName, {
+            contract: diamondArtifact,
             from: options.from,
             args: diamondConstructorArgs,
             autoMine: options.autoMine,
@@ -2258,7 +2264,7 @@ Note that in this case, the contract deployment will not behave the same if depl
             value: options.value,
           });
 
-          await saveDeployment(proxyName, proxy);
+          await saveDeployment(proxyName, {...proxy, abi});
           await saveDeployment(name, {
             ...proxy,
             linkedData: options.linkedData,
