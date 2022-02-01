@@ -1830,7 +1830,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         (fragment: {type: string; inputs: any[]}) =>
           fragment.type === 'constructor'
       );
-      if ((!argsSpecific && !constructor) || constructor.inputs.length === 0) {
+      if (!argsSpecific && (!constructor || constructor.inputs.length === 0)) {
         // reset args for case where facet do not expect any and there was no specific args set on it
         facetArgs = [];
       }
