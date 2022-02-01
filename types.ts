@@ -74,19 +74,23 @@ export type FacetOptions = {
   args?: any[];
   linkedData?: any; // JSONable ?
   libraries?: Libraries;
+  deterministic?: boolean | string;
 };
-export type DiamondFacets = Array<string> | Array<FacetOptions>; // TODO support Object for facet : {contract} // could be deploymentNames too ? or {abi,address}
+export type DiamondFacets = Array<string> | Array<FacetOptions>;
 export interface DiamondOptions extends TxOptions {
-  // TODO specify own diamond code : https://github.com/wighawag/hardhat-deploy/issues/153
+  diamondContract?: string | ArtifactData; // TODO
+  diamondContractArgs?: any[];
   owner?: Address;
+  // defaultLoopeFacet?: boolean; // TODO // always there
+  defaultOwnershipFacet?: boolean;
+  defaultCutFacet?: boolean;
   facets: DiamondFacets;
   log?: boolean;
   libraries?: Libraries;
   linkedData?: any; // JSONable ?
   upgradeIndex?: number;
   execute?: {
-    // TODO separate init from eexecute + add support for executing external address (the latter require new diamond code to allow to do it at first deployment (init))
-    // issue : https://github.com/wighawag/hardhat-deploy/issues/233
+    contract?: string | {name: string; artifact: string | ArtifactData};
     methodName: string;
     args: any[];
   };

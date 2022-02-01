@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.0-next.0
+
+### Minor Changes
+
+- revamp diamond support
+
 ## 0.10.4
 
 ### Patch Changes
