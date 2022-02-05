@@ -1429,7 +1429,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
   });
   if (deployResult.newlyDeployed) {
     log(
-      `contract Token deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`
+      `contract Token deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed} gas`
     );
   }
 };
@@ -1449,7 +1449,7 @@ module.exports = async function ({getNamedAccounts, deployments}) {
   });
   if (deployResult.newlyDeployed) {
     log(
-      `contract Sale deployed at ${deployResult.contract.address} using ${deployResult.receipt.gasUsed} gas`
+      `contract Sale deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed} gas`
     );
   }
 };
