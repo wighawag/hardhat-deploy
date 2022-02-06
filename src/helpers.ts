@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {Signer} from '@ethersproject/abstract-signer';
 import {
   Web3Provider,
   TransactionResponse,
   TransactionRequest,
+  JsonRpcProvider,
 } from '@ethersproject/providers';
+import {ethers, Signer} from 'ethers';
 import {getAddress} from '@ethersproject/address';
 import {
   Contract,
-  ContractFactory,
   PayableOverrides,
 } from '@ethersproject/contracts';
+import * as zk from 'zksync-web3';
 import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
@@ -227,7 +228,7 @@ function linkLibraries(
 export function addHelpers(
   deploymentManager: DeploymentsManager,
   partialExtension: PartialExtension,
-  network: Network,
+  network: any, // TODO work out right config type
   getArtifact: (name: string) => Promise<Artifact>,
   saveDeployment: (
     name: string,
@@ -236,10 +237,10 @@ export function addHelpers(
   ) => Promise<void>,
   willSaveToDisk: () => boolean,
   onPendingTx: (
-    txResponse: TransactionResponse,
+    txResponse: zk.types.TransactionResponse,
     name?: string,
     data?: any
-  ) => Promise<TransactionResponse>,
+  ) => Promise<zk.types.TransactionResponse>,
   getGasPrice: () => Promise<{
     gasPrice: BigNumber | undefined;
     maxFeePerGas: BigNumber | undefined;
@@ -279,13 +280,13 @@ export function addHelpers(
     ) => Promise<void>;
   };
 } {
-  let provider: Web3Provider;
+  let provider: zk.Provider;
   const availableAccounts: {[name: string]: boolean} = {};
 
-  async function init(): Promise<Web3Provider> {
+  async function init(): Promise<zk.Provider> {
     if (!provider) {
       await deploymentManager.setupAccounts();
-      provider = new Web3Provider(fixProvider(network.provider));
+      provider = new zk.Provider(network.config.url);
       try {
         const accounts = await provider.send('eth_accounts', []);
         for (const account of accounts) {
@@ -550,7 +551,7 @@ export function addHelpers(
       nonce: options.nonce,
     };
 
-    const factory = new ContractFactory(
+    const factory = new zk.ContractFactory(
       linkedArtifact.abi,
       linkedArtifact.bytecode,
       ethersSigner
@@ -561,29 +562,37 @@ export function addHelpers(
         `expected ${numArguments} constructor arguments, got ${args.length}`
       );
     }
-    const unsignedTx = factory.getDeployTransaction(...args, overrides);
+
+    const factoryDeps: string[] = [];
+    const unsignedTx = factory.getDeployTransaction(...args, {
+      customData: {
+        factoryDeps,
+        feeToken: zk.utils.ETH_ADDRESS
+      }
+    });
 
     let create2Address;
     if (options.deterministicDeployment) {
-      if (typeof unsignedTx.data === 'string') {
-        const create2DeployerAddress = await ensureCreate2DeployerReady(
-          options
-        );
-        const create2Salt =
-          typeof options.deterministicDeployment === 'string'
-            ? hexlify(zeroPad(options.deterministicDeployment, 32))
-            : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        create2Address = getCreate2Address(
-          create2DeployerAddress,
-          create2Salt,
-          unsignedTx.data
-        );
-        unsignedTx.to = create2DeployerAddress;
+      throw new Error('deterministic zk deployments are supported at this time');
+      // if (typeof unsignedTx.data === 'string') {
+      //   const create2DeployerAddress = await ensureCreate2DeployerReady(
+      //     options
+      //   );
+      //   const create2Salt =
+      //     typeof options.deterministicDeployment === 'string'
+      //       ? hexlify(zeroPad(options.deterministicDeployment, 32))
+      //       : '0x0000000000000000000000000000000000000000000000000000000000000000';
+      //   create2Address = getCreate2Address(
+      //     create2DeployerAddress,
+      //     create2Salt,
+      //     unsignedTx.data
+      //   );
+      //   unsignedTx.to = create2DeployerAddress;
 
-        unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
-      } else {
-        throw new Error('unsigned tx data as bytes not supported');
-      }
+      //   unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
+      // } else {
+      //   throw new Error('unsigned tx data as bytes not supported');
+      // }
     }
 
     await overrideGasLimit(unsignedTx, options, (newOverrides) =>
@@ -777,7 +786,7 @@ export function addHelpers(
       const {artifact} = artifactInfo;
       const abi = artifact.abi;
       const byteCode = linkLibraries(artifact, options.libraries);
-      const factory = new ContractFactory(abi, byteCode, ethersSigner);
+      const factory = new zk.ContractFactory(abi, byteCode, ethersSigner);
 
       const numArguments = factory.interface.deploy.inputs.length;
       if (args.length !== numArguments) {
@@ -833,43 +842,44 @@ export function addHelpers(
     await init();
 
     if (options.deterministicDeployment) {
-      const {ethersSigner} = getFrom(options.from);
+      throw new Error('deterministic zk deployments not supported at this time');
+      // const {ethersSigner} = getFrom(options.from);
 
-      const artifactInfo = await getArtifactFromOptions(name, options);
-      const {artifact} = artifactInfo;
-      const abi = artifact.abi;
-      const byteCode = linkLibraries(artifact, options.libraries);
-      const factory = new ContractFactory(abi, byteCode, ethersSigner);
+      // const artifactInfo = await getArtifactFromOptions(name, options);
+      // const {artifact} = artifactInfo;
+      // const abi = artifact.abi;
+      // const byteCode = linkLibraries(artifact, options.libraries);
+      // const factory = new ContractFactory(abi, byteCode, ethersSigner);
 
-      const numArguments = factory.interface.deploy.inputs.length;
-      if (argArray.length !== numArguments) {
-        throw new Error(
-          `expected ${numArguments} constructor arguments, got ${argArray.length}`
-        );
-      }
+      // const numArguments = factory.interface.deploy.inputs.length;
+      // if (argArray.length !== numArguments) {
+      //   throw new Error(
+      //     `expected ${numArguments} constructor arguments, got ${argArray.length}`
+      //   );
+      // }
 
-      const unsignedTx = factory.getDeployTransaction(...argArray);
-      if (typeof unsignedTx.data === 'string') {
-        const create2Salt =
-          typeof options.deterministicDeployment === 'string'
-            ? hexlify(zeroPad(options.deterministicDeployment, 32))
-            : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        const create2DeployerAddress =
-          await deploymentManager.getDeterministicDeploymentFactoryAddress();
-        const create2Address = getCreate2Address(
-          create2DeployerAddress,
-          create2Salt,
-          unsignedTx.data
-        );
-        const code = await provider.getCode(create2Address);
-        if (code === '0x') {
-          return {differences: true, address: undefined};
-        } else {
-          return {differences: false, address: create2Address};
-        }
-      } else {
-        throw new Error('unsigned tx data as bytes not supported');
-      }
+      // const unsignedTx = factory.getDeployTransaction(...argArray);
+      // if (typeof unsignedTx.data === 'string') {
+      //   const create2Salt =
+      //     typeof options.deterministicDeployment === 'string'
+      //       ? hexlify(zeroPad(options.deterministicDeployment, 32))
+      //       : '0x0000000000000000000000000000000000000000000000000000000000000000';
+      //   const create2DeployerAddress =
+      //     await deploymentManager.getDeterministicDeploymentFactoryAddress();
+      //   const create2Address = getCreate2Address(
+      //     create2DeployerAddress,
+      //     create2Salt,
+      //     unsignedTx.data
+      //   );
+      //   const code = await provider.getCode(create2Address);
+      //   if (code === '0x') {
+      //     return {differences: true, address: undefined};
+      //   } else {
+      //     return {differences: false, address: create2Address};
+      //   }
+      // } else {
+      //   throw new Error('unsigned tx data as bytes not supported');
+      // }
     }
     const deployment = await partialExtension.getOrNull(name);
     if (deployment) {
@@ -896,11 +906,19 @@ export function addHelpers(
         const {artifact} = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact, options.libraries);
-        const factory = new ContractFactory(abi, byteCode, ethersSigner);
-        const newTransaction = factory.getDeployTransaction(...argArray);
+        const factory = new zk.ContractFactory(abi, byteCode, ethersSigner);
+        const factoryDeps: string[] = [];
+        const newTransaction = factory.getDeployTransaction(...argArray, {
+          customData: {
+            factoryDeps,
+            feeToken: zk.utils.ETH_ADDRESS
+          }
+        });
         const newData = newTransaction.data?.toString();
 
-        if (transaction.data !== newData) {
+        const deserialize = zk.utils.parseTransaction(transaction.data) as any;
+
+        if (deserialize.data !== newData || deserialize.customData.factoryDeps[0] != byteCode) {
           return {differences: true, address: deployment.address};
         }
         return {differences: false, address: deployment.address};
@@ -1616,7 +1634,7 @@ Note that in this case, the contract deployment will not behave the same if depl
 
   function getOptionalFrom(from?: string): {
     address?: Address;
-    ethersSigner?: Signer;
+    ethersSigner?: zk.Signer;
     hardwareWallet?: string;
   } {
     if (!from) {
@@ -1631,69 +1649,64 @@ Note that in this case, the contract deployment will not behave the same if depl
 
   function getFrom(from: string): {
     address: Address;
-    ethersSigner: Signer;
+    ethersSigner: zk.Signer;
     hardwareWallet?: string;
     unknown: boolean;
   } {
-    let ethersSigner: Signer | undefined;
+    let ethersSigner: zk.Signer | undefined;
     let hardwareWallet: string | undefined = undefined;
     let unknown = false;
 
-    if (from.length >= 64) {
+    // if (from.length >= 64) {
       if (from.length === 64) {
         from = '0x' + from;
       }
-      const wallet = new Wallet(from, provider);
+      const wallet = new zk.Wallet(from, provider);
       from = wallet.address;
-      ethersSigner = wallet;
-    } else {
-      if (availableAccounts[from.toLowerCase()]) {
-        ethersSigner = provider.getSigner(from);
-      } else {
+      ethersSigner = (wallet as unknown) as zk.Signer;
+    // } else {
+      // if (availableAccounts[from.toLowerCase()]) {
+      //   ethersSigner = zkProvider.getSigner(from);
+      // } else {
         // TODO register protocol based account as availableAccounts ? if so do not else here
-        const registeredProtocol =
-          deploymentManager.addressesToProtocol[from.toLowerCase()];
-        if (registeredProtocol) {
-          if (registeredProtocol === 'ledger') {
-            if (!LedgerSigner) {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              let error: any | undefined;
-              try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const hardwareWalletModule = require('@ethersproject/hardware-wallets');
-                LedgerSigner = hardwareWalletModule.LedgerSigner;
-              } catch (e) {
-                error = e;
-                try {
-                  // eslint-disable-next-line @typescript-eslint/no-var-requires
-                  const hardwareWalletModule = require('@anders-t/ethers-ledger');
-                  LedgerSigner = hardwareWalletModule.LedgerSigner;
-                  error = undefined;
-                } catch (e) {}
-              }
+        // const registeredProtocol =
+        //   deploymentManager.addressesToProtocol[from.toLowerCase()];
+        // if (registeredProtocol) {
+        //   if (registeredProtocol === 'ledger') {
+        //     if (!LedgerSigner) {
+        //       // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        //       let error: any | undefined;
+        //       try {
+        //         // eslint-disable-next-line @typescript-eslint/no-var-requires
+        //         const hardwareWalletModule = require('@ethersproject/hardware-wallets');
+        //         LedgerSigner = hardwareWalletModule.LedgerSigner;
+        //       } catch (e) {
+        //         error = e;
+        //         try {
+        //           // eslint-disable-next-line @typescript-eslint/no-var-requires
+        //           const hardwareWalletModule = require('@anders-t/ethers-ledger');
+        //           LedgerSigner = hardwareWalletModule.LedgerSigner;
+        //           error = undefined;
+        //         } catch (e) {}
+        //       }
 
-              if (error) {
-                console.error(
-                  `failed to loader hardhware wallet module for ledger, you can either use "@ethersproject/hardware-wallets" which as time of writing does not work or use "@anders-t/ethers-ledger."`
-                );
-                throw error;
-              }
-            }
-            ethersSigner = new LedgerSigner(provider);
-            hardwareWallet = 'ledger';
-          } else if (registeredProtocol.startsWith('privatekey')) {
-            ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
-          } else if (registeredProtocol.startsWith('gnosis')) {
-            ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
-          }
-        }
-      }
-    }
-
-    if (!ethersSigner) {
-      unknown = true;
-      ethersSigner = provider.getSigner(from);
-    }
+        //       if (error) {
+        //         console.error(
+        //           `failed to loader hardhware wallet module for ledger, you can either use "@ethersproject/hardware-wallets" which as time of writing does not work or use "@anders-t/ethers-ledger."`
+        //         );
+        //         throw error;
+        //       }
+        //     }
+        //     ethersSigner = new LedgerSigner(zkProvider);
+        //     hardwareWallet = 'ledger';
+        //   } else if (registeredProtocol.startsWith('privatekey')) {
+        //     ethersSigner = new zk.Wallet(registeredProtocol.substr(13), zkProvider);
+        //   } else if (registeredProtocol.startsWith('gnosis')) {
+        //     ethersSigner = new zk.Wallet(registeredProtocol.substr(13), zkProvider);
+        //   }
+        // }
+      // }
+    // }
 
     return {address: from, ethersSigner, hardwareWallet, unknown};
   }
@@ -1752,7 +1765,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     }
     if (oldDeployment) {
       proxy = await getDeployment(proxyName);
-      const diamondProxy = new Contract(proxy.address, proxy.abi, provider);
+      const diamondProxy = new zk.Contract(proxy.address, proxy.abi, provider);
 
       const currentFacets: Facet[] = await diamondProxy.facets();
       for (const currentFacet of currentFacets) {
@@ -1970,7 +1983,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           maxPriorityFeePerGas: options.maxPriorityFeePerGas,
           log: options.log,
         });
-        const diamantaireContract = new Contract(
+        const diamantaireContract = new zk.Contract(
           diamantaireDeployment.address,
           diamantaire.abi,
           provider
@@ -2203,10 +2216,10 @@ Note that in this case, the contract deployment will not behave the same if depl
   ): Promise<DeployResult> {
     options = {...options}; // ensure no change
     await init();
-    if (!options.proxy) {
-      return _deployOne(name, options);
+    if (options.proxy) {
+      throw Error('proxy zk deployments are not supported at this time')
     }
-    return _deployViaProxy(name, options);
+    return _deployOne(name, options);
   }
 
   async function diamond(
@@ -2376,7 +2389,7 @@ data: ${data}
       nonce: options.nonce,
     };
 
-    const ethersContract = new Contract(deployment.address, abi, ethersSigner);
+    const ethersContract = new zk.Contract(deployment.address, abi, ethersSigner);
     if (!ethersContract.functions[methodName]) {
       throw new Error(
         `No method named "${methodName}" on contract deployed as "${name}"`
@@ -2479,7 +2492,7 @@ data: ${data}
     if (typeof args === 'undefined') {
       args = [];
     }
-    let caller: Web3Provider | Signer = provider;
+    let caller: zk.Provider | zk.Signer = provider;
     const {ethersSigner} = getOptionalFrom(options.from);
     if (ethersSigner) {
       caller = ethersSigner;
@@ -2502,10 +2515,10 @@ data: ${data}
       nonce: options.nonce,
     };
     cleanupOverrides(overrides);
-    const ethersContract = new Contract(
+    const ethersContract = new zk.Contract(
       deployment.address,
       abi,
-      caller as Signer
+      caller
     );
     // populate function
     // if (options.outputTx) {

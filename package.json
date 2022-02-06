@@ -79,11 +79,13 @@
     "chokidar": "^3.5.2",
     "debug": "^4.3.2",
     "enquirer": "^2.3.6",
+    "ethers": "^5.5.4",
     "form-data": "^4.0.0",
     "fs-extra": "^10.0.0",
     "match-all": "^1.2.6",
     "murmur-128": "^0.2.1",
-    "qs": "^6.9.4"
+    "qs": "^6.9.4",
+    "zksync-web3": "^0.3.3"
   },
   "scripts": {
     "prepare": "node ./.setup.js",
