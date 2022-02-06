@@ -563,7 +563,7 @@ export function addHelpers(
       );
     }
 
-    const factoryDeps: string[] = [];
+    const factoryDeps = await extractFactoryDeps(linkedArtifact);
     const unsignedTx = factory.getDeployTransaction(...args, {
       customData: {
         factoryDeps,
@@ -833,6 +833,20 @@ export function addHelpers(
     return partialExtension.getOrNull(name);
   }
 
+  // TODO add ZkSyncArtifact
+  async function extractFactoryDeps(artifact: any): Promise<string[]> {
+    // Load all the dependency bytecodes.
+    // We transform it into an array of bytecodes.
+    const factoryDeps: string[] = [];
+    for (const dependencyHash in artifact.factoryDeps) {
+      const dependencyContract = artifact.factoryDeps[dependencyHash];
+      const dependencyBytecodeString = (await getArtifact(dependencyContract)).bytecode;
+      factoryDeps.push(dependencyBytecodeString);
+    }
+
+    return factoryDeps;
+  }
+
   async function fetchIfDifferent(
     name: string,
     options: DeployOptions
@@ -907,7 +921,7 @@ export function addHelpers(
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact, options.libraries);
         const factory = new zk.ContractFactory(abi, byteCode, ethersSigner);
-        const factoryDeps: string[] = [];
+        const factoryDeps = await extractFactoryDeps(artifact);
         const newTransaction = factory.getDeployTransaction(...argArray, {
           customData: {
             factoryDeps,
@@ -917,8 +931,10 @@ export function addHelpers(
         const newData = newTransaction.data?.toString();
 
         const deserialize = zk.utils.parseTransaction(transaction.data) as any;
+        const desFlattened = ethers.utils.hexConcat(deserialize.customData.factoryDeps);
+        const newFlattened = ethers.utils.hexConcat(factoryDeps);
 
-        if (deserialize.data !== newData || deserialize.customData.factoryDeps[0] != byteCode) {
+        if (deserialize.data !== newData || desFlattened != newFlattened) {
           return {differences: true, address: deployment.address};
         }
         return {differences: false, address: deployment.address};
