@@ -2148,14 +2148,13 @@ Note that in this case, the contract deployment will not behave the same if depl
         }
 
         const diamondDeployment: DeploymentSubmission = {
-          receipt: executeReceipt,
-          transactionHash: executeReceipt.transactionHash,
+          ...oldDeployment,
           linkedData: options.linkedData,
           address: proxy.address,
           abi,
           facets: facetSnapshot,
           diamondCut: facetCuts,
-          execute: options.execute,
+          execute: options.execute, // TODO add receipt + tx hash
         };
 
         // TODO reenable history with options
