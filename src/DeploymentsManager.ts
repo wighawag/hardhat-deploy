@@ -437,19 +437,16 @@ export class DeploymentsManager {
       return this._chainId;
     }
     this.setupNetwork();
-    // try {
-    //   this._chainId = await this.network.provider.send('eth_chainId');
-    // } catch (e) {
-    //   console.log('failed to get chainId, falling back on net_version...');
-    //   this._chainId = await this.network.provider.send('net_version');
-    // }
+    try {
+      this._chainId = await this.network.provider.send('eth_chainId');
+    } catch (e) {
+      console.log('failed to get chainId, falling back on net_version...');
+      this._chainId = await this.network.provider.send('net_version');
+    }
 
-    // if (!this._chainId) {
-    //   throw new Error(`could not get chainId from network`);
-    // }
-
-    // Hardcoded temporarily since zk jsonrpc doesnt support eth_chainId
-    this._chainId = '277';
+    if (!this._chainId) {
+      throw new Error(`could not get chainId from network`);
+    }
 
     if (this._chainId.startsWith('0x')) {
       this._chainId = BigNumber.from(this._chainId).toString();
@@ -1487,8 +1484,7 @@ export class DeploymentsManager {
   }> {
     if (!this.db.accountsLoaded) {
       const chainId = await this.getChainId();
-      // const accounts = await this.network.provider.send('eth_accounts');
-      const accounts: any = [];
+      const accounts = await this.network.provider.send('eth_accounts');
       const {
         namedAccounts,
         unnamedAccounts,
