@@ -47,6 +47,7 @@
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
+    "ethers": "^5.5.0",
     "hardhat": "^2.6.8",
     "mocha": "^9.1.0",
     "prettier": "^2.3.2",
@@ -58,34 +59,22 @@
     "typescript": "^4.3.5"
   },
   "peerDependencies": {
-    "@ethersproject/hardware-wallets": "^5.0.14",
+    "ethers": "^5.5.0",
     "hardhat": "^2.6.8"
   },
   "dependencies": {
-    "@ethersproject/abi": "^5.4.0",
-    "@ethersproject/abstract-signer": "^5.4.1",
-    "@ethersproject/address": "^5.4.0",
-    "@ethersproject/bignumber": "^5.4.1",
-    "@ethersproject/bytes": "^5.4.0",
-    "@ethersproject/constants": "^5.4.0",
-    "@ethersproject/contracts": "^5.4.1",
-    "@ethersproject/providers": "^5.4.4",
-    "@ethersproject/solidity": "^5.4.0",
-    "@ethersproject/transactions": "^5.4.0",
-    "@ethersproject/wallet": "^5.4.0",
     "@types/qs": "^6.9.7",
     "axios": "^0.21.1",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.2",
     "debug": "^4.3.2",
     "enquirer": "^2.3.6",
-    "ethers": "^5.5.4",
     "form-data": "^4.0.0",
     "fs-extra": "^10.0.0",
     "match-all": "^1.2.6",
     "murmur-128": "^0.2.1",
     "qs": "^6.9.4",
-    "zksync-web3": "^0.3.3"
+    "zksync-web3": "^0.3.4"
   },
   "scripts": {
     "prepare": "node ./.setup.js",

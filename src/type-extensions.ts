@@ -64,6 +64,7 @@ declare module 'hardhat/types/config' {
     deploy?: string | string[];
     companionNetworks?: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: {feeToken?: string};
   }
 
   interface HttpNetworkUserConfig {
@@ -73,6 +74,7 @@ declare module 'hardhat/types/config' {
     deploy?: string | string[];
     companionNetworks?: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: {feeToken?: string};
   }
 
   interface ProjectPathsUserConfig {
@@ -88,6 +90,7 @@ declare module 'hardhat/types/config' {
     deploy?: string[];
     companionNetworks: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: {feeToken?: string};
   }
 
   interface HttpNetworkConfig {
@@ -97,6 +100,7 @@ declare module 'hardhat/types/config' {
     deploy?: string[];
     companionNetworks: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: {feeToken?: string};
   }
 
   interface ProjectPathsConfig {
@@ -134,5 +138,6 @@ declare module 'hardhat/types/runtime' {
     deploy: string[];
     companionNetworks: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: {feeToken?: string};
   }
 }

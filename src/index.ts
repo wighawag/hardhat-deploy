@@ -35,6 +35,7 @@ import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
 import {store} from './globalStore';
 import {getDeployPaths, getNetworkName} from './utils';
+import * as zk from 'zksync-web3';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
@@ -184,6 +185,7 @@ function createNetworkFromConfig(
     config,
     live: config.live,
     saveDeployments: config.saveDeployments,
+    zksync: config.zksync,
     tags,
     deploy: config.deploy || env.config.paths.deploy,
     companionNetworks: {},
@@ -216,6 +218,11 @@ function networkFromConfig(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       network.verify = {etherscan: (network.config as any).etherscan};
     }
+  }
+
+  if (network.config.zksync !== undefined) {
+    network.config.zksync.feeToken ??= zk.utils.ETH_ADDRESS;
+    network.zksync = network.config.zksync;
   }
 
   // associate tags to current network as object

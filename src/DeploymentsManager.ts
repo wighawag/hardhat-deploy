@@ -14,8 +14,6 @@ import {PartialExtension} from './internal/types';
 import fs from 'fs-extra';
 import path from 'path';
 
-import * as zk from 'zksync-web3';
-
 import {BigNumber} from '@ethersproject/bignumber';
 
 import debug from 'debug';
@@ -33,6 +31,7 @@ import {
   getDeployPaths,
 } from './utils';
 import {addHelpers, waitForTx} from './helpers';
+import {TransactionResponse} from '@ethersproject/providers';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {store} from './globalStore';
 
@@ -500,11 +499,11 @@ export class DeploymentsManager {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public async onPendingTx(
-    tx: zk.types.TransactionResponse,
+    tx: TransactionResponse,
     name?: string,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     deployment?: any
-  ): Promise<zk.types.TransactionResponse> {
+  ): Promise<TransactionResponse> {
     if (
       this.db.writeDeploymentsToFiles &&
       this.network.saveDeployments &&
