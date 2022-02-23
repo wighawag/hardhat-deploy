@@ -814,8 +814,8 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
   .setAction(async (args, hre) => {
     const etherscanApiKey =
       args.apiKey ||
-      process.env.ETHERSCAN_API_KEY ||
       hre.network.verify?.etherscan?.apiKey ||
+      process.env.ETHERSCAN_API_KEY ||
       hre.config.verify?.etherscan?.apiKey;
     if (!etherscanApiKey) {
       throw new Error(
