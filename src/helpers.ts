@@ -1708,14 +1708,16 @@ Note that in this case, the contract deployment will not behave the same if depl
     name: string,
     options: DiamondOptions
   ): Promise<DeployResult> {
+    let proxy: Deployment | undefined;
+    const proxyName = name + '_DiamondProxy';
     const oldDeployment = await getDeploymentOrNUll(name);
-    if (
-      oldDeployment &&
-      oldDeployment.deployedBytecode === oldDiamonBase.deployedBytecode
-    ) {
+    if (oldDeployment) {
+      proxy = await getDeployment(proxyName);
+    }
+    if (proxy && proxy.deployedBytecode === oldDiamonBase.deployedBytecode) {
       return _old_deployViaDiamondProxy(name, options);
     }
-    let proxy: Deployment | undefined;
+
     const deployResult = _checkUpgradeIndex(
       oldDeployment,
       options.upgradeIndex
@@ -1723,8 +1725,6 @@ Note that in this case, the contract deployment will not behave the same if depl
     if (deployResult) {
       return deployResult;
     }
-
-    const proxyName = name + '_DiamondProxy';
 
     let diamondArtifact: ExtendedArtifact = diamondBase;
     if (options.diamondContract) {
@@ -1741,8 +1741,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     const newSelectors: string[] = [];
     const facetSnapshot: Facet[] = [];
     let oldFacets: Facet[] = [];
-    if (oldDeployment) {
-      proxy = await getDeployment(proxyName);
+    if (proxy) {
       const diamondProxy = new Contract(proxy.address, proxy.abi, provider);
       oldFacets = await diamondProxy.facets();
     }
@@ -3033,7 +3032,7 @@ data: ${data}
     options: DiamondOptions
   ): Promise<DeployResult> {
     if (options.log) {
-      log(`old diamond...`);
+      log(`handling old diamond ${name} ...`);
     }
     const oldDeployment = await getDeploymentOrNUll(name);
     let proxy: Deployment | undefined;
