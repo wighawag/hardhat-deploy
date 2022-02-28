@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.0-next.3
+
+### Patch Changes
+
+- support old diamond + fix Loupe typo
+
 ## 0.11.0-next.2
 
 ### Patch Changes
