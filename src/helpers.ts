@@ -48,6 +48,7 @@ import DefaultProxyAdmin from '../extendedArtifacts/ProxyAdmin.json';
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
+import oldDiamonBase from './old_diamondbase.json';
 import diamondERC165Init from '../extendedArtifacts/DiamondERC165Init.json';
 import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
 import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
@@ -1708,6 +1709,12 @@ Note that in this case, the contract deployment will not behave the same if depl
     options: DiamondOptions
   ): Promise<DeployResult> {
     const oldDeployment = await getDeploymentOrNUll(name);
+    if (
+      oldDeployment &&
+      oldDeployment.deployedBytecode === oldDiamonBase.deployedByecode
+    ) {
+      return _old_deployViaDiamondProxy(name, options);
+    }
     let proxy: Deployment | undefined;
     const deployResult = _checkUpgradeIndex(
       oldDeployment,
@@ -3020,6 +3027,328 @@ data: ${data}
     return deploy(name, options);
   };
   // ////////////////////////////////////////////////////////////////////
+
+  async function _old_deployViaDiamondProxy(
+    name: string,
+    options: DiamondOptions
+  ): Promise<DeployResult> {
+    if (options.log) {
+      log(`old diamond...`);
+    }
+    const oldDeployment = await getDeploymentOrNUll(name);
+    let proxy: Deployment | undefined;
+    const deployResult = _checkUpgradeIndex(
+      oldDeployment,
+      options.upgradeIndex
+    );
+    if (deployResult) {
+      return deployResult;
+    }
+
+    if (options.deterministicSalt) {
+      throw new Error(`old diamonds do not support determinsitc deployment`);
+      // need to compute the resulting address accurately
+    }
+
+    const proxyName = name + '_DiamondProxy';
+    const {address: owner, hardwareWallet} = getDiamondOwner(options);
+    const newSelectors: string[] = [];
+    const facetSnapshot: Facet[] = [];
+    const oldFacets: Facet[] = [];
+    const selectorToNotTouch: {[selector: string]: boolean} = {};
+    for (const selector of [
+      '0xcdffacc6',
+      '0x52ef6b2c',
+      '0xadfca15e',
+      '0x7a0ed627',
+      '0x01ffc9a7',
+      '0x1f931c1c',
+      '0xf2fde38b',
+      '0x8da5cb5b',
+    ]) {
+      selectorToNotTouch[selector] = true;
+    }
+    if (oldDeployment) {
+      proxy = await getDeployment(proxyName);
+      const diamondProxy = new Contract(proxy.address, proxy.abi, provider);
+
+      const currentFacets: Facet[] = await diamondProxy.facets();
+      for (const currentFacet of currentFacets) {
+        oldFacets.push(currentFacet);
+
+        // ensure DiamondLoupeFacet, OwnershipFacet and DiamondCutFacet are kept // TODO options to delete cut them out?
+        if (
+          findAll(
+            [
+              '0xcdffacc6',
+              '0x52ef6b2c',
+              '0xadfca15e',
+              '0x7a0ed627',
+              '0x01ffc9a7',
+            ],
+            currentFacet.functionSelectors
+          ) || // Loupe
+          currentFacet.functionSelectors[0] === '0x1f931c1c' || // DiamoncCut
+          findAll(['0xf2fde38b', '0x8da5cb5b'], currentFacet.functionSelectors) // ERC173
+        ) {
+          facetSnapshot.push(currentFacet);
+          newSelectors.push(...currentFacet.functionSelectors);
+        }
+      }
+    } else {
+      throw new Error(`old diamond deployments are now disabled`);
+    }
+    // console.log({ oldFacets: JSON.stringify(oldFacets, null, "  ") });
+
+    let changesDetected = !oldDeployment;
+    let abi: any[] = oldDiamonBase.abi.concat([]);
+    const facetCuts: FacetCut[] = [];
+    for (const facet of options.facets) {
+      let facetName;
+      let artifact;
+      let linkedData = options.linkedData;
+      let libraries = options.libraries;
+      let facetArgs = options.facetsArgs;
+      let argsSpecific = false;
+      if (typeof facet === 'string') {
+        artifact = await partialExtension.getExtendedArtifact(facet);
+        facetName = facet;
+      } else {
+        if (facet.linkedData) {
+          linkedData = facet.linkedData;
+        }
+        if (facet.libraries) {
+          libraries = facet.libraries;
+        }
+        if (facet.args) {
+          facetArgs = facet.args;
+          argsSpecific = true;
+        }
+        if (facet.contract) {
+          if (typeof facet.contract === 'string') {
+            artifact = await partialExtension.getExtendedArtifact(
+              facet.contract
+            );
+          } else {
+            artifact = facet.contract;
+          }
+        } else {
+          if (!facet.name) {
+            throw new Error(
+              `no name , not contract is specified for facet, cannot proceed`
+            );
+          }
+          artifact = await partialExtension.getExtendedArtifact(facet.name);
+        }
+
+        facetName = facet.name;
+        if (!facetName) {
+          if (typeof facet.contract === 'string') {
+            facetName = name + '_facet_' + facet.contract;
+          } else {
+            throw new Error(`facet has no name, please specify one`);
+          }
+        }
+      }
+      const constructor = artifact.abi.find(
+        (fragment: {type: string; inputs: any[]}) =>
+          fragment.type === 'constructor'
+      );
+      if ((!argsSpecific && !constructor) || constructor.inputs.length === 0) {
+        // reset args for case where facet do not expect any and there was no specific args set on it
+        facetArgs = [];
+      }
+      abi = mergeABIs([abi, artifact.abi], {
+        check: true,
+        skipSupportsInterface: false,
+      });
+      // TODO allow facet to be named so multiple version could coexist
+      const implementation = await _deployOne(facetName, {
+        contract: artifact,
+        from: options.from,
+        autoMine: options.autoMine,
+        estimateGasExtra: options.estimateGasExtra,
+        estimatedGasLimit: options.estimatedGasLimit,
+        gasPrice: options.gasPrice,
+        maxFeePerGas: options.maxFeePerGas,
+        maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+        log: options.log,
+        // deterministicDeployment: options.deterministicDeployment, // todo ?
+        libraries,
+        linkedData,
+        args: facetArgs,
+      });
+      if (implementation.newlyDeployed) {
+        // console.log(`facet ${facet} deployed at ${implementation.address}`);
+        const newFacet = {
+          facetAddress: implementation.address,
+          functionSelectors: sigsFromABI(implementation.abi),
+        };
+        facetSnapshot.push(newFacet);
+        newSelectors.push(...newFacet.functionSelectors);
+      } else {
+        const oldImpl = await getDeployment(facetName);
+        const newFacet = {
+          facetAddress: oldImpl.address,
+          functionSelectors: sigsFromABI(oldImpl.abi),
+        };
+        facetSnapshot.push(newFacet);
+        newSelectors.push(...newFacet.functionSelectors);
+      }
+    }
+
+    const oldSelectors: string[] = [];
+    const oldSelectorsFacetAddress: {[selector: string]: string} = {};
+    for (const oldFacet of oldFacets) {
+      for (const selector of oldFacet.functionSelectors) {
+        oldSelectors.push(selector);
+        oldSelectorsFacetAddress[selector] = oldFacet.facetAddress;
+      }
+    }
+
+    for (const newFacet of facetSnapshot) {
+      const selectorsToAdd: string[] = [];
+      const selectorsToReplace: string[] = [];
+
+      for (const selector of newFacet.functionSelectors) {
+        if (oldSelectors.indexOf(selector) > 0) {
+          if (
+            oldSelectorsFacetAddress[selector].toLowerCase() !==
+              newFacet.facetAddress.toLowerCase() &&
+            !selectorToNotTouch[selector]
+          ) {
+            selectorsToReplace.push(selector);
+          }
+        } else {
+          if (!selectorToNotTouch[selector]) {
+            selectorsToAdd.push(selector);
+          }
+        }
+      }
+
+      if (selectorsToReplace.length > 0) {
+        changesDetected = true;
+        facetCuts.push({
+          facetAddress: newFacet.facetAddress,
+          functionSelectors: selectorsToReplace,
+          action: FacetCutAction.Replace,
+        });
+      }
+
+      if (selectorsToAdd.length > 0) {
+        changesDetected = true;
+        facetCuts.push({
+          facetAddress: newFacet.facetAddress,
+          functionSelectors: selectorsToAdd,
+          action: FacetCutAction.Add,
+        });
+      }
+    }
+
+    const selectorsToDelete: string[] = [];
+    for (const selector of oldSelectors) {
+      if (newSelectors.indexOf(selector) === -1) {
+        selectorsToDelete.push(selector);
+      }
+    }
+
+    if (selectorsToDelete.length > 0) {
+      changesDetected = true;
+      facetCuts.unshift({
+        facetAddress: '0x0000000000000000000000000000000000000000',
+        functionSelectors: selectorsToDelete,
+        action: FacetCutAction.Remove,
+      });
+    }
+
+    let data = '0x';
+    if (options.execute) {
+      const diamondContract = new Contract(
+        '0x0000000000000000000000000000000000000001',
+        abi
+      );
+      const txData = await diamondContract.populateTransaction[
+        options.execute.methodName
+      ](...options.execute.args);
+      data = txData.data || '0x';
+    }
+
+    if (changesDetected) {
+      if (!proxy) {
+        throw new Error(
+          `no proxy found: old diamond deployments are now disabled`
+        );
+      } else {
+        const currentOwner = await read(proxyName, 'owner');
+        if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
+          throw new Error(
+            'To change owner, you need to call `transferOwnership`'
+          );
+        }
+        if (currentOwner === AddressZero) {
+          throw new Error(
+            'The Diamond belongs to no-one. It cannot be upgraded anymore'
+          );
+        }
+
+        const executeReceipt = await execute(
+          name,
+          {...options, from: currentOwner},
+          'diamondCut',
+          facetCuts,
+          data === '0x'
+            ? '0x0000000000000000000000000000000000000000'
+            : proxy.address,
+          data
+        );
+        if (!executeReceipt) {
+          throw new Error('failed to execute');
+        }
+
+        const diamondDeployment: DeploymentSubmission = {
+          ...oldDeployment,
+          linkedData: options.linkedData,
+          address: proxy.address,
+          abi,
+          facets: facetSnapshot,
+          diamondCut: facetCuts,
+          execute: options.execute, // TODO add receipt + tx hash
+        };
+
+        // TODO reenable history with options
+        if (oldDeployment.history) {
+          diamondDeployment.history = diamondDeployment.history
+            ? diamondDeployment.history.concat([oldDeployment])
+            : [oldDeployment];
+        }
+
+        await saveDeployment(name, diamondDeployment);
+      }
+
+      const deployment = await partialExtension.get(name);
+      return {
+        ...deployment,
+        newlyDeployed: true,
+      };
+    } else {
+      const oldDeployment = await partialExtension.get(name);
+
+      const proxiedDeployment: DeploymentSubmission = {
+        ...oldDeployment,
+        facets: facetSnapshot,
+        diamondCut: facetCuts,
+        abi,
+        execute: options.execute,
+      };
+      await saveDeployment(name, proxiedDeployment);
+
+      const deployment = await partialExtension.get(name);
+      return {
+        ...deployment,
+        newlyDeployed: false,
+      };
+    }
+  }
 
   return {extension, utils};
 }
