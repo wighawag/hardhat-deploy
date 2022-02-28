@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.0-next.4
+
+### Patch Changes
+
+- fix old diamond detection
+
 ## 0.11.0-next.3
 
 ### Patch Changes
