@@ -1711,7 +1711,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     const oldDeployment = await getDeploymentOrNUll(name);
     if (
       oldDeployment &&
-      oldDeployment.deployedBytecode === oldDiamonBase.deployedByecode
+      oldDeployment.deployedBytecode === oldDiamonBase.deployedBytecode
     ) {
       return _old_deployViaDiamondProxy(name, options);
     }
