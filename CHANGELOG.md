@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.0-next.5
+
+### Patch Changes
+
+- diamond : do not save diamondCut + do not resave if no changes
+
 ## 0.11.0-next.4
 
 ### Patch Changes
