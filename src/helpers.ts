@@ -2250,7 +2250,6 @@ Note that in this case, the contract deployment will not behave the same if depl
             ...proxy,
             linkedData: options.linkedData,
             facets: facetSnapshot,
-            diamondCut: facetCuts,
             abi,
           });
           await _deployViaDiamondProxy(name, options); // this would not recurse again as the name and proxyName are now saved
@@ -2277,7 +2276,6 @@ Note that in this case, the contract deployment will not behave the same if depl
             ...proxy,
             linkedData: options.linkedData,
             facets: facetSnapshot,
-            diamondCut: facetCuts,
             abi,
             execute: options.execute,
           });
@@ -2318,7 +2316,6 @@ Note that in this case, the contract deployment will not behave the same if depl
           address: proxy.address,
           abi,
           facets: facetSnapshot,
-          diamondCut: facetCuts,
           execute: options.execute, // TODO add receipt + tx hash
         };
 
@@ -2343,7 +2340,6 @@ Note that in this case, the contract deployment will not behave the same if depl
       const proxiedDeployment: DeploymentSubmission = {
         ...oldDeployment,
         facets: facetSnapshot,
-        diamondCut: facetCuts,
         abi,
         execute: options.execute,
       };
@@ -3310,7 +3306,6 @@ data: ${data}
           address: proxy.address,
           abi,
           facets: facetSnapshot,
-          diamondCut: facetCuts,
           execute: options.execute, // TODO add receipt + tx hash
         };
 
@@ -3330,17 +3325,6 @@ data: ${data}
         newlyDeployed: true,
       };
     } else {
-      const oldDeployment = await partialExtension.get(name);
-
-      const proxiedDeployment: DeploymentSubmission = {
-        ...oldDeployment,
-        facets: facetSnapshot,
-        diamondCut: facetCuts,
-        abi,
-        execute: options.execute,
-      };
-      await saveDeployment(name, proxiedDeployment);
-
       const deployment = await partialExtension.get(name);
       return {
         ...deployment,

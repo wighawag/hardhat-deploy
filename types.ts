@@ -341,7 +341,6 @@ export interface DeploymentSubmission {
   userdoc?: any;
   devdoc?: any;
   methodIdentifiers?: any;
-  diamondCut?: FacetCut[];
   facets?: Facet[];
   execute?: {
     methodName: string;
@@ -374,7 +373,6 @@ export interface Deployment {
   userdoc?: any;
   devdoc?: any;
   methodIdentifiers?: any;
-  diamondCut?: FacetCut[];
   facets?: Facet[];
   storageLayout?: any;
   gasEstimates?: any;

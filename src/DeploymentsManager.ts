@@ -873,7 +873,6 @@ export class DeploymentsManager {
         deployedBytecode: deployment.deployedBytecode,
         libraries: deployment.libraries,
         facets: deployment.facets,
-        diamondCut: deployment.diamondCut,
         execute: deployment.execute,
         history: deployment.history,
         implementation: deployment.implementation,
