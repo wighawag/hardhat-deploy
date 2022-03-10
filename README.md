@@ -48,6 +48,9 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
 - [Exporting Deployments](#exporting-deployments)
 - [Deploying and Upgrading Proxies](#deploying-and-upgrading-proxies)
 - [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535)
+  - [deployment / upgrade](#deployment--upgrade)
+  - [onUpgrade calls](#onupgrade-calls)
+  - [more...](#more)
 - [Testing Deployed Contracts](#testing-deployed-contracts)
   - [Creating Fixtures](#creating-fixtures)
 - [More Information On Hardhat Tasks](#more-information-on-hardhat-tasks)
@@ -1203,6 +1206,8 @@ it matches:
 
 The deployments field also expose the diamond field: `hre.deployments.diamond` that let you deploy [Diamonds](https://eips.ethereum.org/EIPS/eip-2535) in an easy way.
 
+### deployment / upgrade
+
 Instead of specifying the facets to cut out or cut in, which the diamond contract expects, you specify the facets you want to end up having on the deployed contract.
 
 This declarative approach allow you to focus on what you want instead of how to do it.
@@ -1243,7 +1248,10 @@ Note that if the code for Facet2 and Facet3 changes, they will also be redeploye
 
 Note that the diamond has 3 facet added by default. These facets are used for ownership, diamondCut and diamond loupe.
 
-The implementation is the [reference implementation by Nick Mudge](https://github.com/mudgen/diamond-3)
+The implementation is a sligthly modified version of the [reference implementation by Nick Mudge](https://github.com/mudgen/diamond-3).
+THe only difference is the custom constructor that allow multiple initialization, used to allow the default ERC165 facet to be initialised along your custom initialization function.
+
+### onUpgrade calls
 
 Like normal proxies you can also execute a function at the time of an upgrade.
 
@@ -1260,6 +1268,8 @@ diamond.deploy('ADiamondContract', {
   },
 });
 ```
+
+### more...
 
 There are more options, to be described later...
 
