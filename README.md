@@ -1045,7 +1045,6 @@ As you see the second format include the previous. While in most case you'll nee
 
 Furthermore as hardhat support multiple network configuration for the same network (rinkeby, mainnet...), the export-all format will contains each of them grouped by their chainId.
 
-
 Note: from v0.10.4 the old multi-export down is no more:
 
 ```
@@ -1206,6 +1205,8 @@ The deployments field also expose the diamond field: `hre.deployments.diamond` t
 
 Instead of specifying the facets to cut out or cut in, which the diamond contract expects, you specify the facets you want to end up having on the deployed contract.
 
+This declarative approach allow you to focus on what you want instead of how to do it.
+
 `diamond.deploy` expect the facet as names. The names represent contract to be deployed as facet. In future version you ll be able to specify deployed contract or artifact object as facet.
 
 To deploy a contract with 3 facet you can do as follow :
@@ -1240,8 +1241,7 @@ Then the NewFacet will be deployed automatically if needed and then the diamondC
 
 Note that if the code for Facet2 and Facet3 changes, they will also be redeployed automatically and the diamondCuts will replace the existing facets with these new ones.
 
-Note that The Diamond contract's code is part of `hardhat-deploy` and contains 3 built-in facet that can be removed manually if desired.
-These facets are used for ownership, diamondCut and diamond loupe.
+Note that the diamond has 3 facet added by default. These facets are used for ownership, diamondCut and diamond loupe.
 
 The implementation is the [reference implementation by Nick Mudge](https://github.com/mudgen/diamond-3)
 
@@ -1261,11 +1261,7 @@ diamond.deploy('ADiamondContract', {
 });
 ```
 
-Since the diamond standard has no builtin mechanism to make the deployment of Diamond with function execution, the Diamond when deployed is actually deployed through a special contract, the `Diamantaire` (see code [here](solc_0.7/diamond/Diamantaire.sol)) that act as factory to build Diamond. It uses deterministic deployment for that so, it is transparently managed by `hardhat-deploy`. It also embed the implementation of the builtin facet, removing the need to have different instances of each live.
-
-<!-- The Diamantaire also support the deterministic deployment of Diamonds.
-An extra field can be passed to the Diamond deployment options : `deterministicSalt`. It has to be a non-zero 32bytes string (in hex format).
-Note that if you want to deploy 2 diamonds with same owner, you'll need 2 different deterministicSalt for them to be 2 separate contracts. -->
+There are more options, to be described later...
 
 ## Testing Deployed Contracts
 
