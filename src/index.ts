@@ -844,6 +844,12 @@ task(
     undefined,
     types.string
   )
+  .addOptionalParam(
+    'contractName',
+    'specific contract name to verify',
+    undefined,
+    types.string
+  )
   .addFlag(
     'writeFailingMetadata',
     'write to disk failing metadata for easy debugging'

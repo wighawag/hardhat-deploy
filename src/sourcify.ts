@@ -38,6 +38,7 @@ export async function submitSourcesToSourcify(
   hre: HardhatRuntimeEnvironment,
   config?: {
     endpoint?: string;
+    contractName?: string;
     writeFailingMetadata?: boolean;
   }
 ): Promise<void> {
@@ -109,7 +110,11 @@ export async function submitSourcesToSourcify(
     }
   }
 
-  for (const name of Object.keys(all)) {
-    await submit(name);
+  if (config.contractName) {
+    await submit(config.contractName);
+  } else {
+    for (const name of Object.keys(all)) {
+      await submit(name);
+    }
   }
 }
