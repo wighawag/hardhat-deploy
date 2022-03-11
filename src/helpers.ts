@@ -566,7 +566,7 @@ export function addHelpers(
       const customData = {
         customData: {
           factoryDeps,
-          feeToken: network.zksync.feeToken
+          feeToken: zk.utils.ETH_ADDRESS
         }
       };
       overrides = {
@@ -947,7 +947,7 @@ export function addHelpers(
           const newTransaction = factory.getDeployTransaction(...argArray, {
             customData: {
               factoryDeps,
-              feeToken: network.zksync.feeToken
+              feeToken: zk.utils.ETH_ADDRESS
             }
           });
           const newData = newTransaction.data?.toString();

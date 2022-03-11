@@ -221,7 +221,6 @@ function networkFromConfig(
   }
 
   if (network.config.zksync !== undefined) {
-    network.config.zksync.feeToken ??= zk.utils.ETH_ADDRESS;
     network.zksync = network.config.zksync;
   }
 
