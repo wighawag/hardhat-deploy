@@ -35,7 +35,6 @@ import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
 import {store} from './globalStore';
 import {getDeployPaths, getNetworkName} from './utils';
-import * as zk from 'zksync-web3';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
