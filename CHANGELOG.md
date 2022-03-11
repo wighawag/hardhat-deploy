@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.10.6
+
+### Patch Changes
+
+- add --contract-name to sourcify to specify only one contract to be verified
+
 ## 0.10.5
 
 ### Patch Changes
