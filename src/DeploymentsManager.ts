@@ -1477,6 +1477,28 @@ export class DeploymentsManager {
     return this.getDeploymentNetworkName();
   }
 
+  private async impersonateAccounts(unknownAccounts: string[]) {
+    if (
+      !this.impersonateUnknownAccounts ||
+      process.env.HARDHAT_DEPLOY_NO_IMPERSONATION
+    ) {
+      return;
+    }
+
+    const isHardhat = this.network.name === 'hardhat';
+    if (isHardhat || this.network.autoImpersonate) {
+      for (const address of unknownAccounts) {
+        if (isHardhat) {
+          await this.network.provider.request({
+            method: 'hardhat_impersonateAccount',
+            params: [address],
+          });
+        }
+        this.impersonatedAccounts.push(address);
+      }
+    }
+  }
+
   public async setupAccounts(): Promise<{
     namedAccounts: {[name: string]: string};
     unnamedAccounts: string[];
@@ -1495,21 +1517,9 @@ export class DeploymentsManager {
         accounts,
         chainId
       ); // TODO pass in network name
-      if (
-        (this.network.name === 'hardhat' || this.network.name === 'tenderly') &&
-        this.impersonateUnknownAccounts &&
-        !process.env.HARDHAT_DEPLOY_NO_IMPERSONATION
-      ) {
-        for (const address of unknownAccounts) {
-          if (this.network.name === 'hardhat') {
-            await this.network.provider.request({
-              method: 'hardhat_impersonateAccount',
-              params: [address],
-            });
-          }
-          this.impersonatedAccounts.push(address);
-        }
-      }
+
+      await this.impersonateAccounts(unknownAccounts);
+
       this.db.namedAccounts = namedAccounts;
       this.db.unnamedAccounts = unnamedAccounts;
       this.db.accountsLoaded = true;
