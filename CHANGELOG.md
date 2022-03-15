@@ -1,5 +1,19 @@
 # hardhat-deploy
 
+## 0.11.0
+
+### Minor Changes
+
+- 54ad195: revamp diamond support
+
+### Patch Changes
+
+- 3216a31: fix old diamond detection
+- e8737d5: fix
+- e40546a: fix
+- 0810042: diamond : do not save diamondCut + do not resave if no changes
+- 5602a44: support old diamond + fix Loupe typo
+
 ## 0.11.0-next.5
 
 ### Patch Changes
