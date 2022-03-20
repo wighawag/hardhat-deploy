@@ -249,9 +249,17 @@ function networkFromConfig(
     network.saveDeployments = network.config.saveDeployments;
   }
 
-  if (network.config.autoImpersonate !== undefined) {
-    network.autoImpersonate = network.config.autoImpersonate;
+  let autoImpersonate = false;
+
+  if (networkName === 'hardhat') {
+    autoImpersonate = true;
   }
+
+  if (network.config.autoImpersonate !== undefined) {
+    autoImpersonate = network.config.autoImpersonate;
+  }
+
+  network.autoImpersonate = autoImpersonate;
 }
 
 log('start...');

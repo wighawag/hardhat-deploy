@@ -1485,10 +1485,9 @@ export class DeploymentsManager {
       return;
     }
 
-    const isHardhat = this.network.name === 'hardhat';
-    if (isHardhat || this.network.autoImpersonate) {
+    if (this.network.autoImpersonate) {
       for (const address of unknownAccounts) {
-        if (isHardhat) {
+        if (this.network.name === 'hardhat') {
           await this.network.provider.request({
             method: 'hardhat_impersonateAccount',
             params: [address],
