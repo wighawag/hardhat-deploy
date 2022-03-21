@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.1
+
+### Patch Changes
+
+- do not resave, increasing unecessarely numDeployments for diamond
+
 ## 0.11.0
 
 ### Minor Changes

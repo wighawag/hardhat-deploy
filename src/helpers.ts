@@ -2335,19 +2335,19 @@ Note that in this case, the contract deployment will not behave the same if depl
         newlyDeployed: true,
       };
     } else {
-      const oldDeployment = await partialExtension.get(name);
+      // const oldDeployment = await partialExtension.get(name);
 
-      const proxiedDeployment: DeploymentSubmission = {
-        ...oldDeployment,
-        facets: facetSnapshot,
-        abi,
-        execute: options.execute,
-      };
-      // TODO ?
-      // proxiedDeployment.history = proxiedDeployment.history
-      //   ? proxiedDeployment.history.concat([oldDeployment])
-      //   : [oldDeployment];
-      await saveDeployment(name, proxiedDeployment);
+      // const proxiedDeployment: DeploymentSubmission = {
+      //   ...oldDeployment,
+      //   facets: facetSnapshot,
+      //   abi,
+      //   execute: options.execute,
+      // };
+      // // TODO ?
+      // // proxiedDeployment.history = proxiedDeployment.history
+      // //   ? proxiedDeployment.history.concat([oldDeployment])
+      // //   : [oldDeployment];
+      // await saveDeployment(name, proxiedDeployment);
 
       const deployment = await partialExtension.get(name);
       return {
