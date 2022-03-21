@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.2
+
+### Patch Changes
+
+- 8bbfbae: add --contract-name to etherscan-verify
+
 ## 0.11.1
 
 ### Patch Changes
