@@ -129,6 +129,7 @@ export async function submitSources(
   hre: HardhatRuntimeEnvironment,
   solcInputsPath: string,
   config?: {
+    contractName?: string;
     etherscanApiKey?: string;
     license?: string;
     fallbackOnSolcInput?: boolean;
@@ -516,12 +517,16 @@ export async function submitSources(
     }
   }
 
-  for (const name of Object.keys(all)) {
-    await submit(name);
+  if (config.contractName) {
+    await submit(config.contractName);
+  } else {
+    for (const name of Object.keys(all)) {
+      await submit(name);
 
-    if (sleepBetween) {
-      // sleep between each verification so we don't exceed the API rate limit
-      await sleep(500);
+      if (sleepBetween) {
+        // sleep between each verification so we don't exceed the API rate limit
+        await sleep(500);
+      }
     }
   }
 }
