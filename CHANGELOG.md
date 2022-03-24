@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.3-experimental.0
+
+### Patch Changes
+
+- networkName != deploymentNetworkName
+
 ## 0.11.2
 
 ### Patch Changes

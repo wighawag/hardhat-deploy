@@ -1,0 +1,10 @@
+{
+  "mode": "pre",
+  "tag": "experimental",
+  "initialVersions": {
+    "hardhat-deploy": "0.11.2"
+  },
+  "changesets": [
+    "moody-trees-run"
+  ]
+}

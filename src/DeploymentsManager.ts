@@ -637,7 +637,9 @@ export class DeploymentsManager {
     this.db.migrations = migrations;
     // console.log({ migrations: this.db.migrations });
 
-    const networkName = this.getDeploymentNetworkName();
+    // TODO check ?
+    // const deploymentNetworkName = this.getDeploymentNetworkName();
+    const networkName = this.getNetworkName();
 
     addDeployments(
       this.db,
