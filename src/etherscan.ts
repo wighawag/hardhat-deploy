@@ -196,6 +196,12 @@ export async function submitSources(
       case '256':
         host = 'https://api-testnet.hecoinfo.com';
         break;
+      case '588':
+        host = 'https://stardust-explorer.metis.io';
+        break;
+      case '1088':
+        host = 'https://andromeda-explorer.metis.io';
+        break;
       case '1285':
         host = 'https://api-moonriver.moonscan.io';
         break;
