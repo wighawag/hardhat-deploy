@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.3-experimental.1
+
+### Patch Changes
+
+- .chainId in fork
+
 ## 0.11.3-experimental.0
 
 ### Patch Changes

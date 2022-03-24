@@ -752,6 +752,12 @@ subtask(TASK_NODE_GET_PROVIDER).setAction(
         path.join(hre.config.paths.deployments, networkName),
         path.join(hre.config.paths.deployments, 'localhost')
       );
+
+      // we use chainId from localhost
+      fs.writeFileSync(
+        path.join(hre.config.paths.deployments, 'localhost', '.chainId'),
+        '31337'
+      );
     }
 
     nodeTaskArgs.log = !nodeTaskArgs.silent;
