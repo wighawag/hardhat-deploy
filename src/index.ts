@@ -748,7 +748,7 @@ subtask(TASK_NODE_GET_PROVIDER).setAction(
     if (networkName !== hre.network.name) {
       console.log(`copying ${networkName}'s deployment to localhost...`);
       // copy existing deployment from specified netwotk into localhost deployment folder
-      fs.copy(
+      fs.copySync(
         path.join(hre.config.paths.deployments, networkName),
         path.join(hre.config.paths.deployments, 'localhost')
       );

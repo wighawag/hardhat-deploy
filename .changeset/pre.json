@@ -5,6 +5,7 @@
     "hardhat-deploy": "0.11.2"
   },
   "changesets": [
+    "mighty-planets-flow",
     "moody-trees-run",
     "olive-zebras-walk"
   ]

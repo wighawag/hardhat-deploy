@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.3-experimental.2
+
+### Patch Changes
+
+- fix sync, also affect master
+
 ## 0.11.3-experimental.1
 
 ### Patch Changes
