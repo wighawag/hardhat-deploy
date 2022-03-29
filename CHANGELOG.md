@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.4
+
+### Patch Changes
+
+- add metis block explorer
+
 ## 0.11.3
 
 ### Patch Changes
