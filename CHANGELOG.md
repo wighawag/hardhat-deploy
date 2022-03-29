@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.3
+
+### Patch Changes
+
+- fix proxyAdmin
+
 ## 0.11.2
 
 ### Patch Changes
