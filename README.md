@@ -1130,7 +1130,7 @@ Note that for the second invokation, this deployment will not be executed from t
 
 Now, it is likely you do not want to locally handle the private key / mnemonic of the account that manage the proxy or it could even be that the `greeterOwner` in question is a multi sig. As such that second invocation will throw an error as it cannot find a local signer for it.
 
-The error will output the necessary information to upgrade the contract but `hardhat-deploy` comes also with a utility function for such case: `deployments.catchUnknwonSigner` which will catch the error and output to the console the necessary information while continuing to next step.
+The error will output the necessary information to upgrade the contract but `hardhat-deploy` comes also with a utility function for such case: `deployments.catchUnknownSigner` which will catch the error and output to the console the necessary information while continuing to next step.
 
 Here is the full example :
 
