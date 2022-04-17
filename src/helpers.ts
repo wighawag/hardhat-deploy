@@ -1689,15 +1689,18 @@ Note that in this case, the contract deployment will not behave the same if depl
                 throw error;
               }
             }
-            ethersSigner = new LedgerSigner(provider);
-            hardwareWallet = 'ledger';
 
             // make sure to close an existing connection before every transaction since it's currently not being handled
             // properly by ethers
             if (ledgerSigner) {
               const __eth = await ledgerSigner._eth;
               await __eth.transport.device.close();
+
+              ledgerSigner = undefined;
             }
+
+            ethersSigner = new LedgerSigner(provider);
+            hardwareWallet = 'ledger';
 
             ledgerSigner = ethersSigner;
           } else if (registeredProtocol.startsWith('privatekey')) {
