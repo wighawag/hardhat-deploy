@@ -1693,7 +1693,7 @@ Note that in this case, the contract deployment will not behave the same if depl
             hardwareWallet = 'ledger';
 
             // make sure to close an existing connection before every transaction since it's currently not being handled
-            // properly by ethers.
+            // properly by ethers
             if (ledgerSigner) {
               const __eth = await ledgerSigner._eth;
               await __eth.transport.device.close();
