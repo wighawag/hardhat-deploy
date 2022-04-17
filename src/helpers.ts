@@ -422,7 +422,7 @@ export function addHelpers(
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(options.from);
+    } = await getFrom(options.from);
     const create2DeployerAddress =
       await deploymentManager.getDeterministicDeploymentFactoryAddress();
     const code = await provider.getCode(create2DeployerAddress);
@@ -534,7 +534,7 @@ export function addHelpers(
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(options.from);
+    } = await getFrom(options.from);
 
     const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(
       name,
@@ -771,7 +771,11 @@ export function addHelpers(
       };
     } else {
       const args: any[] = options.args ? [...options.args] : [];
-      const {ethersSigner, unknown, address: from} = getFrom(options.from);
+      const {
+        ethersSigner,
+        unknown,
+        address: from,
+      } = await getFrom(options.from);
 
       const artifactInfo = await getArtifactFromOptions(name, options);
       const {artifact} = artifactInfo;
@@ -833,7 +837,7 @@ export function addHelpers(
     await init();
 
     if (options.deterministicDeployment) {
-      const {ethersSigner} = getFrom(options.from);
+      const {ethersSigner} = await getFrom(options.from);
 
       const artifactInfo = await getArtifactFromOptions(name, options);
       const {artifact} = artifactInfo;
@@ -1186,8 +1190,12 @@ export function addHelpers(
     }
 
     const proxyName = name + '_Proxy';
-    const {address: owner} = getProxyOwner(options);
-    const {address: from} = getFrom(options.from);
+    const {address: owner} = await getProxyOwner(options);
+    const {
+      address: from,
+      ethersSigner,
+      hardwareWallet,
+    } = await getFrom(options.from);
     const implementationArgs = options.args ? [...options.args] : [];
 
     // --- Implementation Deployment ---
@@ -1600,7 +1608,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     }
   }
 
-  function getProxyOwner(options: DeployOptions) {
+  async function getProxyOwner(options: DeployOptions) {
     let address = options.from; // admim default to msg.sender
     if (typeof options.proxy === 'object') {
       address = options.proxy.owner || address;
@@ -1608,17 +1616,17 @@ Note that in this case, the contract deployment will not behave the same if depl
     return getFrom(address);
   }
 
-  function getDiamondOwner(options: DiamondOptions) {
+  async function getDiamondOwner(options: DiamondOptions) {
     let address = options.from; // admim default to msg.sender
     address = options.owner || address;
     return getFrom(address);
   }
 
-  function getOptionalFrom(from?: string): {
+  async function getOptionalFrom(from?: string): Promise<{
     address?: Address;
     ethersSigner?: Signer;
     hardwareWallet?: string;
-  } {
+  }> {
     if (!from) {
       return {
         address: from,
@@ -1629,12 +1637,14 @@ Note that in this case, the contract deployment will not behave the same if depl
     return getFrom(from);
   }
 
-  function getFrom(from: string): {
+  let ledgerSigner: any; // TODO type
+
+  async function getFrom(from: string): Promise<{
     address: Address;
     ethersSigner: Signer;
     hardwareWallet?: string;
     unknown: boolean;
-  } {
+  }> {
     let ethersSigner: Signer | undefined;
     let hardwareWallet: string | undefined = undefined;
     let unknown = false;
@@ -1681,6 +1691,15 @@ Note that in this case, the contract deployment will not behave the same if depl
             }
             ethersSigner = new LedgerSigner(provider);
             hardwareWallet = 'ledger';
+
+            // make sure to close an existing connection before every transaction since it's currently not being handled
+            // properly by ethers.
+            if (ledgerSigner) {
+              const __eth = await ledgerSigner._eth;
+              await __eth.transport.device.close();
+            }
+
+            ledgerSigner = ethersSigner;
           } else if (registeredProtocol.startsWith('privatekey')) {
             ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
           } else if (registeredProtocol.startsWith('gnosis')) {
@@ -1733,7 +1752,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     }
 
     const proxyName = name + '_DiamondProxy';
-    const {address: owner, hardwareWallet} = getDiamondOwner(options);
+    const {address: owner, hardwareWallet} = await getDiamondOwner(options);
     const newSelectors: string[] = [];
     const facetSnapshot: Facet[] = [];
     const oldFacets: Facet[] = [];
@@ -2225,7 +2244,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(tx.from);
+    } = await getFrom(tx.from);
 
     const transactionData = {
       to: tx.to,
@@ -2357,7 +2376,7 @@ data: ${data}
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(options.from);
+    } = await getFrom(options.from);
 
     let tx;
     const deployment = await partialExtension.get(name);
@@ -2479,7 +2498,7 @@ data: ${data}
       args = [];
     }
     let caller: Web3Provider | Signer = provider;
-    const {ethersSigner} = getOptionalFrom(options.from);
+    const {ethersSigner} = await getOptionalFrom(options.from);
     if (ethersSigner) {
       caller = ethersSigner;
     }
@@ -2684,7 +2703,9 @@ data: ${data}
               console.log('waiting for newly broadcasted tx ...');
             } else {
               console.log('resigning the tx...');
-              const {ethersSigner, hardwareWallet} = getOptionalFrom(tx.from);
+              const {ethersSigner, hardwareWallet} = await getOptionalFrom(
+                tx.from
+              );
               if (!ethersSigner) {
                 throw new Error('no signer for ' + tx.from);
               }
@@ -2732,7 +2753,9 @@ data: ${data}
             if (!tx) {
               throw new Error(`cannot resubmit a tx if info not available`);
             }
-            const {ethersSigner, hardwareWallet} = getOptionalFrom(tx.from);
+            const {ethersSigner, hardwareWallet} = await getOptionalFrom(
+              tx.from
+            );
             if (!ethersSigner) {
               throw new Error('no signer for ' + tx.from);
             }
