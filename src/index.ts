@@ -807,6 +807,12 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     undefined,
     types.string
   )
+  .addOptionalParam(
+    'contractName',
+    'specific contract name to verify',
+    undefined,
+    types.string
+  )
   .addFlag(
     'forceLicense',
     'force the use of the license specified by --license option'
@@ -836,6 +842,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     }
     const solcInputsPath = await deploymentsManager.getSolcInputPath();
     await submitSources(hre, solcInputsPath, {
+      contractName: args.contractName,
       etherscanApiKey,
       license: args.license,
       fallbackOnSolcInput: args.solcInput,
