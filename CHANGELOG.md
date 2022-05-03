@@ -86,6 +86,12 @@
 
 - do nor override original receipt for diamond
 
+## 0.10.5-zksync.0
+
+### Patch Changes
+
+- zksync support
+
 ## 0.10.4
 
 ### Patch Changes
