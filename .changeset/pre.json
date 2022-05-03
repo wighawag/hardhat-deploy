@@ -1,0 +1,10 @@
+{
+  "mode": "pre",
+  "tag": "zksync",
+  "initialVersions": {
+    "hardhat-deploy": "0.10.4"
+  },
+  "changesets": [
+    "strong-actors-change"
+  ]
+}
