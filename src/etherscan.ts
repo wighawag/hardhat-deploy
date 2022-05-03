@@ -129,6 +129,7 @@ export async function submitSources(
   hre: HardhatRuntimeEnvironment,
   solcInputsPath: string,
   config?: {
+    contractName?: string;
     etherscanApiKey?: string;
     license?: string;
     fallbackOnSolcInput?: boolean;
@@ -194,6 +195,12 @@ export async function submitSources(
         break;
       case '256':
         host = 'https://api-testnet.hecoinfo.com';
+        break;
+      case '588':
+        host = 'https://stardust-explorer.metis.io';
+        break;
+      case '1088':
+        host = 'https://andromeda-explorer.metis.io';
         break;
       case '1285':
         host = 'https://api-moonriver.moonscan.io';
@@ -516,12 +523,16 @@ export async function submitSources(
     }
   }
 
-  for (const name of Object.keys(all)) {
-    await submit(name);
+  if (config.contractName) {
+    await submit(config.contractName);
+  } else {
+    for (const name of Object.keys(all)) {
+      await submit(name);
 
-    if (sleepBetween) {
-      // sleep between each verification so we don't exceed the API rate limit
-      await sleep(500);
+      if (sleepBetween) {
+        // sleep between each verification so we don't exceed the API rate limit
+        await sleep(500);
+      }
     }
   }
 }

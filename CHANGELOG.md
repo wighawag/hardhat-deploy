@@ -1,5 +1,91 @@
 # hardhat-deploy
 
+## 0.11.4
+
+### Patch Changes
+
+- add metis block explorer
+
+## 0.11.3
+
+### Patch Changes
+
+- fix proxyAdmin
+
+## 0.11.2
+
+### Patch Changes
+
+- 8bbfbae: add --contract-name to etherscan-verify
+
+## 0.11.1
+
+### Patch Changes
+
+- do not resave, increasing unecessarely numDeployments for diamond
+
+## 0.11.0
+
+### Minor Changes
+
+- 54ad195: revamp diamond support
+
+### Patch Changes
+
+- 3216a31: fix old diamond detection
+- e8737d5: fix
+- e40546a: fix
+- 0810042: diamond : do not save diamondCut + do not resave if no changes
+- 5602a44: support old diamond + fix Loupe typo
+
+## 0.11.0-next.5
+
+### Patch Changes
+
+- diamond : do not save diamondCut + do not resave if no changes
+
+## 0.11.0-next.4
+
+### Patch Changes
+
+- fix old diamond detection
+
+## 0.11.0-next.3
+
+### Patch Changes
+
+- support old diamond + fix Loupe typo
+
+## 0.11.0-next.2
+
+### Patch Changes
+
+- fix
+
+## 0.11.0-next.1
+
+### Patch Changes
+
+- fix
+
+## 0.11.0-next.0
+
+### Minor Changes
+
+- revamp diamond support
+
+## 0.10.6
+
+### Patch Changes
+
+- add --contract-name to sourcify to specify only one contract to be verified
+
+## 0.10.5
+
+### Patch Changes
+
+- do nor override original receipt for diamond
+
 ## 0.10.4
 
 ### Patch Changes

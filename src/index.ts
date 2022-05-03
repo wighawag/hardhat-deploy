@@ -253,6 +253,18 @@ function networkFromConfig(
   } else {
     network.saveDeployments = network.config.saveDeployments;
   }
+
+  let autoImpersonate = false;
+
+  if (networkName === 'hardhat') {
+    autoImpersonate = true;
+  }
+
+  if (network.config.autoImpersonate !== undefined) {
+    autoImpersonate = network.config.autoImpersonate;
+  }
+
+  network.autoImpersonate = autoImpersonate;
 }
 
 log('start...');
@@ -800,6 +812,12 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     undefined,
     types.string
   )
+  .addOptionalParam(
+    'contractName',
+    'specific contract name to verify',
+    undefined,
+    types.string
+  )
   .addFlag(
     'forceLicense',
     'force the use of the license specified by --license option'
@@ -829,6 +847,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     }
     const solcInputsPath = await deploymentsManager.getSolcInputPath();
     await submitSources(hre, solcInputsPath, {
+      contractName: args.contractName,
       etherscanApiKey,
       license: args.license,
       fallbackOnSolcInput: args.solcInput,
@@ -846,6 +865,12 @@ task(
   .addOptionalParam(
     'endpoint',
     'endpoint url for sourcify',
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    'contractName',
+    'specific contract name to verify',
     undefined,
     types.string
   )
