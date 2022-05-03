@@ -594,7 +594,7 @@ export function addHelpers(
     if (options.deterministicDeployment) {
       if (network.zksync) {
         throw new Error(
-          'deterministic zk deployments are supported at this time'
+          'deterministic zk deployments are  not supported at this time'
         );
       }
       if (typeof unsignedTx.data === 'string') {
