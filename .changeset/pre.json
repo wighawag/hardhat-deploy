@@ -1,0 +1,10 @@
+{
+  "mode": "pre",
+  "tag": "zksync",
+  "initialVersions": {
+    "hardhat-deploy": "0.11.4"
+  },
+  "changesets": [
+    "green-olives-laugh"
+  ]
+}

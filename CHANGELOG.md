@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.5-zksync.0
+
+### Patch Changes
+
+- zksync support
+
 ## 0.11.4
 
 ### Patch Changes
