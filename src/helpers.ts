@@ -11,11 +11,12 @@ import {
   ContractFactory,
   PayableOverrides,
 } from '@ethersproject/contracts';
+import * as zk from 'zksync-web3';
 import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {zeroPad, hexlify} from '@ethersproject/bytes';
+import {zeroPad, hexlify, hexConcat} from '@ethersproject/bytes';
 import {Interface, FunctionFragment} from '@ethersproject/abi';
 import {
   Deployment,
@@ -218,7 +219,7 @@ function linkLibraries(
 export function addHelpers(
   deploymentManager: DeploymentsManager,
   partialExtension: PartialExtension,
-  network: Network,
+  network: any, // TODO work out right config type
   getArtifact: (name: string) => Promise<Artifact>,
   saveDeployment: (
     name: string,
@@ -270,13 +271,17 @@ export function addHelpers(
     ) => Promise<void>;
   };
 } {
-  let provider: Web3Provider;
+  let provider: Web3Provider | zk.Web3Provider;
   const availableAccounts: {[name: string]: boolean} = {};
 
-  async function init(): Promise<Web3Provider> {
+  async function init(): Promise<Web3Provider | zk.Web3Provider> {
     if (!provider) {
       await deploymentManager.setupAccounts();
-      provider = new Web3Provider(fixProvider(network.provider));
+      if (network.zksync) {
+        provider = new zk.Web3Provider(fixProvider(network.provider));
+      } else {
+        provider = new Web3Provider(fixProvider(network.provider));
+      }
       try {
         const accounts = await provider.send('eth_accounts', []);
         for (const account of accounts) {
@@ -452,7 +457,7 @@ export function addHelpers(
 
       let ethTx = await handleSpecificErrors(
         ethersSigner.sendTransaction(txRequest)
-      );
+      ) as TransactionResponse;
       if (options.log || hardwareWallet) {
         log(` (tx: ${ethTx.hash})...`);
       }
@@ -532,7 +537,7 @@ export function addHelpers(
       options
     );
 
-    const overrides: PayableOverrides = {
+    let overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
       gasPrice: options.gasPrice,
       maxFeePerGas: options.maxFeePerGas,
@@ -541,21 +546,47 @@ export function addHelpers(
       nonce: options.nonce,
     };
 
-    const factory = new ContractFactory(
-      linkedArtifact.abi,
-      linkedArtifact.bytecode,
-      ethersSigner
-    );
+    let factory;
+    if (network.zksync) {
+      factory = new zk.ContractFactory(
+        linkedArtifact.abi,
+        linkedArtifact.bytecode,
+        ethersSigner as zk.Signer
+      );
+      const factoryDeps = await extractFactoryDeps(linkedArtifact);
+      const customData = {
+        customData: {
+          factoryDeps,
+          feeToken: zk.utils.ETH_ADDRESS
+        }
+      };
+      overrides = {
+        ...overrides,
+        ...customData
+      }
+    } else {
+      factory = new ContractFactory(
+        linkedArtifact.abi,
+        linkedArtifact.bytecode,
+        ethersSigner
+      );
+    }
+
+    
     const numArguments = factory.interface.deploy.inputs.length;
     if (args.length !== numArguments) {
       throw new Error(
         `expected ${numArguments} constructor arguments, got ${args.length}`
       );
     }
+
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
 
     let create2Address;
     if (options.deterministicDeployment) {
+      if (network.zksync) {
+        throw new Error('deterministic zk deployments are supported at this time');
+      }
       if (typeof unsignedTx.data === 'string') {
         const create2DeployerAddress = await ensureCreate2DeployerReady(
           options
@@ -598,7 +629,7 @@ export function addHelpers(
     }
     let tx = await handleSpecificErrors(
       ethersSigner.sendTransaction(unsignedTx)
-    );
+    ) as TransactionResponse;
 
     if (options.log || hardwareWallet) {
       print(` (tx: ${tx.hash})...`);
@@ -815,6 +846,20 @@ export function addHelpers(
     return partialExtension.getOrNull(name);
   }
 
+  // TODO add ZkSyncArtifact
+  async function extractFactoryDeps(artifact: any): Promise<string[]> {
+    // Load all the dependency bytecodes.
+    // We transform it into an array of bytecodes.
+    const factoryDeps: string[] = [];
+    for (const dependencyHash in artifact.factoryDeps) {
+      const dependencyContract = artifact.factoryDeps[dependencyHash];
+      const dependencyBytecodeString = (await getArtifact(dependencyContract)).bytecode;
+      factoryDeps.push(dependencyBytecodeString);
+    }
+
+    return factoryDeps;
+  }
+
   async function fetchIfDifferent(
     name: string,
     options: DeployOptions
@@ -887,14 +932,37 @@ export function addHelpers(
         const {artifact} = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact, options.libraries);
-        const factory = new ContractFactory(abi, byteCode, ethersSigner);
-        const newTransaction = factory.getDeployTransaction(...argArray);
-        const newData = newTransaction.data?.toString();
+        if (network.zksync) {
+          const factory = new zk.ContractFactory(abi, byteCode, ethersSigner as zk.Signer);
+          const factoryDeps = await extractFactoryDeps(artifact);
+          const newTransaction = factory.getDeployTransaction(...argArray, {
+            customData: {
+              factoryDeps,
+              feeToken: zk.utils.ETH_ADDRESS
+            }
+          });
+          const newData = newTransaction.data?.toString();
+  
+          const deserialize = zk.utils.parseTransaction(transaction.data) as any;
+          const desFlattened = hexConcat(deserialize.customData.factoryDeps);
+          const newFlattened = hexConcat(factoryDeps);
 
-        if (transaction.data !== newData) {
-          return {differences: true, address: deployment.address};
+          if (deserialize.data !== newData || desFlattened != newFlattened) {
+            return {differences: true, address: deployment.address};
+          }
+          return {differences: false, address: deployment.address};
+    
+        } else {
+          const factory = new ContractFactory(abi, byteCode, ethersSigner);
+          const newTransaction = factory.getDeployTransaction(...argArray);
+          const newData = newTransaction.data?.toString();
+          if (transaction.data !== newData) {
+            return {differences: true, address: deployment.address};
+          }
+          return {differences: false, address: deployment.address};
         }
-        return {differences: false, address: deployment.address};
+
+        
       } else {
         if (transactionDetailsAvailable) {
           throw new Error(
@@ -1622,11 +1690,12 @@ Note that in this case, the contract deployment will not behave the same if depl
 
   function getFrom(from: string): {
     address: Address;
-    ethersSigner: Signer;
+    ethersSigner: Signer | zk.Signer;
     hardwareWallet?: string;
     unknown: boolean;
   } {
-    let ethersSigner: Signer | undefined;
+    let ethersSigner: Signer | zk.Signer | undefined;
+    let wallet: Wallet | zk.Wallet | undefined;
     let hardwareWallet: string | undefined = undefined;
     let unknown = false;
 
@@ -1634,9 +1703,15 @@ Note that in this case, the contract deployment will not behave the same if depl
       if (from.length === 64) {
         from = '0x' + from;
       }
-      const wallet = new Wallet(from, provider);
+      if (network.zksync) {
+        wallet = new zk.Wallet(from, provider as zk.Provider);
+        ethersSigner = (wallet as unknown) as zk.Signer;
+      } else {
+        wallet = new Wallet(from, provider);
+        ethersSigner = wallet;
+      }
       from = wallet.address;
-      ethersSigner = wallet;
+      
     } else {
       if (availableAccounts[from.toLowerCase()]) {
         ethersSigner = provider.getSigner(from);
@@ -2421,7 +2496,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     }
     let pendingTx = await handleSpecificErrors(
       ethersSigner.sendTransaction(transactionData)
-    );
+    ) as TransactionResponse;
     pendingTx = await onPendingTx(pendingTx);
     if (tx.autoMine) {
       try {
@@ -2639,7 +2714,7 @@ data: ${data}
     if (typeof args === 'undefined') {
       args = [];
     }
-    let caller: Web3Provider | Signer = provider;
+    let caller: Web3Provider | Signer | zk.Web3Provider | zk.Signer = provider;
     const {ethersSigner} = getOptionalFrom(options.from);
     if (ethersSigner) {
       caller = ethersSigner;
@@ -2837,7 +2912,7 @@ data: ${data}
             if (txData.rawTx) {
               const tx = await handleSpecificErrors(
                 provider.sendTransaction(txData.rawTx)
-              );
+              ) as TransactionResponse;
               txHashToWait = tx.hash;
               if (tx.hash !== txHash) {
                 console.error('non mathcing tx hashes after resubmitting...');

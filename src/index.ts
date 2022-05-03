@@ -184,6 +184,7 @@ function createNetworkFromConfig(
     config,
     live: config.live,
     saveDeployments: config.saveDeployments,
+    zksync: config.zksync,
     tags,
     deploy: config.deploy || env.config.paths.deploy,
     companionNetworks: {},
@@ -216,6 +217,10 @@ function networkFromConfig(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       network.verify = {etherscan: (network.config as any).etherscan};
     }
+  }
+
+  if (network.config.zksync !== undefined) {
+    network.zksync = network.config.zksync;
   }
 
   // associate tags to current network as object
