@@ -1,5 +1,12 @@
 # hardhat-deploy
 
+## 0.11.5
+
+### Patch Changes
+
+- a103f2d: workaround for ledger
+- 283ec68: zksync support
+
 ## 0.11.5-zksync.1
 
 ### Patch Changes
