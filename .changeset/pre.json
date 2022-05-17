@@ -5,6 +5,7 @@
     "hardhat-deploy": "0.11.4"
   },
   "changesets": [
+    "cyan-lies-beam",
     "green-olives-laugh"
   ]
 }

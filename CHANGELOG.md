@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.5-zksync.1
+
+### Patch Changes
+
+- workaround for ledger
+
 ## 0.11.5-zksync.0
 
 ### Patch Changes
