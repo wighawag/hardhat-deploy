@@ -614,6 +614,12 @@ export function addHelpers(
     );
     await setupGasPrice(unsignedTx);
     await setupNonce(from, unsignedTx);
+ 
+    // Temporary workaround for https://github.com/ethers-io/ethers.js/issues/2078
+    // TODO: Remove me when LedgerSigner adds proper support for 1559 txns
+    if (hardwareWallet === 'ledger') {
+      unsignedTx.type = 1
+    }
 
     if (unknown) {
       throw new UnknownSignerError({
