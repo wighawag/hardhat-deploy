@@ -934,10 +934,10 @@ task('export-artifacts')
       },
       {}
     );
-    const argsMetadataFor: string[] = args.metadataFor
-      ? args.metadataFor.split(',')
+    const argsSourcesFor: string[] = args.sourcesFor
+      ? args.sourcesFor.split(',')
       : [];
-    const metadataFor = argsMetadataFor.reduce(
+    const sourcesFor = argsSourcesFor.reduce(
       (result: Record<string, boolean>, item: string) => {
         result[item] = true;
         return result;
@@ -997,7 +997,7 @@ task('export-artifacts')
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let dataToWrite: any = extendedArtifact;
-      if (args.noMetadata && !metadataFor[artifactName]) {
+      if (args.hideSources && !sourcesFor[artifactName]) {
         dataToWrite = {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           contractName: (extendedArtifact as any).contractName,
