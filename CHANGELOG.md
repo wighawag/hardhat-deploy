@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.7
+
+### Patch Changes
+
+- rename --no-metadata to --hide-sources
+
 ## 0.11.6
 
 ### Patch Changes

@@ -906,12 +906,12 @@ task('export-artifacts')
     types.string
   )
   .addFlag(
-    'noMetadata',
-    'if set, the artifacts file will not contain source code unless specified via --metadata-for'
+    'hideSources',
+    'if set, the artifacts files will not contain source code (metadata or other data exposing it) unless specified via --sources-for'
   )
   .addOptionalParam(
-    'metadataFor',
-    'list of contract names separated by commas to include metadata for (see --no-metadata)',
+    'sourcesFor',
+    'list of contract names separated by commas to include source (metadata,etc...) for (see --hide-sources)',
     undefined,
     types.string
   )
