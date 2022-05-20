@@ -1,5 +1,4 @@
 import './type-extensions';
-import chalk from 'chalk';
 import path from 'path';
 import fs from 'fs-extra';
 import murmur128 from 'murmur-128';
@@ -1018,9 +1017,28 @@ task('export-artifacts')
             : undefined,
         };
       }
-      fs.writeFileSync(
-        path.join(extendedArtifactFolderpath, artifactName + '.json'),
-        JSON.stringify(dataToWrite, null, '  ')
+
+      let filepath = path.join(
+        extendedArtifactFolderpath,
+        artifactName + '.json'
       );
+      if (dataToWrite.sourceName) {
+        if (dataToWrite.contractName) {
+          filepath = path.join(
+            extendedArtifactFolderpath,
+            dataToWrite.sourceName,
+            dataToWrite.contractName + '.json'
+          );
+        } else {
+          filepath = path.join(
+            extendedArtifactFolderpath,
+            dataToWrite.sourceName,
+            artifactName + '.json'
+          );
+        }
+      }
+
+      fs.ensureFileSync(filepath);
+      fs.writeFileSync(filepath, JSON.stringify(dataToWrite, null, '  '));
     }
   });
