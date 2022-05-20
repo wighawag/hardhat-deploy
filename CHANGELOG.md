@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.9
+
+### Patch Changes
+
+- preserve artifact dir structure when exporting
+
 ## 0.11.8
 
 ### Patch Changes
