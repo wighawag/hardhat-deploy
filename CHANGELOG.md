@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.6
+
+### Patch Changes
+
+- ability to export artifact without metadata
+
 ## 0.11.5
 
 ### Patch Changes

@@ -905,6 +905,16 @@ task('export-artifacts')
     undefined,
     types.string
   )
+  .addFlag(
+    'noMetadata',
+    'if set, the artifacts file will not contain source code unless specified via --metadata-for'
+  )
+  .addOptionalParam(
+    'metadataFor',
+    'list of contract names separated by commas to include metadata for (see --no-metadata)',
+    undefined,
+    types.string
+  )
   .setAction(async (args, hre) => {
     await hre.run('compile');
     const argsInclude: string[] = args.include ? args.include.split(',') : [];
@@ -918,6 +928,16 @@ task('export-artifacts')
     );
     const argsExclude: string[] = args.exclude ? args.exclude.split(',') : [];
     const exclude = argsExclude.reduce(
+      (result: Record<string, boolean>, item: string) => {
+        result[item] = true;
+        return result;
+      },
+      {}
+    );
+    const argsMetadataFor: string[] = args.metadataFor
+      ? args.metadataFor.split(',')
+      : [];
+    const metadataFor = argsMetadataFor.reduce(
       (result: Record<string, boolean>, item: string) => {
         result[item] = true;
         return result;
@@ -975,9 +995,32 @@ task('export-artifacts')
         extendedArtifact.solcInputHash = solcInputHash;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let dataToWrite: any = extendedArtifact;
+      if (args.noMetadata && !metadataFor[artifactName]) {
+        dataToWrite = {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          contractName: (extendedArtifact as any).contractName,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          sourceName: (extendedArtifact as any).sourceName,
+          abi: extendedArtifact.abi,
+          bytecode: extendedArtifact.bytecode,
+          deployedBytecode: extendedArtifact.deployedBytecode,
+          linkReferences: extendedArtifact.linkReferences,
+          deployedLinkReferences: extendedArtifact.deployedLinkReferences,
+          devdoc: extendedArtifact.devdoc,
+          userdoc: extendedArtifact.userdoc,
+          evm: extendedArtifact.evm
+            ? {
+                gasEstimates: extendedArtifact.evm.gasEstimates,
+                methodIdentifiers: extendedArtifact.evm.methodIdentifiers,
+              }
+            : undefined,
+        };
+      }
       fs.writeFileSync(
         path.join(extendedArtifactFolderpath, artifactName + '.json'),
-        JSON.stringify(extendedArtifact, null, '  ')
+        JSON.stringify(dataToWrite, null, '  ')
       );
     }
   });
