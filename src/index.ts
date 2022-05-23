@@ -892,6 +892,14 @@ task('export-artifacts')
     'solcInput',
     'if set, artifacts will have an associated solcInput files (required for old version of solidity to ensure verifiability'
   )
+  .addFlag(
+    'includingEmptyBytecode',
+    'if set, even contract without bytecode (like interfaces) will be exported'
+  )
+  .addFlag(
+    'includingNoPublicFunctions',
+    'if set, even contract without public interface (like imternal libraries) will be exported'
+  )
   .addOptionalParam(
     'exclude',
     'list of contract names separated by commas to exclude',
@@ -967,6 +975,21 @@ task('export-artifacts')
       const buildInfo: BuildInfo = await fs.readJSON(buildinfoPath);
       const output =
         buildInfo.output.contracts[artifact.sourceName][artifactName];
+
+      if (!args.includingNoPublicFunctions) {
+        if (
+          !artifact.abi ||
+          artifact.abi.filter((v) => v.type !== 'event').length === 0
+        ) {
+          continue;
+        }
+      }
+
+      if (!args.includingEmptyBytecode) {
+        if (!artifact.bytecode || artifact.bytecode === '0x') {
+          continue;
+        }
+      }
 
       // TODO decide on ExtendedArtifact vs Artifact vs Deployment type
       // save space by not duplicating bytecodes
