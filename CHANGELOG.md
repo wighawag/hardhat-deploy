@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.10
+
+### Patch Changes
+
+- export-artifacts: do not export libraries or interfaces by defaults
+
 ## 0.11.9
 
 ### Patch Changes
