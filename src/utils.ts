@@ -78,6 +78,7 @@ export async function getExtendedArtifactFromFolders(
       } else {
         contractName = fullyQualifiedName.split(':')[1];
       }
+      // TODO try catch ? in case debug file is missing
       const buildInfo = await artifacts.getBuildInfo(fullyQualifiedName);
       if (buildInfo) {
         const solcInput = JSON.stringify(buildInfo.input, null, '  ');

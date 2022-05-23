@@ -1,5 +1,54 @@
 # hardhat-deploy
 
+## 0.11.10
+
+### Patch Changes
+
+- export-artifacts: do not export libraries or interfaces by defaults
+
+## 0.11.9
+
+### Patch Changes
+
+- preserve artifact dir structure when exporting
+
+## 0.11.8
+
+### Patch Changes
+
+- fix --hide-sources
+
+## 0.11.7
+
+### Patch Changes
+
+- rename --no-metadata to --hide-sources
+
+## 0.11.6
+
+### Patch Changes
+
+- ability to export artifact without metadata
+
+## 0.11.5
+
+### Patch Changes
+
+- a103f2d: workaround for ledger
+- 283ec68: zksync support
+
+## 0.11.5-zksync.1
+
+### Patch Changes
+
+- workaround for ledger
+
+## 0.11.5-zksync.0
+
+### Patch Changes
+
+- zksync support
+
 ## 0.11.4
 
 ### Patch Changes
@@ -85,6 +134,12 @@
 ### Patch Changes
 
 - do nor override original receipt for diamond
+
+## 0.10.5-zksync.0
+
+### Patch Changes
+
+- zksync support
 
 ## 0.10.4
 

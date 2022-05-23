@@ -64,6 +64,7 @@ declare module 'hardhat/types/config' {
     deploy?: string | string[];
     companionNetworks?: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: boolean;
     autoImpersonate?: boolean;
   }
 
@@ -74,6 +75,7 @@ declare module 'hardhat/types/config' {
     deploy?: string | string[];
     companionNetworks?: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: boolean;
     autoImpersonate?: boolean;
   }
 
@@ -90,6 +92,7 @@ declare module 'hardhat/types/config' {
     deploy?: string[];
     companionNetworks: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: boolean;
     autoImpersonate?: boolean;
   }
 
@@ -100,6 +103,7 @@ declare module 'hardhat/types/config' {
     deploy?: string[];
     companionNetworks: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: boolean;
     autoImpersonate?: boolean;
   }
 
@@ -138,6 +142,7 @@ declare module 'hardhat/types/runtime' {
     deploy: string[];
     companionNetworks: {[name: string]: string};
     verify?: {etherscan?: {apiKey?: string; apiUrl?: string}};
+    zksync?: boolean;
     autoImpersonate?: boolean;
   }
 }
