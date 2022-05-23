@@ -2607,9 +2607,9 @@ data: ${data}
 
     let tx;
     let deployment = await partialExtension.getOrNull(name);
-    if (!deployment) {
+    if (!deployment?.address) {
       if (!options.to) throw new Error(`expected deployment for ${name} or option "to" with deploymed address`)
-      deployment= {
+      deployment = {
         address: options.to,
         abi: (await partialExtension.getArtifact(name)).abi
       }
