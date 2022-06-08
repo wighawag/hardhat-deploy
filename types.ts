@@ -260,7 +260,7 @@ export interface DeploymentsExtension {
     func: FixtureFunc<T, O>,
     id?: string
   ): (options?: O) => Promise<T>;
-  log(...args: any[]): void; // log data only ig log enabled (disabled in test fixture)
+  log(...args: any[]): void; // log data only if log enabled (disabled in test fixture)
 
   getNetworkName(): string;
   getGasUsed(): number;
