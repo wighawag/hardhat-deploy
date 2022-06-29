@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.11
+
+### Patch Changes
+
+- Update the dependencies for latest deployment of the zkSync v2 test network.
+
 ## 0.11.10
 
 ### Patch Changes
