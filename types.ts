@@ -151,6 +151,7 @@ export type ArtifactData = {
 
 export interface DeployOptionsBase extends TxOptions {
   contract?: string | ArtifactData;
+  importPath?: string;
   args?: any[];
   skipIfAlreadyDeployed?: boolean;
   linkedData?: any; // JSONable ?
