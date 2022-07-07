@@ -582,6 +582,21 @@ You can thus have one network that will be executing L1 deployment and other L2 
 
 You could also have a folder that deploy contracts that are live on mainnet but that you need to replicate for your test or local network.
 
+Example:
+
+```js
+{
+  networks: {
+    mainnet: {
+      deploy: [ 'deploy/' ]
+    },
+    rinkeby: {
+      deploy: [ 'testnet-deploy/' ]
+    }
+  }
+}
+```
+
 #### `companionNetworks`
 
 the companionNetworks field is an object whose key is any name you desire and the value is the name of a network that will be accessible inside the deploy script. For example:
