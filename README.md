@@ -1083,7 +1083,7 @@ As mentioned above, the deploy function can also deploy a contract through a pro
 
 The default Proxy is both ERC-1967 and ERC-173 Compliant, but other proxy can be specified, like openzeppelin transparent proxies.
 
-Code for the default Proxy can be found [here](solc_0.7/proxy/EIP173Proxy.sol).
+Code for the default Proxy can be found [here](solc_0.8/proxy/EIP173Proxy.sol).
 
 To perform such proxy deployment, you just need to invoke the deploy function with the following options : `{..., proxy: true}`
 
