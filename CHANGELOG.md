@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.12
+
+### Patch Changes
+
+- fix DiamondLoupeFacet
+
 ## 0.11.11
 
 ### Patch Changes
