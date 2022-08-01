@@ -21,6 +21,8 @@ import {
   TASK_TEST,
   TASK_NODE_GET_PROVIDER,
   TASK_NODE_SERVER_READY,
+  TASK_COMPILE_SOLIDITY_COMPILE,
+  TASK_COMPILE_SOLIDITY,
 } from 'hardhat/builtin-tasks/task-names';
 import {lazyObject} from 'hardhat/plugins';
 
@@ -34,6 +36,7 @@ import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
 import {store} from './globalStore';
 import {getDeployPaths, getNetworkName} from './utils';
+import {SolcInput} from '@openzeppelin/upgrades-core';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
@@ -796,6 +799,60 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
     });
   }
 });
+
+subtask(
+  TASK_COMPILE_SOLIDITY,
+  async (args: {force: boolean}, hre, runSuper) => {
+    const {
+      readValidations,
+      ValidationsCacheOutdated,
+      ValidationsCacheNotFound,
+    } = await import('./openzeppelin-upgrade-validation');
+
+    try {
+      await readValidations(hre);
+    } catch (e) {
+      if (
+        e instanceof ValidationsCacheOutdated ||
+        e instanceof ValidationsCacheNotFound
+      ) {
+        args = {...args, force: true};
+      } else {
+        throw e;
+      }
+    }
+
+    return runSuper(args);
+  }
+);
+
+subtask(
+  TASK_COMPILE_SOLIDITY_COMPILE,
+  async (args: {input: SolcInput}, hre, runSuper) => {
+    const {validate, solcInputOutputDecoder} = await import(
+      '@openzeppelin/upgrades-core'
+    );
+
+    const {writeValidations} = await import(
+      './openzeppelin-upgrade-validation'
+    );
+
+    // TODO: patch input
+    const {output, solcBuild} = await runSuper();
+
+    const {isFullSolcOutput} = await import(
+      './openzeppelin-upgrade-validation'
+    );
+
+    if (isFullSolcOutput(output)) {
+      const decodeSrc = solcInputOutputDecoder(args.input, output);
+      const validations = validate(output, decodeSrc);
+      await writeValidations(hre, validations);
+    }
+
+    return {output, solcBuild};
+  }
+);
 
 task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
   .addOptionalParam('apiKey', 'etherscan api key', undefined, types.string)
