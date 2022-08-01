@@ -61,6 +61,7 @@ import {
   parse as parseTransaction,
   Transaction,
 } from '@ethersproject/transactions';
+import {openzeppelin_assertIsValidImplementation} from './openzeppelin-upgrade-validation';
 
 let LedgerSigner: any; // TODO type
 
@@ -614,7 +615,7 @@ export function addHelpers(
     );
     await setupGasPrice(unsignedTx);
     await setupNonce(from, unsignedTx);
- 
+
     // Temporary workaround for https://github.com/ethers-io/ethers.js/issues/2078
     // TODO: Remove me when LedgerSigner adds proper support for 1559 txns
     if (hardwareWallet === 'ledger') {
@@ -1283,6 +1284,10 @@ export function addHelpers(
       name,
       implementationOptions
     );
+
+    await openzeppelin_assertIsValidImplementation({
+      bytecode: artifact.bytecode,
+    });
 
     const proxyContractConstructor = proxyContract.abi.find(
       (v) => v.type === 'constructor'
