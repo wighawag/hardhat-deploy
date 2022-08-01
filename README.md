@@ -449,7 +449,7 @@ Later this task might instead pin the metadata to ipfs, so sourcify can automati
 #### **Options**
 
 `--contract-name <contract name>`: specify the contract's name you want to verify
-  
+
 `--endpoint <endpoint>`: specify the sourcify endpoint, default to https://sourcify.dev/server/
 
 `--write-failing-metadata`: if set and the sourcify task fails to verify, the metadata file will be written to disk, so you can more easily figure out what has gone wrong.
@@ -1081,7 +1081,7 @@ export type MultiExport = {
 
 As mentioned above, the deploy function can also deploy a contract through a proxy. It can be done without modification of the contract as long as its number of constructor arguments matches the proxy initialization/update function.
 
-The default Proxy is both ERC-1967 and ERC-173 Compliant, but other proxy can be specified, like openzeppelin transparent proxies.
+The default Proxy is both ERC-1967 and ERC-173 Compliant, but other proxy can be specified, like openzeppelin transparent proxies. The implementations that go alongside the proxies are passed through open zeppelin's [upgrades-plugin](https://github.com/OpenZeppelin/openzeppelin-upgrades) validation. This prevents [storage collisions](https://docs.openzeppelin.com/upgrades-plugins/1.x/faq#what-does-it-mean-for-an-implementation-to-be-compatible) and other [proxy related errors](https://docs.openzeppelin.com/upgrades-plugins/1.x/faq#what-does-it-mean-for-a-contract-to-be-upgrade-safe).
 
 Code for the default Proxy can be found [here](solc_0.8/proxy/EIP173Proxy.sol).
 
