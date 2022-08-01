@@ -4,6 +4,7 @@ import lockfile from 'proper-lockfile';
 
 import type {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {
+  assertStorageUpgradeSafe,
   assertUpgradeSafe,
   getUnlinkedBytecode,
   getVersion,
@@ -12,6 +13,8 @@ import {
   ValidationRunData,
   concatRunData,
   isCurrentValidationData,
+  getStorageLayout,
+  StorageLayout,
 } from '@openzeppelin/upgrades-core';
 import type {SolcOutput} from '@openzeppelin/upgrades-core';
 
@@ -132,6 +135,28 @@ export const openzeppelin_assertIsValidImplementation = async (implementation: {
 
   // This will throw an error if the implementation is invalid.
   assertUpgradeSafe(validations, version, requiredOpts);
+
+  return;
+};
+
+// Checks the old implementation against the new implementation and
+// ensures that it's valid.
+export const openzeppelin_assertIsValidUpgrade = async (
+  oldStorageLayout: StorageLayout,
+  newImplementation: {bytecode?: string}
+): Promise<undefined> => {
+  const {version: newVersion, validations} = await getVersionAndValidations(
+    newImplementation
+  );
+
+  const newStorageLayout = getStorageLayout(validations, newVersion);
+
+  // This will throw an error if the upgrade is invalid.
+  assertStorageUpgradeSafe(
+    oldStorageLayout,
+    newStorageLayout,
+    withValidationDefaults({})
+  );
 
   return;
 };
