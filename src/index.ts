@@ -21,6 +21,7 @@ import {
   TASK_TEST,
   TASK_NODE_GET_PROVIDER,
   TASK_NODE_SERVER_READY,
+  TASK_COMPILE,
 } from 'hardhat/builtin-tasks/task-names';
 import {lazyObject} from 'hardhat/plugins';
 
@@ -34,6 +35,10 @@ import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
 import {store} from './globalStore';
 import {getDeployPaths, getNetworkName} from './utils';
+import {
+  validateAbiCompatibilityForAllContracts,
+  validateAbiCompatibility,
+} from './checkAbiCompatibility';
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
@@ -41,6 +46,7 @@ export const TASK_DEPLOY_RUN_DEPLOY = 'deploy:runDeploy';
 export const TASK_EXPORT = 'export';
 export const TASK_ETHERSCAN_VERIFY = 'etherscan-verify';
 export const TASK_SOURCIFY = 'sourcify';
+export const TASK_VALIDATE_ABI_COMPAT = 'validate-abi-compat';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let nodeTaskArgs: Record<string, any> = {};
@@ -430,7 +436,17 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
   .addFlag('reportGas', 'report gas use')
+  .addFlag(
+    'allowBreakingAbiCompatbility',
+    'not throw an error if there are any breaking abi compatibility changes'
+  )
   .setAction(async (args, hre) => {
+    validateAbiCompatibilityForAllContracts({
+      write: args.export,
+      allowBreakingChanges: args.allowBreakingAbiCompatbility,
+      dirname: hre.config.paths.deployments,
+    });
+    args.allowBreakingAbiCompatbility;
     let tags = args.tags;
     if (typeof tags === 'string') {
       tags = tags.split(',');
@@ -495,7 +511,16 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
     'do not actually deploy, just watch and deploy if changes occurs'
   )
   .addFlag('reportGas', 'report gas use')
+  .addFlag(
+    'allowBreakingAbiCompatbility',
+    'not throw an error if there are any breaking abi compatibility changes'
+  )
   .setAction(async (args, hre) => {
+    validateAbiCompatibilityForAllContracts({
+      write: args.export,
+      allowBreakingChanges: args.allowBreakingAbiCompatbility,
+      dirname: hre.config.paths.deployments,
+    });
     if (args.reset) {
       await deploymentsManager.deletePreviousDeployments(
         args.runAsNode ? 'localhost' : undefined
@@ -647,7 +672,16 @@ task(TASK_DEPLOY, 'Deploy contracts')
   .addFlag('silent', 'whether to remove log')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .addFlag('reportGas', 'report gas use')
+  .addFlag(
+    'allowBreakingAbiCompatbility',
+    'not throw an error if there are any breaking abi compatibility changes'
+  )
   .setAction(async (args, hre) => {
+    validateAbiCompatibilityForAllContracts({
+      write: args.export,
+      allowBreakingChanges: args.allowBreakingAbiCompatbility,
+      dirname: hre.config.paths.deployments,
+    });
     if (args.noImpersonation) {
       deploymentsManager.disableAutomaticImpersonation();
     }
@@ -1063,5 +1097,41 @@ task('export-artifacts')
 
       fs.ensureFileSync(filepath);
       fs.writeFileSync(filepath, JSON.stringify(dataToWrite, null, '  '));
+    }
+  });
+
+task(
+  TASK_VALIDATE_ABI_COMPAT,
+  "validates compatability of the given contract's new ABI with its currently deployed ABI"
+)
+  .addOptionalParam<string>(
+    'contract',
+    'contract to check ABI compatability for'
+  )
+  .addFlag('export', 'export current network deployments')
+  .addFlag('all', 'check all contracts ABI compatability')
+  .setAction(async (taskArgs, hre) => {
+    await hre.run(TASK_COMPILE, {quiet: true}); // compile contracts if necessary
+
+    const {getOrNull} = hre.deployments;
+
+    const validateAllContracts = taskArgs.all;
+    if (validateAllContracts) {
+      validateAbiCompatibilityForAllContracts({
+        write: taskArgs.export,
+        allowBreakingChanges: true,
+        dirname: hre.config.paths.deployments,
+      });
+    } else {
+      const contractName = taskArgs.contract;
+      const previousDeployment = await getOrNull(contractName);
+      if (previousDeployment) {
+        validateAbiCompatibility({
+          contractName: taskArgs.contract,
+          contractDeployment: previousDeployment,
+          dirname: hre.config.paths.deployments,
+          write: false,
+        });
+      }
     }
   });
