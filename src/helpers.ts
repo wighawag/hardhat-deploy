@@ -61,6 +61,10 @@ import {
   parse as parseTransaction,
   Transaction,
 } from '@ethersproject/transactions';
+import {
+  openzeppelin_assertIsValidImplementation,
+  openzeppelin_assertIsValidUpgrade,
+} from './openzeppelin-upgrade-validation';
 
 let LedgerSigner: any; // TODO type
 
@@ -614,7 +618,7 @@ export function addHelpers(
     );
     await setupGasPrice(unsignedTx);
     await setupNonce(from, unsignedTx);
- 
+
     // Temporary workaround for https://github.com/ethers-io/ethers.js/issues/2078
     // TODO: Remove me when LedgerSigner adds proper support for 1559 txns
     if (hardwareWallet === 'ledger') {
@@ -1284,6 +1288,10 @@ export function addHelpers(
       implementationOptions
     );
 
+    await openzeppelin_assertIsValidImplementation({
+      bytecode: artifact.bytecode,
+    });
+
     const proxyContractConstructor = proxyContract.abi.find(
       (v) => v.type === 'constructor'
     );
@@ -1475,6 +1483,18 @@ Note that in this case, the contract deployment will not behave the same if depl
           `The Proxy Admin (${proxyAdminName}) belongs to no-one. The Proxy cannot be upgraded anymore`
         );
       }
+    }
+
+    const oldImplementation = await getDeploymentOrNUll(implementationName);
+    if (oldImplementation && oldImplementation.storageLayout) {
+      const newImplementation = await getLinkedArtifact(
+        implementationName,
+        implementationOptions
+      );
+
+      await openzeppelin_assertIsValidUpgrade(oldImplementation.storageLayout, {
+        bytecode: newImplementation.artifact.bytecode,
+      });
     }
 
     const implementation = await _deployOne(
