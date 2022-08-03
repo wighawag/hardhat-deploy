@@ -2,9 +2,7 @@ import {Interface as ContractInterface, ParamType} from 'ethers/lib/utils';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import {ABI, Deployment} from '../types';
-import {deployments} from 'hardhat';
-const {getNetworkName, getExtendedArtifact} = deployments;
+import {ABI} from '../types';
 
 interface IExplanation {
   errorsMissing: string[];
@@ -19,15 +17,17 @@ interface IReport {
   pass: boolean;
 }
 
-interface IValidateAllParams {
-  write?: boolean;
-  allowBreakingChanges?: boolean;
-  dirname?: string;
-}
-
-interface IValidateParams extends IValidateAllParams {
+export interface IContractDetails {
   contractName: string;
-  contractDeployment: Deployment;
+  prevAbi: ABI;
+  newAbi: ABI;
+}
+interface IValidateParams {
+  write: boolean;
+  allowBreakingChanges?: boolean;
+  dirname: string;
+  networkName: string;
+  contracts: IContractDetails[];
 }
 
 const wrapWithParenthesis = (str: string) => {
@@ -238,10 +238,10 @@ export const toJsonFile = (
   }
 };
 
-export const getAbiCompatibilityReport = async (
+export const getAbiCompatibilityReport = (
   prevAbi: ABI,
   newAbi: ABI
-): Promise<IReport> => {
+): IReport => {
   const prevIface = new ContractInterface(prevAbi);
   const newIface = new ContractInterface(newAbi);
 
@@ -283,47 +283,33 @@ export const getAbiCompatibilityReport = async (
   };
 };
 
-export async function validateAbiCompatibility({
-  contractName,
-  contractDeployment,
+export const validateAbiCompatibility: (params: IValidateParams) => boolean = ({
+  allowBreakingChanges,
   write,
   dirname,
-}: IValidateParams): Promise<boolean> {
-  console.log(
-    `checking ABI compatability for ${contractName} on ${getNetworkName()}`
-  );
-  const {abi} = await getExtendedArtifact(contractName);
-  const report = await getAbiCompatibilityReport(contractDeployment.abi, abi);
-  if (write && dirname) {
-    const abiCompatDir = path.join(
-      dirname,
-      getNetworkName(),
-      'abi_compatibility'
+  networkName,
+  contracts,
+}) => {
+  let isIncompatible = false;
+  for (const {contractName, prevAbi, newAbi} of contracts) {
+    console.log(
+      `checking ABI compatability for ${contractName} on ${networkName}`
     );
-    toJsonFile(contractName, abiCompatDir, report);
-  }
-  return report.pass;
-}
-
-export const validateAbiCompatibilityForAllContracts: (
-  params: IValidateAllParams
-) => Promise<boolean> = async ({allowBreakingChanges, write, dirname}) => {
-  let isContractsIncompatible = false;
-  const allDeployedContracts = Object.entries(await deployments.all());
-  console.log(`checking ABI compatability for all deployed contracts`);
-  for (const [contractName, contractDeployment] of allDeployedContracts) {
-    const isContractIncompatible = await validateAbiCompatibility({
-      contractName,
-      contractDeployment,
-      dirname,
-      write,
-    });
-    if (!isContractsIncompatible) {
-      isContractsIncompatible = isContractIncompatible;
+    if (prevAbi && newAbi) {
+      const report = getAbiCompatibilityReport(prevAbi, newAbi);
+      if (write && dirname && networkName) {
+        const abiCompatDir = path.join(
+          dirname,
+          networkName,
+          'abi_compatibility'
+        );
+        toJsonFile(contractName, abiCompatDir, report);
+      }
+      isIncompatible = isIncompatible || !report.pass;
     }
   }
-  if (!allowBreakingChanges && isContractsIncompatible) {
-    throw new Error('Abi is is incompatible');
+  if (!allowBreakingChanges && isIncompatible) {
+    throw new Error('Abi is incompatible');
   }
-  return !isContractsIncompatible;
+  return !isIncompatible;
 };
