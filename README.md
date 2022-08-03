@@ -449,7 +449,7 @@ Later this task might instead pin the metadata to ipfs, so sourcify can automati
 #### **Options**
 
 `--contract-name <contract name>`: specify the contract's name you want to verify
-  
+
 `--endpoint <endpoint>`: specify the sourcify endpoint, default to https://sourcify.dev/server/
 
 `--write-failing-metadata`: if set and the sourcify task fails to verify, the metadata file will be written to disk, so you can more easily figure out what has gone wrong.
@@ -474,6 +474,28 @@ One of the following options need to be set for this task to have any effects :
 This last option has some limitations, when combined with the use of external deployments (see [Configuration](#configuration)). If such external deployments were using older version of **hardhat-deploy** or truffle, the chainId might be missing. In order for these to be exported, the hardhat network config need to explicity state the chainId in the `networks` config of `hardhat.config.js`.
 
 With both `--export` and `--export-all`, using the special `<filepath>` value of `-` will output to `STDOUT` rather than writing a normal file.
+
+---
+
+### 7. hardhat validate-abi-compat
+
+---
+
+This plugin adds the _validate-abi-compat_ task to Hardhat.
+
+This task will check if there are breaking changes between the old contract ABI and the new contract ABI.
+
+One of the following options needs to be set for this task to have any effects :
+
+#### **Options**
+
+`--replace <string - JSON object>`: replace contract name by its artifact name. The param should be a JSON object in that the key is the contract name, and the value is the artifact name.
+
+`--all`: validate abi compatibility for all deployed contracts.
+
+`--contract <contract name>`: validate abi comptibility for a specific contract.
+
+`--export`: export the abi compatibility report to JSON files.
 
 ---
 
@@ -791,6 +813,8 @@ const factory = await ethers.getContractFactory(artifactName);
 
 This is a new task that the `hardhat-deploy` adds. As the name suggests it deploys contracts.
 To be exact it will look for files in the folder `deploy` or whatever was configured in `paths.deploy`, see [paths config](#extra-paths-config)
+
+It will validate for abi compatibility in all contracts and throws an error if there are any critical changes(unless you set the argument --allowBreakingAbiCompatbility).
 
 It will scan for files in alphabetical order and execute them in turn.
 
