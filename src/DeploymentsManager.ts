@@ -168,7 +168,7 @@ export class DeploymentsManager {
         return this.db.deployments[name];
       },
       getDeploymentsFromAddress: async (address: string) => {
-        const deployments = [];
+        const deployments: Deployment[] = [];
         for (const deployment of Object.values(this.db.deployments)) {
           if (deployment.address === address) {
             deployments.push(deployment);
