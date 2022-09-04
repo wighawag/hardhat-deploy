@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.13
+
+### Patch Changes
+
+- upgrade zksync-web by @MarkuSchick
+
 ## 0.11.12
 
 ### Patch Changes
