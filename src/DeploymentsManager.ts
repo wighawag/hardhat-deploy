@@ -1415,14 +1415,18 @@ export class DeploymentsManager {
       'eth_getBlockByNumber',
       ['latest', false]
     );
-    const snapshot = await this.network.provider.send('evm_snapshot', []);
-    this.db.pastFixtures[key] = {
-      index: ++this.db.snapshotCounter,
-      snapshot,
-      data,
-      blockHash: latestBlock.hash,
-      deployments: {...this.db.deployments},
-    };
+    try {
+      const snapshot = await this.network.provider.send('evm_snapshot', []);
+      this.db.pastFixtures[key] = {
+        index: ++this.db.snapshotCounter,
+        snapshot,
+        data,
+        blockHash: latestBlock.hash,
+        deployments: {...this.db.deployments},
+      };
+    } catch (err) {
+      log(`failed to create snapshot`);
+    }
   }
 
   private async revertSnapshot(saved: {
@@ -1438,9 +1442,15 @@ export class DeploymentsManager {
         delete this.db.pastFixtures[fixtureKey];
       }
     }
-    const success = await this.network.provider.send('evm_revert', [
-      saved.snapshot,
-    ]);
+    let success;
+    try {
+      success = await this.network.provider.send('evm_revert', [
+        saved.snapshot,
+      ]);
+    } catch {
+      log(`failed to revert to snapshot`);
+      success = false;
+    }
     if (success) {
       const blockRetrieved = await this.network.provider.send(
         'eth_getBlockByHash',

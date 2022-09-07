@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.14
+
+### Patch Changes
+
+- catch evm_snapshot and evm_revert errors
+
 ## 0.11.13
 
 ### Patch Changes
