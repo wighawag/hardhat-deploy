@@ -1061,7 +1061,7 @@ export type MultiExport = {
 };
 ```
 
-As you see the second format include the previous. While in most case you'll need the single export where your application will support only one network, there are case where your app would want to support multiple networks at nonce. This second format allow for that.
+As you see the second format include the previous. While in most case you'll need the single export where your application will support only one network, there are case where your app would want to support multiple networks at once. This second format allow for that.
 
 Furthermore as hardhat support multiple network configuration for the same network (rinkeby, mainnet...), the export-all format will contains each of them grouped by their chainId.
 
