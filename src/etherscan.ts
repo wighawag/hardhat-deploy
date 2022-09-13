@@ -196,6 +196,9 @@ export async function submitSources(
       case '256':
         host = 'https://api-testnet.hecoinfo.com';
         break;
+      case '420':
+        host = 'https://api-goerli-optimism.etherscan.io';
+        break;
       case '588':
         host = 'https://stardust-explorer.metis.io';
         break;
