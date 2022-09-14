@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.15
+
+### Patch Changes
+
+- support optimism-goerli
+
 ## 0.11.14
 
 ### Patch Changes
