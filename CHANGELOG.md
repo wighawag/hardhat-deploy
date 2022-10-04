@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.16
+
+### Patch Changes
+
+- fix(367): catch exceptions by artifactExists
+
 ## 0.11.15
 
 ### Patch Changes
