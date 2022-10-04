@@ -68,7 +68,7 @@ export async function getExtendedArtifactFromFolders(
   for (const folderPath of folderPaths) {
     const artifacts = new Artifacts(folderPath);
     let artifact = getOldArtifactSync(name, folderPath);
-    if (!artifact && (await artifacts.artifactExists(name))) {
+    if (!artifact && (await artifacts.artifactExists(name).catch(()=>false))) {
       const hardhatArtifact: Artifact = await artifacts.readArtifact(name);
       // check if name is already a fullyQualifiedName
       let fullyQualifiedName = name;
