@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.17
+
+### Patch Changes
+
+- add env variable for EXPORT
+
 ## 0.11.16
 
 ### Patch Changes

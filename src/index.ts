@@ -440,8 +440,9 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       resetMemory: false,
       deletePreviousDeployments: args.reset,
       writeDeploymentsToFiles: args.write,
-      export: args.export,
-      exportAll: args.exportAll,
+      export: args.export || process.env.HARDHAT_DEPLOY_EXPORT_ARTIFACTS,
+      exportAll:
+        args.exportAll || process.env.HARDHAT_DEPLOY_EXPORT_ALL_ARTIFACTS,
       savePendingTx: args.pendingtx,
       gasPrice: args.gasprice,
       maxFeePerGas: args.maxfee,
