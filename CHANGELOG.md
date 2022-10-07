@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.18
+
+### Patch Changes
+
+- fix typo for export
+
 ## 0.11.17
 
 ### Patch Changes
