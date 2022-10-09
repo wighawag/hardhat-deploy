@@ -90,7 +90,7 @@ extendConfig(
     );
 
     if (userConfig.paths?.deploy) {
-      let deployPaths = [];
+      let deployPaths:string[] = [];
       if (typeof userConfig.paths.deploy === 'string') {
         deployPaths = [userConfig.paths.deploy];
       } else {
