@@ -2989,13 +2989,19 @@ data: ${data}
 
             const gasPriceSetup = await getGasPrice();
             const maxFeePerGas = gasPriceSetup.maxFeePerGas;
-            const maxPriorityFeePerGas = gasPriceSetup.maxPriorityFeePerGas;
+            let maxPriorityFeePerGas = gasPriceSetup.maxPriorityFeePerGas;
             let gasPrice: BigNumber | undefined;
             if (!maxFeePerGas && !maxPriorityFeePerGas) {
               gasPrice = gasPriceSetup.gasPrice;
               if (gasPrice) {
                 console.log('using legacy gasPrice with gasprice passed in');
               }
+            }
+            // maxPriorityFeePerGas must be higher when replacing a transaction
+            if (maxPriorityFeePerGas && tx.maxPriorityFeePerGas && maxPriorityFeePerGas.lte(tx.maxPriorityFeePerGas)) {
+              const txMaxPriorityFee = BigNumber.from(tx.maxPriorityFeePerGas)
+              const increaseBy = txMaxPriorityFee.mul(5).div(100);
+              maxPriorityFeePerGas = txMaxPriorityFee.add(increaseBy);
             }
             // if (!gasPrice && !maxFeePerGas && !maxPriorityFeePerGas) {
             //   console.log('using legacy gasPrice, TODO handle auto pricing')
