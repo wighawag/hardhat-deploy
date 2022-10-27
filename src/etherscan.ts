@@ -220,6 +220,9 @@ export async function submitSources(
       case '421611':
         host = 'https://api-testnet.arbiscan.io';
         break;
+      case '421613':
+        host = 'https://api-goerli.arbiscan.io';
+        break;
       case '43113':
         host = 'https://api-testnet.snowtrace.io';
         break;
