@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.19
+
+### Patch Changes
+
+- Added chain id 421613 and API endpoint https://api-goerli.arbiscan.io
+
 ## 0.11.18
 
 ### Patch Changes
