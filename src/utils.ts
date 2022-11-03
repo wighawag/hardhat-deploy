@@ -68,7 +68,10 @@ export async function getExtendedArtifactFromFolders(
   for (const folderPath of folderPaths) {
     const artifacts = new Artifacts(folderPath);
     let artifact = getOldArtifactSync(name, folderPath);
-    if (!artifact && (await artifacts.artifactExists(name).catch(()=>false))) {
+    if (
+      !artifact &&
+      (await artifacts.artifactExists(name).catch(() => false))
+    ) {
       const hardhatArtifact: Artifact = await artifacts.readArtifact(name);
       // check if name is already a fullyQualifiedName
       let fullyQualifiedName = name;
@@ -332,7 +335,12 @@ function transformNamedAccounts(
           // eslint-disable-next-line no-case-declarations
           const protocolSplit = spec.split('://');
           if (protocolSplit.length > 1) {
-            if (protocolSplit[0].toLowerCase() === 'ledger') {
+            if (protocolSplit[0].toLowerCase() === 'external') {
+              address = protocolSplit[1];
+              addressesToProtocol[address.toLowerCase()] =
+                protocolSplit[0].toLowerCase();
+              // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
+            } else if (protocolSplit[0].toLowerCase() === 'ledger') {
               address = protocolSplit[1];
               addressesToProtocol[address.toLowerCase()] =
                 protocolSplit[0].toLowerCase();

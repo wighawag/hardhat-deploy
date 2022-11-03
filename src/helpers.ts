@@ -614,11 +614,11 @@ export function addHelpers(
     );
     await setupGasPrice(unsignedTx);
     await setupNonce(from, unsignedTx);
- 
+
     // Temporary workaround for https://github.com/ethers-io/ethers.js/issues/2078
     // TODO: Remove me when LedgerSigner adds proper support for 1559 txns
     if (hardwareWallet === 'ledger') {
-      unsignedTx.type = 1
+      unsignedTx.type = 1;
     }
 
     if (unknown) {
@@ -1730,7 +1730,26 @@ Note that in this case, the contract deployment will not behave the same if depl
         const registeredProtocol =
           deploymentManager.addressesToProtocol[from.toLowerCase()];
         if (registeredProtocol) {
-          if (registeredProtocol === 'ledger') {
+          if (registeredProtocol === 'external') {
+            ethersSigner = provider.getSigner(from); //new WaitingTxSigner(from, provider);
+            ethersSigner.sendTransaction = async (
+              txRequest: TransactionRequest
+            ) => {
+              const response: {hash: string} = await enquirer.prompt({
+                type: 'input',
+                name: 'hash',
+                message: `
+                tx hash please
+                to : ${txRequest.to}
+                data : ${txRequest.data}
+                value : ${txRequest.value}
+                `,
+              });
+
+              return provider.getTransaction(response.hash);
+            };
+            hardwareWallet = 'external';
+          } else if (registeredProtocol === 'ledger') {
             if (!LedgerSigner) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               let error: any | undefined;
