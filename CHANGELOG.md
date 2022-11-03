@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.20
+
+### Patch Changes
+
+- preliminary work for external tx support
+
 ## 0.11.19
 
 ### Patch Changes
