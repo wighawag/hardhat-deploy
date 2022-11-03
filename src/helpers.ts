@@ -2625,7 +2625,14 @@ data: ${data}
     } = getFrom(options.from);
 
     let tx;
-    const deployment = await partialExtension.get(name);
+    let deployment = await partialExtension.getOrNull(name);
+    if (!deployment?.address) {
+      if (!options.to) throw new Error(`expected deployment for ${name} or option "to" with deploymed address`)
+      deployment = {
+        address: options.to,
+        abi: (await partialExtension.getArtifact(name)).abi
+      }
+    }
     const abi = deployment.abi;
     const overrides = {
       gasLimit: options.gasLimit,
