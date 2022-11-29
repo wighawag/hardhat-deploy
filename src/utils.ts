@@ -345,9 +345,10 @@ function transformNamedAccounts(
               protocolSplit[0].toLowerCase() === 'trezor'
             ) {
               address = protocolSplit[1];
-              addressesToProtocol[address.toLowerCase()] = protocol;
+              addressesToProtocol[address.toLowerCase()] =
+                protocolSplit[0].toLowerCase();
               // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
-            } else if (protocol === 'privatekey') {
+            } else if (protocolSplit[0].toLowerCase() === 'privatekey') {
               address = new Wallet(protocolSplit[1]).address;
               addressesToProtocol[address.toLowerCase()] =
                 'privatekey://' + protocolSplit[1];
