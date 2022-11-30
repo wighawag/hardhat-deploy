@@ -48,6 +48,7 @@ import OptimizedTransparentUpgradeableProxy from '../extendedArtifacts/Optimized
 import DefaultProxyAdmin from '../extendedArtifacts/ProxyAdmin.json';
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
+import erc1967Proxy from '../extendedArtifacts/ERC1967Proxy.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
 import oldDiamonBase from './old_diamondbase.json';
 import diamondERC165Init from '../extendedArtifacts/DiamondERC165Init.json';
@@ -1240,6 +1241,10 @@ export function addHelpers(
               // } else if (options.proxy.proxyContract === 'UUPS') {
               //   checkABIConflict = true;
               //   proxyContract = UUPSProxy;
+            } else if (options.proxy.proxyContract === 'UUPS') {
+              checkABIConflict = false;
+              proxyContract = erc1967Proxy;
+              proxyArgsTemplate = ['{implementation}', '{data}'];
             } else {
               throw new Error(
                 `no contract found for ${options.proxy.proxyContract}`
