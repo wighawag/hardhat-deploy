@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.22
+
+### Patch Changes
+
+- fix UUPS upgrade logic
+
 ## 0.11.21
 
 ### Patch Changes
