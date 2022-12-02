@@ -1150,6 +1150,7 @@ export function addHelpers(
     updateMethod: string | undefined;
     updateArgs: any[];
     upgradeIndex: number | undefined;
+    checkProxyAdmin: boolean;
   }> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let contractName = options.contract;
@@ -1159,6 +1160,7 @@ export function addHelpers(
     let upgradeIndex;
     let proxyContract: ExtendedArtifact = eip173Proxy;
     let checkABIConflict = true;
+    let checkProxyAdmin = true;
     let viaAdminContract:
       | string
       | {name: string; artifact?: string | ArtifactData}
@@ -1243,6 +1245,7 @@ export function addHelpers(
               //   proxyContract = UUPSProxy;
             } else if (options.proxy.proxyContract === 'UUPS') {
               checkABIConflict = false;
+              checkProxyAdmin = false;
               proxyContract = erc1967Proxy;
               proxyArgsTemplate = ['{implementation}', '{data}'];
             } else {
@@ -1409,6 +1412,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       updateMethod,
       updateArgs,
       upgradeIndex,
+      checkProxyAdmin,
     };
   }
 
@@ -1435,6 +1439,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       proxyContract,
       proxyArgsTemplate,
       mergedABI,
+      checkProxyAdmin,
     } = await _getProxyInfo(name, options);
     /* eslint-enable prefer-const */
 
@@ -1532,11 +1537,26 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
+        let from = options.from;
+
         const ownerStorage = await provider.getStorageAt(
           proxy.address,
           '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
         );
         const currentOwner = getAddress(`0x${ownerStorage.substr(-40)}`);
+        if (currentOwner === AddressZero) {
+          if (checkProxyAdmin) {
+            throw new Error(
+              'The Proxy belongs to no-one. It cannot be upgraded anymore'
+            );
+          }
+        } else if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
+          throw new Error(
+            `To change owner/admin, you need to call the proxy directly, it currently is ${currentOwner}`
+          );
+        } else {
+          from = currentOwner;
+        }
 
         const oldProxy = proxy.abi.find(
           (frag: {name: string}) => frag.name === 'changeImplementation'
@@ -1544,17 +1564,6 @@ Note that in this case, the contract deployment will not behave the same if depl
         const changeImplementationMethod = oldProxy
           ? 'changeImplementation'
           : 'upgradeToAndCall';
-
-        if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
-          throw new Error(
-            `To change owner/admin, you need to call the proxy directly, it currently is ${currentOwner}`
-          );
-        }
-        if (currentOwner === AddressZero) {
-          throw new Error(
-            'The Proxy belongs to no-one. It cannot be upgraded anymore'
-          );
-        }
 
         if (proxyAdminName) {
           if (oldProxy) {
@@ -1594,14 +1603,14 @@ Note that in this case, the contract deployment will not behave the same if depl
           ) {
             executeReceipt = await execute(
               name,
-              {...options, from: currentOwner},
+              {...options, from},
               'upgradeTo',
               implementation.address
             );
           } else {
             executeReceipt = await execute(
               name,
-              {...options, from: currentOwner},
+              {...options, from},
               changeImplementationMethod,
               implementation.address,
               data
