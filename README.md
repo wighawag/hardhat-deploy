@@ -86,7 +86,7 @@ This plugin contains a lot more features too, all geared toward a better develop
 - These helpers contains options to auto mine on dev network (to speed up test deployments).
 - save metadata of deployed contract so they can always be fully verified, via [sourcify](https://sourcify.dev) or [etherscan](https://etherscan.io).
 - ability to submit contract source to etherscan and sourcify for verification at any time. (Because **hardhat-deploy** will save all the necessary info, it can be executed at any time.)
-- support harhdat's fork feature so deployment can be accessed even when run through fork.
+- support hardhat's fork feature so deployment can be accessed even when run through fork.
 - named accounts are automatically impersonnated too, so you can perform tx as if you had their private key.
 - proxy deployment with ability to upgrade them transparently, only if code changes.
 - this include support for [openzeppelin](https://openzeppelin.com) transparent proxies
@@ -389,7 +389,7 @@ hardhat --network mainnet etherscan-verify [--api-key <apikey>] [--apiurl <url>]
 
 #### **Options**
 
-Note that harhdat-deploy now use a different config format to not conflict with `hardhat-etherscan`
+Note that hardhat-deploy now use a different config format to not conflict with `hardhat-etherscan`
 
 `--api-key <api key>`: let you specify your etherscan api key. Alternatively, you can provide it via the env variable `ETHERSCAN_API_KEY` or through the hardhat.config.ts verify field:
 
