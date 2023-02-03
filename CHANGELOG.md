@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.23
+
+### Patch Changes
+
+- Adding the Sepolia network to the network list, so we can verify contracts in the Sepolia network.
+
 ## 0.11.22
 
 ### Patch Changes
