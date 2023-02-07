@@ -1785,15 +1785,14 @@ Note that in this case, the contract deployment will not behave the same if depl
               return provider.getTransaction(response.hash);
             };
             hardwareWallet = 'external';
-          } else if (registeredProtocol === 'ledger') {
-            if (registeredProtocol.startsWith('ledger')) {
-              if (!ledgerSigner) {
-                ledgerSigner = ledgerSignerFactory(
-                  provider,
-                  registeredProtocol.substr(9)
-                );
-              }
+          } else if (registeredProtocol.startsWith('ledger')) {
+            if (!ledgerSigner) {
+              ledgerSigner = ledgerSignerFactory(
+                provider,
+                registeredProtocol.substr(9)
+              );
             }
+
             hardwareWallet = 'ledger';
             ethersSigner = ledgerSigner;
           } else if (registeredProtocol.startsWith('privatekey')) {
