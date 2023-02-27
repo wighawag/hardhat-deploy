@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.24
+
+### Patch Changes
+
+- allow to use HARDHAT_DEPLOY_EXPORT for the export command too
+
 ## 0.11.23
 
 ### Patch Changes
