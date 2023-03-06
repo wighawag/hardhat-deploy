@@ -753,7 +753,7 @@ The `contracts` field specify an array of object which itself have 2 fields.
 - `artifacts`: (mandatory) it is a path to an artifact folder. This support both hardhat and truffle artifacts.
 - `deploy`: (optional) it specifies a path to a folder where reside deploy script. The deploy scripts have only access to the artifact specified in the artifacts field. This allow project to share their deployment procedure. A boon for developer aiming at integrating it as they can get the contracts to be deployed for testing locally.
 
-The `deployments` fields specify an object whose field nasme are the hardhat network and the value is an array of path to look for deployments. It supports both **hardhat-deploy** and truffle formats.
+The `deployments` fields specify an object whose field names are the hardhat network and the value is an array of path to look for deployments. It supports both **hardhat-deploy** and truffle formats.
 
 ---
 
