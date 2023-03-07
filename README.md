@@ -332,9 +332,9 @@ It add similar options than the `deploy` task :
 
 #### **Options**
 
-`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend.
+`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend. If the extension ends in .ts it will generate a typescript file containing the contracts info.
 
-`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
+`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked. If the extension ends in .ts it will generate a typescript file containing the contracts info.
 
 `--tags <tags>`: only excute deploy scripts with the given tags (separated by commas) and their dependencies (see more info [here](#deploy-scripts-tags-and-dependencies) about tags and dependencies)
 
@@ -449,7 +449,7 @@ Later this task might instead pin the metadata to ipfs, so sourcify can automati
 #### **Options**
 
 `--contract-name <contract name>`: specify the contract's name you want to verify
-  
+
 `--endpoint <endpoint>`: specify the sourcify endpoint, default to https://sourcify.dev/server/
 
 `--write-failing-metadata`: if set and the sourcify task fails to verify, the metadata file will be written to disk, so you can more easily figure out what has gone wrong.
@@ -468,9 +468,10 @@ One of the following options need to be set for this task to have any effects :
 
 #### **Options**
 
-`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend.
+`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend. If the extension ends in .ts it will generate a typescript file containing the contracts info.
 
-`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
+`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked. If the extension ends in .ts it will generate a typescript file containing the contracts info.
+
 This last option has some limitations, when combined with the use of external deployments (see [Configuration](#configuration)). If such external deployments were using older version of **hardhat-deploy** or truffle, the chainId might be missing. In order for these to be exported, the hardhat network config need to explicity state the chainId in the `networks` config of `hardhat.config.js`.
 
 With both `--export` and `--export-all`, using the special `<filepath>` value of `-` will output to `STDOUT` rather than writing a normal file.
@@ -1072,6 +1073,8 @@ export type MultiExport = {
   [chainId: string]: {[name: string]: Export};
 };
 ```
+
+For both --export and --export-all, if the extension ends in .ts it will generate a typescript file containing the contracts info.
 
 ---
 
