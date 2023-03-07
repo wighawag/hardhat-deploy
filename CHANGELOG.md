@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.25
+
+### Patch Changes
+
+- allow to export as typescript const
+
 ## 0.11.24
 
 ### Patch Changes
