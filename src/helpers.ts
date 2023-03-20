@@ -40,7 +40,7 @@ import {
 } from '../types';
 import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
-import {mergeABIs, recode} from './utils';
+import {mergeABIs, recode, getArtifactFromFolders} from './utils';
 import fs from 'fs-extra';
 
 import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
@@ -496,7 +496,11 @@ export function addHelpers(
     if (options.contract) {
       if (typeof options.contract === 'string') {
         artifactName = options.contract;
-        artifact = await getArtifact(artifactName);
+        if (options.importPath) {
+          artifact = await getArtifactFromFolders(artifactName, [options.importPath]) as Artifact;
+        } else {
+          artifact = await getArtifact(artifactName);
+        }
       } else {
         artifact = options.contract as Artifact; // TODO better handling
       }
