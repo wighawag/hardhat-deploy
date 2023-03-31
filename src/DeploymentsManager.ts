@@ -151,7 +151,7 @@ export class DeploymentsManager {
         name: string,
         deployment: DeploymentSubmission
       ): Promise<void> => {
-        this.saveDeployment(name, deployment);
+        await this.saveDeployment(name, deployment);
       },
       delete: async (name: string): Promise<void> =>
         this.deleteDeployment(name),
