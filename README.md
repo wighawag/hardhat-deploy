@@ -1175,7 +1175,7 @@ The full proxy options is as follow:
 ```ts
 type ProxyOptionsBase = {
   owner?: Address; // this set the owner of the proxy. further upgrade will need to be executed from that owner
-  upgradeIndex?: number; // allow you to breakdown your upgrades into separate deploy scriot, each with their own index. A deploy call with a specific upgradeIndex will be executed only once, only if the current upgradeIndex is one less.
+  upgradeIndex?: number; // allow you to breakdown your upgrades into separate deploy script, each with their own index. A deploy call with a specific upgradeIndex will be executed only once, only if the current upgradeIndex is one less.
   proxyContract?: // default to "EIP173Proxy". See below for more details
   string | ArtifactData;
   viaAdminContract?: // allow to specify a contract that act as a middle man to perform upgrades. Useful and Recommended for Transparent Proxies
