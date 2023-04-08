@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.26
+
+### Patch Changes
+
+- use pnpm + support latest zksync
+
 ## 0.11.25
 
 ### Patch Changes
