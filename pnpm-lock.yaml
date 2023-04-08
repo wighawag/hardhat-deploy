@@ -71,8 +71,8 @@ dependencies:
     specifier: ^6.9.4
     version: 6.10.1
   zksync-web3:
-    specifier: ^0.8.1
-    version: 0.8.1(ethers@5.5.4)
+    specifier: ^0.14.3
+    version: 0.14.3(ethers@5.5.4)
 
 devDependencies:
   '@changesets/cli':
@@ -5182,10 +5182,10 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /zksync-web3@0.8.1(ethers@5.5.4):
-    resolution: {integrity: sha512-1A4aHPQ3MyuGjpv5X/8pVEN+MdZqMjfVmiweQSRjOlklXYu65wT9BGEOtCmMs5d3gIvLp4ssfTeuR5OCKOD2kw==}
+  /zksync-web3@0.14.3(ethers@5.5.4):
+    resolution: {integrity: sha512-hT72th4AnqyLW1d5Jlv8N2B/qhEnl2NePK2A3org7tAa24niem/UAaHMkEvmWI3SF9waYUPtqAtjpf+yvQ9zvQ==}
     peerDependencies:
-      ethers: ~5.7.0
+      ethers: ^5.7.0
     dependencies:
       ethers: 5.5.4
     dev: false
