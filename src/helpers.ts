@@ -548,13 +548,14 @@ export function addHelpers(
     };
 
     let factory;
+    let factoryDeps: string[] = [];
     if (network.zksync) {
       factory = new zk.ContractFactory(
         linkedArtifact.abi,
         linkedArtifact.bytecode,
         ethersSigner as zk.Signer
       );
-      const factoryDeps = await extractFactoryDeps(linkedArtifact);
+      factoryDeps = await extractFactoryDeps(linkedArtifact);
       const customData = {
         customData: {
           factoryDeps,
@@ -676,6 +677,7 @@ export function addHelpers(
       receipt,
       transactionHash: receipt.transactionHash,
       libraries: options.libraries,
+      factoryDeps,
     };
     await saveDeployment(name, deployment);
     if (options.log || hardwareWallet) {
@@ -956,13 +958,10 @@ export function addHelpers(
           });
           const newData = newTransaction.data?.toString();
 
-          const deserialize = zk.utils.parseTransaction(
-            transaction.data
-          ) as any;
-          const desFlattened = hexConcat(deserialize.customData.factoryDeps);
+          const oldFlattened = hexConcat(deployment.factoryDeps || []);
           const newFlattened = hexConcat(factoryDeps);
 
-          if (deserialize.data !== newData || desFlattened != newFlattened) {
+          if (transaction.data !== newData || oldFlattened != newFlattened) {
             return {differences: true, address: deployment.address};
           }
           return {differences: false, address: deployment.address};
