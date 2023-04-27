@@ -159,7 +159,7 @@ With hardhat the tsconfig.json is optional.
 
 But if you add folders to the `include` field in `tsconfig.json`, you ll also need to include `hardhat.config.ts` like :
 
-`include": ["./hardhat.config.ts", "./scripts", "./deploy", "./test"]`
+`"include": ["./hardhat.config.ts", "./scripts", "./deploy", "./test"]`
 
 for deploy script (see below) you can write them this way to benefit from typing :
 
