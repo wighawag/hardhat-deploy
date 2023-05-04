@@ -63,7 +63,29 @@ import {
   Transaction,
 } from '@ethersproject/transactions';
 
-let LedgerSigner: any; // TODO type
+let ledgerSigner: Signer;
+
+function ledgerSignerFactory(
+  provider: Web3Provider | zk.Web3Provider,
+  path: string
+): Signer {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const hardwareWalletModule = require('@ethersproject/hardware-wallets');
+    return new hardwareWalletModule.LedgerSigner(provider, 'default', path);
+  } catch (_) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const hardwareWalletModule = require('@anders-t/ethers-ledger');
+      return new hardwareWalletModule.LedgerSigner(provider, path);
+    } catch (e) {
+      console.error(
+        `failed to loader hardhware wallet module for ledger, you can either use "@ethersproject/hardware-wallets" which as time of writing does not work or use "@anders-t/ethers-ledger."`
+      );
+      throw e;
+    }
+  }
+}
 
 async function handleSpecificErrors<T>(p: Promise<T>): Promise<T> {
   let result: T;
@@ -1762,33 +1784,16 @@ Note that in this case, the contract deployment will not behave the same if depl
               return provider.getTransaction(response.hash);
             };
             hardwareWallet = 'external';
-          } else if (registeredProtocol === 'ledger') {
-            if (!LedgerSigner) {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              let error: any | undefined;
-              try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const hardwareWalletModule = require('@ethersproject/hardware-wallets');
-                LedgerSigner = hardwareWalletModule.LedgerSigner;
-              } catch (e) {
-                error = e;
-                try {
-                  // eslint-disable-next-line @typescript-eslint/no-var-requires
-                  const hardwareWalletModule = require('@anders-t/ethers-ledger');
-                  LedgerSigner = hardwareWalletModule.LedgerSigner;
-                  error = undefined;
-                } catch (e) {}
-              }
-
-              if (error) {
-                console.error(
-                  `failed to loader hardhware wallet module for ledger, you can either use "@ethersproject/hardware-wallets" which as time of writing does not work or use "@anders-t/ethers-ledger."`
-                );
-                throw error;
-              }
+          } else if (registeredProtocol.startsWith('ledger')) {
+            if (!ledgerSigner) {
+              ledgerSigner = ledgerSignerFactory(
+                provider,
+                registeredProtocol.substr(9)
+              );
             }
-            ethersSigner = new LedgerSigner(provider);
+
             hardwareWallet = 'ledger';
+            ethersSigner = ledgerSigner;
           } else if (registeredProtocol.startsWith('privatekey')) {
             ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
           } else if (registeredProtocol.startsWith('gnosis')) {

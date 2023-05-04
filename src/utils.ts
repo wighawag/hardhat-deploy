@@ -341,9 +341,17 @@ function transformNamedAccounts(
                 protocolSplit[0].toLowerCase();
               // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
             } else if (protocolSplit[0].toLowerCase() === 'ledger') {
-              address = protocolSplit[1];
-              addressesToProtocol[address.toLowerCase()] =
-                protocolSplit[0].toLowerCase();
+              const addressSplit = protocolSplit[1].split(':');
+              if (addressSplit.length > 1) {
+                address = addressSplit[1];
+                addressesToProtocol[
+                  address.toLowerCase()
+                ] = `ledger://${addressSplit[0]}`;
+              } else {
+                address = protocolSplit[1];
+                addressesToProtocol[address.toLowerCase()] =
+                  "ledger://m/44'/60'/0'/0/0";
+              }
               // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
             } else if (protocolSplit[0].toLowerCase() === 'privatekey') {
               address = new Wallet(protocolSplit[1]).address;
