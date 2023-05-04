@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.27
+
+### Patch Changes
+
+- fix ledger support by @stupid-boar
+
 ## 0.11.26
 
 ### Patch Changes
