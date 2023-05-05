@@ -1,5 +1,230 @@
 # hardhat-deploy
 
+## 0.11.27
+
+### Patch Changes
+
+- fix ledger support by @stupid-boar
+
+## 0.11.26
+
+### Patch Changes
+
+- use pnpm + support latest zksync
+
+## 0.11.25
+
+### Patch Changes
+
+- allow to export as typescript const
+
+## 0.11.24
+
+### Patch Changes
+
+- allow to use HARDHAT_DEPLOY_EXPORT for the export command too
+
+## 0.11.23
+
+### Patch Changes
+
+- Adding the Sepolia network to the network list, so we can verify contracts in the Sepolia network.
+
+## 0.11.22
+
+### Patch Changes
+
+- fix UUPS upgrade logic
+
+## 0.11.21
+
+### Patch Changes
+
+- add UUPS optio
+
+## 0.11.20
+
+### Patch Changes
+
+- preliminary work for external tx support
+
+## 0.11.19
+
+### Patch Changes
+
+- Added chain id 421613 and API endpoint https://api-goerli.arbiscan.io
+
+## 0.11.18
+
+### Patch Changes
+
+- fix typo for export
+
+## 0.11.17
+
+### Patch Changes
+
+- add env variable for EXPORT
+
+## 0.11.16
+
+### Patch Changes
+
+- fix(367): catch exceptions by artifactExists
+
+## 0.11.15
+
+### Patch Changes
+
+- support optimism-goerli
+
+## 0.11.14
+
+### Patch Changes
+
+- catch evm_snapshot and evm_revert errors
+
+## 0.11.13
+
+### Patch Changes
+
+- upgrade zksync-web by @MarkuSchick
+
+## 0.11.12
+
+### Patch Changes
+
+- fix DiamondLoupeFacet
+
+## 0.11.11
+
+### Patch Changes
+
+- Update the dependencies for latest deployment of the zkSync v2 test network.
+
+## 0.11.10
+
+### Patch Changes
+
+- export-artifacts: do not export libraries or interfaces by defaults
+
+## 0.11.9
+
+### Patch Changes
+
+- preserve artifact dir structure when exporting
+
+## 0.11.8
+
+### Patch Changes
+
+- fix --hide-sources
+
+## 0.11.7
+
+### Patch Changes
+
+- rename --no-metadata to --hide-sources
+
+## 0.11.6
+
+### Patch Changes
+
+- ability to export artifact without metadata
+
+## 0.11.5
+
+### Patch Changes
+
+- a103f2d: workaround for ledger
+- 283ec68: zksync support
+
+## 0.11.5-zksync.1
+
+### Patch Changes
+
+- workaround for ledger
+
+## 0.11.5-zksync.0
+
+### Patch Changes
+
+- zksync support
+
+## 0.11.4
+
+### Patch Changes
+
+- add metis block explorer
+
+## 0.11.3
+
+### Patch Changes
+
+- fix proxyAdmin
+
+## 0.11.2
+
+### Patch Changes
+
+- 8bbfbae: add --contract-name to etherscan-verify
+
+## 0.11.1
+
+### Patch Changes
+
+- do not resave, increasing unecessarely numDeployments for diamond
+
+## 0.11.0
+
+### Minor Changes
+
+- 54ad195: revamp diamond support
+
+### Patch Changes
+
+- 3216a31: fix old diamond detection
+- e8737d5: fix
+- e40546a: fix
+- 0810042: diamond : do not save diamondCut + do not resave if no changes
+- 5602a44: support old diamond + fix Loupe typo
+
+## 0.11.0-next.5
+
+### Patch Changes
+
+- diamond : do not save diamondCut + do not resave if no changes
+
+## 0.11.0-next.4
+
+### Patch Changes
+
+- fix old diamond detection
+
+## 0.11.0-next.3
+
+### Patch Changes
+
+- support old diamond + fix Loupe typo
+
+## 0.11.0-next.2
+
+### Patch Changes
+
+- fix
+
+## 0.11.0-next.1
+
+### Patch Changes
+
+- fix
+
+## 0.11.0-next.0
+
+### Minor Changes
+
+- revamp diamond support
+
 ## 0.10.6
 
 ### Patch Changes
@@ -11,6 +236,12 @@
 ### Patch Changes
 
 - do nor override original receipt for diamond
+
+## 0.10.5-zksync.0
+
+### Patch Changes
+
+- zksync support
 
 ## 0.10.4
 

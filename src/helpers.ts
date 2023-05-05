@@ -11,11 +11,12 @@ import {
   ContractFactory,
   PayableOverrides,
 } from '@ethersproject/contracts';
+import * as zk from 'zksync-web3';
 import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {zeroPad, hexlify} from '@ethersproject/bytes';
+import {zeroPad, hexlify, hexConcat} from '@ethersproject/bytes';
 import {Interface, FunctionFragment} from '@ethersproject/abi';
 import {
   Deployment,
@@ -47,11 +48,13 @@ import OptimizedTransparentUpgradeableProxy from '../extendedArtifacts/Optimized
 import DefaultProxyAdmin from '../extendedArtifacts/ProxyAdmin.json';
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
+import erc1967Proxy from '../extendedArtifacts/ERC1967Proxy.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
+import oldDiamonBase from './old_diamondbase.json';
+import diamondERC165Init from '../extendedArtifacts/DiamondERC165Init.json';
 import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
 import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
 import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
-import diamantaire from '../extendedArtifacts/Diamantaire.json';
 import {Artifact, EthereumProvider, Network} from 'hardhat/types';
 import {DeploymentsManager} from './DeploymentsManager';
 import enquirer from 'enquirer';
@@ -61,16 +64,6 @@ import {
 } from '@ethersproject/transactions';
 
 let LedgerSigner: any; // TODO type
-
-diamondBase.abi = mergeABIs(
-  [
-    diamondBase.abi,
-    diamondCutFacet.abi,
-    diamondLoupeFacet.abi,
-    ownershipFacet.abi,
-  ],
-  {check: false, skipSupportsInterface: false}
-);
 
 async function handleSpecificErrors<T>(p: Promise<T>): Promise<T> {
   let result: T;
@@ -227,7 +220,7 @@ function linkLibraries(
 export function addHelpers(
   deploymentManager: DeploymentsManager,
   partialExtension: PartialExtension,
-  network: Network,
+  network: any, // TODO work out right config type
   getArtifact: (name: string) => Promise<Artifact>,
   saveDeployment: (
     name: string,
@@ -279,13 +272,17 @@ export function addHelpers(
     ) => Promise<void>;
   };
 } {
-  let provider: Web3Provider;
+  let provider: Web3Provider | zk.Web3Provider;
   const availableAccounts: {[name: string]: boolean} = {};
 
-  async function init(): Promise<Web3Provider> {
+  async function init(): Promise<Web3Provider | zk.Web3Provider> {
     if (!provider) {
       await deploymentManager.setupAccounts();
-      provider = new Web3Provider(fixProvider(network.provider));
+      if (network.zksync) {
+        provider = new zk.Web3Provider(fixProvider(network.provider));
+      } else {
+        provider = new Web3Provider(fixProvider(network.provider));
+      }
       try {
         const accounts = await provider.send('eth_accounts', []);
         for (const account of accounts) {
@@ -459,9 +456,9 @@ export function addHelpers(
         }
       }
 
-      let ethTx = await handleSpecificErrors(
+      let ethTx = (await handleSpecificErrors(
         ethersSigner.sendTransaction(txRequest)
-      );
+      )) as TransactionResponse;
       if (options.log || hardwareWallet) {
         log(` (tx: ${ethTx.hash})...`);
       }
@@ -541,7 +538,7 @@ export function addHelpers(
       options
     );
 
-    const overrides: PayableOverrides = {
+    let overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
       gasPrice: options.gasPrice,
       maxFeePerGas: options.maxFeePerGas,
@@ -550,21 +547,48 @@ export function addHelpers(
       nonce: options.nonce,
     };
 
-    const factory = new ContractFactory(
-      linkedArtifact.abi,
-      linkedArtifact.bytecode,
-      ethersSigner
-    );
+    let factory;
+    if (network.zksync) {
+      factory = new zk.ContractFactory(
+        linkedArtifact.abi,
+        linkedArtifact.bytecode,
+        ethersSigner as zk.Signer
+      );
+      const factoryDeps = await extractFactoryDeps(linkedArtifact);
+      const customData = {
+        customData: {
+          factoryDeps,
+          feeToken: zk.utils.ETH_ADDRESS,
+        },
+      };
+      overrides = {
+        ...overrides,
+        ...customData,
+      };
+    } else {
+      factory = new ContractFactory(
+        linkedArtifact.abi,
+        linkedArtifact.bytecode,
+        ethersSigner
+      );
+    }
+
     const numArguments = factory.interface.deploy.inputs.length;
     if (args.length !== numArguments) {
       throw new Error(
         `expected ${numArguments} constructor arguments, got ${args.length}`
       );
     }
+
     const unsignedTx = factory.getDeployTransaction(...args, overrides);
 
     let create2Address;
     if (options.deterministicDeployment) {
+      if (network.zksync) {
+        throw new Error(
+          'deterministic zk deployments are  not supported at this time'
+        );
+      }
       if (typeof unsignedTx.data === 'string') {
         const create2DeployerAddress = await ensureCreate2DeployerReady(
           options
@@ -592,6 +616,12 @@ export function addHelpers(
     await setupGasPrice(unsignedTx);
     await setupNonce(from, unsignedTx);
 
+    // Temporary workaround for https://github.com/ethers-io/ethers.js/issues/2078
+    // TODO: Remove me when LedgerSigner adds proper support for 1559 txns
+    if (hardwareWallet === 'ledger') {
+      unsignedTx.type = 1;
+    }
+
     if (unknown) {
       throw new UnknownSignerError({
         from,
@@ -605,9 +635,9 @@ export function addHelpers(
         print(` (please confirm on your ${hardwareWallet})`);
       }
     }
-    let tx = await handleSpecificErrors(
+    let tx = (await handleSpecificErrors(
       ethersSigner.sendTransaction(unsignedTx)
-    );
+    )) as TransactionResponse;
 
     if (options.log || hardwareWallet) {
       print(` (tx: ${tx.hash})...`);
@@ -828,6 +858,21 @@ export function addHelpers(
     return partialExtension.getOrNull(name);
   }
 
+  // TODO add ZkSyncArtifact
+  async function extractFactoryDeps(artifact: any): Promise<string[]> {
+    // Load all the dependency bytecodes.
+    // We transform it into an array of bytecodes.
+    const factoryDeps: string[] = [];
+    for (const dependencyHash in artifact.factoryDeps) {
+      const dependencyContract = artifact.factoryDeps[dependencyHash];
+      const dependencyBytecodeString = (await getArtifact(dependencyContract))
+        .bytecode;
+      factoryDeps.push(dependencyBytecodeString);
+    }
+
+    return factoryDeps;
+  }
+
   async function fetchIfDifferent(
     name: string,
     options: DeployOptions
@@ -900,14 +945,40 @@ export function addHelpers(
         const {artifact} = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact, options.libraries);
-        const factory = new ContractFactory(abi, byteCode, ethersSigner);
-        const newTransaction = factory.getDeployTransaction(...argArray);
-        const newData = newTransaction.data?.toString();
+        if (network.zksync) {
+          const factory = new zk.ContractFactory(
+            abi,
+            byteCode,
+            ethersSigner as zk.Signer
+          );
+          const factoryDeps = await extractFactoryDeps(artifact);
+          const newTransaction = factory.getDeployTransaction(...argArray, {
+            customData: {
+              factoryDeps,
+              feeToken: zk.utils.ETH_ADDRESS,
+            },
+          });
+          const newData = newTransaction.data?.toString();
 
-        if (transaction.data !== newData) {
-          return {differences: true, address: deployment.address};
+          const deserialize = zk.utils.parseTransaction(
+            transaction.data
+          ) as any;
+          const desFlattened = hexConcat(deserialize.customData.factoryDeps);
+          const newFlattened = hexConcat(factoryDeps);
+
+          if (deserialize.data !== newData || desFlattened != newFlattened) {
+            return {differences: true, address: deployment.address};
+          }
+          return {differences: false, address: deployment.address};
+        } else {
+          const factory = new ContractFactory(abi, byteCode, ethersSigner);
+          const newTransaction = factory.getDeployTransaction(...argArray);
+          const newData = newTransaction.data?.toString();
+          if (transaction.data !== newData) {
+            return {differences: true, address: deployment.address};
+          }
+          return {differences: false, address: deployment.address};
         }
-        return {differences: false, address: deployment.address};
       } else {
         if (transactionDetailsAvailable) {
           throw new Error(
@@ -1083,6 +1154,7 @@ export function addHelpers(
     updateMethod: string | undefined;
     updateArgs: any[];
     upgradeIndex: number | undefined;
+    checkProxyAdmin: boolean;
   }> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let contractName = options.contract;
@@ -1092,6 +1164,7 @@ export function addHelpers(
     let upgradeIndex;
     let proxyContract: ExtendedArtifact = eip173Proxy;
     let checkABIConflict = true;
+    let checkProxyAdmin = true;
     let viaAdminContract:
       | string
       | {name: string; artifact?: string | ArtifactData}
@@ -1174,6 +1247,11 @@ export function addHelpers(
               // } else if (options.proxy.proxyContract === 'UUPS') {
               //   checkABIConflict = true;
               //   proxyContract = UUPSProxy;
+            } else if (options.proxy.proxyContract === 'UUPS') {
+              checkABIConflict = false;
+              checkProxyAdmin = false;
+              proxyContract = erc1967Proxy;
+              proxyArgsTemplate = ['{implementation}', '{data}'];
             } else {
               throw new Error(
                 `no contract found for ${options.proxy.proxyContract}`
@@ -1191,11 +1269,7 @@ export function addHelpers(
 
     const proxyName = name + '_Proxy';
     const {address: owner} = await getProxyOwner(options);
-    const {
-      address: from,
-      ethersSigner,
-      hardwareWallet,
-    } = await getFrom(options.from);
+    const {address: from} = await getFrom(options.from);
     const implementationArgs = options.args ? [...options.args] : [];
 
     // --- Implementation Deployment ---
@@ -1342,6 +1416,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       updateMethod,
       updateArgs,
       upgradeIndex,
+      checkProxyAdmin,
     };
   }
 
@@ -1368,6 +1443,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       proxyContract,
       proxyArgsTemplate,
       mergedABI,
+      checkProxyAdmin,
     } = await _getProxyInfo(name, options);
     /* eslint-enable prefer-const */
 
@@ -1465,11 +1541,26 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
+        let from = options.from;
+
         const ownerStorage = await provider.getStorageAt(
           proxy.address,
           '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
         );
         const currentOwner = getAddress(`0x${ownerStorage.substr(-40)}`);
+        if (currentOwner === AddressZero) {
+          if (checkProxyAdmin) {
+            throw new Error(
+              'The Proxy belongs to no-one. It cannot be upgraded anymore'
+            );
+          }
+        } else if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
+          throw new Error(
+            `To change owner/admin, you need to call the proxy directly, it currently is ${currentOwner}`
+          );
+        } else {
+          from = currentOwner;
+        }
 
         const oldProxy = proxy.abi.find(
           (frag: {name: string}) => frag.name === 'changeImplementation'
@@ -1477,17 +1568,6 @@ Note that in this case, the contract deployment will not behave the same if depl
         const changeImplementationMethod = oldProxy
           ? 'changeImplementation'
           : 'upgradeToAndCall';
-
-        if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
-          throw new Error(
-            `To change owner/admin, you need to call the proxy directly, it currently is ${currentOwner}`
-          );
-        }
-        if (currentOwner === AddressZero) {
-          throw new Error(
-            'The Proxy belongs to no-one. It cannot be upgraded anymore'
-          );
-        }
 
         if (proxyAdminName) {
           if (oldProxy) {
@@ -1527,14 +1607,14 @@ Note that in this case, the contract deployment will not behave the same if depl
           ) {
             executeReceipt = await execute(
               name,
-              {...options, from: currentOwner},
+              {...options, from},
               'upgradeTo',
               implementation.address
             );
           } else {
             executeReceipt = await execute(
               name,
-              {...options, from: currentOwner},
+              {...options, from},
               changeImplementationMethod,
               implementation.address,
               data
@@ -1641,11 +1721,12 @@ Note that in this case, the contract deployment will not behave the same if depl
 
   async function getFrom(from: string): Promise<{
     address: Address;
-    ethersSigner: Signer;
+    ethersSigner: Signer | zk.Signer;
     hardwareWallet?: string;
     unknown: boolean;
   }> {
-    let ethersSigner: Signer | undefined;
+    let ethersSigner: Signer | zk.Signer | undefined;
+    let wallet: Wallet | zk.Wallet | undefined;
     let hardwareWallet: string | undefined = undefined;
     let unknown = false;
 
@@ -1653,9 +1734,14 @@ Note that in this case, the contract deployment will not behave the same if depl
       if (from.length === 64) {
         from = '0x' + from;
       }
-      const wallet = new Wallet(from, provider);
+      if (network.zksync) {
+        wallet = new zk.Wallet(from, provider as zk.Provider);
+        ethersSigner = wallet as unknown as zk.Signer;
+      } else {
+        wallet = new Wallet(from, provider);
+        ethersSigner = wallet;
+      }
       from = wallet.address;
-      ethersSigner = wallet;
     } else {
       if (availableAccounts[from.toLowerCase()]) {
         ethersSigner = provider.getSigner(from);
@@ -1664,7 +1750,26 @@ Note that in this case, the contract deployment will not behave the same if depl
         const registeredProtocol =
           deploymentManager.addressesToProtocol[from.toLowerCase()];
         if (registeredProtocol) {
-          if (registeredProtocol === 'ledger') {
+          if (registeredProtocol === 'external') {
+            ethersSigner = provider.getSigner(from); //new WaitingTxSigner(from, provider);
+            ethersSigner.sendTransaction = async (
+              txRequest: TransactionRequest
+            ) => {
+              const response: {hash: string} = await enquirer.prompt({
+                type: 'input',
+                name: 'hash',
+                message: `
+                tx hash please
+                to : ${txRequest.to}
+                data : ${txRequest.data}
+                value : ${txRequest.value}
+                `,
+              });
+
+              return provider.getTransaction(response.hash);
+            };
+            hardwareWallet = 'external';
+          } else if (registeredProtocol === 'ledger') {
             if (!LedgerSigner) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               let error: any | undefined;
@@ -1739,8 +1844,16 @@ Note that in this case, the contract deployment will not behave the same if depl
     name: string,
     options: DiamondOptions
   ): Promise<DeployResult> {
-    const oldDeployment = await getDeploymentOrNUll(name);
     let proxy: Deployment | undefined;
+    const proxyName = name + '_DiamondProxy';
+    const oldDeployment = await getDeploymentOrNUll(name);
+    if (oldDeployment) {
+      proxy = await getDeployment(proxyName);
+    }
+    if (proxy && proxy.deployedBytecode === oldDiamonBase.deployedBytecode) {
+      return _old_deployViaDiamondProxy(name, options);
+    }
+
     const deployResult = _checkUpgradeIndex(
       oldDeployment,
       options.upgradeIndex
@@ -1749,68 +1862,70 @@ Note that in this case, the contract deployment will not behave the same if depl
       return deployResult;
     }
 
-    if (options.deterministicSalt) {
-      throw new Error(`diamond determinsitc deployment not implemented yet`);
-      // need to compute the resulting address accurately
+    let diamondArtifact: ExtendedArtifact = diamondBase;
+    if (options.diamondContract) {
+      if (typeof options.diamondContract === 'string') {
+        diamondArtifact = await partialExtension.getExtendedArtifact(
+          options.diamondContract
+        );
+      } else {
+        diamondArtifact = options.diamondContract;
+      }
     }
 
-    const proxyName = name + '_DiamondProxy';
-    const {address: owner, hardwareWallet} = await getDiamondOwner(options);
+    const {address: owner} = await getDiamondOwner(options);
     const newSelectors: string[] = [];
     const facetSnapshot: Facet[] = [];
-    const oldFacets: Facet[] = [];
-    const selectorToNotTouch: {[selector: string]: boolean} = {};
-    for (const selector of [
-      '0xcdffacc6',
-      '0x52ef6b2c',
-      '0xadfca15e',
-      '0x7a0ed627',
-      '0x01ffc9a7',
-      '0x1f931c1c',
-      '0xf2fde38b',
-      '0x8da5cb5b',
-    ]) {
-      selectorToNotTouch[selector] = true;
-    }
-    if (oldDeployment) {
-      proxy = await getDeployment(proxyName);
+    let oldFacets: Facet[] = [];
+    if (proxy) {
       const diamondProxy = new Contract(proxy.address, proxy.abi, provider);
-
-      const currentFacets: Facet[] = await diamondProxy.facets();
-      for (const currentFacet of currentFacets) {
-        oldFacets.push(currentFacet);
-
-        // ensure DiamondLoupeFacet, OwnershipFacet and DiamondCutFacet are kept // TODO options to delete cut them out?
-        if (
-          findAll(
-            [
-              '0xcdffacc6',
-              '0x52ef6b2c',
-              '0xadfca15e',
-              '0x7a0ed627',
-              '0x01ffc9a7',
-            ],
-            currentFacet.functionSelectors
-          ) || // Loupe
-          currentFacet.functionSelectors[0] === '0x1f931c1c' || // DiamoncCut
-          findAll(['0xf2fde38b', '0x8da5cb5b'], currentFacet.functionSelectors) // ERC173
-        ) {
-          facetSnapshot.push(currentFacet);
-          newSelectors.push(...currentFacet.functionSelectors);
-        }
-      }
+      oldFacets = await diamondProxy.facets();
     }
     // console.log({ oldFacets: JSON.stringify(oldFacets, null, "  ") });
 
+    const facetsSet = [...options.facets];
+    if (options.defaultCutFacet === undefined || options.defaultCutFacet) {
+      facetsSet.push({
+        name: '_DefaultDiamondCutFacet',
+        contract: diamondCutFacet,
+        args: [],
+        deterministic: true,
+      });
+    }
+    if (
+      options.defaultOwnershipFacet === undefined ||
+      options.defaultOwnershipFacet
+    ) {
+      facetsSet.push({
+        name: '_DefaultDiamondOwnershipFacet',
+        contract: ownershipFacet,
+        args: [],
+        deterministic: true,
+      });
+    }
+    facetsSet.push({
+      name: '_DefaultDiamondLoupeFacet',
+      contract: diamondLoupeFacet,
+      args: [],
+      deterministic: true,
+    });
+
     let changesDetected = !oldDeployment;
-    let abi: any[] = diamondBase.abi.concat([]);
+    let abi: any[] = diamondArtifact.abi.concat([]);
     const facetCuts: FacetCut[] = [];
-    for (const facet of options.facets) {
+    let facetFound: string | undefined;
+    for (const facet of facetsSet) {
+      let deterministicFacet: string | boolean = true;
       let facetName;
       let artifact;
       let linkedData = options.linkedData;
       let libraries = options.libraries;
       let facetArgs = options.facetsArgs;
+      if (typeof facet !== 'string') {
+        if (facet.deterministic !== undefined) {
+          deterministicFacet = facet.deterministic;
+        }
+      }
       let argsSpecific = false;
       if (typeof facet === 'string') {
         artifact = await partialExtension.getExtendedArtifact(facet);
@@ -1822,7 +1937,8 @@ Note that in this case, the contract deployment will not behave the same if depl
         if (facet.libraries) {
           libraries = facet.libraries;
         }
-        if (facet.args) {
+        if (facet.args !== undefined) {
+          // TODO fix in master
           facetArgs = facet.args;
           argsSpecific = true;
         }
@@ -1856,7 +1972,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         (fragment: {type: string; inputs: any[]}) =>
           fragment.type === 'constructor'
       );
-      if ((!argsSpecific && !constructor) || constructor.inputs.length === 0) {
+      if (!argsSpecific && (!constructor || constructor.inputs.length === 0)) {
         // reset args for case where facet do not expect any and there was no specific args set on it
         facetArgs = [];
       }
@@ -1864,7 +1980,6 @@ Note that in this case, the contract deployment will not behave the same if depl
         check: true,
         skipSupportsInterface: false,
       });
-      // TODO allow facet to be named so multiple version could coexist
       const implementation = await _deployOne(facetName, {
         contract: artifact,
         from: options.from,
@@ -1875,27 +1990,51 @@ Note that in this case, the contract deployment will not behave the same if depl
         maxFeePerGas: options.maxFeePerGas,
         maxPriorityFeePerGas: options.maxPriorityFeePerGas,
         log: options.log,
-        // deterministicDeployment: options.deterministicDeployment, // todo ?
         libraries,
         linkedData,
         args: facetArgs,
+        deterministicDeployment: deterministicFacet,
       });
+      let facetAddress: string;
       if (implementation.newlyDeployed) {
         // console.log(`facet ${facet} deployed at ${implementation.address}`);
+        facetAddress = implementation.address;
         const newFacet = {
-          facetAddress: implementation.address,
+          facetAddress,
           functionSelectors: sigsFromABI(implementation.abi),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
       } else {
         const oldImpl = await getDeployment(facetName);
+        facetAddress = oldImpl.address;
         const newFacet = {
-          facetAddress: oldImpl.address,
+          facetAddress,
           functionSelectors: sigsFromABI(oldImpl.abi),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
+      }
+
+      if (options.execute && !options.execute.contract) {
+        const methods = artifact.abi.filter(
+          (v) => v.name === options.execute?.methodName
+        );
+        if (methods.length > 0) {
+          if (methods.length > 1) {
+            throw new Error(
+              `multiple method named "${options.execute.methodName}" found in facet`
+            );
+          } else {
+            if (facetFound) {
+              throw new Error(
+                `multiple facet with method named "${options.execute.methodName}"`
+              );
+            } else {
+              facetFound = facetAddress;
+            }
+          }
+        }
       }
     }
 
@@ -1913,18 +2052,16 @@ Note that in this case, the contract deployment will not behave the same if depl
       const selectorsToReplace: string[] = [];
 
       for (const selector of newFacet.functionSelectors) {
-        if (oldSelectors.indexOf(selector) > 0) {
+        // TODO fix in master >0 to transform into >= 0
+        if (oldSelectors.indexOf(selector) >= 0) {
           if (
             oldSelectorsFacetAddress[selector].toLowerCase() !==
-              newFacet.facetAddress.toLowerCase() &&
-            !selectorToNotTouch[selector]
+            newFacet.facetAddress.toLowerCase()
           ) {
             selectorsToReplace.push(selector);
           }
         } else {
-          if (!selectorToNotTouch[selector]) {
-            selectorsToAdd.push(selector);
-          }
+          selectorsToAdd.push(selector);
         }
       }
 
@@ -1963,41 +2100,232 @@ Note that in this case, the contract deployment will not behave the same if depl
       });
     }
 
-    let data = '0x';
+    let executeData = '0x';
+    let executeAddress = '0x0000000000000000000000000000000000000000';
     if (options.execute) {
-      const diamondContract = new Contract(
+      let addressSpecified: string | undefined;
+      let executionContract = new Contract(
         '0x0000000000000000000000000000000000000001',
         abi
       );
-      const txData = await diamondContract.populateTransaction[
+      if (options.execute.contract) {
+        if (typeof options.execute.contract === 'string') {
+          const executionDeployment = await _deployOne(
+            options.execute.contract,
+            {
+              from: options.from,
+              autoMine: options.autoMine,
+              estimateGasExtra: options.estimateGasExtra,
+              estimatedGasLimit: options.estimatedGasLimit,
+              gasPrice: options.gasPrice,
+              maxFeePerGas: options.maxFeePerGas,
+              maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+              log: options.log,
+              deterministicDeployment: true,
+            }
+          );
+          executionContract = new Contract(
+            executionDeployment.address,
+            executionDeployment.abi
+          );
+          addressSpecified = executionContract.address;
+        } else {
+          const executionDeployment = await _deployOne(
+            options.execute.contract.name,
+            {
+              from: options.from,
+              contract: options.execute.contract.artifact,
+              args: options.execute.contract.args,
+              autoMine: options.autoMine,
+              estimateGasExtra: options.estimateGasExtra,
+              estimatedGasLimit: options.estimatedGasLimit,
+              gasPrice: options.gasPrice,
+              maxFeePerGas: options.maxFeePerGas,
+              maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+              log: options.log,
+              deterministicDeployment: true,
+            }
+          );
+          executionContract = new Contract(
+            executionDeployment.address,
+            executionDeployment.abi
+          );
+        }
+      }
+      const txData = await executionContract.populateTransaction[
         options.execute.methodName
       ](...options.execute.args);
-      data = txData.data || '0x';
+      executeData = txData.data || '0x';
+      executeAddress =
+        addressSpecified ||
+        facetFound ||
+        '0x0000000000000000000000000000000000000000';
     }
 
     if (changesDetected) {
       if (!proxy) {
-        // ensure a Diamantaire exists on the network :
-        const diamantaireName = 'Diamantaire';
-        let diamantaireDeployment = await getDeploymentOrNUll(diamantaireName);
-        diamantaireDeployment = await _deployOne(diamantaireName, {
-          contract: diamantaire,
-          from: options.from,
-          deterministicDeployment: true,
-          autoMine: options.autoMine,
-          estimateGasExtra: options.estimateGasExtra,
-          estimatedGasLimit: options.estimatedGasLimit,
-          gasPrice: options.gasPrice,
-          maxFeePerGas: options.maxFeePerGas,
-          maxPriorityFeePerGas: options.maxPriorityFeePerGas,
-          log: options.log,
-        });
-        const diamantaireContract = new Contract(
-          diamantaireDeployment.address,
-          diamantaire.abi,
-          provider
-        );
-        // the diamantaire allow the execution of data at diamond construction time
+        // TODO initializations only in case of new diamond
+        // upgrade skip these
+
+        // const initializations = [];
+
+        // const interfaceList = ['0x']; // TODO
+        // if (options.defaultCutFacet) {
+        //   interfaceList.push('0x'); // TODO
+        // }
+        // if (options.defaultOwnershipFacet) {
+        //   interfaceList.push('0x'); // TODO
+        // }
+        // const diamondERC165InitDeployment = await _deployOne(
+        //   '_DiamondERC165Init',
+        //   {
+        //     from: options.from,
+        //     deterministicDeployment: true,
+        //     contract: diamondERC165Init,
+        //     autoMine: options.autoMine,
+        //     estimateGasExtra: options.estimateGasExtra,
+        //     estimatedGasLimit: options.estimatedGasLimit,
+        //     gasPrice: options.gasPrice,
+        //     maxFeePerGas: options.maxFeePerGas,
+        //     maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+        //     log: options.log,
+        //   }
+        // );
+        // const diamondERC165InitContract = new Contract(
+        //   diamondERC165InitDeployment.address,
+        //   diamondERC165InitDeployment.abi
+        // );
+        // const interfaceInitTx =
+        //   await diamondERC165InitContract.populateTransaction.setERC165(
+        //     interfaceList,
+        //     []
+        //   );
+        // initializations.push({
+        //   initContract: diamondERC165InitDeployment.address,
+        //   initData: interfaceInitTx.data,
+        // });
+        // if (executeData) {
+        //   initializations.push({
+        //     initContract: executeData,
+        //     initData: executeAddress,
+        //   });
+        // }
+        // const diamondConstructorArgs = [owner, facetCuts, initializations];
+
+        const diamondConstructorArgs = options.diamondContractArgs || [
+          '{owner}',
+          '{facetCuts}',
+          '{initializations}',
+        ];
+
+        const initializationsArgIndex =
+          diamondConstructorArgs.indexOf('{initializations}');
+        const erc165InitArgIndex = diamondConstructorArgs.indexOf('{erc165}');
+        const initArgIndex = diamondConstructorArgs.indexOf('{init}');
+        const initAddressArgIndex =
+          diamondConstructorArgs.indexOf('{initAddress}');
+        const initDataArgIndex = diamondConstructorArgs.indexOf('{initData}');
+        const ownerArgIndex = diamondConstructorArgs.indexOf('{owner}');
+        const facetCutsArgIndex = diamondConstructorArgs.indexOf('{facetCuts}');
+        if (
+          initializationsArgIndex >= 0 &&
+          (initArgIndex >= 0 ||
+            erc165InitArgIndex >= 0 ||
+            initDataArgIndex >= 0)
+        ) {
+          throw new Error(
+            `{initializations} found but also one or more of {init} {erc165} {initData}`
+          );
+        }
+
+        // TODO option to add more to the list
+        // else mechanism to set it up differently ? LoupeFacet without supportsInterface
+        const interfaceList = ['0x48e2b093'];
+        if (options.defaultCutFacet) {
+          interfaceList.push('0x1f931c1c');
+        }
+        if (options.defaultOwnershipFacet) {
+          interfaceList.push('0x7f5828d0');
+        }
+
+        if (initializationsArgIndex >= 0 || erc165InitArgIndex >= 0) {
+          const diamondERC165InitDeployment = await _deployOne(
+            '_DefaultDiamondERC165Init',
+            {
+              from: options.from,
+              deterministicDeployment: true,
+              contract: diamondERC165Init,
+              autoMine: options.autoMine,
+              estimateGasExtra: options.estimateGasExtra,
+              estimatedGasLimit: options.estimatedGasLimit,
+              gasPrice: options.gasPrice,
+              maxFeePerGas: options.maxFeePerGas,
+              maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+              log: options.log,
+            }
+          );
+          const diamondERC165InitContract = new Contract(
+            diamondERC165InitDeployment.address,
+            diamondERC165InitDeployment.abi
+          );
+          const interfaceInitTx =
+            await diamondERC165InitContract.populateTransaction.setERC165(
+              interfaceList,
+              []
+            );
+          if (initializationsArgIndex >= 0) {
+            const initializations = [];
+            initializations.push({
+              initContract: interfaceInitTx.to,
+              initData: interfaceInitTx.data,
+            });
+            diamondConstructorArgs[initializationsArgIndex] = initializations;
+          } else {
+            diamondConstructorArgs[erc165InitArgIndex] = {
+              initContract: interfaceInitTx.to,
+              initData: interfaceInitTx.data,
+            };
+          }
+        }
+
+        if (ownerArgIndex >= 0) {
+          diamondConstructorArgs[ownerArgIndex] = owner;
+        } else {
+          // TODO ?
+        }
+
+        if (facetCutsArgIndex >= 0) {
+          diamondConstructorArgs[facetCutsArgIndex] = facetCuts;
+        } else {
+          throw new Error(`diamond constructor needs a {facetCuts} argument`);
+        }
+
+        if (executeData) {
+          if (initializationsArgIndex >= 0) {
+            if (executeData !== '0x') {
+              diamondConstructorArgs[initializationsArgIndex].push({
+                initContract: executeAddress,
+                initData: executeData,
+              });
+            }
+          } else {
+            if (initArgIndex >= 0) {
+              diamondConstructorArgs[initArgIndex] = {
+                initContract: executeAddress,
+                initData: executeData,
+              };
+            } else if (initDataArgIndex >= 0) {
+              diamondConstructorArgs[initDataArgIndex] = executeData;
+              if (initAddressArgIndex >= 0) {
+                diamondConstructorArgs[initAddressArgIndex] = executeAddress;
+              }
+            } else {
+              throw new Error(
+                `no {init} or {initData} found in list of args even though execute is set in option`
+              );
+            }
+          }
+        }
 
         let deterministicDiamondAlreadyDeployed = false;
         let expectedAddress: string | undefined = undefined;
@@ -2016,12 +2344,24 @@ Note that in this case, the contract deployment will not behave the same if depl
                 );
               }
               salt = options.deterministicSalt;
+
+              const factory = new ContractFactory(
+                diamondArtifact.abi,
+                diamondArtifact.bytecode
+              );
+              const unsignedTx = factory.getDeployTransaction(
+                ...diamondConstructorArgs
+              );
+              if (typeof unsignedTx.data !== 'string') {
+                throw new Error('unsigned tx data as bytes not supported');
+              }
+
+              const create2DeployerAddress =
+                await deploymentManager.getDeterministicDeploymentFactoryAddress();
               expectedAddress = getCreate2Address(
-                diamantaireContract.address,
-                solidityKeccak256(['bytes32', 'address'], [salt, owner]),
-                diamondBase.bytecode +
-                  '000000000000000000000000' +
-                  diamantaireContract.address.slice(2)
+                create2DeployerAddress,
+                salt,
+                unsignedTx.data || '0x'
               );
               const code = await provider.getCode(expectedAddress);
               if (code !== '0x') {
@@ -2035,110 +2375,47 @@ Note that in this case, the contract deployment will not behave the same if depl
           }
         }
 
-        // this is with the default Diamantaire based on create2
-        const builtinDiamondCut = [
-          {
-            // DiamondCutFacet
-            facetAddress: '0x35d80a53f7be635f75152221d4d71cd4dcb07e5c',
-            action: 0,
-            functionSelectors: ['0x1f931c1c'],
-          },
-          {
-            // DiamondLoupeFacet
-            facetAddress: '0xc1bbdf9f8c0b6ae0b4d35e9a778080b691a72a3e',
-            action: 0,
-            functionSelectors: [
-              '0xadfca15e',
-              '0x7a0ed627',
-              '0xcdffacc6',
-              '0x52ef6b2c',
-              '0x01ffc9a7',
-            ],
-          },
-          {
-            // OwnershipFacet
-            facetAddress: '0xcfEe10af6C7A91863c2bbDbCCA3bCB5064A447BE',
-            action: 0,
-            functionSelectors: ['0xf2fde38b', '0x8da5cb5b'],
-          },
-        ];
-
-        const diamondConstructorArgs = [
-          builtinDiamondCut,
-          {owner: diamantaireDeployment.address},
-        ];
-
         if (expectedAddress && deterministicDiamondAlreadyDeployed) {
           proxy = {
-            ...diamondBase,
+            ...diamondArtifact,
             address: expectedAddress,
             args: diamondConstructorArgs,
           };
           await saveDeployment(proxyName, proxy);
+          await saveDeployment(name, {
+            ...proxy,
+            linkedData: options.linkedData,
+            facets: facetSnapshot,
+            abi,
+          });
+          await _deployViaDiamondProxy(name, options); // this would not recurse again as the name and proxyName are now saved
         } else {
-          const createReceipt = await execute(
-            diamantaireName,
-            options,
-            'createDiamond',
-            owner,
-            facetCuts,
-            data,
-            salt
-          );
-
-          if (!createReceipt) {
-            throw new Error(`failed to get receipt from diamond creation`);
-          }
-
-          const events = [];
-          if (createReceipt.logs) {
-            for (const l of createReceipt.logs) {
-              try {
-                events.push(diamantaireContract.interface.parseLog(l));
-              } catch (e) {}
-            }
-          }
-
-          const diamondCreatedEvent = events.find(
-            (e) => e.name === 'DiamondCreated'
-          );
-          if (!diamondCreatedEvent) {
-            throw new Error('DiamondCreated Not Emitted');
-          }
-          const proxyAddress = diamondCreatedEvent.args.diamond;
-          if (options.log || hardwareWallet) {
-            log(
-              `Diamond deployed at ${proxyAddress} via Diamantaire (${diamantaireDeployment.address} (tx: ${createReceipt.transactionHash})) with ${createReceipt.gasUsed} gas`
-            );
-          }
-
-          if (expectedAddress && expectedAddress !== proxyAddress) {
-            throw new Error(
-              `unexpected address ${proxyAddress} VS ${expectedAddress}`
-            );
-          }
-          proxy = {
-            ...diamondBase,
-            address: proxyAddress,
-            receipt: createReceipt,
-            transactionHash: createReceipt.transactionHash,
+          proxy = await _deployOne(proxyName, {
+            contract: diamondArtifact,
+            from: options.from,
             args: diamondConstructorArgs,
-          };
-          await saveDeployment(proxyName, proxy);
-        }
+            autoMine: options.autoMine,
+            deterministicDeployment: options.deterministicSalt,
+            estimateGasExtra: options.estimateGasExtra,
+            estimatedGasLimit: options.estimatedGasLimit,
+            gasLimit: options.gasLimit,
+            gasPrice: options.gasPrice,
+            log: options.log,
+            nonce: options.nonce,
+            maxFeePerGas: options.maxFeePerGas,
+            maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+            value: options.value,
+          });
 
-        await saveDeployment(name, {
-          ...diamondBase,
-          args: proxy.args,
-          address: proxy.address,
-          receipt: proxy.receipt,
-          transactionHash: proxy.transactionHash,
-          linkedData: options.linkedData,
-          facets: facetSnapshot,
-          diamondCut: facetCuts,
-          abi,
-          execute: options.execute,
-        });
+          await saveDeployment(proxyName, {...proxy, abi});
+          await saveDeployment(name, {
+            ...proxy,
+            linkedData: options.linkedData,
+            facets: facetSnapshot,
+            abi,
+            execute: options.execute,
+          });
+        }
       } else {
         if (!oldDeployment) {
           throw new Error(`Cannot find Deployment for ${name}`);
@@ -2160,10 +2437,10 @@ Note that in this case, the contract deployment will not behave the same if depl
           {...options, from: currentOwner},
           'diamondCut',
           facetCuts,
-          data === '0x'
+          executeData === '0x'
             ? '0x0000000000000000000000000000000000000000'
-            : proxy.address,
-          data
+            : executeAddress || proxy.address, // TODO  || proxy.address should not be required, the facet should have been found
+          executeData
         );
         if (!executeReceipt) {
           throw new Error('failed to execute');
@@ -2175,7 +2452,6 @@ Note that in this case, the contract deployment will not behave the same if depl
           address: proxy.address,
           abi,
           facets: facetSnapshot,
-          diamondCut: facetCuts,
           execute: options.execute, // TODO add receipt + tx hash
         };
 
@@ -2195,20 +2471,19 @@ Note that in this case, the contract deployment will not behave the same if depl
         newlyDeployed: true,
       };
     } else {
-      const oldDeployment = await partialExtension.get(name);
+      // const oldDeployment = await partialExtension.get(name);
 
-      const proxiedDeployment: DeploymentSubmission = {
-        ...oldDeployment,
-        facets: facetSnapshot,
-        diamondCut: facetCuts,
-        abi,
-        execute: options.execute,
-      };
-      // TODO ?
-      // proxiedDeployment.history = proxiedDeployment.history
-      //   ? proxiedDeployment.history.concat([oldDeployment])
-      //   : [oldDeployment];
-      await saveDeployment(name, proxiedDeployment);
+      // const proxiedDeployment: DeploymentSubmission = {
+      //   ...oldDeployment,
+      //   facets: facetSnapshot,
+      //   abi,
+      //   execute: options.execute,
+      // };
+      // // TODO ?
+      // // proxiedDeployment.history = proxiedDeployment.history
+      // //   ? proxiedDeployment.history.concat([oldDeployment])
+      // //   : [oldDeployment];
+      // await saveDeployment(name, proxiedDeployment);
 
       const deployment = await partialExtension.get(name);
       return {
@@ -2280,9 +2555,9 @@ Note that in this case, the contract deployment will not behave the same if depl
     if (hardwareWallet) {
       log(` please confirm on your ${hardwareWallet}`);
     }
-    let pendingTx = await handleSpecificErrors(
+    let pendingTx = (await handleSpecificErrors(
       ethersSigner.sendTransaction(transactionData)
-    );
+    )) as TransactionResponse;
     pendingTx = await onPendingTx(pendingTx);
     if (tx.autoMine) {
       try {
@@ -2500,7 +2775,7 @@ data: ${data}
     if (typeof args === 'undefined') {
       args = [];
     }
-    let caller: Web3Provider | Signer = provider;
+    let caller: Web3Provider | Signer | zk.Web3Provider | zk.Signer = provider;
     const {ethersSigner} = await getOptionalFrom(options.from);
     if (ethersSigner) {
       caller = ethersSigner;
@@ -2696,9 +2971,9 @@ data: ${data}
             }
 
             if (txData.rawTx) {
-              const tx = await handleSpecificErrors(
+              const tx = (await handleSpecificErrors(
                 provider.sendTransaction(txData.rawTx)
-              );
+              )) as TransactionResponse;
               txHashToWait = tx.hash;
               if (tx.hash !== txHash) {
                 console.error('non mathcing tx hashes after resubmitting...');
@@ -2887,6 +3162,316 @@ data: ${data}
     return deploy(name, options);
   };
   // ////////////////////////////////////////////////////////////////////
+
+  async function _old_deployViaDiamondProxy(
+    name: string,
+    options: DiamondOptions
+  ): Promise<DeployResult> {
+    if (options.log) {
+      log(`handling old diamond ${name} ...`);
+    }
+    const oldDeployment = await getDeploymentOrNUll(name);
+    let proxy: Deployment | undefined;
+    const deployResult = _checkUpgradeIndex(
+      oldDeployment,
+      options.upgradeIndex
+    );
+    if (deployResult) {
+      return deployResult;
+    }
+
+    if (options.deterministicSalt) {
+      throw new Error(`old diamonds do not support determinsitc deployment`);
+      // need to compute the resulting address accurately
+    }
+
+    const proxyName = name + '_DiamondProxy';
+    const {address: owner} = await getDiamondOwner(options);
+    const newSelectors: string[] = [];
+    const facetSnapshot: Facet[] = [];
+    const oldFacets: Facet[] = [];
+    const selectorToNotTouch: {[selector: string]: boolean} = {};
+    for (const selector of [
+      '0xcdffacc6',
+      '0x52ef6b2c',
+      '0xadfca15e',
+      '0x7a0ed627',
+      '0x01ffc9a7',
+      '0x1f931c1c',
+      '0xf2fde38b',
+      '0x8da5cb5b',
+    ]) {
+      selectorToNotTouch[selector] = true;
+    }
+    if (oldDeployment) {
+      proxy = await getDeployment(proxyName);
+      const diamondProxy = new Contract(proxy.address, proxy.abi, provider);
+
+      const currentFacets: Facet[] = await diamondProxy.facets();
+      for (const currentFacet of currentFacets) {
+        oldFacets.push(currentFacet);
+
+        // ensure DiamondLoupeFacet, OwnershipFacet and DiamondCutFacet are kept // TODO options to delete cut them out?
+        if (
+          findAll(
+            [
+              '0xcdffacc6',
+              '0x52ef6b2c',
+              '0xadfca15e',
+              '0x7a0ed627',
+              '0x01ffc9a7',
+            ],
+            currentFacet.functionSelectors
+          ) || // Loupe
+          currentFacet.functionSelectors[0] === '0x1f931c1c' || // DiamoncCut
+          findAll(['0xf2fde38b', '0x8da5cb5b'], currentFacet.functionSelectors) // ERC173
+        ) {
+          facetSnapshot.push(currentFacet);
+          newSelectors.push(...currentFacet.functionSelectors);
+        }
+      }
+    } else {
+      throw new Error(`old diamond deployments are now disabled`);
+    }
+    // console.log({ oldFacets: JSON.stringify(oldFacets, null, "  ") });
+
+    let changesDetected = !oldDeployment;
+    let abi: any[] = oldDiamonBase.abi.concat([]);
+    const facetCuts: FacetCut[] = [];
+    for (const facet of options.facets) {
+      let facetName;
+      let artifact;
+      let linkedData = options.linkedData;
+      let libraries = options.libraries;
+      let facetArgs = options.facetsArgs;
+      let argsSpecific = false;
+      if (typeof facet === 'string') {
+        artifact = await partialExtension.getExtendedArtifact(facet);
+        facetName = facet;
+      } else {
+        if (facet.linkedData) {
+          linkedData = facet.linkedData;
+        }
+        if (facet.libraries) {
+          libraries = facet.libraries;
+        }
+        if (facet.args) {
+          facetArgs = facet.args;
+          argsSpecific = true;
+        }
+        if (facet.contract) {
+          if (typeof facet.contract === 'string') {
+            artifact = await partialExtension.getExtendedArtifact(
+              facet.contract
+            );
+          } else {
+            artifact = facet.contract;
+          }
+        } else {
+          if (!facet.name) {
+            throw new Error(
+              `no name , not contract is specified for facet, cannot proceed`
+            );
+          }
+          artifact = await partialExtension.getExtendedArtifact(facet.name);
+        }
+
+        facetName = facet.name;
+        if (!facetName) {
+          if (typeof facet.contract === 'string') {
+            facetName = name + '_facet_' + facet.contract;
+          } else {
+            throw new Error(`facet has no name, please specify one`);
+          }
+        }
+      }
+      const constructor = artifact.abi.find(
+        (fragment: {type: string; inputs: any[]}) =>
+          fragment.type === 'constructor'
+      );
+      if ((!argsSpecific && !constructor) || constructor.inputs.length === 0) {
+        // reset args for case where facet do not expect any and there was no specific args set on it
+        facetArgs = [];
+      }
+      abi = mergeABIs([abi, artifact.abi], {
+        check: true,
+        skipSupportsInterface: false,
+      });
+      // TODO allow facet to be named so multiple version could coexist
+      const implementation = await _deployOne(facetName, {
+        contract: artifact,
+        from: options.from,
+        autoMine: options.autoMine,
+        estimateGasExtra: options.estimateGasExtra,
+        estimatedGasLimit: options.estimatedGasLimit,
+        gasPrice: options.gasPrice,
+        maxFeePerGas: options.maxFeePerGas,
+        maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+        log: options.log,
+        // deterministicDeployment: options.deterministicDeployment, // todo ?
+        libraries,
+        linkedData,
+        args: facetArgs,
+      });
+      if (implementation.newlyDeployed) {
+        // console.log(`facet ${facet} deployed at ${implementation.address}`);
+        const newFacet = {
+          facetAddress: implementation.address,
+          functionSelectors: sigsFromABI(implementation.abi),
+        };
+        facetSnapshot.push(newFacet);
+        newSelectors.push(...newFacet.functionSelectors);
+      } else {
+        const oldImpl = await getDeployment(facetName);
+        const newFacet = {
+          facetAddress: oldImpl.address,
+          functionSelectors: sigsFromABI(oldImpl.abi),
+        };
+        facetSnapshot.push(newFacet);
+        newSelectors.push(...newFacet.functionSelectors);
+      }
+    }
+
+    const oldSelectors: string[] = [];
+    const oldSelectorsFacetAddress: {[selector: string]: string} = {};
+    for (const oldFacet of oldFacets) {
+      for (const selector of oldFacet.functionSelectors) {
+        oldSelectors.push(selector);
+        oldSelectorsFacetAddress[selector] = oldFacet.facetAddress;
+      }
+    }
+
+    for (const newFacet of facetSnapshot) {
+      const selectorsToAdd: string[] = [];
+      const selectorsToReplace: string[] = [];
+
+      for (const selector of newFacet.functionSelectors) {
+        if (oldSelectors.indexOf(selector) > 0) {
+          if (
+            oldSelectorsFacetAddress[selector].toLowerCase() !==
+              newFacet.facetAddress.toLowerCase() &&
+            !selectorToNotTouch[selector]
+          ) {
+            selectorsToReplace.push(selector);
+          }
+        } else {
+          if (!selectorToNotTouch[selector]) {
+            selectorsToAdd.push(selector);
+          }
+        }
+      }
+
+      if (selectorsToReplace.length > 0) {
+        changesDetected = true;
+        facetCuts.push({
+          facetAddress: newFacet.facetAddress,
+          functionSelectors: selectorsToReplace,
+          action: FacetCutAction.Replace,
+        });
+      }
+
+      if (selectorsToAdd.length > 0) {
+        changesDetected = true;
+        facetCuts.push({
+          facetAddress: newFacet.facetAddress,
+          functionSelectors: selectorsToAdd,
+          action: FacetCutAction.Add,
+        });
+      }
+    }
+
+    const selectorsToDelete: string[] = [];
+    for (const selector of oldSelectors) {
+      if (newSelectors.indexOf(selector) === -1) {
+        selectorsToDelete.push(selector);
+      }
+    }
+
+    if (selectorsToDelete.length > 0) {
+      changesDetected = true;
+      facetCuts.unshift({
+        facetAddress: '0x0000000000000000000000000000000000000000',
+        functionSelectors: selectorsToDelete,
+        action: FacetCutAction.Remove,
+      });
+    }
+
+    let data = '0x';
+    if (options.execute) {
+      const diamondContract = new Contract(
+        '0x0000000000000000000000000000000000000001',
+        abi
+      );
+      const txData = await diamondContract.populateTransaction[
+        options.execute.methodName
+      ](...options.execute.args);
+      data = txData.data || '0x';
+    }
+
+    if (changesDetected) {
+      if (!proxy) {
+        throw new Error(
+          `no proxy found: old diamond deployments are now disabled`
+        );
+      } else {
+        const currentOwner = await read(proxyName, 'owner');
+        if (currentOwner.toLowerCase() !== owner.toLowerCase()) {
+          throw new Error(
+            'To change owner, you need to call `transferOwnership`'
+          );
+        }
+        if (currentOwner === AddressZero) {
+          throw new Error(
+            'The Diamond belongs to no-one. It cannot be upgraded anymore'
+          );
+        }
+
+        const executeReceipt = await execute(
+          name,
+          {...options, from: currentOwner},
+          'diamondCut',
+          facetCuts,
+          data === '0x'
+            ? '0x0000000000000000000000000000000000000000'
+            : proxy.address,
+          data
+        );
+        if (!executeReceipt) {
+          throw new Error('failed to execute');
+        }
+
+        const diamondDeployment: DeploymentSubmission = {
+          ...oldDeployment,
+          linkedData: options.linkedData,
+          address: proxy.address,
+          abi,
+          facets: facetSnapshot,
+          execute: options.execute, // TODO add receipt + tx hash
+        };
+
+        // TODO reenable history with options
+        if (oldDeployment.history) {
+          diamondDeployment.history = diamondDeployment.history
+            ? diamondDeployment.history.concat([oldDeployment])
+            : [oldDeployment];
+        }
+
+        await saveDeployment(name, diamondDeployment);
+      }
+
+      const deployment = await partialExtension.get(name);
+      return {
+        ...deployment,
+        newlyDeployed: true,
+      };
+    } else {
+      const deployment = await partialExtension.get(name);
+      return {
+        ...deployment,
+        newlyDeployed: false,
+      };
+    }
+  }
 
   return {extension, utils};
 }

@@ -68,7 +68,10 @@ export async function getExtendedArtifactFromFolders(
   for (const folderPath of folderPaths) {
     const artifacts = new Artifacts(folderPath);
     let artifact = getOldArtifactSync(name, folderPath);
-    if (!artifact && (await artifacts.artifactExists(name))) {
+    if (
+      !artifact &&
+      (await artifacts.artifactExists(name).catch(() => false))
+    ) {
       const hardhatArtifact: Artifact = await artifacts.readArtifact(name);
       // check if name is already a fullyQualifiedName
       let fullyQualifiedName = name;
@@ -78,6 +81,7 @@ export async function getExtendedArtifactFromFolders(
       } else {
         contractName = fullyQualifiedName.split(':')[1];
       }
+      // TODO try catch ? in case debug file is missing
       const buildInfo = await artifacts.getBuildInfo(fullyQualifiedName);
       if (buildInfo) {
         const solcInput = JSON.stringify(buildInfo.input, null, '  ');
@@ -331,10 +335,23 @@ function transformNamedAccounts(
           // eslint-disable-next-line no-case-declarations
           const protocolSplit = spec.split('://');
           if (protocolSplit.length > 1) {
-            if (protocolSplit[0].toLowerCase() === 'ledger') {
+            if (protocolSplit[0].toLowerCase() === 'external') {
               address = protocolSplit[1];
               addressesToProtocol[address.toLowerCase()] =
                 protocolSplit[0].toLowerCase();
+              // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
+            } else if (protocolSplit[0].toLowerCase() === 'ledger') {
+              const addressSplit = protocolSplit[1].split(':');
+              if (addressSplit.length > 1) {
+                address = addressSplit[1];
+                addressesToProtocol[
+                  address.toLowerCase()
+                ] = `ledger://${addressSplit[0]}`;
+              } else {
+                address = protocolSplit[1];
+                addressesToProtocol[address.toLowerCase()] =
+                  "ledger://m/44'/60'/0'/0/0";
+              }
               // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
             } else if (protocolSplit[0].toLowerCase() === 'privatekey') {
               address = new Wallet(protocolSplit[1]).address;

@@ -20,3 +20,4 @@
 - [ ] error on Library missing in bytecode
 - [ ] error when not finding --no-scripts as folder
 - [ ] continue even if evm_snapshot not present on fixture call
+- [ ] supports ENS name in namedAccounts (fetch ENS first, or only if ends with .eth or other domain?, require mainnet provider)
