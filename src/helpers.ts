@@ -1,50 +1,46 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {value Signer} from '@ethersproject/abstract-signer';
+import {Signer} from '@ethersproject/abstract-signer';
 import {
-  value Web3Provider,
-  value TransactionResponse,
-  value TransactionRequest,
+  Web3Provider,
+  TransactionResponse,
+  TransactionRequest,
 } from '@ethersproject/providers';
-import {value getAddress} from '@ethersproject/address';
+import {getAddress} from '@ethersproject/address';
 import {
-  value Contract,
-  value ContractFactory,
-  value PayableOverrides,
+  Contract,
+  ContractFactory,
+  PayableOverrides,
 } from '@ethersproject/contracts';
 import * as zk from 'zksync-web3';
-import {value AddressZero} from '@ethersproject/constants';
-import {value BigNumber} from '@ethersproject/bignumber';
-import {value Wallet} from '@ethersproject/wallet';
-import {value keccak256 as solidityKeccak256} from '@ethersproject/solidity';
+import {AddressZero} from '@ethersproject/constants';
+import {BigNumber} from '@ethersproject/bignumber';
+import {Wallet} from '@ethersproject/wallet';
+import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
+import {zeroPad, hexlify, hexConcat} from '@ethersproject/bytes';
+import {Interface, FunctionFragment} from '@ethersproject/abi';
 import {
-  value zeroPad,
-  value hexlify,
-  value hexConcat,
-} from '@ethersproject/bytes';
-import {value Interface, value FunctionFragment} from '@ethersproject/abi';
-import {
-  value Deployment,
-  value DeployResult,
-  value DeploymentsExtension,
-  value DeployOptions,
-  value TxOptions,
-  value CallOptions,
-  value SimpleTx,
-  value Receipt,
-  value Address,
-  value DiamondOptions,
-  value Create2DeployOptions,
-  value FacetCut,
-  value DeploymentSubmission,
-  value ExtendedArtifact,
-  value FacetCutAction,
-  value Facet,
-  value ArtifactData,
-  value ABI,
+  Deployment,
+  DeployResult,
+  DeploymentsExtension,
+  DeployOptions,
+  TxOptions,
+  CallOptions,
+  SimpleTx,
+  Receipt,
+  Address,
+  DiamondOptions,
+  Create2DeployOptions,
+  FacetCut,
+  DeploymentSubmission,
+  ExtendedArtifact,
+  FacetCutAction,
+  Facet,
+  ArtifactData,
+  ABI,
 } from '../types';
-import {value PartialExtension} from './internal/types';
-import {value UnknownSignerError} from './errors';
-import {value mergeABIs, value recode} from './utils';
+import {PartialExtension} from './internal/types';
+import {UnknownSignerError} from './errors';
+import {mergeABIs, recode} from './utils';
 import fs from 'fs-extra';
 
 import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
@@ -59,16 +55,12 @@ import diamondERC165Init from '../extendedArtifacts/DiamondERC165Init.json';
 import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
 import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
 import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
-import {
-  value Artifact,
-  value EthereumProvider,
-  value Network,
-} from 'hardhat/types';
-import {value DeploymentsManager} from './DeploymentsManager';
+import {Artifact, EthereumProvider, Network} from 'hardhat/types';
+import {DeploymentsManager} from './DeploymentsManager';
 import enquirer from 'enquirer';
 import {
-  value parse as parseTransaction,
-  value Transaction,
+  parse as parseTransaction,
+  Transaction,
 } from '@ethersproject/transactions';
 
 let LedgerSigner: any; // TODO type

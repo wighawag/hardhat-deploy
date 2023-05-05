@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.28
+
+### Patch Changes
+
+- fix ledger
+
 ## 0.11.27
 
 ### Patch Changes
