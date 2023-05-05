@@ -883,6 +883,9 @@ export class DeploymentsManager {
         gasEstimates: deployment.gasEstimates, // TODO double check : use evm field ?
       })
     );
+    if (deployment.factoryDeps?.length) {
+      obj.factoryDeps = deployment.factoryDeps;
+    }
     this.db.deployments[name] = obj;
     if (obj.address === undefined && obj.transactionHash !== undefined) {
       let receiptFetched;
@@ -1323,8 +1326,7 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       });
-      const out = JSON.stringify(all, null, '  ');
-      this._writeExports(options.exportAll, out);
+      this._writeExports(options.exportAll, all);
 
       log('export-all complete');
     }
@@ -1356,13 +1358,14 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       };
-      const out = JSON.stringify(singleExport, null, '  ');
-      this._writeExports(options.export, out);
+
+      this._writeExports(options.export, singleExport);
       log('single export complete');
     }
   }
 
-  private _writeExports(dests: string, output: string) {
+  private _writeExports(dests: string, outputObject: any) {
+    const output = JSON.stringify(outputObject, null, '  '); // TODO remove bytecode ?
     const splitted = dests.split(',');
     for (const split of splitted) {
       if (!split) {
@@ -1372,7 +1375,11 @@ export class DeploymentsManager {
         process.stdout.write(output);
       } else {
         fs.ensureDirSync(path.dirname(split));
-        fs.writeFileSync(split, output); // TODO remove bytecode ?
+        if (split.endsWith('.ts')) {
+          fs.writeFileSync(split, `export default ${output} as const;`);
+        } else {
+          fs.writeFileSync(split, output);
+        }
       }
     }
   }
@@ -1415,14 +1422,18 @@ export class DeploymentsManager {
       'eth_getBlockByNumber',
       ['latest', false]
     );
-    const snapshot = await this.network.provider.send('evm_snapshot', []);
-    this.db.pastFixtures[key] = {
-      index: ++this.db.snapshotCounter,
-      snapshot,
-      data,
-      blockHash: latestBlock.hash,
-      deployments: {...this.db.deployments},
-    };
+    try {
+      const snapshot = await this.network.provider.send('evm_snapshot', []);
+      this.db.pastFixtures[key] = {
+        index: ++this.db.snapshotCounter,
+        snapshot,
+        data,
+        blockHash: latestBlock.hash,
+        deployments: {...this.db.deployments},
+      };
+    } catch (err) {
+      log(`failed to create snapshot`);
+    }
   }
 
   private async revertSnapshot(saved: {
@@ -1438,9 +1449,15 @@ export class DeploymentsManager {
         delete this.db.pastFixtures[fixtureKey];
       }
     }
-    const success = await this.network.provider.send('evm_revert', [
-      saved.snapshot,
-    ]);
+    let success;
+    try {
+      success = await this.network.provider.send('evm_revert', [
+        saved.snapshot,
+      ]);
+    } catch {
+      log(`failed to revert to snapshot`);
+      success = false;
+    }
     if (success) {
       const blockRetrieved = await this.network.provider.send(
         'eth_getBlockByHash',

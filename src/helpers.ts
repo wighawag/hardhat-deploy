@@ -1,46 +1,50 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {Signer} from '@ethersproject/abstract-signer';
+import {value Signer} from '@ethersproject/abstract-signer';
 import {
-  Web3Provider,
-  TransactionResponse,
-  TransactionRequest,
+  value Web3Provider,
+  value TransactionResponse,
+  value TransactionRequest,
 } from '@ethersproject/providers';
-import {getAddress} from '@ethersproject/address';
+import {value getAddress} from '@ethersproject/address';
 import {
-  Contract,
-  ContractFactory,
-  PayableOverrides,
+  value Contract,
+  value ContractFactory,
+  value PayableOverrides,
 } from '@ethersproject/contracts';
 import * as zk from 'zksync-web3';
-import {AddressZero} from '@ethersproject/constants';
-import {BigNumber} from '@ethersproject/bignumber';
-import {Wallet} from '@ethersproject/wallet';
-import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {zeroPad, hexlify, hexConcat} from '@ethersproject/bytes';
-import {Interface, FunctionFragment} from '@ethersproject/abi';
+import {value AddressZero} from '@ethersproject/constants';
+import {value BigNumber} from '@ethersproject/bignumber';
+import {value Wallet} from '@ethersproject/wallet';
+import {value keccak256 as solidityKeccak256} from '@ethersproject/solidity';
 import {
-  Deployment,
-  DeployResult,
-  DeploymentsExtension,
-  DeployOptions,
-  TxOptions,
-  CallOptions,
-  SimpleTx,
-  Receipt,
-  Address,
-  DiamondOptions,
-  Create2DeployOptions,
-  FacetCut,
-  DeploymentSubmission,
-  ExtendedArtifact,
-  FacetCutAction,
-  Facet,
-  ArtifactData,
-  ABI,
+  value zeroPad,
+  value hexlify,
+  value hexConcat,
+} from '@ethersproject/bytes';
+import {value Interface, value FunctionFragment} from '@ethersproject/abi';
+import {
+  value Deployment,
+  value DeployResult,
+  value DeploymentsExtension,
+  value DeployOptions,
+  value TxOptions,
+  value CallOptions,
+  value SimpleTx,
+  value Receipt,
+  value Address,
+  value DiamondOptions,
+  value Create2DeployOptions,
+  value FacetCut,
+  value DeploymentSubmission,
+  value ExtendedArtifact,
+  value FacetCutAction,
+  value Facet,
+  value ArtifactData,
+  value ABI,
 } from '../types';
-import {PartialExtension} from './internal/types';
-import {UnknownSignerError} from './errors';
-import {mergeABIs, recode} from './utils';
+import {value PartialExtension} from './internal/types';
+import {value UnknownSignerError} from './errors';
+import {value mergeABIs, value recode} from './utils';
 import fs from 'fs-extra';
 
 import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
@@ -48,18 +52,23 @@ import OptimizedTransparentUpgradeableProxy from '../extendedArtifacts/Optimized
 import DefaultProxyAdmin from '../extendedArtifacts/ProxyAdmin.json';
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
+import erc1967Proxy from '../extendedArtifacts/ERC1967Proxy.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
 import oldDiamonBase from './old_diamondbase.json';
 import diamondERC165Init from '../extendedArtifacts/DiamondERC165Init.json';
 import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
 import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
 import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
-import {Artifact, EthereumProvider, Network} from 'hardhat/types';
-import {DeploymentsManager} from './DeploymentsManager';
+import {
+  value Artifact,
+  value EthereumProvider,
+  value Network,
+} from 'hardhat/types';
+import {value DeploymentsManager} from './DeploymentsManager';
 import enquirer from 'enquirer';
 import {
-  parse as parseTransaction,
-  Transaction,
+  value parse as parseTransaction,
+  value Transaction,
 } from '@ethersproject/transactions';
 
 let LedgerSigner: any; // TODO type
@@ -618,7 +627,7 @@ export function addHelpers(
     // Temporary workaround for https://github.com/ethers-io/ethers.js/issues/2078
     // TODO: Remove me when LedgerSigner adds proper support for 1559 txns
     if (hardwareWallet === 'ledger') {
-      unsignedTx.type = 1
+      unsignedTx.type = 1;
     }
 
     if (unknown) {
@@ -1153,6 +1162,7 @@ export function addHelpers(
     updateMethod: string | undefined;
     updateArgs: any[];
     upgradeIndex: number | undefined;
+    checkProxyAdmin: boolean;
   }> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let contractName = options.contract;
@@ -1162,6 +1172,7 @@ export function addHelpers(
     let upgradeIndex;
     let proxyContract: ExtendedArtifact = eip173Proxy;
     let checkABIConflict = true;
+    let checkProxyAdmin = true;
     let viaAdminContract:
       | string
       | {name: string; artifact?: string | ArtifactData}
@@ -1244,6 +1255,11 @@ export function addHelpers(
               // } else if (options.proxy.proxyContract === 'UUPS') {
               //   checkABIConflict = true;
               //   proxyContract = UUPSProxy;
+            } else if (options.proxy.proxyContract === 'UUPS') {
+              checkABIConflict = false;
+              checkProxyAdmin = false;
+              proxyContract = erc1967Proxy;
+              proxyArgsTemplate = ['{implementation}', '{data}'];
             } else {
               throw new Error(
                 `no contract found for ${options.proxy.proxyContract}`
@@ -1407,6 +1423,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       updateMethod,
       updateArgs,
       upgradeIndex,
+      checkProxyAdmin,
     };
   }
 
@@ -1433,6 +1450,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       proxyContract,
       proxyArgsTemplate,
       mergedABI,
+      checkProxyAdmin,
     } = await _getProxyInfo(name, options);
     /* eslint-enable prefer-const */
 
@@ -1530,11 +1548,26 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
+        let from = options.from;
+
         const ownerStorage = await provider.getStorageAt(
           proxy.address,
           '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
         );
         const currentOwner = getAddress(`0x${ownerStorage.substr(-40)}`);
+        if (currentOwner === AddressZero) {
+          if (checkProxyAdmin) {
+            throw new Error(
+              'The Proxy belongs to no-one. It cannot be upgraded anymore'
+            );
+          }
+        } else if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
+          throw new Error(
+            `To change owner/admin, you need to call the proxy directly, it currently is ${currentOwner}`
+          );
+        } else {
+          from = currentOwner;
+        }
 
         const oldProxy = proxy.abi.find(
           (frag: {name: string}) => frag.name === 'changeImplementation'
@@ -1542,17 +1575,6 @@ Note that in this case, the contract deployment will not behave the same if depl
         const changeImplementationMethod = oldProxy
           ? 'changeImplementation'
           : 'upgradeToAndCall';
-
-        if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
-          throw new Error(
-            `To change owner/admin, you need to call the proxy directly, it currently is ${currentOwner}`
-          );
-        }
-        if (currentOwner === AddressZero) {
-          throw new Error(
-            'The Proxy belongs to no-one. It cannot be upgraded anymore'
-          );
-        }
 
         if (proxyAdminName) {
           if (oldProxy) {
@@ -1592,14 +1614,14 @@ Note that in this case, the contract deployment will not behave the same if depl
           ) {
             executeReceipt = await execute(
               name,
-              {...options, from: currentOwner},
+              {...options, from},
               'upgradeTo',
               implementation.address
             );
           } else {
             executeReceipt = await execute(
               name,
-              {...options, from: currentOwner},
+              {...options, from},
               changeImplementationMethod,
               implementation.address,
               data
@@ -1735,7 +1757,26 @@ Note that in this case, the contract deployment will not behave the same if depl
         const registeredProtocol =
           deploymentManager.addressesToProtocol[from.toLowerCase()];
         if (registeredProtocol) {
-          if (registeredProtocol === 'ledger') {
+          if (registeredProtocol === 'external') {
+            ethersSigner = provider.getSigner(from); //new WaitingTxSigner(from, provider);
+            ethersSigner.sendTransaction = async (
+              txRequest: TransactionRequest
+            ) => {
+              const response: {hash: string} = await enquirer.prompt({
+                type: 'input',
+                name: 'hash',
+                message: `
+                tx hash please
+                to : ${txRequest.to}
+                data : ${txRequest.data}
+                value : ${txRequest.value}
+                `,
+              });
+
+              return provider.getTransaction(response.hash);
+            };
+            hardwareWallet = 'external';
+          } else if (registeredProtocol === 'ledger') {
             if (!LedgerSigner) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               let error: any | undefined;

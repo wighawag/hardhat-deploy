@@ -1,5 +1,107 @@
 # hardhat-deploy
 
+## 0.11.27
+
+### Patch Changes
+
+- fix ledger support by @stupid-boar
+
+## 0.11.26
+
+### Patch Changes
+
+- use pnpm + support latest zksync
+
+## 0.11.25
+
+### Patch Changes
+
+- allow to export as typescript const
+
+## 0.11.24
+
+### Patch Changes
+
+- allow to use HARDHAT_DEPLOY_EXPORT for the export command too
+
+## 0.11.23
+
+### Patch Changes
+
+- Adding the Sepolia network to the network list, so we can verify contracts in the Sepolia network.
+
+## 0.11.22
+
+### Patch Changes
+
+- fix UUPS upgrade logic
+
+## 0.11.21
+
+### Patch Changes
+
+- add UUPS optio
+
+## 0.11.20
+
+### Patch Changes
+
+- preliminary work for external tx support
+
+## 0.11.19
+
+### Patch Changes
+
+- Added chain id 421613 and API endpoint https://api-goerli.arbiscan.io
+
+## 0.11.18
+
+### Patch Changes
+
+- fix typo for export
+
+## 0.11.17
+
+### Patch Changes
+
+- add env variable for EXPORT
+
+## 0.11.16
+
+### Patch Changes
+
+- fix(367): catch exceptions by artifactExists
+
+## 0.11.15
+
+### Patch Changes
+
+- support optimism-goerli
+
+## 0.11.14
+
+### Patch Changes
+
+- catch evm_snapshot and evm_revert errors
+
+## 0.11.13
+
+### Patch Changes
+
+- upgrade zksync-web by @MarkuSchick
+
+## 0.11.12
+
+### Patch Changes
+
+- fix DiamondLoupeFacet
+
+## 0.11.11
+
+### Patch Changes
+
+- Update the dependencies for latest deployment of the zkSync v2 test network.
+
 ## 0.11.10
 
 ### Patch Changes

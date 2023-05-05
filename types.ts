@@ -349,6 +349,7 @@ export interface DeploymentSubmission {
   storageLayout?: any;
   libraries?: Libraries;
   gasEstimates?: any;
+  factoryDeps?: string[];
 }
 
 // export type LibraryReferences = {
@@ -376,6 +377,7 @@ export interface Deployment {
   facets?: Facet[];
   storageLayout?: any;
   gasEstimates?: any;
+  factoryDeps?: string[];
 }
 
 export interface DeterministicDeploymentInfo {

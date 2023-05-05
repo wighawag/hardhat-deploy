@@ -440,8 +440,8 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       resetMemory: false,
       deletePreviousDeployments: args.reset,
       writeDeploymentsToFiles: args.write,
-      export: args.export,
-      exportAll: args.exportAll,
+      export: args.export || process.env.HARDHAT_DEPLOY_EXPORT,
+      exportAll: args.exportAll || process.env.HARDHAT_DEPLOY_EXPORT_ALL,
       savePendingTx: args.pendingtx,
       gasPrice: args.gasprice,
       maxFeePerGas: args.maxfee,
@@ -677,7 +677,10 @@ task(
   .addOptionalParam('exportAll', 'export all deployments into one file')
   .setAction(async (args) => {
     await deploymentsManager.loadDeployments(false);
-    await deploymentsManager.export(args);
+    await deploymentsManager.export({
+      export: args.export || process.env.HARDHAT_DEPLOY_EXPORT,
+      exportAll: args.exportAll || process.env.HARDHAT_DEPLOY_EXPORT_ALL,
+    });
   });
 
 async function enableProviderLogging(

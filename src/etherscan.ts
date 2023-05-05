@@ -196,6 +196,9 @@ export async function submitSources(
       case '256':
         host = 'https://api-testnet.hecoinfo.com';
         break;
+      case '420':
+        host = 'https://api-goerli-optimism.etherscan.io';
+        break;
       case '588':
         host = 'https://stardust-explorer.metis.io';
         break;
@@ -217,11 +220,17 @@ export async function submitSources(
       case '421611':
         host = 'https://api-testnet.arbiscan.io';
         break;
+      case '421613':
+        host = 'https://api-goerli.arbiscan.io';
+        break;
       case '43113':
         host = 'https://api-testnet.snowtrace.io';
         break;
       case '43114':
         host = 'https://api.snowtrace.io';
+        break;
+      case '11155111':
+        host = 'https://api-sepolia.etherscan.io';
         break;
       default:
         return logError(
