@@ -1,46 +1,50 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {Signer} from '@ethersproject/abstract-signer';
+import {value Signer} from '@ethersproject/abstract-signer';
 import {
-  Web3Provider,
-  TransactionResponse,
-  TransactionRequest,
+  value Web3Provider,
+  value TransactionResponse,
+  value TransactionRequest,
 } from '@ethersproject/providers';
-import {getAddress} from '@ethersproject/address';
+import {value getAddress} from '@ethersproject/address';
 import {
-  Contract,
-  ContractFactory,
-  PayableOverrides,
+  value Contract,
+  value ContractFactory,
+  value PayableOverrides,
 } from '@ethersproject/contracts';
 import * as zk from 'zksync-web3';
-import {AddressZero} from '@ethersproject/constants';
-import {BigNumber} from '@ethersproject/bignumber';
-import {Wallet} from '@ethersproject/wallet';
-import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {zeroPad, hexlify, hexConcat} from '@ethersproject/bytes';
-import {Interface, FunctionFragment} from '@ethersproject/abi';
+import {value AddressZero} from '@ethersproject/constants';
+import {value BigNumber} from '@ethersproject/bignumber';
+import {value Wallet} from '@ethersproject/wallet';
+import {value keccak256 as solidityKeccak256} from '@ethersproject/solidity';
 import {
-  Deployment,
-  DeployResult,
-  DeploymentsExtension,
-  DeployOptions,
-  TxOptions,
-  CallOptions,
-  SimpleTx,
-  Receipt,
-  Address,
-  DiamondOptions,
-  Create2DeployOptions,
-  FacetCut,
-  DeploymentSubmission,
-  ExtendedArtifact,
-  FacetCutAction,
-  Facet,
-  ArtifactData,
-  ABI,
+  value zeroPad,
+  value hexlify,
+  value hexConcat,
+} from '@ethersproject/bytes';
+import {value Interface, value FunctionFragment} from '@ethersproject/abi';
+import {
+  value Deployment,
+  value DeployResult,
+  value DeploymentsExtension,
+  value DeployOptions,
+  value TxOptions,
+  value CallOptions,
+  value SimpleTx,
+  value Receipt,
+  value Address,
+  value DiamondOptions,
+  value Create2DeployOptions,
+  value FacetCut,
+  value DeploymentSubmission,
+  value ExtendedArtifact,
+  value FacetCutAction,
+  value Facet,
+  value ArtifactData,
+  value ABI,
 } from '../types';
-import {PartialExtension} from './internal/types';
-import {UnknownSignerError} from './errors';
-import {mergeABIs, recode} from './utils';
+import {value PartialExtension} from './internal/types';
+import {value UnknownSignerError} from './errors';
+import {value mergeABIs, value recode} from './utils';
 import fs from 'fs-extra';
 
 import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
@@ -55,37 +59,19 @@ import diamondERC165Init from '../extendedArtifacts/DiamondERC165Init.json';
 import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
 import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
 import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
-import {Artifact, EthereumProvider, Network} from 'hardhat/types';
-import {DeploymentsManager} from './DeploymentsManager';
+import {
+  value Artifact,
+  value EthereumProvider,
+  value Network,
+} from 'hardhat/types';
+import {value DeploymentsManager} from './DeploymentsManager';
 import enquirer from 'enquirer';
 import {
-  parse as parseTransaction,
-  Transaction,
+  value parse as parseTransaction,
+  value Transaction,
 } from '@ethersproject/transactions';
 
-let ledgerSigner: Signer;
-
-function ledgerSignerFactory(
-  provider: Web3Provider | zk.Web3Provider,
-  path: string
-): Signer {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const hardwareWalletModule = require('@ethersproject/hardware-wallets');
-    return new hardwareWalletModule.LedgerSigner(provider, 'default', path);
-  } catch (_) {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const hardwareWalletModule = require('@anders-t/ethers-ledger');
-      return new hardwareWalletModule.LedgerSigner(provider, path);
-    } catch (e) {
-      console.error(
-        `failed to loader hardhware wallet module for ledger, you can either use "@ethersproject/hardware-wallets" which as time of writing does not work or use "@anders-t/ethers-ledger."`
-      );
-      throw e;
-    }
-  }
-}
+let LedgerSigner: any; // TODO type
 
 async function handleSpecificErrors<T>(p: Promise<T>): Promise<T> {
   let result: T;
@@ -441,7 +427,7 @@ export function addHelpers(
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(options.from);
+    } = await getFrom(options.from);
     const create2DeployerAddress =
       await deploymentManager.getDeterministicDeploymentFactoryAddress();
     const code = await provider.getCode(create2DeployerAddress);
@@ -553,7 +539,7 @@ export function addHelpers(
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(options.from);
+    } = await getFrom(options.from);
 
     const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(
       name,
@@ -570,14 +556,13 @@ export function addHelpers(
     };
 
     let factory;
-    let factoryDeps: string[] = [];
     if (network.zksync) {
       factory = new zk.ContractFactory(
         linkedArtifact.abi,
         linkedArtifact.bytecode,
         ethersSigner as zk.Signer
       );
-      factoryDeps = await extractFactoryDeps(linkedArtifact);
+      const factoryDeps = await extractFactoryDeps(linkedArtifact);
       const customData = {
         customData: {
           factoryDeps,
@@ -699,7 +684,6 @@ export function addHelpers(
       receipt,
       transactionHash: receipt.transactionHash,
       libraries: options.libraries,
-      factoryDeps,
     };
     await saveDeployment(name, deployment);
     if (options.log || hardwareWallet) {
@@ -825,7 +809,11 @@ export function addHelpers(
       };
     } else {
       const args: any[] = options.args ? [...options.args] : [];
-      const {ethersSigner, unknown, address: from} = getFrom(options.from);
+      const {
+        ethersSigner,
+        unknown,
+        address: from,
+      } = await getFrom(options.from);
 
       const artifactInfo = await getArtifactFromOptions(name, options);
       const {artifact} = artifactInfo;
@@ -902,7 +890,7 @@ export function addHelpers(
     await init();
 
     if (options.deterministicDeployment) {
-      const {ethersSigner} = getFrom(options.from);
+      const {ethersSigner} = await getFrom(options.from);
 
       const artifactInfo = await getArtifactFromOptions(name, options);
       const {artifact} = artifactInfo;
@@ -980,10 +968,13 @@ export function addHelpers(
           });
           const newData = newTransaction.data?.toString();
 
-          const oldFlattened = hexConcat(deployment.factoryDeps || []);
+          const deserialize = zk.utils.parseTransaction(
+            transaction.data
+          ) as any;
+          const desFlattened = hexConcat(deserialize.customData.factoryDeps);
           const newFlattened = hexConcat(factoryDeps);
 
-          if (transaction.data !== newData || oldFlattened != newFlattened) {
+          if (deserialize.data !== newData || desFlattened != newFlattened) {
             return {differences: true, address: deployment.address};
           }
           return {differences: false, address: deployment.address};
@@ -1285,8 +1276,7 @@ export function addHelpers(
     }
 
     const proxyName = name + '_Proxy';
-    const {address: owner} = getProxyOwner(options);
-    const {address: from} = getFrom(options.from);
+    const {address: owner} = await getProxyOwner(options);
     const implementationArgs = options.args ? [...options.args] : [];
 
     // --- Implementation Deployment ---
@@ -1705,7 +1695,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     }
   }
 
-  function getProxyOwner(options: DeployOptions) {
+  async function getProxyOwner(options: DeployOptions) {
     let address = options.from; // admim default to msg.sender
     if (typeof options.proxy === 'object') {
       address = options.proxy.owner || address;
@@ -1713,17 +1703,17 @@ Note that in this case, the contract deployment will not behave the same if depl
     return getFrom(address);
   }
 
-  function getDiamondOwner(options: DiamondOptions) {
+  async function getDiamondOwner(options: DiamondOptions) {
     let address = options.from; // admim default to msg.sender
     address = options.owner || address;
     return getFrom(address);
   }
 
-  function getOptionalFrom(from?: string): {
+  async function getOptionalFrom(from?: string): Promise<{
     address?: Address;
     ethersSigner?: Signer;
     hardwareWallet?: string;
-  } {
+  }> {
     if (!from) {
       return {
         address: from,
@@ -1734,12 +1724,14 @@ Note that in this case, the contract deployment will not behave the same if depl
     return getFrom(from);
   }
 
-  function getFrom(from: string): {
+  let ledgerSigner: any; // TODO type
+
+  async function getFrom(from: string): Promise<{
     address: Address;
     ethersSigner: Signer | zk.Signer;
     hardwareWallet?: string;
     unknown: boolean;
-  } {
+  }> {
     let ethersSigner: Signer | zk.Signer | undefined;
     let wallet: Wallet | zk.Wallet | undefined;
     let hardwareWallet: string | undefined = undefined;
@@ -1784,16 +1776,45 @@ Note that in this case, the contract deployment will not behave the same if depl
               return provider.getTransaction(response.hash);
             };
             hardwareWallet = 'external';
-          } else if (registeredProtocol.startsWith('ledger')) {
-            if (!ledgerSigner) {
-              ledgerSigner = ledgerSignerFactory(
-                provider,
-                registeredProtocol.substr(9)
-              );
+          } else if (registeredProtocol === 'ledger') {
+            if (!LedgerSigner) {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              let error: any | undefined;
+              try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const hardwareWalletModule = require('@ethersproject/hardware-wallets');
+                LedgerSigner = hardwareWalletModule.LedgerSigner;
+              } catch (e) {
+                error = e;
+                try {
+                  // eslint-disable-next-line @typescript-eslint/no-var-requires
+                  const hardwareWalletModule = require('@anders-t/ethers-ledger');
+                  LedgerSigner = hardwareWalletModule.LedgerSigner;
+                  error = undefined;
+                } catch (e) {}
+              }
+
+              if (error) {
+                console.error(
+                  `failed to loader hardhware wallet module for ledger, you can either use "@ethersproject/hardware-wallets" which as time of writing does not work or use "@anders-t/ethers-ledger."`
+                );
+                throw error;
+              }
             }
 
+            // make sure to close an existing connection before every transaction since it's currently not being handled
+            // properly by ethers
+            if (ledgerSigner) {
+              const __eth = await ledgerSigner._eth;
+              await __eth.transport.device.close();
+
+              ledgerSigner = undefined;
+            }
+
+            ethersSigner = new LedgerSigner(provider);
             hardwareWallet = 'ledger';
-            ethersSigner = ledgerSigner;
+
+            ledgerSigner = ethersSigner;
           } else if (registeredProtocol.startsWith('privatekey')) {
             ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
           } else if (registeredProtocol.startsWith('gnosis')) {
@@ -1859,7 +1880,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       }
     }
 
-    const {address: owner} = getDiamondOwner(options);
+    const {address: owner} = await getDiamondOwner(options);
     const newSelectors: string[] = [];
     const facetSnapshot: Facet[] = [];
     let oldFacets: Facet[] = [];
@@ -2508,7 +2529,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(tx.from);
+    } = await getFrom(tx.from);
 
     const transactionData = {
       to: tx.to,
@@ -2640,7 +2661,7 @@ data: ${data}
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(options.from);
+    } = await getFrom(options.from);
 
     let tx;
     const deployment = await partialExtension.get(name);
@@ -2762,7 +2783,7 @@ data: ${data}
       args = [];
     }
     let caller: Web3Provider | Signer | zk.Web3Provider | zk.Signer = provider;
-    const {ethersSigner} = getOptionalFrom(options.from);
+    const {ethersSigner} = await getOptionalFrom(options.from);
     if (ethersSigner) {
       caller = ethersSigner;
     }
@@ -2967,7 +2988,9 @@ data: ${data}
               console.log('waiting for newly broadcasted tx ...');
             } else {
               console.log('resigning the tx...');
-              const {ethersSigner, hardwareWallet} = getOptionalFrom(tx.from);
+              const {ethersSigner, hardwareWallet} = await getOptionalFrom(
+                tx.from
+              );
               if (!ethersSigner) {
                 throw new Error('no signer for ' + tx.from);
               }
@@ -3015,7 +3038,9 @@ data: ${data}
             if (!tx) {
               throw new Error(`cannot resubmit a tx if info not available`);
             }
-            const {ethersSigner, hardwareWallet} = getOptionalFrom(tx.from);
+            const {ethersSigner, hardwareWallet} = await getOptionalFrom(
+              tx.from
+            );
             if (!ethersSigner) {
               throw new Error('no signer for ' + tx.from);
             }
@@ -3168,7 +3193,7 @@ data: ${data}
     }
 
     const proxyName = name + '_DiamondProxy';
-    const {address: owner, hardwareWallet} = getDiamondOwner(options);
+    const {address: owner} = await getDiamondOwner(options);
     const newSelectors: string[] = [];
     const facetSnapshot: Facet[] = [];
     const oldFacets: Facet[] = [];
