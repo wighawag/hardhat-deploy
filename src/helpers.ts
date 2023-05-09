@@ -48,6 +48,7 @@ import OptimizedTransparentUpgradeableProxy from '../extendedArtifacts/Optimized
 import DefaultProxyAdmin from '../extendedArtifacts/ProxyAdmin.json';
 import eip173Proxy from '../extendedArtifacts/EIP173Proxy.json';
 import eip173ProxyWithReceive from '../extendedArtifacts/EIP173ProxyWithReceive.json';
+import erc1967Proxy from '../extendedArtifacts/ERC1967Proxy.json';
 import diamondBase from '../extendedArtifacts/Diamond.json';
 import oldDiamonBase from './old_diamondbase.json';
 import diamondERC165Init from '../extendedArtifacts/DiamondERC165Init.json';
@@ -421,7 +422,7 @@ export function addHelpers(
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(options.from);
+    } = await getFrom(options.from);
     const create2DeployerAddress =
       await deploymentManager.getDeterministicDeploymentFactoryAddress();
     const code = await provider.getCode(create2DeployerAddress);
@@ -533,7 +534,7 @@ export function addHelpers(
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(options.from);
+    } = await getFrom(options.from);
 
     const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(
       name,
@@ -805,7 +806,11 @@ export function addHelpers(
       };
     } else {
       const args: any[] = options.args ? [...options.args] : [];
-      const {ethersSigner, unknown, address: from} = getFrom(options.from);
+      const {
+        ethersSigner,
+        unknown,
+        address: from,
+      } = await getFrom(options.from);
 
       const artifactInfo = await getArtifactFromOptions(name, options);
       const {artifact} = artifactInfo;
@@ -882,7 +887,7 @@ export function addHelpers(
     await init();
 
     if (options.deterministicDeployment) {
-      const {ethersSigner} = getFrom(options.from);
+      const {ethersSigner} = await getFrom(options.from);
 
       const artifactInfo = await getArtifactFromOptions(name, options);
       const {artifact} = artifactInfo;
@@ -1154,6 +1159,7 @@ export function addHelpers(
     updateMethod: string | undefined;
     updateArgs: any[];
     upgradeIndex: number | undefined;
+    checkProxyAdmin: boolean;
   }> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let contractName = options.contract;
@@ -1163,6 +1169,7 @@ export function addHelpers(
     let upgradeIndex;
     let proxyContract: ExtendedArtifact = eip173Proxy;
     let checkABIConflict = true;
+    let checkProxyAdmin = true;
     let viaAdminContract:
       | string
       | {name: string; artifact?: string | ArtifactData}
@@ -1245,6 +1252,11 @@ export function addHelpers(
               // } else if (options.proxy.proxyContract === 'UUPS') {
               //   checkABIConflict = true;
               //   proxyContract = UUPSProxy;
+            } else if (options.proxy.proxyContract === 'UUPS') {
+              checkABIConflict = false;
+              checkProxyAdmin = false;
+              proxyContract = erc1967Proxy;
+              proxyArgsTemplate = ['{implementation}', '{data}'];
             } else {
               throw new Error(
                 `no contract found for ${options.proxy.proxyContract}`
@@ -1261,8 +1273,7 @@ export function addHelpers(
     }
 
     const proxyName = name + '_Proxy';
-    const {address: owner} = getProxyOwner(options);
-    const {address: from} = getFrom(options.from);
+    const {address: owner} = await getProxyOwner(options);
     const implementationArgs = options.args ? [...options.args] : [];
 
     // --- Implementation Deployment ---
@@ -1409,6 +1420,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       updateMethod,
       updateArgs,
       upgradeIndex,
+      checkProxyAdmin,
     };
   }
 
@@ -1435,6 +1447,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       proxyContract,
       proxyArgsTemplate,
       mergedABI,
+      checkProxyAdmin,
     } = await _getProxyInfo(name, options);
     /* eslint-enable prefer-const */
 
@@ -1532,11 +1545,26 @@ Note that in this case, the contract deployment will not behave the same if depl
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
+        let from = options.from;
+
         const ownerStorage = await provider.getStorageAt(
           proxy.address,
           '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
         );
         const currentOwner = getAddress(`0x${ownerStorage.substr(-40)}`);
+        if (currentOwner === AddressZero) {
+          if (checkProxyAdmin) {
+            throw new Error(
+              'The Proxy belongs to no-one. It cannot be upgraded anymore'
+            );
+          }
+        } else if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
+          throw new Error(
+            `To change owner/admin, you need to call the proxy directly, it currently is ${currentOwner}`
+          );
+        } else {
+          from = currentOwner;
+        }
 
         const oldProxy = proxy.abi.find(
           (frag: {name: string}) => frag.name === 'changeImplementation'
@@ -1544,17 +1572,6 @@ Note that in this case, the contract deployment will not behave the same if depl
         const changeImplementationMethod = oldProxy
           ? 'changeImplementation'
           : 'upgradeToAndCall';
-
-        if (currentOwner.toLowerCase() !== proxyAdmin.toLowerCase()) {
-          throw new Error(
-            `To change owner/admin, you need to call the proxy directly, it currently is ${currentOwner}`
-          );
-        }
-        if (currentOwner === AddressZero) {
-          throw new Error(
-            'The Proxy belongs to no-one. It cannot be upgraded anymore'
-          );
-        }
 
         if (proxyAdminName) {
           if (oldProxy) {
@@ -1594,14 +1611,14 @@ Note that in this case, the contract deployment will not behave the same if depl
           ) {
             executeReceipt = await execute(
               name,
-              {...options, from: currentOwner},
+              {...options, from},
               'upgradeTo',
               implementation.address
             );
           } else {
             executeReceipt = await execute(
               name,
-              {...options, from: currentOwner},
+              {...options, from},
               changeImplementationMethod,
               implementation.address,
               data
@@ -1675,7 +1692,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     }
   }
 
-  function getProxyOwner(options: DeployOptions) {
+  async function getProxyOwner(options: DeployOptions) {
     let address = options.from; // admim default to msg.sender
     if (typeof options.proxy === 'object') {
       address = options.proxy.owner || address;
@@ -1683,17 +1700,17 @@ Note that in this case, the contract deployment will not behave the same if depl
     return getFrom(address);
   }
 
-  function getDiamondOwner(options: DiamondOptions) {
+  async function getDiamondOwner(options: DiamondOptions) {
     let address = options.from; // admim default to msg.sender
     address = options.owner || address;
     return getFrom(address);
   }
 
-  function getOptionalFrom(from?: string): {
+  async function getOptionalFrom(from?: string): Promise<{
     address?: Address;
     ethersSigner?: Signer;
     hardwareWallet?: string;
-  } {
+  }> {
     if (!from) {
       return {
         address: from,
@@ -1704,12 +1721,14 @@ Note that in this case, the contract deployment will not behave the same if depl
     return getFrom(from);
   }
 
-  function getFrom(from: string): {
+  let ledgerSigner: any; // TODO type
+
+  async function getFrom(from: string): Promise<{
     address: Address;
     ethersSigner: Signer | zk.Signer;
     hardwareWallet?: string;
     unknown: boolean;
-  } {
+  }> {
     let ethersSigner: Signer | zk.Signer | undefined;
     let wallet: Wallet | zk.Wallet | undefined;
     let hardwareWallet: string | undefined = undefined;
@@ -1780,8 +1799,19 @@ Note that in this case, the contract deployment will not behave the same if depl
                 throw error;
               }
             }
+
+            // make sure to close an existing connection before every transaction since it's currently not being handled
+            // properly by ethers
+            if (ledgerSigner) {
+              const __eth = await ledgerSigner._eth;
+              await __eth.transport.device.close();
+
+              ledgerSigner = undefined;
+            }
+
             ethersSigner = new LedgerSigner(provider);
             hardwareWallet = 'ledger';
+            ledgerSigner = ethersSigner;
           } else if (registeredProtocol === 'trezor') {
             if (!TrezorSigner) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1886,7 +1916,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       }
     }
 
-    const {address: owner} = getDiamondOwner(options);
+    const {address: owner} = await getDiamondOwner(options);
     const newSelectors: string[] = [];
     const facetSnapshot: Facet[] = [];
     let oldFacets: Facet[] = [];
@@ -2535,7 +2565,7 @@ Note that in this case, the contract deployment will not behave the same if depl
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(tx.from);
+    } = await getFrom(tx.from);
 
     const transactionData = {
       to: tx.to,
@@ -2667,7 +2697,7 @@ data: ${data}
       ethersSigner,
       hardwareWallet,
       unknown,
-    } = getFrom(options.from);
+    } = await getFrom(options.from);
 
     let tx;
     const deployment = await partialExtension.get(name);
@@ -2789,7 +2819,7 @@ data: ${data}
       args = [];
     }
     let caller: Web3Provider | Signer | zk.Web3Provider | zk.Signer = provider;
-    const {ethersSigner} = getOptionalFrom(options.from);
+    const {ethersSigner} = await getOptionalFrom(options.from);
     if (ethersSigner) {
       caller = ethersSigner;
     }
@@ -2994,7 +3024,9 @@ data: ${data}
               console.log('waiting for newly broadcasted tx ...');
             } else {
               console.log('resigning the tx...');
-              const {ethersSigner, hardwareWallet} = getOptionalFrom(tx.from);
+              const {ethersSigner, hardwareWallet} = await getOptionalFrom(
+                tx.from
+              );
               if (!ethersSigner) {
                 throw new Error('no signer for ' + tx.from);
               }
@@ -3042,7 +3074,9 @@ data: ${data}
             if (!tx) {
               throw new Error(`cannot resubmit a tx if info not available`);
             }
-            const {ethersSigner, hardwareWallet} = getOptionalFrom(tx.from);
+            const {ethersSigner, hardwareWallet} = await getOptionalFrom(
+              tx.from
+            );
             if (!ethersSigner) {
               throw new Error('no signer for ' + tx.from);
             }
@@ -3195,7 +3229,7 @@ data: ${data}
     }
 
     const proxyName = name + '_DiamondProxy';
-    const {address: owner, hardwareWallet} = getDiamondOwner(options);
+    const {address: owner} = await getDiamondOwner(options);
     const newSelectors: string[] = [];
     const facetSnapshot: Facet[] = [];
     const oldFacets: Facet[] = [];

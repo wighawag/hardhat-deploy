@@ -1,5 +1,53 @@
 # hardhat-deploy
 
+## 0.11.28
+
+### Patch Changes
+
+- fix ledger
+
+## 0.11.27
+
+### Patch Changes
+
+- fix ledger support by @stupid-boar
+
+## 0.11.26
+
+### Patch Changes
+
+- use pnpm + support latest zksync
+
+## 0.11.25
+
+### Patch Changes
+
+- allow to export as typescript const
+
+## 0.11.24
+
+### Patch Changes
+
+- allow to use HARDHAT_DEPLOY_EXPORT for the export command too
+
+## 0.11.23
+
+### Patch Changes
+
+- Adding the Sepolia network to the network list, so we can verify contracts in the Sepolia network.
+
+## 0.11.22
+
+### Patch Changes
+
+- fix UUPS upgrade logic
+
+## 0.11.21
+
+### Patch Changes
+
+- add UUPS optio
+
 ## 0.11.20
 
 ### Patch Changes

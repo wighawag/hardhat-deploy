@@ -883,6 +883,9 @@ export class DeploymentsManager {
         gasEstimates: deployment.gasEstimates, // TODO double check : use evm field ?
       })
     );
+    if (deployment.factoryDeps?.length) {
+      obj.factoryDeps = deployment.factoryDeps;
+    }
     this.db.deployments[name] = obj;
     if (obj.address === undefined && obj.transactionHash !== undefined) {
       let receiptFetched;
@@ -1323,8 +1326,7 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       });
-      const out = JSON.stringify(all, null, '  ');
-      this._writeExports(options.exportAll, out);
+      this._writeExports(options.exportAll, all);
 
       log('export-all complete');
     }
@@ -1356,13 +1358,14 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       };
-      const out = JSON.stringify(singleExport, null, '  ');
-      this._writeExports(options.export, out);
+
+      this._writeExports(options.export, singleExport);
       log('single export complete');
     }
   }
 
-  private _writeExports(dests: string, output: string) {
+  private _writeExports(dests: string, outputObject: any) {
+    const output = JSON.stringify(outputObject, null, '  '); // TODO remove bytecode ?
     const splitted = dests.split(',');
     for (const split of splitted) {
       if (!split) {
@@ -1372,7 +1375,11 @@ export class DeploymentsManager {
         process.stdout.write(output);
       } else {
         fs.ensureDirSync(path.dirname(split));
-        fs.writeFileSync(split, output); // TODO remove bytecode ?
+        if (split.endsWith('.ts')) {
+          fs.writeFileSync(split, `export default ${output} as const;`);
+        } else {
+          fs.writeFileSync(split, output);
+        }
       }
     }
   }
