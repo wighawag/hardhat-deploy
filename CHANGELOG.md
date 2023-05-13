@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.29
+
+### Patch Changes
+
+- add trezor support
+
 ## 0.11.28
 
 ### Patch Changes
