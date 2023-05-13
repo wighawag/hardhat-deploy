@@ -62,8 +62,11 @@ import {
   parse as parseTransaction,
   Transaction,
 } from '@ethersproject/transactions';
+import {getDerivationPath} from './hdpath';
 
 let LedgerSigner: any; // TODO type
+let TrezorSigner: any; // TODO type
+let hardwareSigner: any; // TODO type
 
 async function handleSpecificErrors<T>(p: Promise<T>): Promise<T> {
   let result: T;
@@ -619,6 +622,8 @@ export function addHelpers(
     // Temporary workaround for https://github.com/ethers-io/ethers.js/issues/2078
     // TODO: Remove me when LedgerSigner adds proper support for 1559 txns
     if (hardwareWallet === 'ledger') {
+      unsignedTx.type = 1;
+    } else if (hardwareWallet === 'trezor') {
       unsignedTx.type = 1;
     }
 
@@ -1728,6 +1733,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     let wallet: Wallet | zk.Wallet | undefined;
     let hardwareWallet: string | undefined = undefined;
     let unknown = false;
+    let derivationPath: string | undefined = undefined;
 
     if (from.length >= 64) {
       if (from.length === 64) {
@@ -1805,8 +1811,46 @@ Note that in this case, the contract deployment will not behave the same if depl
 
             ethersSigner = new LedgerSigner(provider);
             hardwareWallet = 'ledger';
-
             ledgerSigner = ethersSigner;
+          } else if (registeredProtocol === 'trezor') {
+            if (!TrezorSigner) {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              let error: any | undefined;
+              try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const hardwareWalletModule = require('@nxqbao/eth-signer-trezor');
+                derivationPath = getDerivationPath(network.config.chainId);
+
+                if (!derivationPath) {
+                  throw new Error(
+                    `network is currently unsupported with trezor`
+                  );
+                }
+
+                TrezorSigner = hardwareWalletModule.TrezorSigner;
+              } catch (e) {
+                error = e;
+              }
+
+              if (error) {
+                console.error(
+                  `failed to loader hardware wallet module for trezor`
+                );
+                throw error;
+              }
+            }
+
+            if (!hardwareSigner) {
+              hardwareSigner = new TrezorSigner(
+                provider,
+                derivationPath,
+                undefined, // TODO: support fetch by index
+                from,
+                'hardhat-deploy-trezor'
+              );
+            }
+            ethersSigner = hardwareSigner;
+            hardwareWallet = 'trezor';
           } else if (registeredProtocol.startsWith('privatekey')) {
             ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
           } else if (registeredProtocol.startsWith('gnosis')) {
