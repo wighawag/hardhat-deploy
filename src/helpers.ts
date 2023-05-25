@@ -1774,7 +1774,7 @@ Note that in this case, the contract deployment will not behave the same if depl
               return provider.getTransaction(response.hash);
             };
             hardwareWallet = 'external';
-          } else if (registeredProtocol === 'ledger') {
+          } else if (registeredProtocol.startsWith('ledger')) {
             if (!LedgerSigner) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               let error: any | undefined;
@@ -1812,7 +1812,7 @@ Note that in this case, the contract deployment will not behave the same if depl
             ethersSigner = new LedgerSigner(provider);
             hardwareWallet = 'ledger';
             ledgerSigner = ethersSigner;
-          } else if (registeredProtocol === 'trezor') {
+          } else if (registeredProtocol.startsWith('trezor')) {
             if (!TrezorSigner) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               let error: any | undefined;
