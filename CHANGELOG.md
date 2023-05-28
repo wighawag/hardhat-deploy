@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.30
+
+### Patch Changes
+
+- fix ledger account @ifelsedeveloper
+
 ## 0.11.29
 
 ### Patch Changes
