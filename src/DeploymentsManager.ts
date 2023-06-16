@@ -34,6 +34,7 @@ import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {store} from './globalStore';
+import {bnReplacer} from './internal/utils';
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -328,7 +329,7 @@ export class DeploymentsManager {
         return async (options?: O) => {
           let id = baseId;
           if (options !== undefined) {
-            id = id + JSON.stringify(options);
+            id = id + JSON.stringify(options, bnReplacer);
           }
           const saved = this.db.pastFixtures[id];
           if (saved) {
@@ -540,7 +541,7 @@ export class DeploymentsManager {
         : {rawTx, decoded};
       fs.writeFileSync(
         pendingTxPath,
-        JSON.stringify(this.db.pendingTransactions, null, '  ')
+        JSON.stringify(this.db.pendingTransactions, bnReplacer, '  ')
       );
       // await new Promise(r => setTimeout(r, 20000));
       const wait = tx.wait.bind(tx);
@@ -553,7 +554,7 @@ export class DeploymentsManager {
         } else {
           fs.writeFileSync(
             pendingTxPath,
-            JSON.stringify(this.db.pendingTransactions, null, '  ')
+            JSON.stringify(this.db.pendingTransactions, bnReplacer, '  ')
           );
         }
         this.db.gasUsed = this.db.gasUsed.add(receipt.gasUsed);
@@ -858,30 +859,33 @@ export class DeploymentsManager {
     }
 
     const obj = JSON.parse(
-      JSON.stringify({
-        address: deployment.address || actualReceipt?.contractAddress,
-        abi: deployment.abi,
-        transactionHash:
-          deployment.transactionHash || actualReceipt?.transactionHash,
-        receipt: actualReceipt,
-        args: actualArgs,
-        numDeployments,
-        linkedData: deployment.linkedData,
-        solcInputHash: deployment.solcInputHash,
-        metadata: deployment.metadata,
-        bytecode: deployment.bytecode,
-        deployedBytecode: deployment.deployedBytecode,
-        libraries: deployment.libraries,
-        facets: deployment.facets,
-        execute: deployment.execute,
-        history: deployment.history,
-        implementation: deployment.implementation,
-        devdoc: deployment.devdoc,
-        userdoc: deployment.userdoc,
-        storageLayout: deployment.storageLayout,
-        methodIdentifiers: deployment.methodIdentifiers,
-        gasEstimates: deployment.gasEstimates, // TODO double check : use evm field ?
-      })
+      JSON.stringify(
+        {
+          address: deployment.address || actualReceipt?.contractAddress,
+          abi: deployment.abi,
+          transactionHash:
+            deployment.transactionHash || actualReceipt?.transactionHash,
+          receipt: actualReceipt,
+          args: actualArgs,
+          numDeployments,
+          linkedData: deployment.linkedData,
+          solcInputHash: deployment.solcInputHash,
+          metadata: deployment.metadata,
+          bytecode: deployment.bytecode,
+          deployedBytecode: deployment.deployedBytecode,
+          libraries: deployment.libraries,
+          facets: deployment.facets,
+          execute: deployment.execute,
+          history: deployment.history,
+          implementation: deployment.implementation,
+          devdoc: deployment.devdoc,
+          userdoc: deployment.userdoc,
+          storageLayout: deployment.storageLayout,
+          methodIdentifiers: deployment.methodIdentifiers,
+          gasEstimates: deployment.gasEstimates, // TODO double check : use evm field ?
+        },
+        bnReplacer
+      )
     );
     if (deployment.factoryDeps?.length) {
       obj.factoryDeps = deployment.factoryDeps;
@@ -930,7 +934,7 @@ export class DeploymentsManager {
         fs.writeFileSync(chainIdFilepath, chainId);
       }
 
-      fs.writeFileSync(filepath, JSON.stringify(obj, null, '  '));
+      fs.writeFileSync(filepath, JSON.stringify(obj, bnReplacer, '  '));
 
       if (deployment.solcInputHash && deployment.solcInput) {
         const solcInputsFolderpath = path.join(
@@ -1260,7 +1264,7 @@ export class DeploymentsManager {
                   deploymentFolderPath,
                   '.migrations.json'
                 ),
-                JSON.stringify(this.db.migrations, null, '  ')
+                JSON.stringify(this.db.migrations, bnReplacer, '  ')
               );
             }
           }
@@ -1365,7 +1369,7 @@ export class DeploymentsManager {
   }
 
   private _writeExports(dests: string, outputObject: any) {
-    const output = JSON.stringify(outputObject, null, '  '); // TODO remove bytecode ?
+    const output = JSON.stringify(outputObject, bnReplacer, '  '); // TODO remove bytecode ?
     const splitted = dests.split(',');
     for (const split of splitted) {
       if (!split) {

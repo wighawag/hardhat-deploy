@@ -63,6 +63,7 @@ import {
   Transaction,
 } from '@ethersproject/transactions';
 import {getDerivationPath} from './hdpath';
+import {bnReplacer} from './internal/utils';
 
 let LedgerSigner: any; // TODO type
 let TrezorSigner: any; // TODO type
@@ -103,7 +104,7 @@ You'll need to wait the tx resolve, or increase the gas price via --gasprice (th
       //   confirmations: 0,
       // });
     } else {
-      console.error((e as any).message, JSON.stringify(e), e);
+      console.error((e as any).message, JSON.stringify(e, bnReplacer), e);
       throw e;
     }
   }
@@ -630,7 +631,7 @@ export function addHelpers(
     if (unknown) {
       throw new UnknownSignerError({
         from,
-        ...JSON.parse(JSON.stringify(unsignedTx)),
+        ...JSON.parse(JSON.stringify(unsignedTx, bnReplacer)),
       });
     }
 
@@ -830,7 +831,7 @@ export function addHelpers(
       if (unknown) {
         throw new UnknownSignerError({
           from,
-          ...JSON.parse(JSON.stringify(unsignedTx)),
+          ...JSON.parse(JSON.stringify(unsignedTx, bnReplacer)),
         });
       }
 
@@ -3063,7 +3064,7 @@ data: ${data}
                 } else {
                   fs.writeFileSync(
                     pendingTxPath,
-                    JSON.stringify(pendingTxs, null, '  ')
+                    JSON.stringify(pendingTxs, bnReplacer, '  ')
                   );
                 }
                 await onPendingTx(txReq);
@@ -3127,7 +3128,7 @@ data: ${data}
             } else {
               fs.writeFileSync(
                 pendingTxPath,
-                JSON.stringify(pendingTxs, null, '  ')
+                JSON.stringify(pendingTxs, bnReplacer, '  ')
               );
             }
             await onPendingTx(txReq);
@@ -3159,7 +3160,7 @@ data: ${data}
         } else {
           fs.writeFileSync(
             pendingTxPath,
-            JSON.stringify(pendingTxs, null, '  ')
+            JSON.stringify(pendingTxs, bnReplacer, '  ')
           );
         }
       }
@@ -3276,7 +3277,7 @@ data: ${data}
     } else {
       throw new Error(`old diamond deployments are now disabled`);
     }
-    // console.log({ oldFacets: JSON.stringify(oldFacets, null, "  ") });
+    // console.log({ oldFacets: JSON.stringify(oldFacets, bnReplacer, "  ") });
 
     let changesDetected = !oldDeployment;
     let abi: any[] = oldDiamonBase.abi.concat([]);

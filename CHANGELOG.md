@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.31
+
+### Patch Changes
+
+- add bnreplacer to stringify values from ethers v6
+
 ## 0.11.30
 
 ### Patch Changes
