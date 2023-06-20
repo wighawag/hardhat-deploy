@@ -96,6 +96,9 @@ export interface DiamondOptions extends TxOptions {
     methodName: string;
     args: any[];
   };
+  excludeSelectors?: {
+    [facetName: string]: string[]
+  };
   deterministicSalt?: string;
   facetsArgs?: any[];
 }
