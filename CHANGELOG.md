@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.34
+
+### Patch Changes
+
+- fix: \_setOwner before \_setImplementation in solc_0.8 EIP173Proxy by @gitpusha
+
 ## 0.11.33
 
 ### Patch Changes
