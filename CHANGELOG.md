@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.32
+
+### Patch Changes
+
+- Add filtering of selectors by facets in Diamonds (by @idkravitz)
+
 ## 0.11.31
 
 ### Patch Changes
