@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.33
+
+### Patch Changes
+
+- Allow override custom proxy params (by @LeoVS09)
+
 ## 0.11.32
 
 ### Patch Changes
