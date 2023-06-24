@@ -110,7 +110,7 @@ task(TASK_COMPILE).setAction(async (args, hre, runSuper) => {
     (extendedArtifact._format as any) = undefined;
     fs.writeFileSync(
       path.join(extendedArtifactFolderpath, artifactName + '.json'),
-      JSON.stringify(extendedArtifact, bnReplacer, '  ')
+      JSON.stringify(extendedArtifact, null, '  ')
     );
   }
 });
