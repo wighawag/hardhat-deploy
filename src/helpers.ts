@@ -40,7 +40,7 @@ import {
 } from '../types';
 import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
-import {mergeABIs, recode} from './utils';
+import {filterABI, mergeABIs, recode} from './utils';
 import fs from 'fs-extra';
 
 import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
@@ -1958,6 +1958,7 @@ Note that in this case, the contract deployment will not behave the same if depl
     let abi: any[] = diamondArtifact.abi.concat([]);
     const facetCuts: FacetCut[] = [];
     let facetFound: string | undefined;
+    const excludeSelectors: Record<string, string[]> = options.excludeSelectors || {};
     for (const facet of facetsSet) {
       let deterministicFacet: string | boolean = true;
       let facetName;
@@ -2020,7 +2021,12 @@ Note that in this case, the contract deployment will not behave the same if depl
         // reset args for case where facet do not expect any and there was no specific args set on it
         facetArgs = [];
       }
-      abi = mergeABIs([abi, artifact.abi], {
+      let excludeSighashes: Set<string> = new Set();
+      if (facetName in excludeSelectors) {
+        const iface = new Interface(artifact.abi);
+        excludeSighashes = new Set(excludeSelectors[facetName].map(selector => iface.getSighash(selector)));
+      }
+      abi = mergeABIs([abi, filterABI(artifact.abi, excludeSighashes)], {
         check: true,
         skipSupportsInterface: false,
       });
@@ -2045,7 +2051,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetAddress = implementation.address;
         const newFacet = {
           facetAddress,
-          functionSelectors: sigsFromABI(implementation.abi),
+          functionSelectors: sigsFromABI(filterABI(implementation.abi, excludeSighashes)),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
@@ -2054,7 +2060,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetAddress = oldImpl.address;
         const newFacet = {
           facetAddress,
-          functionSelectors: sigsFromABI(oldImpl.abi),
+          functionSelectors: sigsFromABI(filterABI(oldImpl.abi, excludeSighashes)),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
