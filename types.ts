@@ -116,6 +116,8 @@ type ProxyOptionsBase = {
         artifact?: string | ArtifactData;
       };
   implementationName?: string;
+  checkABIConflict?: boolean;
+  checkProxyAdmin?: boolean;
 };
 
 export type ProxyOptions =

@@ -1226,6 +1226,9 @@ export function addHelpers(
         }
       }
 
+      checkABIConflict = options.proxy.checkABIConflict ?? checkABIConflict;
+      checkProxyAdmin = options.proxy.checkProxyAdmin ?? checkProxyAdmin;
+
       if (options.proxy.proxyContract) {
         if (typeof options.proxy.proxyContract === 'string') {
           try {
@@ -1306,7 +1309,7 @@ export function addHelpers(
     );
     // ensure no clash
     const mergedABI = mergeABIs([proxyContract.abi, artifact.abi], {
-      check: checkABIConflict, // TODO options for custom proxy ?
+      check: checkABIConflict,
       skipSupportsInterface: true, // TODO options for custom proxy ?
     }).filter((v) => v.type !== 'constructor');
     mergedABI.push(proxyContractConstructor); // use proxy constructor abi
