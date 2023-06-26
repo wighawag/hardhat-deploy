@@ -398,6 +398,8 @@ export function addHelpers(
     salt: string,
     bytecode: string
   ): Address {
+    if (network.zksync)
+      return getZkCreate2Address(create2DeployerAddress, salt, bytecode);
     return getAddress(
       '0x' +
         solidityKeccak256(
@@ -408,6 +410,21 @@ export function addHelpers(
             )}${solidityKeccak256(['bytes'], [bytecode]).slice(2)}`,
           ]
         ).slice(-40)
+    );
+  }
+
+  function getZkCreate2Address(
+    create2DeployerAddress: Address,
+    salt: string,
+    bytecode: string
+  ): Address {
+    //create2Address(sender: Address, bytecodeHash: BytesLike, salt: BytesLike, input: BytesLike): string;
+    const bytecodeHash = zk.utils.hashBytecode(bytecode);
+    return zk.utils.create2Address(
+      create2DeployerAddress,
+      bytecodeHash,
+      salt,
+      bytecode
     );
   }
 
@@ -588,12 +605,10 @@ export function addHelpers(
 
     let create2Address;
     if (options.deterministicDeployment) {
-      if (network.zksync) {
-        throw new Error(
-          'deterministic zk deployments are  not supported at this time'
-        );
-      }
-      if (typeof unsignedTx.data === 'string') {
+      const bytecode = network.zksync
+        ? linkedArtifact.bytecode
+        : unsignedTx.data;
+      if (typeof bytecode === 'string') {
         const create2DeployerAddress = await ensureCreate2DeployerReady(
           options
         );
@@ -604,11 +619,11 @@ export function addHelpers(
         create2Address = getCreate2Address(
           create2DeployerAddress,
           create2Salt,
-          unsignedTx.data
+          bytecode
         );
         unsignedTx.to = create2DeployerAddress;
 
-        unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
+        unsignedTx.data = create2Salt + bytecode.slice(2);
       } else {
         throw new Error('unsigned tx data as bytes not supported');
       }
@@ -1961,7 +1976,8 @@ Note that in this case, the contract deployment will not behave the same if depl
     let abi: any[] = diamondArtifact.abi.concat([]);
     const facetCuts: FacetCut[] = [];
     let facetFound: string | undefined;
-    const excludeSelectors: Record<string, string[]> = options.excludeSelectors || {};
+    const excludeSelectors: Record<string, string[]> =
+      options.excludeSelectors || {};
     for (const facet of facetsSet) {
       let deterministicFacet: string | boolean = true;
       let facetName;
@@ -2027,7 +2043,11 @@ Note that in this case, the contract deployment will not behave the same if depl
       let excludeSighashes: Set<string> = new Set();
       if (facetName in excludeSelectors) {
         const iface = new Interface(artifact.abi);
-        excludeSighashes = new Set(excludeSelectors[facetName].map(selector => iface.getSighash(selector)));
+        excludeSighashes = new Set(
+          excludeSelectors[facetName].map((selector) =>
+            iface.getSighash(selector)
+          )
+        );
       }
       abi = mergeABIs([abi, filterABI(artifact.abi, excludeSighashes)], {
         check: true,
@@ -2054,7 +2074,9 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetAddress = implementation.address;
         const newFacet = {
           facetAddress,
-          functionSelectors: sigsFromABI(filterABI(implementation.abi, excludeSighashes)),
+          functionSelectors: sigsFromABI(
+            filterABI(implementation.abi, excludeSighashes)
+          ),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
@@ -2063,7 +2085,9 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetAddress = oldImpl.address;
         const newFacet = {
           facetAddress,
-          functionSelectors: sigsFromABI(filterABI(oldImpl.abi, excludeSighashes)),
+          functionSelectors: sigsFromABI(
+            filterABI(oldImpl.abi, excludeSighashes)
+          ),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
