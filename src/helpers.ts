@@ -64,6 +64,8 @@ import {
 } from '@ethersproject/transactions';
 import {getDerivationPath} from './hdpath';
 import {bnReplacer} from './internal/utils';
+import {DeploymentFactory} from './DeploymentFactory';
+import {link} from 'fs';
 
 let LedgerSigner: any; // TODO type
 let TrezorSigner: any; // TODO type
@@ -393,41 +395,6 @@ export function addHelpers(
     }
   }
 
-  function getCreate2Address(
-    create2DeployerAddress: Address,
-    salt: string,
-    bytecode: string
-  ): Address {
-    if (network.zksync)
-      return getZkCreate2Address(create2DeployerAddress, salt, bytecode);
-    return getAddress(
-      '0x' +
-        solidityKeccak256(
-          ['bytes'],
-          [
-            `0xff${create2DeployerAddress.slice(2)}${salt.slice(
-              2
-            )}${solidityKeccak256(['bytes'], [bytecode]).slice(2)}`,
-          ]
-        ).slice(-40)
-    );
-  }
-
-  function getZkCreate2Address(
-    create2DeployerAddress: Address,
-    salt: string,
-    bytecode: string
-  ): Address {
-    //create2Address(sender: Address, bytecodeHash: BytesLike, salt: BytesLike, input: BytesLike): string;
-    const bytecodeHash = zk.utils.hashBytecode(bytecode);
-    return zk.utils.create2Address(
-      create2DeployerAddress,
-      bytecodeHash,
-      salt,
-      bytecode
-    );
-  }
-
   async function ensureCreate2DeployerReady(options: {
     from: string;
     log?: boolean;
@@ -568,47 +535,20 @@ export function addHelpers(
       nonce: options.nonce,
     };
 
-    let factory;
-    if (network.zksync) {
-      factory = new zk.ContractFactory(
-        linkedArtifact.abi,
-        linkedArtifact.bytecode,
-        ethersSigner as zk.Signer
-      );
-      const factoryDeps = await extractFactoryDeps(linkedArtifact);
-      const customData = {
-        customData: {
-          factoryDeps,
-          feeToken: zk.utils.ETH_ADDRESS,
-        },
-      };
-      overrides = {
-        ...overrides,
-        ...customData,
-      };
-    } else {
-      factory = new ContractFactory(
-        linkedArtifact.abi,
-        linkedArtifact.bytecode,
-        ethersSigner
-      );
-    }
+    const factory = new DeploymentFactory(
+      getArtifact,
+      linkedArtifact,
+      args,
+      network,
+      ethersSigner,
+      overrides
+    );
 
-    const numArguments = factory.interface.deploy.inputs.length;
-    if (args.length !== numArguments) {
-      throw new Error(
-        `expected ${numArguments} constructor arguments, got ${args.length}`
-      );
-    }
-
-    const unsignedTx = factory.getDeployTransaction(...args, overrides);
+    const unsignedTx = await factory.getDeployTransaction();
 
     let create2Address;
     if (options.deterministicDeployment) {
-      const bytecode = network.zksync
-        ? linkedArtifact.bytecode
-        : unsignedTx.data;
-      if (typeof bytecode === 'string') {
+      if (typeof unsignedTx.data === 'string') {
         const create2DeployerAddress = await ensureCreate2DeployerReady(
           options
         );
@@ -616,14 +556,13 @@ export function addHelpers(
           typeof options.deterministicDeployment === 'string'
             ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        create2Address = getCreate2Address(
+        create2Address = await factory.getCreate2Address(
           create2DeployerAddress,
-          create2Salt,
-          bytecode
+          create2Salt
         );
         unsignedTx.to = create2DeployerAddress;
 
-        unsignedTx.data = create2Salt + bytecode.slice(2);
+        unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
       } else {
         throw new Error('unsigned tx data as bytes not supported');
       }
@@ -828,46 +767,40 @@ export function addHelpers(
         address: from,
       } = await getFrom(options.from);
 
-      const artifactInfo = await getArtifactFromOptions(name, options);
-      const {artifact} = artifactInfo;
-      const abi = artifact.abi;
-      const byteCode = linkLibraries(artifact, options.libraries);
-      const factory = new ContractFactory(abi, byteCode, ethersSigner);
-
-      const numArguments = factory.interface.deploy.inputs.length;
-      if (args.length !== numArguments) {
-        throw new Error(
-          `expected ${numArguments} constructor arguments, got ${args.length}`
-        );
-      }
-
-      const unsignedTx = factory.getDeployTransaction(...args);
+      const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(
+        name,
+        options
+      );
+      const factory = new DeploymentFactory(
+        getArtifact,
+        linkedArtifact,
+        args,
+        network,
+        ethersSigner
+      );
 
       if (unknown) {
         throw new UnknownSignerError({
           from,
-          ...JSON.parse(JSON.stringify(unsignedTx, bnReplacer)),
+          ...JSON.parse(
+            JSON.stringify(await factory.getDeployTransaction(), bnReplacer)
+          ),
         });
       }
 
-      if (typeof unsignedTx.data !== 'string') {
-        throw new Error('unsigned tx data as bytes not supported');
-      } else {
-        return {
-          address: getCreate2Address(
-            await deploymentManager.getDeterministicDeploymentFactoryAddress(),
-            options.salt
-              ? hexlify(zeroPad(options.salt, 32))
-              : '0x0000000000000000000000000000000000000000000000000000000000000000',
-            unsignedTx.data
-          ),
-          deploy: () =>
-            deploy(name, {
-              ...options,
-              deterministicDeployment: options.salt || true,
-            }),
-        };
-      }
+      return {
+        address: await factory.getCreate2Address(
+          await deploymentManager.getDeterministicDeploymentFactoryAddress(),
+          options.salt
+            ? hexlify(zeroPad(options.salt, 32))
+            : '0x0000000000000000000000000000000000000000000000000000000000000000'
+        ),
+        deploy: () =>
+          deploy(name, {
+            ...options,
+            deterministicDeployment: options.salt || true,
+          }),
+      };
     }
   }
 
@@ -879,66 +812,40 @@ export function addHelpers(
     return partialExtension.getOrNull(name);
   }
 
-  // TODO add ZkSyncArtifact
-  async function extractFactoryDeps(artifact: any): Promise<string[]> {
-    // Load all the dependency bytecodes.
-    // We transform it into an array of bytecodes.
-    const factoryDeps: string[] = [];
-    for (const dependencyHash in artifact.factoryDeps) {
-      const dependencyContract = artifact.factoryDeps[dependencyHash];
-      const dependencyBytecodeString = (await getArtifact(dependencyContract))
-        .bytecode;
-      factoryDeps.push(dependencyBytecodeString);
-    }
-
-    return factoryDeps;
-  }
-
   async function fetchIfDifferent(
     name: string,
     options: DeployOptions
   ): Promise<{differences: boolean; address?: string}> {
     options = {...options}; // ensure no change
-    const argArray = options.args ? [...options.args] : [];
+    const args = options.args ? [...options.args] : [];
     await init();
 
+    const {ethersSigner} = await getFrom(options.from);
+    const {artifact: linkedArtifact} = await getLinkedArtifact(name, options);
+    const factory = new DeploymentFactory(
+      getArtifact,
+      linkedArtifact,
+      args,
+      network,
+      ethersSigner
+    );
+
     if (options.deterministicDeployment) {
-      const {ethersSigner} = await getFrom(options.from);
-
-      const artifactInfo = await getArtifactFromOptions(name, options);
-      const {artifact} = artifactInfo;
-      const abi = artifact.abi;
-      const byteCode = linkLibraries(artifact, options.libraries);
-      const factory = new ContractFactory(abi, byteCode, ethersSigner);
-
-      const numArguments = factory.interface.deploy.inputs.length;
-      if (argArray.length !== numArguments) {
-        throw new Error(
-          `expected ${numArguments} constructor arguments, got ${argArray.length}`
-        );
-      }
-
-      const unsignedTx = factory.getDeployTransaction(...argArray);
-      if (typeof unsignedTx.data === 'string') {
-        const create2Salt =
-          typeof options.deterministicDeployment === 'string'
-            ? hexlify(zeroPad(options.deterministicDeployment, 32))
-            : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        const create2DeployerAddress =
-          await deploymentManager.getDeterministicDeploymentFactoryAddress();
-        const create2Address = getCreate2Address(
-          create2DeployerAddress,
-          create2Salt,
-          unsignedTx.data
-        );
-        const code = await provider.getCode(create2Address);
-        if (code === '0x') {
-          return {differences: true, address: undefined};
-        } else {
-          return {differences: false, address: create2Address};
-        }
+      const create2Salt =
+        typeof options.deterministicDeployment === 'string'
+          ? hexlify(zeroPad(options.deterministicDeployment, 32))
+          : '0x0000000000000000000000000000000000000000000000000000000000000000';
+      const create2DeployerAddress =
+        await deploymentManager.getDeterministicDeploymentFactoryAddress();
+      const create2Address = await factory.getCreate2Address(
+        create2DeployerAddress,
+        create2Salt
+      );
+      const code = await provider.getCode(create2Address);
+      if (code === '0x') {
+        return {differences: true, address: undefined};
       } else {
-        throw new Error('unsigned tx data as bytes not supported');
+        return {differences: false, address: create2Address};
       }
     }
     const deployment = await partialExtension.getOrNull(name);
@@ -962,44 +869,10 @@ export function addHelpers(
       }
 
       if (transaction) {
-        const {ethersSigner} = await getFrom(options.from);
-        const {artifact} = await getArtifactFromOptions(name, options);
-        const abi = artifact.abi;
-        const byteCode = linkLibraries(artifact, options.libraries);
-        if (network.zksync) {
-          const factory = new zk.ContractFactory(
-            abi,
-            byteCode,
-            ethersSigner as zk.Signer
-          );
-          const factoryDeps = await extractFactoryDeps(artifact);
-          const newTransaction = factory.getDeployTransaction(...argArray, {
-            customData: {
-              factoryDeps,
-              feeToken: zk.utils.ETH_ADDRESS,
-            },
-          });
-          const newData = newTransaction.data?.toString();
-
-          const deserialize = zk.utils.parseTransaction(
-            transaction.data
-          ) as any;
-          const desFlattened = hexConcat(deserialize.customData.factoryDeps);
-          const newFlattened = hexConcat(factoryDeps);
-
-          if (deserialize.data !== newData || desFlattened != newFlattened) {
-            return {differences: true, address: deployment.address};
-          }
-          return {differences: false, address: deployment.address};
-        } else {
-          const factory = new ContractFactory(abi, byteCode, ethersSigner);
-          const newTransaction = factory.getDeployTransaction(...argArray);
-          const newData = newTransaction.data?.toString();
-          if (transaction.data !== newData) {
-            return {differences: true, address: deployment.address};
-          }
-          return {differences: false, address: deployment.address};
-        }
+        const differences = await factory.compareDeploymentTransaction(
+          transaction
+        );
+        return {differences, address: deployment.address};
       } else {
         if (transactionDetailsAvailable) {
           throw new Error(
@@ -2422,23 +2295,18 @@ Note that in this case, the contract deployment will not behave the same if depl
               }
               salt = options.deterministicSalt;
 
-              const factory = new ContractFactory(
-                diamondArtifact.abi,
-                diamondArtifact.bytecode
+              const factory = new DeploymentFactory(
+                getArtifact,
+                diamondArtifact,
+                diamondConstructorArgs,
+                network
               );
-              const unsignedTx = factory.getDeployTransaction(
-                ...diamondConstructorArgs
-              );
-              if (typeof unsignedTx.data !== 'string') {
-                throw new Error('unsigned tx data as bytes not supported');
-              }
 
               const create2DeployerAddress =
                 await deploymentManager.getDeterministicDeploymentFactoryAddress();
-              expectedAddress = getCreate2Address(
+              expectedAddress = await factory.getCreate2Address(
                 create2DeployerAddress,
-                salt,
-                unsignedTx.data || '0x'
+                salt
               );
               const code = await provider.getCode(expectedAddress);
               if (code !== '0x') {
