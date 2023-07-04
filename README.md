@@ -346,8 +346,6 @@ It add similar options than the `deploy` task :
 
 `--no-reset`: This flag prevent the reseting of the existing deployments. This is usually not desired when running the `node` task as a network is created from scratch and previous deployemnt are irrelevant.
 
-`--show-accounts`: this flag will output the account private keys
-
 `--silent`: This flag removes **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
 `--watch`: This flag makes the task never-ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) or [Diamond](#builtin-in-support-for-diamonds-eip2535)) this allow to have HCR (Hot Contract Replacement).
