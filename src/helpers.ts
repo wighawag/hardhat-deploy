@@ -728,6 +728,7 @@ export function addHelpers(
         implementationOptions,
         proxyName,
         proxyContract,
+        proxyArgsTemplate,
         mergedABI,
         updateMethod,
         updateArgs,
@@ -794,7 +795,11 @@ export function addHelpers(
       delete proxyOptions.proxy;
       delete proxyOptions.libraries;
       proxyOptions.contract = proxyContract;
-      proxyOptions.args = [implementationAddress, proxyAdmin, data];
+      proxyOptions.args = replaceTemplateArgs(proxyArgsTemplate, {
+        implementationAddress,
+        proxyAdmin,
+        data,
+      });
       const {address: proxyAddress} = await deterministic(proxyName, {
         ...proxyOptions,
         salt: options.salt,
@@ -1531,20 +1536,11 @@ Note that in this case, the contract deployment will not behave the same if depl
         delete proxyOptions.libraries;
         proxyOptions.contract = proxyContract;
 
-        const proxyArgs = [];
-        for (let i = 0; i < proxyArgsTemplate.length; i++) {
-          const argValue = proxyArgsTemplate[i];
-          if (argValue === '{implementation}') {
-            proxyArgs.push(implementation.address);
-          } else if (argValue === '{admin}') {
-            proxyArgs.push(proxyAdmin);
-          } else if (argValue === '{data}') {
-            proxyArgs.push(data);
-          } else {
-            proxyArgs.push(argValue);
-          }
-        }
-        proxyOptions.args = proxyArgs; //  [implementation.address, proxyAdmin, data]
+        proxyOptions.args = replaceTemplateArgs(proxyArgsTemplate, {
+          implementationAddress: implementation.address,
+          proxyAdmin,
+          data,
+        });
 
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
@@ -1961,7 +1957,8 @@ Note that in this case, the contract deployment will not behave the same if depl
     let abi: any[] = diamondArtifact.abi.concat([]);
     const facetCuts: FacetCut[] = [];
     let facetFound: string | undefined;
-    const excludeSelectors: Record<string, string[]> = options.excludeSelectors || {};
+    const excludeSelectors: Record<string, string[]> =
+      options.excludeSelectors || {};
     for (const facet of facetsSet) {
       let deterministicFacet: string | boolean = true;
       let facetName;
@@ -2027,7 +2024,11 @@ Note that in this case, the contract deployment will not behave the same if depl
       let excludeSighashes: Set<string> = new Set();
       if (facetName in excludeSelectors) {
         const iface = new Interface(artifact.abi);
-        excludeSighashes = new Set(excludeSelectors[facetName].map(selector => iface.getSighash(selector)));
+        excludeSighashes = new Set(
+          excludeSelectors[facetName].map((selector) =>
+            iface.getSighash(selector)
+          )
+        );
       }
       abi = mergeABIs([abi, filterABI(artifact.abi, excludeSighashes)], {
         check: true,
@@ -2054,7 +2055,9 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetAddress = implementation.address;
         const newFacet = {
           facetAddress,
-          functionSelectors: sigsFromABI(filterABI(implementation.abi, excludeSighashes)),
+          functionSelectors: sigsFromABI(
+            filterABI(implementation.abi, excludeSighashes)
+          ),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
@@ -2063,7 +2066,9 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetAddress = oldImpl.address;
         const newFacet = {
           facetAddress,
-          functionSelectors: sigsFromABI(filterABI(oldImpl.abi, excludeSighashes)),
+          functionSelectors: sigsFromABI(
+            filterABI(oldImpl.abi, excludeSighashes)
+          ),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
@@ -3557,4 +3562,29 @@ export async function waitForTx(
     }
     await pause(2);
   }
+}
+
+function replaceTemplateArgs(
+  proxyArgsTemplate: string[],
+  {
+    implementationAddress,
+    proxyAdmin,
+    data,
+  }: {implementationAddress: string; proxyAdmin: string; data: string}
+): string[] {
+  const proxyArgs = [];
+  for (let i = 0; i < proxyArgsTemplate.length; i++) {
+    const argValue = proxyArgsTemplate[i];
+    if (argValue === '{implementation}') {
+      proxyArgs.push(implementationAddress);
+    } else if (argValue === '{admin}') {
+      proxyArgs.push(proxyAdmin);
+    } else if (argValue === '{data}') {
+      proxyArgs.push(data);
+    } else {
+      proxyArgs.push(argValue);
+    }
+  }
+
+  return proxyArgs;
 }
