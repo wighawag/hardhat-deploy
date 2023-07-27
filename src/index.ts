@@ -323,12 +323,7 @@ extendEnvironment((env) => {
       if (!network) {
         throw new Error(`no network named ${networkName}`);
       }
-      network.provider = createProvider(
-        networkName,
-        config,
-        env.config.paths,
-        env.artifacts
-      );
+      network.provider = createProvider(env.config, networkName, env.artifacts);
       const networkDeploymentsManager = new DeploymentsManager(env, network);
       deploymentsManager.addCompanionManager(name, networkDeploymentsManager);
       const extraNetwork = {
