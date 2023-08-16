@@ -97,7 +97,7 @@ export interface DiamondOptions extends TxOptions {
     args: any[];
   };
   excludeSelectors?: {
-    [facetName: string]: string[]
+    [facetName: string]: string[];
   };
   deterministicSalt?: string;
   facetsArgs?: any[];
@@ -118,6 +118,10 @@ type ProxyOptionsBase = {
   implementationName?: string;
   checkABIConflict?: boolean;
   checkProxyAdmin?: boolean;
+  upgradeFunction?: {
+    methodName: string;
+    upgradeArgs: any[];
+  };
 };
 
 export type ProxyOptions =
