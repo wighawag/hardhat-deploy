@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.35
+
+### Patch Changes
+
+- add --tags-require-all flag allowing to execute only deploy scripts containing all the tags specified in --tags
+
 ## 0.11.34
 
 ### Patch Changes

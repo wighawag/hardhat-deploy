@@ -981,6 +981,7 @@ export class DeploymentsManager {
       gasPrice?: string;
       maxFeePerGas?: string;
       maxPriorityFeePerGas?: string;
+      tagsRequireAll?: boolean;
     } = {
       log: false,
       resetMemory: true,
@@ -1046,7 +1047,7 @@ export class DeploymentsManager {
         if (externalContracts.deploy) {
           this.db.onlyArtifacts = externalContracts.artifacts;
           try {
-            await this.executeDeployScripts([externalContracts.deploy], tags);
+            await this.executeDeployScripts([externalContracts.deploy], tags, options.tagsRequireAll);
           } finally {
             this.db.onlyArtifacts = undefined;
           }
@@ -1056,7 +1057,7 @@ export class DeploymentsManager {
 
     const deployPaths = getDeployPaths(this.network);
 
-    await this.executeDeployScripts(deployPaths, tags);
+    await this.executeDeployScripts(deployPaths, tags, options.tagsRequireAll);
 
     await this.export(options);
 
@@ -1065,7 +1066,8 @@ export class DeploymentsManager {
 
   public async executeDeployScripts(
     deployScriptsPaths: string[],
-    tags?: string[]
+    tags: string[] = [],
+    tagsRequireAll = false,
   ): Promise<void> {
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
     // TODO loop over companion networks ?
@@ -1112,38 +1114,21 @@ export class DeploymentsManager {
         );
       }
       // console.log("get tags if any for " + scriptFilePath);
-      let scriptTags = deployFunc.tags;
-      if (scriptTags !== undefined) {
-        if (typeof scriptTags === 'string') {
-          scriptTags = [scriptTags];
+      let scriptTags = deployFunc.tags || [];
+      if (typeof scriptTags === 'string') {
+        scriptTags = [scriptTags];
+      }
+      for (const tag of scriptTags) {
+        if (tag.indexOf(',') >= 0) {
+          throw new Error('Tag cannot contain commas');
         }
-        for (const tag of scriptTags) {
-          if (tag.indexOf(',') >= 0) {
-            throw new Error('Tag cannot contains commas');
-          }
-          const bag = scriptPathBags[tag] || [];
-          scriptPathBags[tag] = bag;
-          bag.push(scriptFilePath);
-        }
+        const bag = scriptPathBags[tag] || [];
+        scriptPathBags[tag] = bag;
+        bag.push(scriptFilePath);
       }
       // console.log("tags found " + scriptFilePath, scriptTags);
-      if (tags !== undefined) {
-        let found = false;
-        if (scriptTags !== undefined) {
-          for (const tagToFind of tags) {
-            for (const tag of scriptTags) {
-              if (tag === tagToFind) {
-                scriptFilePaths.push(scriptFilePath);
-                found = true;
-                break;
-              }
-            }
-            if (found) {
-              break;
-            }
-          }
-        }
-      } else {
+      if (tagsRequireAll && tags.every(tag => scriptTags.includes(tag))
+        || !tagsRequireAll && (tags.length == 0 || tags.some(tag => scriptTags.includes(tag)))) {
         scriptFilePaths.push(scriptFilePath);
       }
     }
