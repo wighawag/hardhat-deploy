@@ -402,6 +402,10 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     undefined,
     types.string
   )
+  .addFlag(
+    'tagsRequireAll',
+    'execute only deploy scripts containing all the tags specified'
+  )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',
@@ -446,6 +450,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       gasPrice: args.gasprice,
       maxFeePerGas: args.maxfee,
       maxPriorityFeePerGas: args.priorityfee,
+      tagsRequireAll: args.tagsRequireAll,
     });
     if (args.reportGas) {
       console.log(`total gas used: ${hre.deployments.getGasUsed()}`);
@@ -460,6 +465,10 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
     'specify which deploy script to execute via tags, separated by commas',
     undefined,
     types.string
+  )
+  .addFlag(
+    'tagsRequireAll',
+    'execute only deploy scripts containing all the tags specified'
   )
   .addOptionalParam(
     'write',
@@ -614,6 +623,10 @@ task(TASK_DEPLOY, 'Deploy contracts')
     'specify which deploy script to execute via tags, separated by commas',
     undefined,
     types.string
+  )
+  .addFlag(
+    'tagsRequireAll',
+    'execute only deploy scripts containing all the tags specified'
   )
   .addOptionalParam(
     'write',
