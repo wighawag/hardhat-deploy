@@ -1,5 +1,17 @@
 # hardhat-deploy
 
+## 0.11.36
+
+### Patch Changes
+
+- Allow deterministic support for zkSync
+
+## 0.11.35
+
+### Patch Changes
+
+- fix deterministic UUPS proxy
+
 ## 0.11.34
 
 ### Patch Changes

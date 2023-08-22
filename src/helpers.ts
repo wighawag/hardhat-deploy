@@ -65,7 +65,6 @@ import {
 import {getDerivationPath} from './hdpath';
 import {bnReplacer} from './internal/utils';
 import {DeploymentFactory} from './DeploymentFactory';
-import {link} from 'fs';
 
 let LedgerSigner: any; // TODO type
 let TrezorSigner: any; // TODO type
