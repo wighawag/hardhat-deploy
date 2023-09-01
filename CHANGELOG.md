@@ -1,5 +1,23 @@
 # hardhat-deploy
 
+## 0.11.37
+
+### Patch Changes
+
+- add --tags-require-all flag allowing to execute only deploy scripts containing all the tags specified in --tags
+
+## 0.11.36
+
+### Patch Changes
+
+- Allow deterministic support for zkSync
+
+## 0.11.35
+
+### Patch Changes
+
+- fix deterministic UUPS proxy
+
 ## 0.11.34
 
 ### Patch Changes

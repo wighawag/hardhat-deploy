@@ -1436,6 +1436,10 @@ The same applies to the `console` task.
 
 It is possible to execute only specific parts of the deployments with `hardhat deploy --tags <tags>`
 
+`<tags>` is an array of tags, separated by comma, for example `hardhat deploy --tags tag1,tag2` will look for the scripts containing **any** of the tags `tag1`  or `tag2`
+
+To execute only the scripts containing **all** the tags, add `--tags-require-all` flag, for example `hardhat deploy --tags tag1,tag2 --tags-require-all` will look for the scripts containing **all** of the tags `tag1` and `tag2`
+
 Tags represent what the deploy script acts on. In general it will be a single string value, the name of the contract it deploys or modifies.
 
 Then if another deploy script has such tag as a dependency, then when this latter deploy script has a specific tag and that tag is requested, the dependency will be executed first.
