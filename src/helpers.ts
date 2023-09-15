@@ -2767,6 +2767,12 @@ data: ${data}
       return method(overrides);
     }
   }
+  async function getSigner(address: string): Promise<Signer> {
+    const {
+      ethersSigner
+    } = await getFrom(address);
+    return ethersSigner;
+  }
 
   const extension: DeploymentsExtension = {
     ...partialExtension,
@@ -2780,6 +2786,7 @@ data: ${data}
     rawTx,
     read,
     deterministic,
+    getSigner
   };
 
   const utils = {
