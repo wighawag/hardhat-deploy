@@ -1,8 +1,8 @@
 {
-  "name": "hardhat-deploy",
+  "name": "@huyhuynh3103/hardhat-deploy",
   "version": "0.11.37",
   "description": "Hardhat Plugin For Replicable Deployments And Tests",
-  "repository": "github:wighawag/hardhat-deploy",
+  "repository": "git@github.com:huyhuynh3103/hardhat-deploy.git",
   "author": "wighawag",
   "license": "MIT",
   "publishConfig": {
@@ -95,5 +95,13 @@
     "publish:next": "npm publish --tag next",
     "publish:release": "npm publish",
     "prepublishOnly": "npm run build"
+  },
+  "bugs": {
+    "url": "https://github.com/wighawag/hardhat-deploy/issues"
+  },
+  "homepage": "https://github.com/wighawag/hardhat-deploy#readme",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
   }
 }
