@@ -1,8 +1,11 @@
 {
-  "name": "@huyhuynh3103/hardhat-deploy",
+  "name": "@bahuy3103/hardhat-deploy",
   "version": "0.11.37",
   "description": "Hardhat Plugin For Replicable Deployments And Tests",
-  "repository": "git@github.com:huyhuynh3103/hardhat-deploy.git",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/huyhuynh3103/hardhat-deploy.git"
+  },
   "author": "wighawag",
   "license": "MIT",
   "publishConfig": {
