@@ -2768,6 +2768,7 @@ data: ${data}
     }
   }
   async function getSigner(address: string): Promise<Signer> {
+    await init();
     const {
       ethersSigner
     } = await getFrom(address);
