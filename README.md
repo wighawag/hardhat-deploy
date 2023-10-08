@@ -630,7 +630,7 @@ module.exports = async ({
   getChainId,
   getUnnamedAccounts,
 }) => {
-  const {deploy} = deployments;
+  const {deploy,execute} = deployments;
   const {deployer} = await getNamedAccounts();
 
   const OVM_L1ERC20Gateway = await hre.companionNetworks['l1'].deployments.get(
