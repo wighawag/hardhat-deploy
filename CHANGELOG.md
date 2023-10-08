@@ -1,5 +1,113 @@
 # hardhat-deploy
 
+## 0.11.40
+
+### Patch Changes
+
+- Missing await in save method (by blukat29)
+
+## 0.11.39
+
+### Patch Changes
+
+- Expose signer interface (by huyhuynh3103)
+
+## 0.11.38
+
+### Patch Changes
+
+- implements custom upgrade function (by zmalatrax)
+
+## 0.11.37
+
+### Patch Changes
+
+- add --tags-require-all flag allowing to execute only deploy scripts containing all the tags specified in --tags
+
+## 0.11.36
+
+### Patch Changes
+
+- Allow deterministic support for zkSync
+
+## 0.11.35
+
+### Patch Changes
+
+- fix deterministic UUPS proxy
+
+## 0.11.34
+
+### Patch Changes
+
+- fix: \_setOwner before \_setImplementation in solc_0.8 EIP173Proxy by @gitpusha
+
+## 0.11.33
+
+### Patch Changes
+
+- Allow override custom proxy params (by @LeoVS09)
+
+## 0.11.32
+
+### Patch Changes
+
+- Add filtering of selectors by facets in Diamonds (by @idkravitz)
+
+## 0.11.31
+
+### Patch Changes
+
+- add bnreplacer to stringify values from ethers v6
+
+## 0.11.30
+
+### Patch Changes
+
+- fix ledger account @ifelsedeveloper
+
+## 0.11.29
+
+### Patch Changes
+
+- add trezor support
+
+## 0.11.28
+
+### Patch Changes
+
+- fix ledger
+
+## 0.11.27
+
+### Patch Changes
+
+- fix ledger support by @stupid-boar
+
+## 0.11.26
+
+### Patch Changes
+
+- use pnpm + support latest zksync
+
+## 0.11.25
+
+### Patch Changes
+
+- allow to export as typescript const
+
+## 0.11.24
+
+### Patch Changes
+
+- allow to use HARDHAT_DEPLOY_EXPORT for the export command too
+
+## 0.11.23
+
+### Patch Changes
+
+- Adding the Sepolia network to the network list, so we can verify contracts in the Sepolia network.
+
 ## 0.11.22
 
 ### Patch Changes

@@ -20,8 +20,8 @@ contract EIP173Proxy is Proxy {
         address ownerAddress,
         bytes memory data
     ) payable {
-        _setImplementation(implementationAddress, data);
         _setOwner(ownerAddress);
+        _setImplementation(implementationAddress, data);
     }
 
     // ///////////////////// EXTERNAL ///////////////////////////////////////////////////////////////////////////

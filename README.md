@@ -2,7 +2,7 @@
 
 _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Testing_
 
-> **A complete dev template using hardhat-deploy is available here** : https://github.com/wighawag/template-ethereum-contracts
+> **A complete dev template using hardhat-deploy is available here**: https://github.com/wighawag/template-ethereum-contracts
 > It also contains various branches exemplifying the capability of hardhat-deploy. Check it out.
 
 - [What is it for?](#what-is-it-for-)
@@ -69,8 +69,8 @@ It also adds a mechanism to associate names to addresses, so test and deployment
 This plugin contains a lot more features too, all geared toward a better developer experience :
 
 - chain configuration export
-- listing deployed contracts' addresses and their abis (useful for webapps)
-- library linking at time of deployment.
+- listing deployed contracts' addresses and their abis (useful for web apps)
+- library linking at the time of deployment.
 - deterministic deployment across networks.
 - support for specific deploy script per network (L1 vs L2 for example)
 - ability to access deployment from "companion" networks
@@ -79,11 +79,11 @@ This plugin contains a lot more features too, all geared toward a better develop
 - deployments as test fixture using `evm_snapshot` to speed up testing.
 - ability to create your own test fixture that automatically benefits from `evm_snapshot`'s tests speed-up boost
 - combined with [hardhat-deploy-ethers](https://github.com/wighawag/hardhat-deploy-ethers) it has the ability to get ethers contract instance by name (like `await ethers.getContract("ContractName")`).
-- importing artifact from external sources (like npm packages), including [truffle](https://www.trufflesuite.com/truffle) support.
+- importing artifacts from external sources (like npm packages), including [truffle](https://www.trufflesuite.com/truffle) support.
 - importing deployments from external sources (like npm packages)
 - ability to log information in `deploy` mode only (while in test the console remains clean).
 - contains helpers to read and execute transaction on deployed contract referring to them by name.
-- These helpers contains options to auto mine on dev network (to speed up test deployments).
+- These helpers contains options to auto-mine on dev network (to speed up test deployments).
 - save metadata of deployed contract so they can always be fully verified, via [sourcify](https://sourcify.dev) or [etherscan](https://etherscan.io).
 - ability to submit contract source to etherscan and sourcify for verification at any time. (Because **hardhat-deploy** will save all the necessary info, it can be executed at any time.)
 - support hardhat's fork feature so deployment can be accessed even when run through fork.
@@ -123,7 +123,7 @@ You can even group deploy scripts in different sub-folders and ensure they are e
 
 Furthermore hardhat-deploy can also support a multi-chain settings like L1, L2 with multiple deploy folder specific to each network.
 
-**All of this can also be bundled in a npm package so user of hardhat-deploy can reuse your deployment procedure and get started integrating with your project locally.**
+**All of this can also be bundled in a npm package so users of hardhat-deploy can reuse your deployment procedure and get started integrating with your project locally.**
 
 There is a tutorial covering the basics here: https://github.com/wighawag/tutorial-hardhat-deploy
 
@@ -143,15 +143,12 @@ require('hardhat-deploy');
 
 if you use `ethers.js` we recommend you also install `hardhat-deploy-ethers` which add extra features to access deployments as ethers contract.
 
-Since `hardhat-deploy-ethers` is a fork of `@nomiclabs/hardhat-ethers` and that other plugin might have a hardcoded dependency on `@nomiclabs/hardhat-ethers` the best way to install `hardhat-deploy-ethers` and ensure compatibility is the following:
 
 ```bash
-npm install --save-dev  @nomiclabs/hardhat-ethers@npm:hardhat-deploy-ethers ethers
+npm install --save-dev  @nomiclabs/hardhat-ethers hardhat-deploy-ethers ethers
 ```
 
-Which means you then need to do `require("@nomiclabs/hardhat-ethers")` instead of `require("hardhat-deploy-ethers")` in your `hardhat.config.js` file.
-
-More details on `hardhat-deploy-ethers` repo : https://github.com/wighawag/hardhat-deploy-ethers#readme
+More details on `hardhat-deploy-ethers` repo: https://github.com/wighawag/hardhat-deploy-ethers#readme
 
 ### TypeScript support
 
@@ -159,7 +156,7 @@ With hardhat the tsconfig.json is optional.
 
 But if you add folders to the `include` field in `tsconfig.json`, you ll also need to include `hardhat.config.ts` like :
 
-`include": ["./hardhat.config.ts", "./scripts", "./deploy", "./test"]`
+`"include": ["./hardhat.config.ts", "./scripts", "./deploy", "./test"]`
 
 for deploy script (see below) you can write them this way to benefit from typing :
 
@@ -173,13 +170,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 ```
 
-See a template that uses **hardhat-deploy** here : https://github.com/wighawag/template-ethereum-contracts
+See a template that uses **hardhat-deploy** here: https://github.com/wighawag/template-ethereum-contracts
 
-This repo has also some examples branch that exemplify specific features, like the forking testing here : https://github.com/wighawag/template-ethereum-contracts/tree/examples/fork-test
+This repo has also some examples branch that exemplify specific features, like the forking testing here: https://github.com/wighawag/template-ethereum-contracts/tree/examples/fork-test
 
 ### Migrating existing deployment to hardhat-deploy
 
-> Only needed for existing project that already deployed contracts and has the deployment information available **(at minimum, address and abi)**
+> Only needed for an existing project that already deployed contracts and has the deployment information available **(at minimum, address and abi)**
 
 You might want to switch your current deployment process to use **hardhat-deploy**. In that case you probably have some deployments saved elsewhere.
 
@@ -188,7 +185,7 @@ In order to port them to **hardhat-deploy**, you'll need to create one `.json` f
 The network folder is simply the hardhat network name (as configured in hardhat.config.js) (accessible at runtime via `hre.network.name`).
 Such folder need to have a file named `.chainId` containing the chainId as decimal.
 
-For example for network named "rinkeby" (for the corresponding network) the file `deployments/rinkeby/.chainId` would be
+For example for a network named "rinkeby" (for the corresponding network) the file `deployments/rinkeby/.chainId` would be
 
 ```
 4
@@ -302,7 +299,7 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 #### **Options**
 
-`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend.
+`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your front end.
 
 `--export-all <filepath>`: export one file that contains all contracts across all saved deployments, regardless of the network being invoked.
 
@@ -318,7 +315,7 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 `--silent`: This flag removes **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
-`--watch`: This flag makes the task never-ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) or [Diamond](#builtin-in-support-for-diamonds-eip2535)) this allow to have HCR (Hot Contract Replacement).
+`--watch`: This flag make the task never-ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) or [Diamond](#builtin-in-support-for-diamonds-eip2535)) this allow to have HCR (Hot Contract Replacement).
 
 ---
 
@@ -332,11 +329,11 @@ It adds similar options than the `deploy` task :
 
 #### **Options**
 
-`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend.
+`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your front end. If the extension ends in .ts it will generate a typescript file containing the contracts info.
 
-`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
+`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked. If the extension ends in .ts it will generate a typescript file containing the contracts info.
 
-`--tags <tags>`: only excute deploy scripts with the given tags (separated by commas) and their dependencies (see more info [here](#deploy-scripts-tags-and-dependencies) about tags and dependencies)
+`--tags <tags>`: only excutes deploy scripts with the given tags (separated by commas) and their dependencies (see more info [here](#deploy-scripts-tags-and-dependencies) about tags and dependencies)
 
 `--gasprice <gasprice>`: specify the gasprice to use by default for transactions executed via **hardhat-deploy** helpers in deploy scripts
 
@@ -346,7 +343,7 @@ It adds similar options than the `deploy` task :
 
 `--no-reset`: This flag prevents the resetting of the existing deployments. This is usually not desired when running the `node` task as a network is created from scratch and previous deployments are irrelevant.
 
-`--show-accounts`: this flag will output the account private keys
+`--silent`: This flag removes **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
 `--silent`: This flag removes **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
@@ -449,7 +446,7 @@ Later this task might instead pin the metadata to ipfs, so sourcify can automati
 #### **Options**
 
 `--contract-name <contract name>`: specify the contract's name you want to verify
-  
+
 `--endpoint <endpoint>`: specify the sourcify endpoint, default to https://sourcify.dev/server/
 
 `--write-failing-metadata`: if set and the sourcify task fails to verify, the metadata file will be written to disk, so you can more easily figure out what has gone wrong.
@@ -468,9 +465,10 @@ One of the following options need to be set for this task to have any effects :
 
 #### **Options**
 
-`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your frontend.
+`--export <filepath>`: export one file that contains all contracts (address, abi + extra data) for the network being invoked. The file contains the minimal information so to not bloat your front end. If the extension ends in .ts it will generate a typescript file containing the contracts info.
 
-`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked.
+`--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked. If the extension ends in .ts it will generate a typescript file containing the contracts info.
+
 This last option has some limitations, when combined with the use of external deployments (see [Configuration](#configuration)). If such external deployments were using older version of **hardhat-deploy** or truffle, the chainId might be missing. In order for these to be exported, the hardhat network config need to explicity state the chainId in the `networks` config of `hardhat.config.js`.
 
 With both `--export` and `--export-all`, using the special `<filepath>` value of `-` will output to `STDOUT` rather than writing a normal file.
@@ -621,7 +619,7 @@ By using name you can have the same deploy script used in different set of netwo
 
 For your test you could have the companion networks pointing to the same hardhat network, for test deployment, you could have rinkeby acting like your l2 while goerli act as your l1.
 
-An example repo that showcase a multi-network setup with optimism can be found here : https://github.com/wighawag/template-ethereum-contracts/tree/examples/optimism
+An example repo that showcase a multi-network setup with optimism can be found here: https://github.com/wighawag/template-ethereum-contracts/tree/examples/optimism
 
 deploy script can then access the network and its deployment as follow :
 
@@ -1073,6 +1071,8 @@ export type MultiExport = {
 };
 ```
 
+For both --export and --export-all, if the extension ends in .ts it will generate a typescript file containing the contracts info.
+
 ---
 
 ---
@@ -1172,7 +1172,7 @@ The full proxy options is as follow:
 ```ts
 type ProxyOptionsBase = {
   owner?: Address; // this set the owner of the proxy. further upgrade will need to be executed from that owner
-  upgradeIndex?: number; // allow you to breakdown your upgrades into separate deploy scriot, each with their own index. A deploy call with a specific upgradeIndex will be executed only once, only if the current upgradeIndex is one less.
+  upgradeIndex?: number; // allow you to breakdown your upgrades into separate deploy script, each with their own index. A deploy call with a specific upgradeIndex will be executed only once, only if the current upgradeIndex is one less.
   proxyContract?: // default to "EIP173Proxy". See below for more details
   string | ArtifactData;
   viaAdminContract?: // allow to specify a contract that act as a middle man to perform upgrades. Useful and Recommended for Transparent Proxies
@@ -1434,6 +1434,10 @@ The same applies to the `console` task.
 ---
 
 It is possible to execute only specific parts of the deployments with `hardhat deploy --tags <tags>`
+
+`<tags>` is an array of tags, separated by comma, for example `hardhat deploy --tags tag1,tag2` will look for the scripts containing **any** of the tags `tag1`  or `tag2`
+
+To execute only the scripts containing **all** the tags, add `--tags-require-all` flag, for example `hardhat deploy --tags tag1,tag2 --tags-require-all` will look for the scripts containing **all** of the tags `tag1` and `tag2`
 
 Tags represent what the deploy script acts on. In general it will be a single string value, the name of the contract it deploys or modifies.
 
