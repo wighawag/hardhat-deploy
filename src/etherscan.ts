@@ -196,12 +196,18 @@ export async function submitSources(
       case '256':
         host = 'https://api-testnet.hecoinfo.com';
         break;
+      case '420':
+        host = 'https://api-goerli-optimism.etherscan.io';
+        break;
       case '588':
         host = 'https://stardust-explorer.metis.io';
         break;
       case '1088':
         host = 'https://andromeda-explorer.metis.io';
         break;
+      case '1284':
+        host = 'https://api-moonbeam.moonscan.io';
+        break;      
       case '1285':
         host = 'https://api-moonriver.moonscan.io';
         break;
@@ -217,6 +223,9 @@ export async function submitSources(
       case '421611':
         host = 'https://api-testnet.arbiscan.io';
         break;
+      case '421613':
+        host = 'https://api-goerli.arbiscan.io';
+        break;
       case '43113':
         host = 'https://api-testnet.snowtrace.io';
         break;
@@ -229,6 +238,9 @@ export async function submitSources(
       case '25':
           host = 'https://api.cronoscan.com/api';
           break;
+      case '11155111':
+        host = 'https://api-sepolia.etherscan.io';
+        break;
       default:
         return logError(
           `Network with chainId: ${chainId} not supported. You can specify the url manually via --api-url <url>.`

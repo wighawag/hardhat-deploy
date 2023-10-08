@@ -34,6 +34,7 @@ import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {store} from './globalStore';
+import {bnReplacer} from './internal/utils';
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -151,7 +152,7 @@ export class DeploymentsManager {
         name: string,
         deployment: DeploymentSubmission
       ): Promise<void> => {
-        this.saveDeployment(name, deployment);
+        await this.saveDeployment(name, deployment);
       },
       delete: async (name: string): Promise<void> =>
         this.deleteDeployment(name),
@@ -168,7 +169,7 @@ export class DeploymentsManager {
         return this.db.deployments[name];
       },
       getDeploymentsFromAddress: async (address: string) => {
-        const deployments = [];
+        const deployments: Deployment[] = [];
         for (const deployment of Object.values(this.db.deployments)) {
           if (deployment.address === address) {
             deployments.push(deployment);
@@ -328,7 +329,7 @@ export class DeploymentsManager {
         return async (options?: O) => {
           let id = baseId;
           if (options !== undefined) {
-            id = id + JSON.stringify(options);
+            id = id + JSON.stringify(options, bnReplacer);
           }
           const saved = this.db.pastFixtures[id];
           if (saved) {
@@ -540,7 +541,7 @@ export class DeploymentsManager {
         : {rawTx, decoded};
       fs.writeFileSync(
         pendingTxPath,
-        JSON.stringify(this.db.pendingTransactions, null, '  ')
+        JSON.stringify(this.db.pendingTransactions, bnReplacer, '  ')
       );
       // await new Promise(r => setTimeout(r, 20000));
       const wait = tx.wait.bind(tx);
@@ -553,7 +554,7 @@ export class DeploymentsManager {
         } else {
           fs.writeFileSync(
             pendingTxPath,
-            JSON.stringify(this.db.pendingTransactions, null, '  ')
+            JSON.stringify(this.db.pendingTransactions, bnReplacer, '  ')
           );
         }
         this.db.gasUsed = this.db.gasUsed.add(receipt.gasUsed);
@@ -858,31 +859,37 @@ export class DeploymentsManager {
     }
 
     const obj = JSON.parse(
-      JSON.stringify({
-        address: deployment.address || actualReceipt?.contractAddress,
-        abi: deployment.abi,
-        transactionHash:
-          deployment.transactionHash || actualReceipt?.transactionHash,
-        receipt: actualReceipt,
-        args: actualArgs,
-        numDeployments,
-        linkedData: deployment.linkedData,
-        solcInputHash: deployment.solcInputHash,
-        metadata: deployment.metadata,
-        bytecode: deployment.bytecode,
-        deployedBytecode: deployment.deployedBytecode,
-        libraries: deployment.libraries,
-        facets: deployment.facets,
-        execute: deployment.execute,
-        history: deployment.history,
-        implementation: deployment.implementation,
-        devdoc: deployment.devdoc,
-        userdoc: deployment.userdoc,
-        storageLayout: deployment.storageLayout,
-        methodIdentifiers: deployment.methodIdentifiers,
-        gasEstimates: deployment.gasEstimates, // TODO double check : use evm field ?
-      })
+      JSON.stringify(
+        {
+          address: deployment.address || actualReceipt?.contractAddress,
+          abi: deployment.abi,
+          transactionHash:
+            deployment.transactionHash || actualReceipt?.transactionHash,
+          receipt: actualReceipt,
+          args: actualArgs,
+          numDeployments,
+          linkedData: deployment.linkedData,
+          solcInputHash: deployment.solcInputHash,
+          metadata: deployment.metadata,
+          bytecode: deployment.bytecode,
+          deployedBytecode: deployment.deployedBytecode,
+          libraries: deployment.libraries,
+          facets: deployment.facets,
+          execute: deployment.execute,
+          history: deployment.history,
+          implementation: deployment.implementation,
+          devdoc: deployment.devdoc,
+          userdoc: deployment.userdoc,
+          storageLayout: deployment.storageLayout,
+          methodIdentifiers: deployment.methodIdentifiers,
+          gasEstimates: deployment.gasEstimates, // TODO double check : use evm field ?
+        },
+        bnReplacer
+      )
     );
+    if (deployment.factoryDeps?.length) {
+      obj.factoryDeps = deployment.factoryDeps;
+    }
     this.db.deployments[name] = obj;
     if (obj.address === undefined && obj.transactionHash !== undefined) {
       let receiptFetched;
@@ -927,7 +934,7 @@ export class DeploymentsManager {
         fs.writeFileSync(chainIdFilepath, chainId);
       }
 
-      fs.writeFileSync(filepath, JSON.stringify(obj, null, '  '));
+      fs.writeFileSync(filepath, JSON.stringify(obj, bnReplacer, '  '));
 
       if (deployment.solcInputHash && deployment.solcInput) {
         const solcInputsFolderpath = path.join(
@@ -974,6 +981,7 @@ export class DeploymentsManager {
       gasPrice?: string;
       maxFeePerGas?: string;
       maxPriorityFeePerGas?: string;
+      tagsRequireAll?: boolean;
     } = {
       log: false,
       resetMemory: true,
@@ -1039,7 +1047,7 @@ export class DeploymentsManager {
         if (externalContracts.deploy) {
           this.db.onlyArtifacts = externalContracts.artifacts;
           try {
-            await this.executeDeployScripts([externalContracts.deploy], tags);
+            await this.executeDeployScripts([externalContracts.deploy], tags, options.tagsRequireAll);
           } finally {
             this.db.onlyArtifacts = undefined;
           }
@@ -1049,7 +1057,7 @@ export class DeploymentsManager {
 
     const deployPaths = getDeployPaths(this.network);
 
-    await this.executeDeployScripts(deployPaths, tags);
+    await this.executeDeployScripts(deployPaths, tags, options.tagsRequireAll);
 
     await this.export(options);
 
@@ -1058,7 +1066,8 @@ export class DeploymentsManager {
 
   public async executeDeployScripts(
     deployScriptsPaths: string[],
-    tags?: string[]
+    tags: string[] = [],
+    tagsRequireAll = false,
   ): Promise<void> {
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
     // TODO loop over companion networks ?
@@ -1105,38 +1114,21 @@ export class DeploymentsManager {
         );
       }
       // console.log("get tags if any for " + scriptFilePath);
-      let scriptTags = deployFunc.tags;
-      if (scriptTags !== undefined) {
-        if (typeof scriptTags === 'string') {
-          scriptTags = [scriptTags];
+      let scriptTags = deployFunc.tags || [];
+      if (typeof scriptTags === 'string') {
+        scriptTags = [scriptTags];
+      }
+      for (const tag of scriptTags) {
+        if (tag.indexOf(',') >= 0) {
+          throw new Error('Tag cannot contain commas');
         }
-        for (const tag of scriptTags) {
-          if (tag.indexOf(',') >= 0) {
-            throw new Error('Tag cannot contains commas');
-          }
-          const bag = scriptPathBags[tag] || [];
-          scriptPathBags[tag] = bag;
-          bag.push(scriptFilePath);
-        }
+        const bag = scriptPathBags[tag] || [];
+        scriptPathBags[tag] = bag;
+        bag.push(scriptFilePath);
       }
       // console.log("tags found " + scriptFilePath, scriptTags);
-      if (tags !== undefined) {
-        let found = false;
-        if (scriptTags !== undefined) {
-          for (const tagToFind of tags) {
-            for (const tag of scriptTags) {
-              if (tag === tagToFind) {
-                scriptFilePaths.push(scriptFilePath);
-                found = true;
-                break;
-              }
-            }
-            if (found) {
-              break;
-            }
-          }
-        }
-      } else {
+      if (tagsRequireAll && tags.every(tag => scriptTags.includes(tag))
+        || !tagsRequireAll && (tags.length == 0 || tags.some(tag => scriptTags.includes(tag)))) {
         scriptFilePaths.push(scriptFilePath);
       }
     }
@@ -1257,7 +1249,7 @@ export class DeploymentsManager {
                   deploymentFolderPath,
                   '.migrations.json'
                 ),
-                JSON.stringify(this.db.migrations, null, '  ')
+                JSON.stringify(this.db.migrations, bnReplacer, '  ')
               );
             }
           }
@@ -1323,8 +1315,7 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       });
-      const out = JSON.stringify(all, null, '  ');
-      this._writeExports(options.exportAll, out);
+      this._writeExports(options.exportAll, all);
 
       log('export-all complete');
     }
@@ -1356,13 +1347,14 @@ export class DeploymentsManager {
         chainId,
         contracts: currentNetworkDeployments,
       };
-      const out = JSON.stringify(singleExport, null, '  ');
-      this._writeExports(options.export, out);
+
+      this._writeExports(options.export, singleExport);
       log('single export complete');
     }
   }
 
-  private _writeExports(dests: string, output: string) {
+  private _writeExports(dests: string, outputObject: any) {
+    const output = JSON.stringify(outputObject, bnReplacer, '  '); // TODO remove bytecode ?
     const splitted = dests.split(',');
     for (const split of splitted) {
       if (!split) {
@@ -1372,7 +1364,11 @@ export class DeploymentsManager {
         process.stdout.write(output);
       } else {
         fs.ensureDirSync(path.dirname(split));
-        fs.writeFileSync(split, output); // TODO remove bytecode ?
+        if (split.endsWith('.ts')) {
+          fs.writeFileSync(split, `export default ${output} as const;`);
+        } else {
+          fs.writeFileSync(split, output);
+        }
       }
     }
   }
@@ -1415,14 +1411,18 @@ export class DeploymentsManager {
       'eth_getBlockByNumber',
       ['latest', false]
     );
-    const snapshot = await this.network.provider.send('evm_snapshot', []);
-    this.db.pastFixtures[key] = {
-      index: ++this.db.snapshotCounter,
-      snapshot,
-      data,
-      blockHash: latestBlock.hash,
-      deployments: {...this.db.deployments},
-    };
+    try {
+      const snapshot = await this.network.provider.send('evm_snapshot', []);
+      this.db.pastFixtures[key] = {
+        index: ++this.db.snapshotCounter,
+        snapshot,
+        data,
+        blockHash: latestBlock.hash,
+        deployments: {...this.db.deployments},
+      };
+    } catch (err) {
+      log(`failed to create snapshot`);
+    }
   }
 
   private async revertSnapshot(saved: {
@@ -1438,9 +1438,15 @@ export class DeploymentsManager {
         delete this.db.pastFixtures[fixtureKey];
       }
     }
-    const success = await this.network.provider.send('evm_revert', [
-      saved.snapshot,
-    ]);
+    let success;
+    try {
+      success = await this.network.provider.send('evm_revert', [
+        saved.snapshot,
+      ]);
+    } catch {
+      log(`failed to revert to snapshot`);
+      success = false;
+    }
     if (success) {
       const blockRetrieved = await this.network.provider.send(
         'eth_getBlockByHash',

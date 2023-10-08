@@ -7,6 +7,7 @@ import {
   HardhatRuntimeEnvironment,
 } from 'hardhat/types';
 import type {BigNumber} from '@ethersproject/bignumber';
+import {Signer} from '@ethersproject/abstract-signer';
 
 export type ExtendedArtifact = {
   abi: any[];
@@ -96,6 +97,9 @@ export interface DiamondOptions extends TxOptions {
     methodName: string;
     args: any[];
   };
+  excludeSelectors?: {
+    [facetName: string]: string[];
+  };
   deterministicSalt?: string;
   facetsArgs?: any[];
 }
@@ -113,6 +117,12 @@ type ProxyOptionsBase = {
         artifact?: string | ArtifactData;
       };
   implementationName?: string;
+  checkABIConflict?: boolean;
+  checkProxyAdmin?: boolean;
+  upgradeFunction?: {
+    methodName: string;
+    upgradeArgs: any[];
+  };
 };
 
 export type ProxyOptions =
@@ -260,7 +270,7 @@ export interface DeploymentsExtension {
     func: FixtureFunc<T, O>,
     id?: string
   ): (options?: O) => Promise<T>;
-  log(...args: any[]): void; // log data only ig log enabled (disabled in test fixture)
+  log(...args: any[]): void; // log data only if log enabled (disabled in test fixture)
 
   getNetworkName(): string;
   getGasUsed(): number;
@@ -288,6 +298,7 @@ export interface DeploymentsExtension {
     ...args: any[]
   ): Promise<any>;
   read(name: string, methodName: string, ...args: any[]): Promise<any>;
+  getSigner(address: string): Promise<Signer>;
   // rawCall(to: Address, data: string): Promise<any>; // TODO ?
 }
 
@@ -349,6 +360,7 @@ export interface DeploymentSubmission {
   storageLayout?: any;
   libraries?: Libraries;
   gasEstimates?: any;
+  factoryDeps?: string[];
 }
 
 // export type LibraryReferences = {
@@ -376,6 +388,7 @@ export interface Deployment {
   facets?: Facet[];
   storageLayout?: any;
   gasEstimates?: any;
+  factoryDeps?: string[];
 }
 
 export interface DeterministicDeploymentInfo {
