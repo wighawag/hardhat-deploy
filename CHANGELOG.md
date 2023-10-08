@@ -1,5 +1,14 @@
 # hardhat-deploy
 
+## 0.11.42
+
+### Patch Changes
+
+- - added moonbeam support for etherscan (by sashaaldrick)
+  - Added typing to 'deployments' (by codebydolapo)
+  - added cronos and cronosTestnet to network (by adeojoemmanuel)
+  - export function to get network name (by passabilities)
+
 ## 0.11.41
 
 ### Patch Changes
