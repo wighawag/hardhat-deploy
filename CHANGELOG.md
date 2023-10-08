@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.39
+
+### Patch Changes
+
+- Expose signer interface (by huyhuynh3103)
+
 ## 0.11.38
 
 ### Patch Changes
