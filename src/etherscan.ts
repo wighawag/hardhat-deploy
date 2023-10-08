@@ -229,6 +229,9 @@ export async function submitSources(
       case '43114':
         host = 'https://api.snowtrace.io';
         break;
+      case '11155111':
+        host = 'https://api-sepolia.etherscan.io';
+        break;
       default:
         return logError(
           `Network with chainId: ${chainId} not supported. You can specify the url manually via --api-url <url>.`

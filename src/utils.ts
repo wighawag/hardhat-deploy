@@ -6,7 +6,7 @@ import {getAddress, isAddress} from '@ethersproject/address';
 import {Interface, FunctionFragment, Fragment} from '@ethersproject/abi';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {BigNumber} from '@ethersproject/bignumber';
-import {Export, ExtendedArtifact, MultiExport} from '../types';
+import {ABI, Export, ExtendedArtifact, MultiExport} from '../types';
 import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
 import {Transaction} from '@ethersproject/transactions';
@@ -340,10 +340,24 @@ function transformNamedAccounts(
               addressesToProtocol[address.toLowerCase()] =
                 protocolSplit[0].toLowerCase();
               // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
-            } else if (protocolSplit[0].toLowerCase() === 'ledger') {
+            } else if (
+              protocolSplit[0].toLowerCase() === 'trezor'
+            ) {
               address = protocolSplit[1];
               addressesToProtocol[address.toLowerCase()] =
                 protocolSplit[0].toLowerCase();
+            } else if (protocolSplit[0].toLowerCase() === 'ledger') {
+              const addressSplit = protocolSplit[1].split(':');
+              if (addressSplit.length > 1) {
+                address = addressSplit[1];
+                addressesToProtocol[
+                  address.toLowerCase()
+                ] = `ledger://${addressSplit[0]}`;
+              } else {
+                address = protocolSplit[1];
+                addressesToProtocol[address.toLowerCase()] =
+                  "ledger://m/44'/60'/0'/0/0";
+              }
               // knownAccountsDict[address.toLowerCase()] = true; // TODO ? this would prevent auto impersonation in fork/test
             } else if (protocolSplit[0].toLowerCase() === 'privatekey') {
               address = new Wallet(protocolSplit[1]).address;
@@ -547,6 +561,13 @@ export function getDeployPaths(network: Network): string[] {
   } else {
     return store.networks[networkName]?.deploy; // skip network.deploy
   }
+}
+
+export function filterABI(
+  abi: ABI,
+  excludeSighashes: Set<string>,
+): any[] {
+  return abi.filter(fragment => fragment.type !== 'function' || !excludeSighashes.has(Interface.getSighash(Fragment.from(fragment) as FunctionFragment)));
 }
 
 export function mergeABIs(

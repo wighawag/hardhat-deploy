@@ -1,6 +1,6 @@
 {
   "name": "hardhat-deploy",
-  "version": "0.11.22",
+  "version": "0.11.40",
   "description": "Hardhat Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/hardhat-deploy",
   "author": "wighawag",
@@ -58,6 +58,17 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/abstract-signer": "^5.7.0",
+    "@ethersproject/address": "^5.7.0",
+    "@ethersproject/bignumber": "^5.7.0",
+    "@ethersproject/bytes": "^5.7.0",
+    "@ethersproject/constants": "^5.7.0",
+    "@ethersproject/contracts": "^5.7.0",
+    "@ethersproject/providers": "^5.7.2",
+    "@ethersproject/solidity": "^5.7.0",
+    "@ethersproject/transactions": "^5.7.0",
+    "@ethersproject/wallet": "^5.7.0",
     "@types/qs": "^6.9.7",
     "axios": "^0.21.1",
     "chalk": "^4.1.2",
@@ -70,7 +81,7 @@
     "match-all": "^1.2.6",
     "murmur-128": "^0.2.1",
     "qs": "^6.9.4",
-    "zksync-web3": "^0.8.1"
+    "zksync-web3": "^0.14.3"
   },
   "scripts": {
     "prepare": "node ./.setup.js",
