@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.41
+
+### Patch Changes
+
+- Make network deployment file copying to localhost synchronous (by bstchow)
+
 ## 0.11.40
 
 ### Patch Changes
