@@ -7,6 +7,7 @@ import {
   HardhatRuntimeEnvironment,
 } from 'hardhat/types';
 import type {BigNumber} from '@ethersproject/bignumber';
+import {Signer} from '@ethersproject/abstract-signer';
 
 export type ExtendedArtifact = {
   abi: any[];
@@ -297,6 +298,7 @@ export interface DeploymentsExtension {
     ...args: any[]
   ): Promise<any>;
   read(name: string, methodName: string, ...args: any[]): Promise<any>;
+  getSigner(address: string): Promise<Signer>;
   // rawCall(to: Address, data: string): Promise<any>; // TODO ?
 }
 
