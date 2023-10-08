@@ -1053,6 +1053,8 @@ export function addHelpers(
     updateArgs: any[];
     upgradeIndex: number | undefined;
     checkProxyAdmin: boolean;
+    upgradeMethod: string | undefined;
+    upgradeArgsTemplate: any[];
   }> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let contractName = options.contract;
@@ -1068,6 +1070,8 @@ export function addHelpers(
       | {name: string; artifact?: string | ArtifactData}
       | undefined;
     let proxyArgsTemplate = ['{implementation}', '{admin}', '{data}'];
+    let upgradeMethod: string | undefined;
+    let upgradeArgsTemplate: string[] = [];
     if (typeof options.proxy === 'object') {
       if (options.proxy.proxyArgs) {
         proxyArgsTemplate = options.proxy.proxyArgs;
@@ -1163,6 +1167,11 @@ export function addHelpers(
       }
       if (options.proxy.viaAdminContract) {
         viaAdminContract = options.proxy.viaAdminContract;
+      }
+
+      if (options.proxy.upgradeFunction) {
+        upgradeMethod = options.proxy.upgradeFunction.methodName;
+        upgradeArgsTemplate = options.proxy.upgradeFunction.upgradeArgs;
       }
     } else if (typeof options.proxy === 'string') {
       updateMethod = options.proxy;
@@ -1296,6 +1305,25 @@ Note that in this case, the contract deployment will not behave the same if depl
       }
     }
 
+    // Set upgrade function if not defined by the user, based on other options
+    if (!upgradeMethod) {
+      if (viaAdminContract) {
+        if (updateMethod) {
+          upgradeMethod = 'upgradeAndCall';
+          upgradeArgsTemplate = ['{proxy}', '{implementation}', '{data}'];
+        } else {
+          upgradeMethod = 'upgrade';
+          upgradeArgsTemplate = ['{proxy}', '{implementation}'];
+        }
+      } else if (updateMethod) {
+        upgradeMethod = 'upgradeToAndCall';
+        upgradeArgsTemplate = ['{implementation}', '{data}'];
+      } else {
+        upgradeMethod = 'upgradeTo';
+        upgradeArgsTemplate = ['{implementation}'];
+      }
+    }
+
     return {
       proxyName,
       proxyContract,
@@ -1317,6 +1345,8 @@ Note that in this case, the contract deployment will not behave the same if depl
       updateArgs,
       upgradeIndex,
       checkProxyAdmin,
+      upgradeMethod,
+      upgradeArgsTemplate,
     };
   }
 
@@ -1344,6 +1374,8 @@ Note that in this case, the contract deployment will not behave the same if depl
       proxyArgsTemplate,
       mergedABI,
       checkProxyAdmin,
+      upgradeMethod,
+      upgradeArgsTemplate,
     } = await _getProxyInfo(name, options);
     /* eslint-enable prefer-const */
 
@@ -1456,10 +1488,24 @@ Note that in this case, the contract deployment will not behave the same if depl
         const oldProxy = proxy.abi.find(
           (frag: {name: string}) => frag.name === 'changeImplementation'
         );
-        const changeImplementationMethod = oldProxy
-          ? 'changeImplementation'
-          : 'upgradeToAndCall';
+        if (oldProxy) {
+          upgradeMethod = 'changeImplementation';
+          upgradeArgsTemplate = ['{implementation}', '{data}'];
+        }
 
+        let proxyAddress = proxy.address;
+        let upgradeArgs = replaceTemplateArgs(upgradeArgsTemplate, {
+          implementationAddress: implementation.address,
+          proxyAdmin,
+          data,
+          proxyAddress,
+        });
+
+        if (!upgradeMethod) {
+          throw new Error(`No upgrade method found, cannot make upgrades`);
+        }
+
+        let executeReceipt;
         if (proxyAdminName) {
           if (oldProxy) {
             throw new Error(`Old Proxy do not support Proxy Admin contracts`);
@@ -1468,53 +1514,22 @@ Note that in this case, the contract deployment will not behave the same if depl
             throw new Error(`no currentProxyAdminOwner found in ProxyAdmin`);
           }
 
-          let executeReceipt;
-          if (updateMethod) {
-            executeReceipt = await execute(
-              proxyAdminName,
-              {...options, from: currentProxyAdminOwner},
-              'upgradeAndCall',
-              proxy.address,
-              implementation.address,
-              data
-            );
-          } else {
-            executeReceipt = await execute(
-              proxyAdminName,
-              {...options, from: currentProxyAdminOwner},
-              'upgrade',
-              proxy.address,
-              implementation.address
-            );
-          }
-          if (!executeReceipt) {
-            throw new Error(`could not execute ${changeImplementationMethod}`);
-          }
+          executeReceipt = await execute(
+            proxyAdminName,
+            {...options, from: currentProxyAdminOwner},
+            upgradeMethod,
+            ...upgradeArgs
+          );
         } else {
-          let executeReceipt;
-          if (
-            changeImplementationMethod === 'upgradeToAndCall' &&
-            !updateMethod
-          ) {
-            executeReceipt = await execute(
-              name,
-              {...options, from},
-              'upgradeTo',
-              implementation.address
-            );
-          } else {
-            executeReceipt = await execute(
-              name,
-              {...options, from},
-              changeImplementationMethod,
-              implementation.address,
-              data
-            );
-          }
-
-          if (!executeReceipt) {
-            throw new Error(`could not execute ${changeImplementationMethod}`);
-          }
+          executeReceipt = await execute(
+            name,
+            {...options, from},
+            upgradeMethod,
+            ...upgradeArgs
+          );
+        }
+        if (!executeReceipt) {
+          throw new Error(`could not execute ${upgradeMethod}`);
         }
       }
       const proxiedDeployment: DeploymentSubmission = {
@@ -3452,9 +3467,15 @@ function replaceTemplateArgs(
     implementationAddress,
     proxyAdmin,
     data,
-  }: {implementationAddress: string; proxyAdmin: string; data: string}
-): string[] {
-  const proxyArgs = [];
+    proxyAddress,
+  }: {
+    implementationAddress: string;
+    proxyAdmin: string;
+    data: string;
+    proxyAddress?: string;
+  }
+): any[] {
+  const proxyArgs: any[] = [];
   for (let i = 0; i < proxyArgsTemplate.length; i++) {
     const argValue = proxyArgsTemplate[i];
     if (argValue === '{implementation}') {
@@ -3463,6 +3484,11 @@ function replaceTemplateArgs(
       proxyArgs.push(proxyAdmin);
     } else if (argValue === '{data}') {
       proxyArgs.push(data);
+    } else if (argValue === '{proxy}') {
+      if (!proxyAddress) {
+        throw new Error(`Expected proxy address but none was specified.`);
+      }
+      proxyArgs.push(proxyAddress);
     } else {
       proxyArgs.push(argValue);
     }
