@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.38
+
+### Patch Changes
+
+- implements custom upgrade function (by zmalatrax)
+
 ## 0.11.37
 
 ### Patch Changes
