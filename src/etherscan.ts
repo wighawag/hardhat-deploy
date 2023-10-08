@@ -232,6 +232,12 @@ export async function submitSources(
       case '43114':
         host = 'https://api.snowtrace.io';
         break;
+      case '338':
+          host = 'https://api-testnet.cronoscan.com/api';
+          break;
+      case '25':
+          host = 'https://api.cronoscan.com/api';
+          break;
       case '11155111':
         host = 'https://api-sepolia.etherscan.io';
         break;
