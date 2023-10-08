@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.40
+
+### Patch Changes
+
+- Missing await in save method (by blukat29)
+
 ## 0.11.39
 
 ### Patch Changes
