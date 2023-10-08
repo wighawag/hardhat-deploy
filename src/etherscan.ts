@@ -205,6 +205,9 @@ export async function submitSources(
       case '1088':
         host = 'https://andromeda-explorer.metis.io';
         break;
+      case '1284':
+        host = 'https://api-moonbeam.moonscan.io';
+        break;      
       case '1285':
         host = 'https://api-moonriver.moonscan.io';
         break;
