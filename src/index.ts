@@ -33,8 +33,9 @@ import {submitSources} from './etherscan';
 import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
 import {store} from './globalStore';
-import {getDeployPaths} from './utils';
-export {getNetworkName} from './utils';
+import {getDeployPaths, getNetworkName} from './utils';
+
+export {getNetworkName};
 
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
