@@ -381,7 +381,7 @@ This task will also attempt to automatically find the SPDX license in the source
 To execute that task, you need to specify the network to run against :
 
 ```bash
-hardhat --network mainnet etherscan-verify [--api-key <apikey>] [--apiurl <url>]
+hardhat --network mainnet etherscan-verify [--api-key <etherscan-apikey>] [--api-url <url>]
 ```
 
 #### **Options**
