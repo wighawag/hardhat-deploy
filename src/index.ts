@@ -297,52 +297,6 @@ extendEnvironment((env) => {
         config
       );
     }
-
-    env.companionNetworks = {};
-    for (const name of Object.keys(env.network.companionNetworks)) {
-      const networkName = env.network.companionNetworks[name];
-      // TODO Fork case ?
-      if (networkName === env.network.name) {
-        deploymentsManager.addCompanionManager(name, deploymentsManager);
-        const extraNetwork = {
-          deployments: deploymentsManager.deploymentsExtension,
-          getNamedAccounts: () => deploymentsManager.getNamedAccounts(),
-          getUnnamedAccounts: () => deploymentsManager.getUnnamedAccounts(),
-          getChainId: () => deploymentsManager.getChainId(),
-          provider: lazyObject(() => env.network.provider),
-        };
-        env.companionNetworks[name] = extraNetwork;
-        continue;
-      }
-      const config = env.config.networks[networkName];
-      if (!('url' in config) || networkName === 'hardhat') {
-        throw new Error(
-          `in memory network like hardhat are not supported as companion network`
-        );
-      }
-
-      const network = store.networks[networkName];
-      if (!network) {
-        throw new Error(`no network named ${networkName}`);
-      }
-      network.provider = createProvider(
-        networkName,
-        config,
-        env.config.paths,
-        env.artifacts
-      );
-      const networkDeploymentsManager = new DeploymentsManager(env, network);
-      deploymentsManager.addCompanionManager(name, networkDeploymentsManager);
-      const extraNetwork = {
-        deployments: networkDeploymentsManager.deploymentsExtension,
-        getNamedAccounts: () => networkDeploymentsManager.getNamedAccounts(),
-        getUnnamedAccounts: () =>
-          networkDeploymentsManager.getUnnamedAccounts(),
-        getChainId: () => networkDeploymentsManager.getChainId(),
-        provider: network.provider,
-      };
-      env.companionNetworks[name] = extraNetwork;
-    }
   }
   log('ready');
 });
@@ -395,6 +349,54 @@ function setupExtraSolcSettings(settings: {
   // addIfNotPresent(settings.outputSelection["*"][""], "ast");
 }
 
+async function initCompanionNetworks(hre: HardhatRuntimeEnvironment) {
+  hre.companionNetworks = {};
+  for (const name of Object.keys(hre.network.companionNetworks)) {
+    const networkName = hre.network.companionNetworks[name];
+    // TODO Fork case ?
+    if (networkName === hre.network.name) {
+      deploymentsManager.addCompanionManager(name, deploymentsManager);
+      const extraNetwork = {
+        deployments: deploymentsManager.deploymentsExtension,
+        getNamedAccounts: () => deploymentsManager.getNamedAccounts(),
+        getUnnamedAccounts: () => deploymentsManager.getUnnamedAccounts(),
+        getChainId: () => deploymentsManager.getChainId(),
+        provider: lazyObject(() => hre.network.provider),
+      };
+      hre.companionNetworks[name] = extraNetwork;
+      continue;
+    }
+    const config = hre.config.networks[networkName];
+    if (!('url' in config) || networkName === 'hardhat') {
+      throw new Error(
+        `in memory network like hardhat are not supported as companion network`
+      );
+    }
+
+    const network = store.networks[networkName];
+    if (!network) {
+      throw new Error(`no network named ${networkName}`);
+    }
+
+    network.provider = await createProvider(
+      hre.config,
+      networkName,
+      hre.artifacts
+    );
+
+    const networkDeploymentsManager = new DeploymentsManager(hre, network);
+    deploymentsManager.addCompanionManager(name, networkDeploymentsManager);
+    const extraNetwork = {
+      deployments: networkDeploymentsManager.deploymentsExtension,
+      getNamedAccounts: () => networkDeploymentsManager.getNamedAccounts(),
+      getUnnamedAccounts: () => networkDeploymentsManager.getUnnamedAccounts(),
+      getChainId: () => networkDeploymentsManager.getChainId(),
+      provider: network.provider,
+    };
+    hre.companionNetworks[name] = extraNetwork;
+  }
+}
+
 subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
@@ -441,6 +443,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     if (typeof tags === 'string') {
       tags = tags.split(',');
     }
+    await initCompanionNetworks(hre);
     await deploymentsManager.runDeploy(tags, {
       log: args.log,
       resetMemory: false,
