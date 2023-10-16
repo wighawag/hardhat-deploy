@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.43
+
+### Patch Changes
+
+- Change companion networks init to work with hardhat ^2.16 (by nataouze)
+
 ## 0.11.42
 
 ### Patch Changes
