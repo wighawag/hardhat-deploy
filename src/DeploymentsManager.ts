@@ -1042,12 +1042,36 @@ export class DeploymentsManager {
       tags = [tags];
     }
 
+    const scriptPathBags: {[tag: string]: string[]} = {};
+    const funcByFilePath: {[filename: string]: DeployFunction} = {};
+
     if (this.env.config.external?.contracts) {
       for (const externalContracts of this.env.config.external.contracts) {
+        if (externalContracts.dependencyOnlyDeploy) {
+          this.loadDeployScripts(
+            [externalContracts.dependencyOnlyDeploy],
+            scriptPathBags,
+            funcByFilePath
+          );
+        }
         if (externalContracts.deploy) {
+          const externalScriptPathBags: {[tag: string]: string[]} = {};
+          const externalFuncByFilePath: {[filename: string]: DeployFunction} =
+            {};
           this.db.onlyArtifacts = externalContracts.artifacts;
+          this.loadDeployScripts(
+            [externalContracts.deploy],
+            externalScriptPathBags,
+            externalFuncByFilePath
+          );
           try {
-            await this.executeDeployScripts([externalContracts.deploy], tags, options.tagsRequireAll);
+            await this.executeDeployScripts(
+              [externalContracts.deploy],
+              externalScriptPathBags,
+              externalFuncByFilePath,
+              tags,
+              options.tagsRequireAll
+            );
           } finally {
             this.db.onlyArtifacts = undefined;
           }
@@ -1057,17 +1081,77 @@ export class DeploymentsManager {
 
     const deployPaths = getDeployPaths(this.network);
 
-    await this.executeDeployScripts(deployPaths, tags, options.tagsRequireAll);
+    this.loadDeployScripts(deployPaths, scriptPathBags, funcByFilePath);
+
+    await this.executeDeployScripts(
+      deployPaths,
+      scriptPathBags,
+      funcByFilePath,
+      tags,
+      options.tagsRequireAll
+    );
 
     await this.export(options);
 
     return this.db.deployments;
   }
 
+  private requireDeployScript(scriptFilePath: string): DeployFunction {
+    let deployFunc: DeployFunction;
+    try {
+      delete require.cache[scriptFilePath]; // ensure we reload it every time, so changes are taken in consideration
+      deployFunc = require(scriptFilePath);
+      if ((deployFunc as any).default) {
+        deployFunc = (deployFunc as any).default as DeployFunction;
+      }
+    } catch (e) {
+      throw new Error(
+        'ERROR loading deploy script at ' +
+          scriptFilePath +
+          ':\n' +
+          ((e as any).stack || e)
+      );
+    }
+    return deployFunc;
+  }
+
+  public loadDeployScripts(
+    deployScriptsPaths: string[],
+    scriptPathBags: {[tag: string]: string[]},
+    funcByFilePath: {[filename: string]: DeployFunction}
+  ): void {
+    let filepaths;
+    try {
+      filepaths = traverseMultipleDirectory(deployScriptsPaths);
+    } catch (e) {
+      return;
+    }
+
+    for (const filepath of filepaths) {
+      const scriptFilePath = path.resolve(filepath);
+      const deployFunc = this.requireDeployScript(scriptFilePath);
+      funcByFilePath[scriptFilePath] = deployFunc;
+      let scriptTags = deployFunc.tags || [];
+      if (typeof scriptTags === 'string') {
+        scriptTags = [scriptTags];
+      }
+      for (const tag of scriptTags) {
+        if (tag.indexOf(',') >= 0) {
+          throw new Error('Tag cannot contain commas');
+        }
+        const bag = scriptPathBags[tag] || [];
+        scriptPathBags[tag] = bag;
+        bag.push(scriptFilePath);
+      }
+    }
+  }
+
   public async executeDeployScripts(
     deployScriptsPaths: string[],
+    scriptPathBags: {[tag: string]: string[]},
+    funcByFilePath: {[filename: string]: DeployFunction},
     tags: string[] = [],
-    tagsRequireAll = false,
+    tagsRequireAll = false
   ): Promise<void> {
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
     // TODO loop over companion networks ?
@@ -1090,49 +1174,25 @@ export class DeploymentsManager {
     });
     log('deploy script folder parsed');
 
-    const funcByFilePath: {[filename: string]: DeployFunction} = {};
-    const scriptPathBags: {[tag: string]: string[]} = {};
     const scriptFilePaths: string[] = [];
+
     for (const filepath of filepaths) {
       const scriptFilePath = path.resolve(filepath);
-      let deployFunc: DeployFunction;
-      // console.log("fetching " + scriptFilePath);
-      try {
-        delete require.cache[scriptFilePath]; // ensure we reload it every time, so changes are taken in consideration
-        deployFunc = require(scriptFilePath);
-        if ((deployFunc as any).default) {
-          deployFunc = (deployFunc as any).default as DeployFunction;
-        }
-        funcByFilePath[scriptFilePath] = deployFunc;
-      } catch (e) {
-        // console.error("require failed", e);
-        throw new Error(
-          'ERROR processing skip func of ' +
-            filepath +
-            ':\n' +
-            ((e as any).stack || e)
-        );
-      }
-      // console.log("get tags if any for " + scriptFilePath);
+      const deployFunc = this.requireDeployScript(scriptFilePath);
       let scriptTags = deployFunc.tags || [];
       if (typeof scriptTags === 'string') {
         scriptTags = [scriptTags];
       }
-      for (const tag of scriptTags) {
-        if (tag.indexOf(',') >= 0) {
-          throw new Error('Tag cannot contain commas');
-        }
-        const bag = scriptPathBags[tag] || [];
-        scriptPathBags[tag] = bag;
-        bag.push(scriptFilePath);
-      }
-      // console.log("tags found " + scriptFilePath, scriptTags);
-      if (tagsRequireAll && tags.every(tag => scriptTags.includes(tag))
-        || !tagsRequireAll && (tags.length == 0 || tags.some(tag => scriptTags.includes(tag)))) {
+
+      if (
+        (tagsRequireAll && tags.every((tag) => scriptTags.includes(tag))) ||
+        (!tagsRequireAll &&
+          (tags.length == 0 || tags.some((tag) => scriptTags.includes(tag))))
+      ) {
         scriptFilePaths.push(scriptFilePath);
       }
     }
-    log('tag collected');
+    log('tags collected');
 
     // console.log({ scriptFilePaths });
     const scriptsRegisteredToRun: {[filename: string]: boolean} = {};

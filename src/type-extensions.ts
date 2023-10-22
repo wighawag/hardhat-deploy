@@ -28,6 +28,7 @@ declare module 'hardhat/types/config' {
       contracts?: {
         artifacts: string | string[];
         deploy?: string;
+        dependencyOnlyDeploy?: string;
       }[];
     };
     verify?: {etherscan?: {apiKey?: string}};
@@ -52,6 +53,7 @@ declare module 'hardhat/types/config' {
       contracts?: {
         artifacts: string[];
         deploy?: string;
+        dependencyOnlyDeploy?: string;
       }[];
     };
     verify: {etherscan?: {apiKey?: string}};
