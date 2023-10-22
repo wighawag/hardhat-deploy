@@ -121,7 +121,7 @@ extendConfig(
         const externalContracts: {
           artifacts: string[];
           deploy?: string;
-          dependencyOnlyDeploy?: string;
+          execute?: boolean;
         }[] = [];
         config.external.contracts = externalContracts;
         for (const userDefinedExternalContracts of userConfig.external
@@ -139,14 +139,10 @@ extendConfig(
                   userDefinedExternalContracts.deploy
                 )
               : undefined,
-            dependencyOnlyDeploy:
-              userDefinedExternalContracts.dependencyOnlyDeploy
-                ? normalizePath(
-                    config,
-                    userDefinedExternalContracts.dependencyOnlyDeploy,
-                    userDefinedExternalContracts.dependencyOnlyDeploy
-                  )
-                : undefined,
+            execute:
+              userDefinedExternalContracts.execute !== undefined
+                ? userDefinedExternalContracts.execute
+                : true,
           });
         }
       }

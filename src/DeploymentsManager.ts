@@ -1047,33 +1047,34 @@ export class DeploymentsManager {
 
     if (this.env.config.external?.contracts) {
       for (const externalContracts of this.env.config.external.contracts) {
-        if (externalContracts.dependencyOnlyDeploy) {
-          this.loadDeployScripts(
-            [externalContracts.dependencyOnlyDeploy],
-            scriptPathBags,
-            funcByFilePath
-          );
-        }
         if (externalContracts.deploy) {
-          const externalScriptPathBags: {[tag: string]: string[]} = {};
-          const externalFuncByFilePath: {[filename: string]: DeployFunction} =
-            {};
-          this.db.onlyArtifacts = externalContracts.artifacts;
-          this.loadDeployScripts(
-            [externalContracts.deploy],
-            externalScriptPathBags,
-            externalFuncByFilePath
-          );
-          try {
-            await this.executeDeployScripts(
+          if (externalContracts.execute) {
+            const externalScriptPathBags: {[tag: string]: string[]} = {};
+            const externalFuncByFilePath: {[filename: string]: DeployFunction} =
+              {};
+            this.loadDeployScripts(
               [externalContracts.deploy],
               externalScriptPathBags,
-              externalFuncByFilePath,
-              tags,
-              options.tagsRequireAll
+              externalFuncByFilePath
             );
-          } finally {
-            this.db.onlyArtifacts = undefined;
+            this.db.onlyArtifacts = externalContracts.artifacts;
+            try {
+              await this.executeDeployScripts(
+                [externalContracts.deploy],
+                externalScriptPathBags,
+                externalFuncByFilePath,
+                tags,
+                options.tagsRequireAll
+              );
+            } finally {
+              this.db.onlyArtifacts = undefined;
+            }
+          } else {
+            this.loadDeployScripts(
+              [externalContracts.deploy],
+              scriptPathBags,
+              funcByFilePath
+            );
           }
         }
       }
