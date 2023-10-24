@@ -83,8 +83,32 @@ export interface DiamondOptions extends TxOptions {
   diamondContractArgs?: any[];
   owner?: Address;
   // defaultLoopeFacet?: boolean; // TODO // always there
+  viaLoopeFacetContract?:
+    | string
+    | {
+        name: string;
+        artifact?: string | ArtifactData;
+      };
   defaultOwnershipFacet?: boolean;
+  viaOwnershipFacetContract?:
+    | string
+    | {
+        name: string;
+        artifact?: string | ArtifactData;
+      };
   defaultCutFacet?: boolean;
+  viaCutFacetContract?:
+    | string
+    | {
+        name: string;
+        artifact?: string | ArtifactData;
+      };
+  viaERC165InitContract?:
+    | string
+    | {
+        name: string;
+        artifact?: string | ArtifactData;
+      };
   facets: DiamondFacets;
   log?: boolean;
   libraries?: Libraries;
