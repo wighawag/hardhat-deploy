@@ -140,15 +140,17 @@ export class DeploymentFactory {
   ): Promise<boolean> {
     const newTransaction = await this.getDeployTransaction();
     const newData = newTransaction.data?.toString();
-    if (this.isZkSync) {
-      const deserialize = zk.utils.parseTransaction(transaction.data) as any;
-      const desFlattened = hexConcat(deserialize.customData.factoryDeps);
-      const factoryDeps = await this.extractFactoryDeps(this.artifact);
-      const newFlattened = hexConcat(factoryDeps);
+    // NOTE: (25 Oct) zksync-era client does not support factoryDeps in transaction.data
+    // if (this.isZkSync) {
+    //   const deserialize = zk.utils.parseTransaction(transaction.data) as any;
+    //   const desFlattened = hexConcat(deserialize.customData.factoryDeps);
+    //   const factoryDeps = await this.extractFactoryDeps(this.artifact);
+    //   const newFlattened = hexConcat(factoryDeps);
 
-      return deserialize.data !== newData || desFlattened != newFlattened;
-    } else {
-      return transaction.data !== newData;
-    }
+    //   return deserialize.data !== newData || desFlattened != newFlattened;
+    // } else {
+    //   return transaction.data !== newData;
+    // }
+    return transaction.data !== newData;
   }
 }
