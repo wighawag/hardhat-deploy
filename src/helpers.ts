@@ -2276,7 +2276,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         if (options.defaultCutFacetContract) {
           interfaceList.push('0x1f931c1c');
         }
-        if (options.defaultOwnershipFacetContract !== false) {
+        if (options.defaultOwnershipFacetContract) {
           interfaceList.push('0x7f5828d0');
         }
 
