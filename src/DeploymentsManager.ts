@@ -67,6 +67,8 @@ export class DeploymentsManager {
     migrations: {[id: string]: number};
     onlyArtifacts?: string[];
     runAsNode: boolean;
+    dependenciesScriptPathBags: {[tag: string]: string[]};
+    dependenciesFuncByFilePath: {[filename: string]: DeployFunction};
   };
 
   private env: HardhatRuntimeEnvironment;
@@ -134,6 +136,8 @@ export class DeploymentsManager {
       savePendingTx: false,
       gasPrice: undefined,
       runAsNode: false,
+      dependenciesScriptPathBags: {},
+      dependenciesFuncByFilePath: {},
     };
     this.env = env;
     this.deploymentsPath = env.config.paths.deployments;
@@ -1042,27 +1046,14 @@ export class DeploymentsManager {
       tags = [tags];
     }
 
-    const scriptPathBags: {[tag: string]: string[]} = {};
-    const funcByFilePath: {[filename: string]: DeployFunction} = {};
-
     if (this.env.config.external?.contracts) {
       for (const externalContracts of this.env.config.external.contracts) {
         if (externalContracts.deploy) {
           if (externalContracts.execute) {
-            const externalScriptPathBags: {[tag: string]: string[]} = {};
-            const externalFuncByFilePath: {[filename: string]: DeployFunction} =
-              {};
-            this.loadDeployScripts(
-              [externalContracts.deploy],
-              externalScriptPathBags,
-              externalFuncByFilePath
-            );
             this.db.onlyArtifacts = externalContracts.artifacts;
             try {
               await this.executeDeployScripts(
                 [externalContracts.deploy],
-                externalScriptPathBags,
-                externalFuncByFilePath,
                 tags,
                 options.tagsRequireAll
               );
@@ -1072,8 +1063,8 @@ export class DeploymentsManager {
           } else {
             this.loadDeployScripts(
               [externalContracts.deploy],
-              scriptPathBags,
-              funcByFilePath
+              this.db.dependenciesScriptPathBags,
+              this.db.dependenciesFuncByFilePath
             );
           }
         }
@@ -1082,15 +1073,7 @@ export class DeploymentsManager {
 
     const deployPaths = getDeployPaths(this.network);
 
-    this.loadDeployScripts(deployPaths, scriptPathBags, funcByFilePath);
-
-    await this.executeDeployScripts(
-      deployPaths,
-      scriptPathBags,
-      funcByFilePath,
-      tags,
-      options.tagsRequireAll
-    );
+    await this.executeDeployScripts(deployPaths, tags, options.tagsRequireAll);
 
     await this.export(options);
 
@@ -1149,8 +1132,6 @@ export class DeploymentsManager {
 
   public async executeDeployScripts(
     deployScriptsPaths: string[],
-    scriptPathBags: {[tag: string]: string[]},
-    funcByFilePath: {[filename: string]: DeployFunction},
     tags: string[] = [],
     tagsRequireAll = false
   ): Promise<void> {
@@ -1195,7 +1176,13 @@ export class DeploymentsManager {
     }
     log('tags collected');
 
-    // console.log({ scriptFilePaths });
+    const scriptPathBags: {[tag: string]: string[]} = {};
+    const funcByFilePath: {[filename: string]: DeployFunction} = {};
+    this.loadDeployScripts(deployScriptsPaths, scriptPathBags, funcByFilePath);
+
+    const dependenciesFuncByFilePath = this.db.dependenciesFuncByFilePath;
+    const dependenciesScriptPathBags = this.db.dependenciesScriptPathBags;
+
     const scriptsRegisteredToRun: {[filename: string]: boolean} = {};
     const scriptsToRun: Array<{
       func: DeployFunction;
@@ -1209,10 +1196,14 @@ export class DeploymentsManager {
       if (scriptsRegisteredToRun[scriptFilePath]) {
         return;
       }
-      const deployFunc = funcByFilePath[scriptFilePath];
+      const deployFunc =
+        funcByFilePath[scriptFilePath] ||
+        dependenciesFuncByFilePath[scriptFilePath];
       if (deployFunc.dependencies) {
         for (const dependency of deployFunc.dependencies) {
-          const scriptFilePathsToAdd = scriptPathBags[dependency];
+          const scriptFilePathsToAdd =
+            scriptPathBags[dependency] ||
+            dependenciesScriptPathBags[dependency];
           if (scriptFilePathsToAdd) {
             for (const scriptFilenameToAdd of scriptFilePathsToAdd) {
               recurseDependencies(scriptFilenameToAdd);
