@@ -117,13 +117,11 @@ export function loadAllDeployments(
   fs.readdirSync(deploymentsPath).forEach((fileName) => {
     const fPath = path.resolve(deploymentsPath, fileName);
     const stats = fs.statSync(fPath);
-    let name = fileName;
     if (stats.isDirectory()) {
       let chainIdFound: string;
       const chainIdFilepath = path.join(fPath, '.chainId');
       if (fs.existsSync(chainIdFilepath)) {
         chainIdFound = fs.readFileSync(chainIdFilepath).toString().trim();
-        name = fileName;
       } else {
         throw new Error(
           `with hardhat-deploy >= 0.6 you need to rename network folder without appended chainId
@@ -140,11 +138,11 @@ export function loadAllDeployments(
         onlyABIAndAddress
       );
       const network = {
-        name,
+        name: fileName,
         chainId: chainIdFound,
         contracts,
       };
-      networksFound[name] = network;
+      networksFound[fileName] = network;
       all[chainIdFound].push(network);
     }
   });
