@@ -1808,9 +1808,12 @@ Note that in this case, the contract deployment will not behave the same if depl
 
               ledgerSigner = undefined;
             }
-
-            ethersSigner = new LedgerSigner(provider);
+            derivationPath = getDerivationPath(network.config.chainId);
             hardwareWallet = 'ledger';
+            ethersSigner = new LedgerSigner(
+              provider,
+              `${hardwareWallet}://${derivationPath}`
+            );
             ledgerSigner = ethersSigner;
           } else if (registeredProtocol.startsWith('trezor')) {
             if (!TrezorSigner) {
