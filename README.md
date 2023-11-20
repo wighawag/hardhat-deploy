@@ -3,9 +3,9 @@
 _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Testing_
 
 > **A complete dev template using hardhat-deploy is available here**: https://github.com/wighawag/template-ethereum-contracts
-> It also contains various branches examplifying the capability of hardhat-deploy. Check it out.
+> It also contains various branches exemplifying the capability of hardhat-deploy. Check it out.
 
-- [What is it for?](#what-is-it-for-)
+- [What is it for?](#what-is-it-for)
 - [hardhat-deploy in a nutshell](#hardhat-deploy-in-a-nutshell)
 - [Installation](#installation)
   - [npm install hardhat-deploy](#npm-install-hardhat-deploy)
@@ -47,6 +47,8 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
 - [Handling contract using libraries](#handling-contract-using-libraries)
 - [Exporting Deployments](#exporting-deployments)
 - [Deploying and Upgrading Proxies](#deploying-and-upgrading-proxies)
+    - [When the constructor and init functions are different](#when-the-constructor-and-init-functions-are-different)
+    - [Proxy deployment options](#proxy-deployment-options)
 - [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535)
   - [deployment / upgrade](#deployment--upgrade)
   - [onUpgrade calls](#onupgrade-calls)
@@ -87,7 +89,7 @@ This plugin contains a lot more features too, all geared toward a better develop
 - save metadata of deployed contract so they can always be fully verified, via [sourcify](https://sourcify.dev) or [etherscan](https://etherscan.io).
 - ability to submit contract source to etherscan and sourcify for verification at any time. (Because **hardhat-deploy** will save all the necessary info, it can be executed at any time.)
 - support hardhat's fork feature so deployment can be accessed even when run through fork.
-- named accounts are automatically impersonated too, so you can perform tx as if you had their private key.
+- named accounts are automatically impersonnated too, so you can perform tx as if you had their private key.
 - proxy deployment with ability to upgrade them transparently, only if code changes.
 - this include support for [openzeppelin](https://openzeppelin.com) transparent proxies
 - diamond deployment with facets, allowing you to focus on what the new version will be. It will generate the diamondCut necessary to reach the new state.
@@ -143,13 +145,10 @@ require('hardhat-deploy');
 
 if you use `ethers.js` we recommend you also install `hardhat-deploy-ethers` which add extra features to access deployments as ethers contract.
 
-Since `hardhat-deploy-ethers` is a fork of `@nomiclabs/hardhat-ethers` and that other plugin might have a hardcoded  dependency on `@nomiclabs/hardhat-ethers` the best way to install `hardhat-deploy-ethers` and ensure compatibility is the following:
 
 ```bash
-npm install --save-dev  @nomiclabs/hardhat-ethers@npm:hardhat-deploy-ethers ethers
+npm install --save-dev  @nomiclabs/hardhat-ethers hardhat-deploy-ethers ethers
 ```
-
-Which means you then need to do `require("@nomiclabs/hardhat-ethers")` instead of `require("hardhat-deploy-ethers")` in your `hardhat.config.js` file.
 
 More details on `hardhat-deploy-ethers` repo: https://github.com/wighawag/hardhat-deploy-ethers#readme
 
@@ -282,7 +281,7 @@ The reason why **hardhat-deploy** save chainId in the `.chainId` file is both fo
 
 ## Hardhat Tasks Available/Updated
 
-hardhat deploy add several task to hardhat. It also modify existing one, adding new options and new behavior. All of these are described here:
+hardhat deploy adds several tasks to hardhat. It also modifies existing one, adding new options and new behavior. All of these are described here:
 
 ---
 
@@ -296,7 +295,7 @@ This task will execute the scripts in the `deploy` folder and save the contract 
 
 With the deployment saved, it allows you to deploy a contract only if changes were made.
 
-Deploy scripts (also called Deploy functions) can also perform aribtrary logic.
+Deploy scripts (also called Deploy functions) can also perform arbitrary logic.
 
 For further details on how to use it and write deploy script, see [section](#deploy-scripts) below.
 
@@ -306,7 +305,7 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 `--export-all <filepath>`: export one file that contains all contracts across all saved deployments, regardless of the network being invoked.
 
-`--tags <tags>`: only excutes deploy scripts with the given tags (separated by commas) and their dependencies (see more info [here](#deploy-scripts-tags-and-dependencies) about tags and dependencies)
+`--tags <tags>`: only execute deploy scripts with the given tags (separated by commas) and their dependencies (see more info [here](#deploy-scripts-tags-and-dependencies) about tags and dependencies)
 
 `--gasprice <gasprice>`: specify the gasprice (in wei) to use by default for transactions executed via **hardhat-deploy** helpers in deploy scripts
 
@@ -314,7 +313,7 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 #### **Flags**
 
-`--reset`: This flag resets the deployments from scratch. Previously deployed contract are not considered and deleted from disk.
+`--reset`: This flag resets the deployments from scratch. Previously deployed contracts are not considered and deleted from disk.
 
 `--silent`: This flag removes **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
@@ -326,9 +325,9 @@ For further details on how to use it and write deploy script, see [section](#dep
 
 ---
 
-This plugin modify the _node_ task so that it also execute the deployment script before exposing the server http RPC interface
+This plugin modifies the _node_ task so that it also executes the deployment script before exposing the server http RPC interface
 
-It add similar options than the `deploy` task :
+It adds similar options than the `deploy` task :
 
 #### **Options**
 
@@ -344,17 +343,17 @@ It add similar options than the `deploy` task :
 
 #### **Flags**
 
-`--no-reset`: This flag prevent the reseting of the existing deployments. This is usually not desired when running the `node` task as a network is created from scratch and previous deployemnt are irrelevant.
-
-`--show-accounts`: this flag will output the account private keys
+`--no-reset`: This flag prevents the resetting of the existing deployments. This is usually not desired when running the `node` task as a network is created from scratch and previous deployments are irrelevant.
 
 `--silent`: This flag removes **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
-`--watch`: This flag makes the task never-ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) or [Diamond](#builtin-in-support-for-diamonds-eip2535)) this allow to have HCR (Hot Contract Replacement).
+`--silent`: This flag removes **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
+
+`--watch`: This flag makes the task never-ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) or [Diamond](#builtin-in-support-for-diamonds-eip2535)) this allows to have HCR (Hot Contract Replacement).
 
 `--no-deploy` that discard all other options to revert to normal `hardhat node` behavior without any deployment being performed.
 
-> :warning: Note that the deployments are saved as if the network name is `localhost`. This is because `hardhat node` is expected to be used as localhost: You can for example execute `hardhat --network localhost console` after `node` is running. Doing `hardhat --network hardhat console` would indeed not do anything useful. It still take the configuration from `hardhat` in the hardhat.config.js file though.
+> :warning: Note that the deployments are saved as if the network name is `localhost`. This is because `hardhat node` is expected to be used as localhost: You can for example execute `hardhat --network localhost console` after `node` is running. Doing `hardhat --network hardhat console` would indeed not do anything useful. It still takes the configuration from `hardhat` in the hardhat.config.js file though.
 
 ---
 
@@ -364,7 +363,7 @@ It add similar options than the `deploy` task :
 
 This plugin adds a flag argument `--deploy-fixture` to the _test_ task which if enabled will run the global deployments fixture before the tests and snapshots it. This will generally speed up the tests as further test will be able to revert back to the full deployment.
 
-> :warning: Note though that if your test behave differently whether that option is on or not, this most likely mean that your deploy scripts' tags and dependencies are not configured correctly. This is because the global fixture will ensure all contract are deployed while test will usually (for efficiency) ask for a particular tag.
+> :warning: Note though that if your test behave differently whether that option is on or not, this most likely means that your deploy scripts' tags and dependencies are not configured correctly. This is because the global fixture will ensure all contracts are deployed while test will usually (for efficiency) ask for a particular tag.
 
 ---
 
@@ -381,15 +380,15 @@ But Etherscan sometime fails due to a bug in solidity compiler (<https://github.
 
 This task will also attempt to automatically find the SPDX license in the source.
 
-To execute that task, you need to specifiy the network to run against :
+To execute that task, you need to specify the network to run against :
 
 ```bash
-hardhat --network mainnet etherscan-verify [--api-key <apikey>] [--apiurl <url>]
+hardhat --network mainnet etherscan-verify [--api-key <etherscan-apikey>] [--api-url <url>]
 ```
 
 #### **Options**
 
-Note that harhdat-deploy now use a different config format to not conflict with `hardhat-etherscan`
+Note that hardhat-deploy now use a different config format to not conflict with `hardhat-etherscan`
 
 `--api-key <api key>`: let you specify your etherscan api key. Alternatively, you can provide it via the env variable `ETHERSCAN_API_KEY` or through the hardhat.config.ts verify field:
 
@@ -577,7 +576,7 @@ Example:
 
 #### `deploy`
 
-the deploy field override the paths.deploy option and let you define a set of folder containing the deploy scripts to be executed for this network.
+the deploy field overrides the paths.deploy option and let you define a set of folder containing the deploy scripts to be executed for this network.
 
 You can thus have one network that will be executing L1 deployment and other L2 deployments, etc...
 
@@ -622,7 +621,7 @@ By using name you can have the same deploy script used in different set of netwo
 
 For your test you could have the companion networks pointing to the same hardhat network, for test deployment, you could have rinkeby acting like your l2 while goerli act as your l1.
 
-An example repo that show case a multi-network setup with optimism can be found here: https://github.com/wighawag/template-ethereum-contracts/tree/examples/optimism
+An example repo that showcase a multi-network setup with optimism can be found here: https://github.com/wighawag/template-ethereum-contracts/tree/examples/optimism
 
 deploy script can then access the network and its deployment as follow :
 
@@ -633,7 +632,7 @@ module.exports = async ({
   getChainId,
   getUnnamedAccounts,
 }) => {
-  const {deploy} = deployments;
+  const {deploy,execute} = deployments;
   const {deployer} = await getNamedAccounts();
 
   const OVM_L1ERC20Gateway = await hre.companionNetworks['l1'].deployments.get(
@@ -669,12 +668,12 @@ Here is an example showing the default values :
 }
 ```
 
-The `deploy` folder is expected to contains the deploy script that are executed upon invocation of `hardhat deploy` or `hardhat node`.
+The `deploy` folder is expected to contain the deploy scripts that are executed upon invocation of `hardhat deploy` or `hardhat node`.
 It can also be an array of folder path.
 
-The `deployments` folder will contains the resulting deployments (contract addresses along their abi, bytecode, metadata...). One folder per network and one file per contract.
+The `deployments` folder will contain the resulting deployments (contract addresses along their abi, bytecode, metadata...). One folder per network and one file per contract.
 
-The `imports` folder is expected to contains artifacts that were pre-compiled. Useful if you want to upgrade to a new solidity version but want to keep using previously compiled contracts. The artifact is the same format as normal hardhat artifact, so you can easily copy them over, before switching to a new compiler version.
+The `imports` folder is expected to contain artifacts that were pre-compiled. Useful if you want to upgrade to a new solidity version but want to keep using previously compiled contracts. The artifact is the same format as normal hardhat artifact, so you can easily copy them over, before switching to a new compiler version.
 
 > This is less useful now that hardhat support multiple solidity compiler at once.
 
@@ -707,7 +706,7 @@ The information can be defined either as an object
 }
 ```
 
-or as an function that returns the information for the deterministic deployment
+or as a function that returns the information for the deterministic deployment
 
 ```js
 {
@@ -762,7 +761,7 @@ The `deployments` fields specify an object whose field names are the hardhat net
 
 Artifacts in hardhat terminology represent a compiled contract (not yet deployed) with at least its bytecode and abi.
 
-`hardhat-deploy` gives can access to these artifact via the `deployments.getArtifact` function :
+`hardhat-deploy` gives can access to these artifacts via the `deployments.getArtifact` function :
 
 ```js
 const {deployments} = require('hardhat');
@@ -828,7 +827,7 @@ The `runAtTheEnd` is a boolean that if set to true, will queue that script to be
 
 These set of fields allow more flexibility to organize the scripts. You are not limited to alphabetical order and you can even organise deploy script in sub folders.
 
-Finally the function can return true if it wishes to never be executed again. This can be usfeul to emulate migration scripts that are meant to be executed only once. Once such script return true (async), the `id` field is used to track execution and if that field is not present when the script return true, it will fails.
+Finally the function can return true if it wishes to never be executed again. This can be useful to emulate migration scripts that are meant to be executed only once. Once such script return true (async), the `id` field is used to track execution and if that field is not present when the script return true, it will fails.
 
 In other words, if you want a particular deploy script to run only once, it needs to both return true (async) and have an `id` set.
 
@@ -882,7 +881,7 @@ export interface DeploymentsExtension {
     // deploy diamond based contract (see section below)
     deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
   };
-  deterministic( // return the determinsitic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
+  deterministic( // return the deterministic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
     name: string,
     options: Create2DeployOptions
   ): Promise<{
@@ -962,7 +961,7 @@ See below the full list of fields that the option parameter allows and requires:
 
 ```ts
 export interface DeployOptions = {
-  from: string; // address (or private key) that will perform the transaction. you can use `getNamedAccounts` to retrived the address you want by name.
+  from: string; // address (or private key) that will perform the transaction. you can use `getNamedAccounts` to retrieve the address you want by name.
   contract?: // this is an optional field. If not specified it defaults to the contract with the same name as the first parameter
     | string // this field can be either a string for the name of the contract
     | { // or abi and bytecode
@@ -1082,7 +1081,7 @@ For both --export and --export-all, if the extension ends in .ts it will generat
 
 ## Deploying and Upgrading Proxies
 
-As mentioned above, the deploy function can also deploy a contract through a proxy. It can be done without modification of the contract as long as its number of constructor arguments matches the proxy initialization/update function.
+As mentioned above, the deploy function can also deploy a contract through a proxy. It can be done without modification of the contract *as long as its number of constructor arguments matches the proxy initialization/update function*. If the arguments do not match, see [this section below](#when-the-constructor-and-init-functions-are-different).
 
 The default Proxy is both ERC-1967 and ERC-173 Compliant, but other proxy can be specified, like openzeppelin transparent proxies.
 
@@ -1144,7 +1143,7 @@ module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
 };
 ```
 
-Note that for the second invocation, this deployment will not be executed from the specified `from: deployer` as otherwise these tx will always fails. It will instead be automatically executed from the proxy's current owner (in that case : `greeterOwner`)
+Note that for the second invocation, this deployment will not be executed from the specified `from: deployer` as otherwise these tx will always fail. It will instead be automatically executed from the proxy's current owner (in that case : `greeterOwner`)
 
 Now, it is likely you do not want to locally handle the private key / mnemonic of the account that manage the proxy or it could even be that the `greeterOwner` in question is a multi sig. As such that second invocation will throw an error as it cannot find a local signer for it.
 
@@ -1169,7 +1168,27 @@ module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
   // you could pause the deployment here and wait for input to continue
 };
 ```
+#### When the constructor and init functions are different
+When the constructor and proxy have different signatures, you will not be able to use the top level `args` property. Instead you can use the `execute` property of `proxy` to specify the `init` method and arguments. This will not try to pass any arguments to the constructor.
 
+```typescript
+const deployed = await deploy("YourContract", {
+  from: deployer,
+  proxy: {
+    execute: {
+      init: {
+        methodName: "initialize",
+        args: ["arg1", "arg2"],
+      },
+    },
+    proxyContract: "OpenZeppelinTransparentProxy",
+  },
+  log: true,
+  autoMine: true,
+});
+```
+
+#### Proxy deployment options
 The full proxy options is as follow:
 
 ```ts
@@ -1222,6 +1241,8 @@ it matches:
 
 - `OptimizedTransparentProxy`: This contract is similar to above, except that it is optimized to not require storage read for the admin on every call.
 
+
+
 ## Builtin-In Support For Diamonds (EIP2535)
 
 The deployments field also expose the diamond field: `hre.deployments.diamond` that let you deploy [Diamonds](https://eips.ethereum.org/EIPS/eip-2535) in an easy way.
@@ -1269,7 +1290,7 @@ Note that if the code for Facet2 and Facet3 changes, they will also be redeploye
 Note that the diamond has 3 facet added by default. These facets are used for ownership, diamondCut and diamond loupe.
 
 The implementation is a sligthly modified version of the [reference implementation by Nick Mudge](https://github.com/mudgen/diamond-3).
-THe only difference is the custom constructor that allow multiple initialization, used to allow the default ERC165 facet to be initialised along your custom initialization function.
+The only difference is the custom constructor that allow multiple initialization, used to allow the default ERC165 facet to be initialised along your custom initialization function.
 
 ### onUpgrade calls
 
@@ -1363,7 +1384,7 @@ describe('Token', () => {
 });
 ```
 
-While this example is trivial, some fixture can requires several transaction and the ability to snapshot them automatically speed up the tests greatly.
+While this example is trivial, some fixture can require several transaction and the ability to snapshot them automatically speed up the tests greatly.
 
 ---
 
@@ -1375,7 +1396,7 @@ While this example is trivial, some fixture can requires several transaction and
 
 ### **1. node task**
 
-as mentioned above, the node task is slighly modified and augmented with various flags and options
+as mentioned above, the node task is slightly modified and augmented with various flags and options
 
 `hardhat node`
 
@@ -1390,7 +1411,7 @@ Your webapp can then access all contracts information.
 
 the test task is augmented with one flag argument `--deploy-fixture` that allows to run all deployments in a fixture snapshot before executing the tests. This can speed up the tests that use specific tags as the global fixture take precedence (unless specified).
 
-In other word tests can use `deployments.fixture(<specific tag>)` where specific tag only deploys the minimal contracts for tests, while still benefiting from global deployment snapshot if used.
+In other words tests can use `deployments.fixture(<specific tag>)` where specific tag only deploys the minimal contracts for tests, while still benefiting from global deployment snapshot if used.
 
 If a test needs the deployments to only include the specific deployment specified by the tag, it can use the following :
 
@@ -1437,6 +1458,10 @@ The same applies to the `console` task.
 ---
 
 It is possible to execute only specific parts of the deployments with `hardhat deploy --tags <tags>`
+
+`<tags>` is an array of tags, separated by comma, for example `hardhat deploy --tags tag1,tag2` will look for the scripts containing **any** of the tags `tag1`  or `tag2`
+
+To execute only the scripts containing **all** the tags, add `--tags-require-all` flag, for example `hardhat deploy --tags tag1,tag2 --tags-require-all` will look for the scripts containing **all** of the tags `tag1` and `tag2`
 
 Tags represent what the deploy script acts on. In general it will be a single string value, the name of the contract it deploys or modifies.
 
@@ -1502,4 +1527,4 @@ module.exports.tags = ['Sale'];
 module.exports.runAtTheEnd = true;
 ```
 
-Tags can also be used in test with `deployments.fixture`. This allow you to test a subset of the deploy script.
+Tags can also be used in test with `deployments.fixture`. This allows you to test a subset of the deploy script.

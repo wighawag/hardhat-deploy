@@ -40,7 +40,7 @@ import {
 } from '../types';
 import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
-import {mergeABIs, recode} from './utils';
+import {filterABI, mergeABIs, recode} from './utils';
 import fs from 'fs-extra';
 
 import OpenZeppelinTransparentProxy from '../extendedArtifacts/TransparentUpgradeableProxy.json';
@@ -63,6 +63,8 @@ import {
   Transaction,
 } from '@ethersproject/transactions';
 import {getDerivationPath} from './hdpath';
+import {bnReplacer} from './internal/utils';
+import {DeploymentFactory} from './DeploymentFactory';
 
 let LedgerSigner: any; // TODO type
 let TrezorSigner: any; // TODO type
@@ -103,7 +105,7 @@ You'll need to wait the tx resolve, or increase the gas price via --gasprice (th
       //   confirmations: 0,
       // });
     } else {
-      console.error((e as any).message, JSON.stringify(e), e);
+      console.error((e as any).message, JSON.stringify(e, bnReplacer), e);
       throw e;
     }
   }
@@ -392,24 +394,6 @@ export function addHelpers(
     }
   }
 
-  function getCreate2Address(
-    create2DeployerAddress: Address,
-    salt: string,
-    bytecode: string
-  ): Address {
-    return getAddress(
-      '0x' +
-        solidityKeccak256(
-          ['bytes'],
-          [
-            `0xff${create2DeployerAddress.slice(2)}${salt.slice(
-              2
-            )}${solidityKeccak256(['bytes'], [bytecode]).slice(2)}`,
-          ]
-        ).slice(-40)
-    );
-  }
-
   async function ensureCreate2DeployerReady(options: {
     from: string;
     log?: boolean;
@@ -550,48 +534,19 @@ export function addHelpers(
       nonce: options.nonce,
     };
 
-    let factory;
-    if (network.zksync) {
-      factory = new zk.ContractFactory(
-        linkedArtifact.abi,
-        linkedArtifact.bytecode,
-        ethersSigner as zk.Signer
-      );
-      const factoryDeps = await extractFactoryDeps(linkedArtifact);
-      const customData = {
-        customData: {
-          factoryDeps,
-          feeToken: zk.utils.ETH_ADDRESS,
-        },
-      };
-      overrides = {
-        ...overrides,
-        ...customData,
-      };
-    } else {
-      factory = new ContractFactory(
-        linkedArtifact.abi,
-        linkedArtifact.bytecode,
-        ethersSigner
-      );
-    }
+    const factory = new DeploymentFactory(
+      getArtifact,
+      linkedArtifact,
+      args,
+      network,
+      ethersSigner,
+      overrides
+    );
 
-    const numArguments = factory.interface.deploy.inputs.length;
-    if (args.length !== numArguments) {
-      throw new Error(
-        `expected ${numArguments} constructor arguments, got ${args.length}`
-      );
-    }
-
-    const unsignedTx = factory.getDeployTransaction(...args, overrides);
+    const unsignedTx = await factory.getDeployTransaction();
 
     let create2Address;
     if (options.deterministicDeployment) {
-      if (network.zksync) {
-        throw new Error(
-          'deterministic zk deployments are  not supported at this time'
-        );
-      }
       if (typeof unsignedTx.data === 'string') {
         const create2DeployerAddress = await ensureCreate2DeployerReady(
           options
@@ -600,10 +555,9 @@ export function addHelpers(
           typeof options.deterministicDeployment === 'string'
             ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        create2Address = getCreate2Address(
+        create2Address = await factory.getCreate2Address(
           create2DeployerAddress,
-          create2Salt,
-          unsignedTx.data
+          create2Salt
         );
         unsignedTx.to = create2DeployerAddress;
 
@@ -630,7 +584,7 @@ export function addHelpers(
     if (unknown) {
       throw new UnknownSignerError({
         from,
-        ...JSON.parse(JSON.stringify(unsignedTx)),
+        ...JSON.parse(JSON.stringify(unsignedTx, bnReplacer)),
       });
     }
 
@@ -727,6 +681,7 @@ export function addHelpers(
         implementationOptions,
         proxyName,
         proxyContract,
+        proxyArgsTemplate,
         mergedABI,
         updateMethod,
         updateArgs,
@@ -793,7 +748,11 @@ export function addHelpers(
       delete proxyOptions.proxy;
       delete proxyOptions.libraries;
       proxyOptions.contract = proxyContract;
-      proxyOptions.args = [implementationAddress, proxyAdmin, data];
+      proxyOptions.args = replaceTemplateArgs(proxyArgsTemplate, {
+        implementationAddress,
+        proxyAdmin,
+        data,
+      });
       const {address: proxyAddress} = await deterministic(proxyName, {
         ...proxyOptions,
         salt: options.salt,
@@ -812,46 +771,40 @@ export function addHelpers(
         address: from,
       } = await getFrom(options.from);
 
-      const artifactInfo = await getArtifactFromOptions(name, options);
-      const {artifact} = artifactInfo;
-      const abi = artifact.abi;
-      const byteCode = linkLibraries(artifact, options.libraries);
-      const factory = new ContractFactory(abi, byteCode, ethersSigner);
-
-      const numArguments = factory.interface.deploy.inputs.length;
-      if (args.length !== numArguments) {
-        throw new Error(
-          `expected ${numArguments} constructor arguments, got ${args.length}`
-        );
-      }
-
-      const unsignedTx = factory.getDeployTransaction(...args);
+      const {artifact: linkedArtifact, artifactName} = await getLinkedArtifact(
+        name,
+        options
+      );
+      const factory = new DeploymentFactory(
+        getArtifact,
+        linkedArtifact,
+        args,
+        network,
+        ethersSigner
+      );
 
       if (unknown) {
         throw new UnknownSignerError({
           from,
-          ...JSON.parse(JSON.stringify(unsignedTx)),
+          ...JSON.parse(
+            JSON.stringify(await factory.getDeployTransaction(), bnReplacer)
+          ),
         });
       }
 
-      if (typeof unsignedTx.data !== 'string') {
-        throw new Error('unsigned tx data as bytes not supported');
-      } else {
-        return {
-          address: getCreate2Address(
-            await deploymentManager.getDeterministicDeploymentFactoryAddress(),
-            options.salt
-              ? hexlify(zeroPad(options.salt, 32))
-              : '0x0000000000000000000000000000000000000000000000000000000000000000',
-            unsignedTx.data
-          ),
-          deploy: () =>
-            deploy(name, {
-              ...options,
-              deterministicDeployment: options.salt || true,
-            }),
-        };
-      }
+      return {
+        address: await factory.getCreate2Address(
+          await deploymentManager.getDeterministicDeploymentFactoryAddress(),
+          options.salt
+            ? hexlify(zeroPad(options.salt, 32))
+            : '0x0000000000000000000000000000000000000000000000000000000000000000'
+        ),
+        deploy: () =>
+          deploy(name, {
+            ...options,
+            deterministicDeployment: options.salt || true,
+          }),
+      };
     }
   }
 
@@ -863,66 +816,40 @@ export function addHelpers(
     return partialExtension.getOrNull(name);
   }
 
-  // TODO add ZkSyncArtifact
-  async function extractFactoryDeps(artifact: any): Promise<string[]> {
-    // Load all the dependency bytecodes.
-    // We transform it into an array of bytecodes.
-    const factoryDeps: string[] = [];
-    for (const dependencyHash in artifact.factoryDeps) {
-      const dependencyContract = artifact.factoryDeps[dependencyHash];
-      const dependencyBytecodeString = (await getArtifact(dependencyContract))
-        .bytecode;
-      factoryDeps.push(dependencyBytecodeString);
-    }
-
-    return factoryDeps;
-  }
-
   async function fetchIfDifferent(
     name: string,
     options: DeployOptions
   ): Promise<{differences: boolean; address?: string}> {
     options = {...options}; // ensure no change
-    const argArray = options.args ? [...options.args] : [];
+    const args = options.args ? [...options.args] : [];
     await init();
 
+    const {ethersSigner} = await getFrom(options.from);
+    const {artifact: linkedArtifact} = await getLinkedArtifact(name, options);
+    const factory = new DeploymentFactory(
+      getArtifact,
+      linkedArtifact,
+      args,
+      network,
+      ethersSigner
+    );
+
     if (options.deterministicDeployment) {
-      const {ethersSigner} = await getFrom(options.from);
-
-      const artifactInfo = await getArtifactFromOptions(name, options);
-      const {artifact} = artifactInfo;
-      const abi = artifact.abi;
-      const byteCode = linkLibraries(artifact, options.libraries);
-      const factory = new ContractFactory(abi, byteCode, ethersSigner);
-
-      const numArguments = factory.interface.deploy.inputs.length;
-      if (argArray.length !== numArguments) {
-        throw new Error(
-          `expected ${numArguments} constructor arguments, got ${argArray.length}`
-        );
-      }
-
-      const unsignedTx = factory.getDeployTransaction(...argArray);
-      if (typeof unsignedTx.data === 'string') {
-        const create2Salt =
-          typeof options.deterministicDeployment === 'string'
-            ? hexlify(zeroPad(options.deterministicDeployment, 32))
-            : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        const create2DeployerAddress =
-          await deploymentManager.getDeterministicDeploymentFactoryAddress();
-        const create2Address = getCreate2Address(
-          create2DeployerAddress,
-          create2Salt,
-          unsignedTx.data
-        );
-        const code = await provider.getCode(create2Address);
-        if (code === '0x') {
-          return {differences: true, address: undefined};
-        } else {
-          return {differences: false, address: create2Address};
-        }
+      const create2Salt =
+        typeof options.deterministicDeployment === 'string'
+          ? hexlify(zeroPad(options.deterministicDeployment, 32))
+          : '0x0000000000000000000000000000000000000000000000000000000000000000';
+      const create2DeployerAddress =
+        await deploymentManager.getDeterministicDeploymentFactoryAddress();
+      const create2Address = await factory.getCreate2Address(
+        create2DeployerAddress,
+        create2Salt
+      );
+      const code = await provider.getCode(create2Address);
+      if (code === '0x') {
+        return {differences: true, address: undefined};
       } else {
-        throw new Error('unsigned tx data as bytes not supported');
+        return {differences: false, address: create2Address};
       }
     }
     const deployment = await partialExtension.getOrNull(name);
@@ -946,44 +873,10 @@ export function addHelpers(
       }
 
       if (transaction) {
-        const {ethersSigner} = await getFrom(options.from);
-        const {artifact} = await getArtifactFromOptions(name, options);
-        const abi = artifact.abi;
-        const byteCode = linkLibraries(artifact, options.libraries);
-        if (network.zksync) {
-          const factory = new zk.ContractFactory(
-            abi,
-            byteCode,
-            ethersSigner as zk.Signer
-          );
-          const factoryDeps = await extractFactoryDeps(artifact);
-          const newTransaction = factory.getDeployTransaction(...argArray, {
-            customData: {
-              factoryDeps,
-              feeToken: zk.utils.ETH_ADDRESS,
-            },
-          });
-          const newData = newTransaction.data?.toString();
-
-          const deserialize = zk.utils.parseTransaction(
-            transaction.data
-          ) as any;
-          const desFlattened = hexConcat(deserialize.customData.factoryDeps);
-          const newFlattened = hexConcat(factoryDeps);
-
-          if (deserialize.data !== newData || desFlattened != newFlattened) {
-            return {differences: true, address: deployment.address};
-          }
-          return {differences: false, address: deployment.address};
-        } else {
-          const factory = new ContractFactory(abi, byteCode, ethersSigner);
-          const newTransaction = factory.getDeployTransaction(...argArray);
-          const newData = newTransaction.data?.toString();
-          if (transaction.data !== newData) {
-            return {differences: true, address: deployment.address};
-          }
-          return {differences: false, address: deployment.address};
-        }
+        const differences = await factory.compareDeploymentTransaction(
+          transaction
+        );
+        return {differences, address: deployment.address};
       } else {
         if (transactionDetailsAvailable) {
           throw new Error(
@@ -1160,6 +1053,8 @@ export function addHelpers(
     updateArgs: any[];
     upgradeIndex: number | undefined;
     checkProxyAdmin: boolean;
+    upgradeMethod: string | undefined;
+    upgradeArgsTemplate: any[];
   }> {
     const oldDeployment = await getDeploymentOrNUll(name);
     let contractName = options.contract;
@@ -1175,6 +1070,8 @@ export function addHelpers(
       | {name: string; artifact?: string | ArtifactData}
       | undefined;
     let proxyArgsTemplate = ['{implementation}', '{admin}', '{data}'];
+    let upgradeMethod: string | undefined;
+    let upgradeArgsTemplate: string[] = [];
     if (typeof options.proxy === 'object') {
       if (options.proxy.proxyArgs) {
         proxyArgsTemplate = options.proxy.proxyArgs;
@@ -1225,6 +1122,9 @@ export function addHelpers(
         }
       }
 
+      checkABIConflict = options.proxy.checkABIConflict ?? checkABIConflict;
+      checkProxyAdmin = options.proxy.checkProxyAdmin ?? checkProxyAdmin;
+
       if (options.proxy.proxyContract) {
         if (typeof options.proxy.proxyContract === 'string') {
           try {
@@ -1268,6 +1168,11 @@ export function addHelpers(
       if (options.proxy.viaAdminContract) {
         viaAdminContract = options.proxy.viaAdminContract;
       }
+
+      if (options.proxy.upgradeFunction) {
+        upgradeMethod = options.proxy.upgradeFunction.methodName;
+        upgradeArgsTemplate = options.proxy.upgradeFunction.upgradeArgs;
+      }
     } else if (typeof options.proxy === 'string') {
       updateMethod = options.proxy;
     }
@@ -1305,7 +1210,7 @@ export function addHelpers(
     );
     // ensure no clash
     const mergedABI = mergeABIs([proxyContract.abi, artifact.abi], {
-      check: checkABIConflict, // TODO options for custom proxy ?
+      check: checkABIConflict,
       skipSupportsInterface: true, // TODO options for custom proxy ?
     }).filter((v) => v.type !== 'constructor');
     mergedABI.push(proxyContractConstructor); // use proxy constructor abi
@@ -1400,6 +1305,25 @@ Note that in this case, the contract deployment will not behave the same if depl
       }
     }
 
+    // Set upgrade function if not defined by the user, based on other options
+    if (!upgradeMethod) {
+      if (viaAdminContract) {
+        if (updateMethod) {
+          upgradeMethod = 'upgradeAndCall';
+          upgradeArgsTemplate = ['{proxy}', '{implementation}', '{data}'];
+        } else {
+          upgradeMethod = 'upgrade';
+          upgradeArgsTemplate = ['{proxy}', '{implementation}'];
+        }
+      } else if (updateMethod) {
+        upgradeMethod = 'upgradeToAndCall';
+        upgradeArgsTemplate = ['{implementation}', '{data}'];
+      } else {
+        upgradeMethod = 'upgradeTo';
+        upgradeArgsTemplate = ['{implementation}'];
+      }
+    }
+
     return {
       proxyName,
       proxyContract,
@@ -1421,6 +1345,8 @@ Note that in this case, the contract deployment will not behave the same if depl
       updateArgs,
       upgradeIndex,
       checkProxyAdmin,
+      upgradeMethod,
+      upgradeArgsTemplate,
     };
   }
 
@@ -1448,6 +1374,8 @@ Note that in this case, the contract deployment will not behave the same if depl
       proxyArgsTemplate,
       mergedABI,
       checkProxyAdmin,
+      upgradeMethod,
+      upgradeArgsTemplate,
     } = await _getProxyInfo(name, options);
     /* eslint-enable prefer-const */
 
@@ -1527,20 +1455,11 @@ Note that in this case, the contract deployment will not behave the same if depl
         delete proxyOptions.libraries;
         proxyOptions.contract = proxyContract;
 
-        const proxyArgs = [];
-        for (let i = 0; i < proxyArgsTemplate.length; i++) {
-          const argValue = proxyArgsTemplate[i];
-          if (argValue === '{implementation}') {
-            proxyArgs.push(implementation.address);
-          } else if (argValue === '{admin}') {
-            proxyArgs.push(proxyAdmin);
-          } else if (argValue === '{data}') {
-            proxyArgs.push(data);
-          } else {
-            proxyArgs.push(argValue);
-          }
-        }
-        proxyOptions.args = proxyArgs; //  [implementation.address, proxyAdmin, data]
+        proxyOptions.args = replaceTemplateArgs(proxyArgsTemplate, {
+          implementationAddress: implementation.address,
+          proxyAdmin,
+          data,
+        });
 
         proxy = await _deployOne(proxyName, proxyOptions, true);
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
@@ -1569,10 +1488,24 @@ Note that in this case, the contract deployment will not behave the same if depl
         const oldProxy = proxy.abi.find(
           (frag: {name: string}) => frag.name === 'changeImplementation'
         );
-        const changeImplementationMethod = oldProxy
-          ? 'changeImplementation'
-          : 'upgradeToAndCall';
+        if (oldProxy) {
+          upgradeMethod = 'changeImplementation';
+          upgradeArgsTemplate = ['{implementation}', '{data}'];
+        }
 
+        let proxyAddress = proxy.address;
+        let upgradeArgs = replaceTemplateArgs(upgradeArgsTemplate, {
+          implementationAddress: implementation.address,
+          proxyAdmin,
+          data,
+          proxyAddress,
+        });
+
+        if (!upgradeMethod) {
+          throw new Error(`No upgrade method found, cannot make upgrades`);
+        }
+
+        let executeReceipt;
         if (proxyAdminName) {
           if (oldProxy) {
             throw new Error(`Old Proxy do not support Proxy Admin contracts`);
@@ -1581,53 +1514,22 @@ Note that in this case, the contract deployment will not behave the same if depl
             throw new Error(`no currentProxyAdminOwner found in ProxyAdmin`);
           }
 
-          let executeReceipt;
-          if (updateMethod) {
-            executeReceipt = await execute(
-              proxyAdminName,
-              {...options, from: currentProxyAdminOwner},
-              'upgradeAndCall',
-              proxy.address,
-              implementation.address,
-              data
-            );
-          } else {
-            executeReceipt = await execute(
-              proxyAdminName,
-              {...options, from: currentProxyAdminOwner},
-              'upgrade',
-              proxy.address,
-              implementation.address
-            );
-          }
-          if (!executeReceipt) {
-            throw new Error(`could not execute ${changeImplementationMethod}`);
-          }
+          executeReceipt = await execute(
+            proxyAdminName,
+            {...options, from: currentProxyAdminOwner},
+            upgradeMethod,
+            ...upgradeArgs
+          );
         } else {
-          let executeReceipt;
-          if (
-            changeImplementationMethod === 'upgradeToAndCall' &&
-            !updateMethod
-          ) {
-            executeReceipt = await execute(
-              name,
-              {...options, from},
-              'upgradeTo',
-              implementation.address
-            );
-          } else {
-            executeReceipt = await execute(
-              name,
-              {...options, from},
-              changeImplementationMethod,
-              implementation.address,
-              data
-            );
-          }
-
-          if (!executeReceipt) {
-            throw new Error(`could not execute ${changeImplementationMethod}`);
-          }
+          executeReceipt = await execute(
+            name,
+            {...options, from},
+            upgradeMethod,
+            ...upgradeArgs
+          );
+        }
+        if (!executeReceipt) {
+          throw new Error(`could not execute ${upgradeMethod}`);
         }
       }
       const proxiedDeployment: DeploymentSubmission = {
@@ -1960,6 +1862,8 @@ Note that in this case, the contract deployment will not behave the same if depl
     let abi: any[] = diamondArtifact.abi.concat([]);
     const facetCuts: FacetCut[] = [];
     let facetFound: string | undefined;
+    const excludeSelectors: Record<string, string[]> =
+      options.excludeSelectors || {};
     for (const facet of facetsSet) {
       let deterministicFacet: string | boolean = true;
       let facetName;
@@ -2022,7 +1926,16 @@ Note that in this case, the contract deployment will not behave the same if depl
         // reset args for case where facet do not expect any and there was no specific args set on it
         facetArgs = [];
       }
-      abi = mergeABIs([abi, artifact.abi], {
+      let excludeSighashes: Set<string> = new Set();
+      if (facetName in excludeSelectors) {
+        const iface = new Interface(artifact.abi);
+        excludeSighashes = new Set(
+          excludeSelectors[facetName].map((selector) =>
+            iface.getSighash(selector)
+          )
+        );
+      }
+      abi = mergeABIs([abi, filterABI(artifact.abi, excludeSighashes)], {
         check: true,
         skipSupportsInterface: false,
       });
@@ -2047,7 +1960,9 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetAddress = implementation.address;
         const newFacet = {
           facetAddress,
-          functionSelectors: sigsFromABI(implementation.abi),
+          functionSelectors: sigsFromABI(
+            filterABI(implementation.abi, excludeSighashes)
+          ),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
@@ -2056,7 +1971,9 @@ Note that in this case, the contract deployment will not behave the same if depl
         facetAddress = oldImpl.address;
         const newFacet = {
           facetAddress,
-          functionSelectors: sigsFromABI(oldImpl.abi),
+          functionSelectors: sigsFromABI(
+            filterABI(oldImpl.abi, excludeSighashes)
+          ),
         };
         facetSnapshot.push(newFacet);
         newSelectors.push(...newFacet.functionSelectors);
@@ -2391,23 +2308,18 @@ Note that in this case, the contract deployment will not behave the same if depl
               }
               salt = options.deterministicSalt;
 
-              const factory = new ContractFactory(
-                diamondArtifact.abi,
-                diamondArtifact.bytecode
+              const factory = new DeploymentFactory(
+                getArtifact,
+                diamondArtifact,
+                diamondConstructorArgs,
+                network
               );
-              const unsignedTx = factory.getDeployTransaction(
-                ...diamondConstructorArgs
-              );
-              if (typeof unsignedTx.data !== 'string') {
-                throw new Error('unsigned tx data as bytes not supported');
-              }
 
               const create2DeployerAddress =
                 await deploymentManager.getDeterministicDeploymentFactoryAddress();
-              expectedAddress = getCreate2Address(
+              expectedAddress = await factory.getCreate2Address(
                 create2DeployerAddress,
-                salt,
-                unsignedTx.data || '0x'
+                salt
               );
               const code = await provider.getCode(expectedAddress);
               if (code !== '0x') {
@@ -2873,6 +2785,13 @@ data: ${data}
       return method(overrides);
     }
   }
+  async function getSigner(address: string): Promise<Signer> {
+    await init();
+    const {
+      ethersSigner
+    } = await getFrom(address);
+    return ethersSigner;
+  }
 
   const extension: DeploymentsExtension = {
     ...partialExtension,
@@ -2886,6 +2805,7 @@ data: ${data}
     rawTx,
     read,
     deterministic,
+    getSigner
   };
 
   const utils = {
@@ -3066,7 +2986,7 @@ data: ${data}
                 } else {
                   fs.writeFileSync(
                     pendingTxPath,
-                    JSON.stringify(pendingTxs, null, '  ')
+                    JSON.stringify(pendingTxs, bnReplacer, '  ')
                   );
                 }
                 await onPendingTx(txReq);
@@ -3130,7 +3050,7 @@ data: ${data}
             } else {
               fs.writeFileSync(
                 pendingTxPath,
-                JSON.stringify(pendingTxs, null, '  ')
+                JSON.stringify(pendingTxs, bnReplacer, '  ')
               );
             }
             await onPendingTx(txReq);
@@ -3162,7 +3082,7 @@ data: ${data}
         } else {
           fs.writeFileSync(
             pendingTxPath,
-            JSON.stringify(pendingTxs, null, '  ')
+            JSON.stringify(pendingTxs, bnReplacer, '  ')
           );
         }
       }
@@ -3279,7 +3199,7 @@ data: ${data}
     } else {
       throw new Error(`old diamond deployments are now disabled`);
     }
-    // console.log({ oldFacets: JSON.stringify(oldFacets, null, "  ") });
+    // console.log({ oldFacets: JSON.stringify(oldFacets, bnReplacer, "  ") });
 
     let changesDetected = !oldDeployment;
     let abi: any[] = oldDiamonBase.abi.concat([]);
@@ -3550,4 +3470,40 @@ export async function waitForTx(
     }
     await pause(2);
   }
+}
+
+function replaceTemplateArgs(
+  proxyArgsTemplate: string[],
+  {
+    implementationAddress,
+    proxyAdmin,
+    data,
+    proxyAddress,
+  }: {
+    implementationAddress: string;
+    proxyAdmin: string;
+    data: string;
+    proxyAddress?: string;
+  }
+): any[] {
+  const proxyArgs: any[] = [];
+  for (let i = 0; i < proxyArgsTemplate.length; i++) {
+    const argValue = proxyArgsTemplate[i];
+    if (argValue === '{implementation}') {
+      proxyArgs.push(implementationAddress);
+    } else if (argValue === '{admin}') {
+      proxyArgs.push(proxyAdmin);
+    } else if (argValue === '{data}') {
+      proxyArgs.push(data);
+    } else if (argValue === '{proxy}') {
+      if (!proxyAddress) {
+        throw new Error(`Expected proxy address but none was specified.`);
+      }
+      proxyArgs.push(proxyAddress);
+    } else {
+      proxyArgs.push(argValue);
+    }
+  }
+
+  return proxyArgs;
 }

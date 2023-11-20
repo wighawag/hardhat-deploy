@@ -1,5 +1,92 @@
 # hardhat-deploy
 
+## 0.11.43
+
+### Patch Changes
+
+- Change companion networks init to work with hardhat ^2.16 (by nataouze)
+
+## 0.11.42
+
+### Patch Changes
+
+- - added moonbeam support for etherscan (by sashaaldrick)
+  - Added typing to 'deployments' (by codebydolapo)
+  - added cronos and cronosTestnet to network (by adeojoemmanuel)
+  - export function to get network name (by passabilities)
+
+## 0.11.41
+
+### Patch Changes
+
+- Make network deployment file copying to localhost synchronous (by bstchow)
+
+## 0.11.40
+
+### Patch Changes
+
+- Missing await in save method (by blukat29)
+
+## 0.11.39
+
+### Patch Changes
+
+- Expose signer interface (by huyhuynh3103)
+
+## 0.11.38
+
+### Patch Changes
+
+- implements custom upgrade function (by zmalatrax)
+
+## 0.11.37
+
+### Patch Changes
+
+- add --tags-require-all flag allowing to execute only deploy scripts containing all the tags specified in --tags
+
+## 0.11.36
+
+### Patch Changes
+
+- Allow deterministic support for zkSync
+
+## 0.11.35
+
+### Patch Changes
+
+- fix deterministic UUPS proxy
+
+## 0.11.34
+
+### Patch Changes
+
+- fix: \_setOwner before \_setImplementation in solc_0.8 EIP173Proxy by @gitpusha
+
+## 0.11.33
+
+### Patch Changes
+
+- Allow override custom proxy params (by @LeoVS09)
+
+## 0.11.32
+
+### Patch Changes
+
+- Add filtering of selectors by facets in Diamonds (by @idkravitz)
+
+## 0.11.31
+
+### Patch Changes
+
+- add bnreplacer to stringify values from ethers v6
+
+## 0.11.30
+
+### Patch Changes
+
+- fix ledger account @ifelsedeveloper
+
 ## 0.11.29
 
 ### Patch Changes

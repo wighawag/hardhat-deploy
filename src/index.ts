@@ -35,6 +35,8 @@ import {Network} from 'hardhat/types/runtime';
 import {store} from './globalStore';
 import {getDeployPaths, getNetworkName} from './utils';
 
+export {getNetworkName};
+
 export const TASK_DEPLOY = 'deploy';
 export const TASK_DEPLOY_MAIN = 'deploy:main';
 export const TASK_DEPLOY_RUN_DEPLOY = 'deploy:runDeploy';
@@ -295,52 +297,6 @@ extendEnvironment((env) => {
         config
       );
     }
-
-    env.companionNetworks = {};
-    for (const name of Object.keys(env.network.companionNetworks)) {
-      const networkName = env.network.companionNetworks[name];
-      // TODO Fork case ?
-      if (networkName === env.network.name) {
-        deploymentsManager.addCompanionManager(name, deploymentsManager);
-        const extraNetwork = {
-          deployments: deploymentsManager.deploymentsExtension,
-          getNamedAccounts: () => deploymentsManager.getNamedAccounts(),
-          getUnnamedAccounts: () => deploymentsManager.getUnnamedAccounts(),
-          getChainId: () => deploymentsManager.getChainId(),
-          provider: lazyObject(() => env.network.provider),
-        };
-        env.companionNetworks[name] = extraNetwork;
-        continue;
-      }
-      const config = env.config.networks[networkName];
-      if (!('url' in config) || networkName === 'hardhat') {
-        throw new Error(
-          `in memory network like hardhat are not supported as companion network`
-        );
-      }
-
-      const network = store.networks[networkName];
-      if (!network) {
-        throw new Error(`no network named ${networkName}`);
-      }
-      network.provider = createProvider(
-        networkName,
-        config,
-        env.config.paths,
-        env.artifacts
-      );
-      const networkDeploymentsManager = new DeploymentsManager(env, network);
-      deploymentsManager.addCompanionManager(name, networkDeploymentsManager);
-      const extraNetwork = {
-        deployments: networkDeploymentsManager.deploymentsExtension,
-        getNamedAccounts: () => networkDeploymentsManager.getNamedAccounts(),
-        getUnnamedAccounts: () =>
-          networkDeploymentsManager.getUnnamedAccounts(),
-        getChainId: () => networkDeploymentsManager.getChainId(),
-        provider: network.provider,
-      };
-      env.companionNetworks[name] = extraNetwork;
-    }
   }
   log('ready');
 });
@@ -393,6 +349,54 @@ function setupExtraSolcSettings(settings: {
   // addIfNotPresent(settings.outputSelection["*"][""], "ast");
 }
 
+async function initCompanionNetworks(hre: HardhatRuntimeEnvironment) {
+  hre.companionNetworks = {};
+  for (const name of Object.keys(hre.network.companionNetworks)) {
+    const networkName = hre.network.companionNetworks[name];
+    // TODO Fork case ?
+    if (networkName === hre.network.name) {
+      deploymentsManager.addCompanionManager(name, deploymentsManager);
+      const extraNetwork = {
+        deployments: deploymentsManager.deploymentsExtension,
+        getNamedAccounts: () => deploymentsManager.getNamedAccounts(),
+        getUnnamedAccounts: () => deploymentsManager.getUnnamedAccounts(),
+        getChainId: () => deploymentsManager.getChainId(),
+        provider: lazyObject(() => hre.network.provider),
+      };
+      hre.companionNetworks[name] = extraNetwork;
+      continue;
+    }
+    const config = hre.config.networks[networkName];
+    if (!('url' in config) || networkName === 'hardhat') {
+      throw new Error(
+        `in memory network like hardhat are not supported as companion network`
+      );
+    }
+
+    const network = store.networks[networkName];
+    if (!network) {
+      throw new Error(`no network named ${networkName}`);
+    }
+
+    network.provider = await createProvider(
+      hre.config,
+      networkName,
+      hre.artifacts
+    );
+
+    const networkDeploymentsManager = new DeploymentsManager(hre, network);
+    deploymentsManager.addCompanionManager(name, networkDeploymentsManager);
+    const extraNetwork = {
+      deployments: networkDeploymentsManager.deploymentsExtension,
+      getNamedAccounts: () => networkDeploymentsManager.getNamedAccounts(),
+      getUnnamedAccounts: () => networkDeploymentsManager.getUnnamedAccounts(),
+      getChainId: () => networkDeploymentsManager.getChainId(),
+      provider: network.provider,
+    };
+    hre.companionNetworks[name] = extraNetwork;
+  }
+}
+
 subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
   .addOptionalParam('export', 'export current network deployments')
   .addOptionalParam('exportAll', 'export all deployments into one file')
@@ -401,6 +405,10 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     'specify which deploy script to execute via tags, separated by commas',
     undefined,
     types.string
+  )
+  .addFlag(
+    'tagsRequireAll',
+    'execute only deploy scripts containing all the tags specified'
   )
   .addOptionalParam(
     'write',
@@ -435,6 +443,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     if (typeof tags === 'string') {
       tags = tags.split(',');
     }
+    await initCompanionNetworks(hre);
     await deploymentsManager.runDeploy(tags, {
       log: args.log,
       resetMemory: false,
@@ -446,6 +455,7 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
       gasPrice: args.gasprice,
       maxFeePerGas: args.maxfee,
       maxPriorityFeePerGas: args.priorityfee,
+      tagsRequireAll: args.tagsRequireAll,
     });
     if (args.reportGas) {
       console.log(`total gas used: ${hre.deployments.getGasUsed()}`);
@@ -460,6 +470,10 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
     'specify which deploy script to execute via tags, separated by commas',
     undefined,
     types.string
+  )
+  .addFlag(
+    'tagsRequireAll',
+    'execute only deploy scripts containing all the tags specified'
   )
   .addOptionalParam(
     'write',
@@ -615,6 +629,10 @@ task(TASK_DEPLOY, 'Deploy contracts')
     undefined,
     types.string
   )
+  .addFlag(
+    'tagsRequireAll',
+    'execute only deploy scripts containing all the tags specified'
+  )
   .addOptionalParam(
     'write',
     'whether to write deployments to file',
@@ -767,7 +785,7 @@ subtask(TASK_NODE_GET_PROVIDER).setAction(
     if (networkName !== hre.network.name) {
       console.log(`copying ${networkName}'s deployment to localhost...`);
       // copy existing deployment from specified netwotk into localhost deployment folder
-      fs.copy(
+      await fs.copy(
         path.join(hre.config.paths.deployments, networkName),
         path.join(hre.config.paths.deployments, 'localhost')
       );

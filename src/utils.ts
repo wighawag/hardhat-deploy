@@ -6,7 +6,7 @@ import {getAddress, isAddress} from '@ethersproject/address';
 import {Interface, FunctionFragment, Fragment} from '@ethersproject/abi';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {BigNumber} from '@ethersproject/bignumber';
-import {Export, ExtendedArtifact, MultiExport} from '../types';
+import {ABI, Export, ExtendedArtifact, MultiExport} from '../types';
 import {Artifacts} from 'hardhat/internal/artifacts';
 import murmur128 from 'murmur-128';
 import {Transaction} from '@ethersproject/transactions';
@@ -117,13 +117,11 @@ export function loadAllDeployments(
   fs.readdirSync(deploymentsPath).forEach((fileName) => {
     const fPath = path.resolve(deploymentsPath, fileName);
     const stats = fs.statSync(fPath);
-    let name = fileName;
     if (stats.isDirectory()) {
       let chainIdFound: string;
       const chainIdFilepath = path.join(fPath, '.chainId');
       if (fs.existsSync(chainIdFilepath)) {
         chainIdFound = fs.readFileSync(chainIdFilepath).toString().trim();
-        name = fileName;
       } else {
         throw new Error(
           `with hardhat-deploy >= 0.6 you need to rename network folder without appended chainId
@@ -140,11 +138,11 @@ export function loadAllDeployments(
         onlyABIAndAddress
       );
       const network = {
-        name,
+        name: fileName,
         chainId: chainIdFound,
         contracts,
       };
-      networksFound[name] = network;
+      networksFound[fileName] = network;
       all[chainIdFound].push(network);
     }
   });
@@ -561,6 +559,13 @@ export function getDeployPaths(network: Network): string[] {
   } else {
     return store.networks[networkName]?.deploy; // skip network.deploy
   }
+}
+
+export function filterABI(
+  abi: ABI,
+  excludeSighashes: Set<string>,
+): any[] {
+  return abi.filter(fragment => fragment.type !== 'function' || !excludeSighashes.has(Interface.getSighash(Fragment.from(fragment) as FunctionFragment)));
 }
 
 export function mergeABIs(

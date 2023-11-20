@@ -1,4 +1,5 @@
 import {BigNumber} from '@ethersproject/bignumber';
+import {bnReplacer} from './internal/utils';
 
 export class UnknownSignerError extends Error {
   constructor(
@@ -13,7 +14,11 @@ export class UnknownSignerError extends Error {
     super(
       `Unknown Signer for account: ${
         data.from
-      } Trying to execute the following::\n ${JSON.stringify(data, null, '  ')}`
+      } Trying to execute the following::\n ${JSON.stringify(
+        data,
+        bnReplacer,
+        '  '
+      )}`
     );
     Error.captureStackTrace(this, UnknownSignerError);
   }
