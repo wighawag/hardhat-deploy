@@ -1684,12 +1684,14 @@ Note that in this case, the contract deployment will not behave the same if depl
                 // eslint-disable-next-line @typescript-eslint/no-var-requires
                 const hardwareWalletModule = require('@ethersproject/hardware-wallets');
                 LedgerSigner = hardwareWalletModule.LedgerSigner;
+                ethersSigner = new LedgerSigner(provider);
               } catch (e) {
                 error = e;
                 try {
                   // eslint-disable-next-line @typescript-eslint/no-var-requires
                   const hardwareWalletModule = require('@anders-t/ethers-ledger');
                   LedgerSigner = hardwareWalletModule.LedgerSigner;
+                  ethersSigner = new LedgerSigner(provider, registeredProtocol);
                   error = undefined;
                 } catch (e) {}
               }
@@ -1711,7 +1713,6 @@ Note that in this case, the contract deployment will not behave the same if depl
               ledgerSigner = undefined;
             }
 
-            ethersSigner = new LedgerSigner(provider, registeredProtocol);
             ledgerSigner = ethersSigner;
           } else if (registeredProtocol.startsWith('trezor')) {
             if (!TrezorSigner) {
