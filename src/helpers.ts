@@ -1710,12 +1710,8 @@ Note that in this case, the contract deployment will not behave the same if depl
 
               ledgerSigner = undefined;
             }
-            derivationPath = getDerivationPath(network.config.chainId);
-            hardwareWallet = 'ledger';
-            ethersSigner = new LedgerSigner(
-              provider,
-              `${hardwareWallet}://${derivationPath}`
-            );
+
+            ethersSigner = new LedgerSigner(provider, registeredProtocol);
             ledgerSigner = ethersSigner;
           } else if (registeredProtocol.startsWith('trezor')) {
             if (!TrezorSigner) {
@@ -2787,9 +2783,7 @@ data: ${data}
   }
   async function getSigner(address: string): Promise<Signer> {
     await init();
-    const {
-      ethersSigner
-    } = await getFrom(address);
+    const {ethersSigner} = await getFrom(address);
     return ethersSigner;
   }
 
@@ -2805,7 +2799,7 @@ data: ${data}
     rawTx,
     read,
     deterministic,
-    getSigner
+    getSigner,
   };
 
   const utils = {
