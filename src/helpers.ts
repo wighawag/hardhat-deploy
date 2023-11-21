@@ -67,6 +67,8 @@ import {bnReplacer} from './internal/utils';
 import {DeploymentFactory} from './DeploymentFactory';
 
 let LedgerSigner: any; // TODO type
+let ethersprojectHardwareWalletsModule: any | undefined;
+let andrestEthersLedgerModule: any | undefined;
 let TrezorSigner: any; // TODO type
 let hardwareSigner: any; // TODO type
 
@@ -1677,23 +1679,23 @@ Note that in this case, the contract deployment will not behave the same if depl
             };
             hardwareWallet = 'external';
           } else if (registeredProtocol.startsWith('ledger')) {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const ethersprojectHardwareWalletsModule = require('@ethersproject/hardware-wallets');
             if (!LedgerSigner) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               let error: any | undefined;
               try {
-                if (ethersprojectHardwareWalletsModule) {
-                  LedgerSigner =
-                    ethersprojectHardwareWalletsModule.LedgerSigner;
-                } else {
-                  // eslint-disable-next-line @typescript-eslint/no-var-requires
-                  const hardwareWalletModule = require('@anders-t/ethers-ledger');
-                  LedgerSigner = hardwareWalletModule.LedgerSigner;
-                  error = undefined;
-                }
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                ethersprojectHardwareWalletsModule = require('@ethersproject/hardware-wallets');
+                LedgerSigner = ethersprojectHardwareWalletsModule.LedgerSigner;
               } catch (e) {
                 error = e;
+                try {
+                  // eslint-disable-next-line @typescript-eslint/no-var-requires
+                  andrestEthersLedgerModule = require('@anders-t/ethers-ledger');
+                  LedgerSigner = andrestEthersLedgerModule.LedgerSigner;
+                  error = undefined;
+                } catch (e) {
+                  error = e;
+                }
               }
 
               if (error) {
