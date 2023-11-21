@@ -1677,23 +1677,23 @@ Note that in this case, the contract deployment will not behave the same if depl
             };
             hardwareWallet = 'external';
           } else if (registeredProtocol.startsWith('ledger')) {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const ethersprojectHardwareWalletsModule = require('@ethersproject/hardware-wallets');
             if (!LedgerSigner) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               let error: any | undefined;
               try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const hardwareWalletModule = require('@ethersproject/hardware-wallets');
-                LedgerSigner = hardwareWalletModule.LedgerSigner;
-                ethersSigner = new LedgerSigner(provider);
-              } catch (e) {
-                error = e;
-                try {
+                if (ethersprojectHardwareWalletsModule) {
+                  LedgerSigner =
+                    ethersprojectHardwareWalletsModule.LedgerSigner;
+                } else {
                   // eslint-disable-next-line @typescript-eslint/no-var-requires
                   const hardwareWalletModule = require('@anders-t/ethers-ledger');
                   LedgerSigner = hardwareWalletModule.LedgerSigner;
-                  ethersSigner = new LedgerSigner(provider, registeredProtocol);
                   error = undefined;
-                } catch (e) {}
+                }
+              } catch (e) {
+                error = e;
               }
 
               if (error) {
@@ -1711,6 +1711,17 @@ Note that in this case, the contract deployment will not behave the same if depl
               await __eth.transport.device.close();
 
               ledgerSigner = undefined;
+            }
+
+            if (ethersprojectHardwareWalletsModule) {
+              derivationPath = getDerivationPath(network.config.chainId);
+              ethersSigner = new LedgerSigner(
+                provider,
+                'default',
+                derivationPath
+              );
+            } else {
+              ethersSigner = new LedgerSigner(provider, registeredProtocol);
             }
 
             ledgerSigner = ethersSigner;
