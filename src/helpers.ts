@@ -67,6 +67,8 @@ import {bnReplacer} from './internal/utils';
 import {DeploymentFactory} from './DeploymentFactory';
 
 let LedgerSigner: any; // TODO type
+let ethersprojectHardwareWalletsModule: any | undefined;
+let andrestEthersLedgerModule: any | undefined;
 let TrezorSigner: any; // TODO type
 let hardwareSigner: any; // TODO type
 
@@ -1682,16 +1684,18 @@ Note that in this case, the contract deployment will not behave the same if depl
               let error: any | undefined;
               try {
                 // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const hardwareWalletModule = require('@ethersproject/hardware-wallets');
-                LedgerSigner = hardwareWalletModule.LedgerSigner;
+                ethersprojectHardwareWalletsModule = require('@ethersproject/hardware-wallets');
+                LedgerSigner = ethersprojectHardwareWalletsModule.LedgerSigner;
               } catch (e) {
                 error = e;
                 try {
                   // eslint-disable-next-line @typescript-eslint/no-var-requires
-                  const hardwareWalletModule = require('@anders-t/ethers-ledger');
-                  LedgerSigner = hardwareWalletModule.LedgerSigner;
+                  andrestEthersLedgerModule = require('@anders-t/ethers-ledger');
+                  LedgerSigner = andrestEthersLedgerModule.LedgerSigner;
                   error = undefined;
-                } catch (e) {}
+                } catch (e) {
+                  error = e;
+                }
               }
 
               if (error) {
@@ -1711,8 +1715,17 @@ Note that in this case, the contract deployment will not behave the same if depl
               ledgerSigner = undefined;
             }
 
-            ethersSigner = new LedgerSigner(provider);
-            hardwareWallet = 'ledger';
+            if (ethersprojectHardwareWalletsModule) {
+              derivationPath = getDerivationPath(network.config.chainId);
+              ethersSigner = new LedgerSigner(
+                provider,
+                'default',
+                derivationPath
+              );
+            } else {
+              ethersSigner = new LedgerSigner(provider, registeredProtocol);
+            }
+
             ledgerSigner = ethersSigner;
           } else if (registeredProtocol.startsWith('trezor')) {
             if (!TrezorSigner) {
@@ -2784,9 +2797,7 @@ data: ${data}
   }
   async function getSigner(address: string): Promise<Signer> {
     await init();
-    const {
-      ethersSigner
-    } = await getFrom(address);
+    const {ethersSigner} = await getFrom(address);
     return ethersSigner;
   }
 
@@ -2802,7 +2813,7 @@ data: ${data}
     rawTx,
     read,
     deterministic,
-    getSigner
+    getSigner,
   };
 
   const utils = {
