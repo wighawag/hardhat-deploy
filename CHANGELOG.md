@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.44
+
+### Patch Changes
+
+- Ledger: add path support by @ifelsedeveloper
+
 ## 0.11.43
 
 ### Patch Changes
