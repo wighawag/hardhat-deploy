@@ -10,7 +10,8 @@
     "strict": true,
     "rootDirs": ["./src", "./test"],
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "skipLibCheck": true
   },
   "exclude": ["dist", "node_modules"],
   "include": ["./test", "./src", "types.ts"]
