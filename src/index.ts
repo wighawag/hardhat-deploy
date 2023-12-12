@@ -857,9 +857,9 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
   .setAction(async (args, hre) => {
     const etherscanApiKey =
       args.apiKey ||
-      process.env.ETHERSCAN_API_KEY ||
       hre.network.verify?.etherscan?.apiKey ||
-      hre.config.verify?.etherscan?.apiKey;
+      hre.config.verify?.etherscan?.apiKey ||
+      process.env.ETHERSCAN_API_KEY;
     if (!etherscanApiKey) {
       throw new Error(
         `No Etherscan API KEY provided. Set it through command line option, in hardhat.config.ts, or by setting the "ETHERSCAN_API_KEY" env variable`
