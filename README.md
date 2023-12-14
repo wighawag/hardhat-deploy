@@ -403,6 +403,10 @@ Note that hardhat-deploy now use a different config format to not conflict with 
 }
 ```
 
+Keep in mind that the `ETHERSCAN_API_KEY` .env variable is read first, before the hardhat.config.ts.  
+If you want to set up multi-network api key support, you can do it by adding an env loader that use .env.<network-name> files and set `ETHERSCAN_API_KEY`` for each network this way.  
+Alternatively, you can change the mainnet etherscan api key env var name to something other than `ETHERSCAN_API_KEY`, and specify the other network keys as specified above.  
+
 `--api-url <url>`: let you specify your etherscan url to submit the source to. Can also be configured per network in `hardhat.config.js`:
 
 ```js
