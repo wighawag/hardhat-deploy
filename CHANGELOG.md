@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.11.45
+
+### Patch Changes
+
+- Init companion networks for all tasks (by tim-becker)
+
 ## 0.11.44
 
 ### Patch Changes
