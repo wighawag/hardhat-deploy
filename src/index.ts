@@ -12,6 +12,7 @@ import {
   NetworkConfig,
 } from 'hardhat/types';
 import {createProvider} from 'hardhat/internal/core/providers/construction'; // TODO harhdat argument types not from internal
+import {LazyInitializationProviderAdapter} from "hardhat/internal/core/providers/lazy-initialization";
 import {Deployment, ExtendedArtifact} from '../types';
 import {extendEnvironment, task, subtask, extendConfig} from 'hardhat/config';
 import {HARDHAT_NETWORK_NAME, HardhatPluginError} from 'hardhat/plugins';
@@ -298,6 +299,7 @@ extendEnvironment((env) => {
       );
     }
   }
+  initCompanionNetworks(env);
   log('ready');
 });
 
@@ -349,7 +351,7 @@ function setupExtraSolcSettings(settings: {
   // addIfNotPresent(settings.outputSelection["*"][""], "ast");
 }
 
-async function initCompanionNetworks(hre: HardhatRuntimeEnvironment) {
+function initCompanionNetworks(hre: HardhatRuntimeEnvironment) {
   hre.companionNetworks = {};
   for (const name of Object.keys(hre.network.companionNetworks)) {
     const networkName = hre.network.companionNetworks[name];
@@ -378,11 +380,13 @@ async function initCompanionNetworks(hre: HardhatRuntimeEnvironment) {
       throw new Error(`no network named ${networkName}`);
     }
 
-    network.provider = await createProvider(
-      hre.config,
-      networkName,
-      hre.artifacts
-    );
+    network.provider = new LazyInitializationProviderAdapter(() => {
+        return createProvider(
+          hre.config,
+          networkName,
+          hre.artifacts
+        );
+    })
 
     const networkDeploymentsManager = new DeploymentsManager(hre, network);
     deploymentsManager.addCompanionManager(name, networkDeploymentsManager);
@@ -443,7 +447,6 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     if (typeof tags === 'string') {
       tags = tags.split(',');
     }
-    await initCompanionNetworks(hre);
     await deploymentsManager.runDeploy(tags, {
       log: args.log,
       resetMemory: false,
