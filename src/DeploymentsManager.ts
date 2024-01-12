@@ -439,6 +439,9 @@ export class DeploymentsManager {
     this.setupNetwork();
     try {
       this._chainId = await this.network.provider.send('eth_chainId');
+      if (this._chainId && this.network.name.includes('vechain')) {
+        this._chainId = `0x${BigInt(this._chainId).toString(16).slice(-2)}`;
+      }
     } catch (e) {
       console.log('failed to get chainId, falling back on net_version...');
       this._chainId = await this.network.provider.send('net_version');
