@@ -11,7 +11,7 @@ import {
   ContractFactory,
   PayableOverrides,
 } from '@ethersproject/contracts';
-import * as zk from 'zksync-web3';
+import * as zk from 'zksync-ethers';
 import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
