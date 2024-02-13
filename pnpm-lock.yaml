@@ -74,9 +74,9 @@ dependencies:
   qs:
     specifier: ^6.9.4
     version: 6.10.1
-  zksync-web3:
-    specifier: ^0.14.3
-    version: 0.14.3(ethers@5.7.2)
+  zksync-ethers:
+    specifier: ^5.0.0
+    version: 5.3.0(ethers@5.7.2)
 
 devDependencies:
   '@changesets/cli':
@@ -2526,6 +2526,7 @@ packages:
       is-hex-prefixed: 1.0.0
       strip-hex-prefix: 1.0.0
     dev: true
+    bundledDependencies: false
 
   /evp_bytestokey@1.0.3:
     resolution: {integrity: sha512-/f2Go4TognH/KvCISP7OUsHn85hT9nUkxxA9BEWxFn+Oj9o8ZNLm/40hdlgSLyuOimsrTKLUMEorQexp/aPQeA==}
@@ -5034,10 +5035,10 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /zksync-web3@0.14.3(ethers@5.7.2):
-    resolution: {integrity: sha512-hT72th4AnqyLW1d5Jlv8N2B/qhEnl2NePK2A3org7tAa24niem/UAaHMkEvmWI3SF9waYUPtqAtjpf+yvQ9zvQ==}
+  /zksync-ethers@5.3.0(ethers@5.7.2):
+    resolution: {integrity: sha512-9Gt9WJDxaCdBjr90xCqX0+mNKvIqXotBMAdwD/dVQgaD9DnFJb6m4q2ALOQNxYOn6wl/Wdo5ZNrw7liC0SFaDQ==}
     peerDependencies:
-      ethers: ^5.7.0
+      ethers: ~5.7.0
     dependencies:
       ethers: 5.7.2
     dev: false
