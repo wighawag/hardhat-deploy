@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.12.0
+
+### Minor Changes
+
+- Replace deprecated zksync-web3 with zksync-ethers by janjakubnanista
+
 ## 0.11.45
 
 ### Patch Changes
