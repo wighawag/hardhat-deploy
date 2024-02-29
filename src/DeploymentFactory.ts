@@ -4,7 +4,7 @@ import {
 } from '@ethersproject/providers';
 import {ContractFactory, PayableOverrides, Signer} from 'ethers';
 import {Artifact} from 'hardhat/types';
-import * as zk from 'zksync-web3';
+import * as zk from 'zksync-ethers';
 import {Address, ExtendedArtifact} from '../types';
 import {getAddress} from '@ethersproject/address';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';

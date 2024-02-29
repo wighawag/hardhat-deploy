@@ -11,7 +11,7 @@ import {
   ContractFactory,
   PayableOverrides,
 } from '@ethersproject/contracts';
-import * as zk from 'zksync-web3';
+import * as zk from 'zksync-ethers';
 import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
@@ -527,7 +527,7 @@ export function addHelpers(
       options
     );
 
-    let overrides: PayableOverrides = {
+    const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
       gasPrice: options.gasPrice,
       maxFeePerGas: options.maxFeePerGas,
@@ -1495,8 +1495,8 @@ Note that in this case, the contract deployment will not behave the same if depl
           upgradeArgsTemplate = ['{implementation}', '{data}'];
         }
 
-        let proxyAddress = proxy.address;
-        let upgradeArgs = replaceTemplateArgs(upgradeArgsTemplate, {
+        const proxyAddress = proxy.address;
+        const upgradeArgs = replaceTemplateArgs(upgradeArgsTemplate, {
           implementationAddress: implementation.address,
           proxyAdmin,
           data,
