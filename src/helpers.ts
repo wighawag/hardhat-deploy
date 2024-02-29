@@ -399,6 +399,7 @@ export function addHelpers(
   async function ensureCreate2DeployerReady(options: {
     from: string;
     log?: boolean;
+    waitConfirmations?: number;
     gasPrice?: string | BigNumber;
     maxFeePerGas?: string | BigNumber;
     maxPriorityFeePerGas?: string | BigNumber;
@@ -452,7 +453,7 @@ export function addHelpers(
         log(` (tx: ${ethTx.hash})...`);
       }
       ethTx = await onPendingTx(ethTx);
-      await ethTx.wait();
+      await ethTx.wait(options.waitConfirmations);
 
       if (options.log || hardwareWallet) {
         print(
@@ -468,7 +469,7 @@ export function addHelpers(
       if (options.log || hardwareWallet) {
         log(` (tx: ${deployTx.hash})...`);
       }
-      await deployTx.wait();
+      await deployTx.wait(options.waitConfirmations);
     }
     return create2DeployerAddress;
   }
@@ -2532,7 +2533,7 @@ Note that in this case, the contract deployment will not behave the same if depl
         await provider.send('evm_mine', []);
       } catch (e) {}
     }
-    return pendingTx.wait();
+    return pendingTx.wait(tx.waitConfirmations);
   }
 
   async function catchUnknownSigner(
@@ -2705,7 +2706,7 @@ data: ${data}
         await provider.send('evm_mine', []);
       } catch (e) {}
     }
-    const receipt = await tx.wait();
+    const receipt = await tx.wait(options.waitConfirmations);
     if (options.log || hardwareWallet) {
       print(`: performed with ${receipt.gasUsed} gas\n`);
     }
