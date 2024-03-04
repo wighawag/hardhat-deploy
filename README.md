@@ -347,8 +347,6 @@ It adds similar options than the `deploy` task :
 
 `--silent`: This flag removes **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
 
-`--silent`: This flag removes **hardhat-deploy** log output (see log function and log options for [`hre.deployments`](#the-deployments-field))
-
 `--watch`: This flag makes the task never-ending, watching for file changes in the deploy scripts folder and the contract source folder. If any changes happen the contracts are recompiled and the deploy script are re-run. Combined with a proxy deployment ([Proxies](#deploying-and-upgrading-proxies) or [Diamond](#builtin-in-support-for-diamonds-eip2535)) this allows to have HCR (Hot Contract Replacement).
 
 `--no-deploy` that discard all other options to revert to normal `hardhat node` behavior without any deployment being performed.
