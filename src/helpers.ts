@@ -628,10 +628,11 @@ export function addHelpers(
     }
     tx = await onPendingTx(tx, name, preDeployment);
     const receipt = await tx.wait(options.waitConfirmations);
-    const address =
-      options.deterministicDeployment && create2Address
-        ? create2Address
-        : receipt.contractAddress;
+    const address = factory.getDeployedAddress(
+      receipt,
+      options,
+      create2Address
+    );
     const deployment = {
       ...preDeployment,
       address,

@@ -1,14 +1,16 @@
 import {
+  TransactionReceipt,
   TransactionRequest,
   TransactionResponse,
 } from '@ethersproject/providers';
-import {ContractFactory, PayableOverrides, Signer} from 'ethers';
+import {ContractFactory, PayableOverrides, Signer, ethers} from 'ethers';
 import {Artifact} from 'hardhat/types';
 import * as zk from 'zksync-ethers';
-import {Address, ExtendedArtifact} from '../types';
+import {Address, DeployOptions, ExtendedArtifact} from '../types';
 import {getAddress} from '@ethersproject/address';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
 import {hexConcat} from '@ethersproject/bytes';
+import {CONTRACT_DEPLOYER_ADDRESS} from 'zksync-ethers/build/src/utils';
 
 export class DeploymentFactory {
   private factory: ContractFactory;
@@ -150,5 +152,35 @@ export class DeploymentFactory {
     } else {
       return transaction.data !== newData;
     }
+  }
+
+  getDeployedAddress(
+    receipt: TransactionReceipt,
+    options: DeployOptions,
+    create2Address: string | undefined
+  ): string {
+    if (options.deterministicDeployment && create2Address) {
+      return create2Address;
+    }
+
+    if (this.isZkSync) {
+      const addressBytesLen = 40;
+      const addresses = receipt.logs
+        .filter(
+          (log) =>
+            log.topics[0] ==
+              ethers.utils.id('ContractDeployed(address,bytes32,address)') &&
+            log.address == CONTRACT_DEPLOYER_ADDRESS
+        )
+        .map((log) => {
+          const address = `0x${log.topics[3].slice(
+            log.topics[3].length - addressBytesLen
+          )}`;
+          return address;
+        });
+      return addresses[addresses.length - 1];
+    }
+
+    return receipt.contractAddress;
   }
 }
