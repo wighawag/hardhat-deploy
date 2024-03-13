@@ -1,14 +1,15 @@
 import {
+  TransactionReceipt,
   TransactionRequest,
   TransactionResponse,
 } from '@ethersproject/providers';
-import {ContractFactory, PayableOverrides, Signer} from 'ethers';
-import {Artifact} from 'hardhat/types';
+import { ContractFactory, PayableOverrides, Signer, ethers } from 'ethers';
+import { Artifact } from 'hardhat/types';
 import * as zk from 'zksync-ethers';
-import {Address, ExtendedArtifact} from '../types';
-import {getAddress} from '@ethersproject/address';
-import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {hexConcat} from '@ethersproject/bytes';
+import { Address, DeployOptions, ExtendedArtifact } from '../types';
+import { getAddress } from '@ethersproject/address';
+import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
+import { hexConcat } from '@ethersproject/bytes';
 
 export class DeploymentFactory {
   private factory: ContractFactory;
@@ -95,14 +96,14 @@ export class DeploymentFactory {
       throw Error('unsigned tx data as bytes not supported');
     return getAddress(
       '0x' +
-        solidityKeccak256(
-          ['bytes'],
-          [
-            `0xff${create2DeployerAddress.slice(2)}${salt.slice(
-              2
-            )}${solidityKeccak256(['bytes'], [deploymentTx.data]).slice(2)}`,
-          ]
-        ).slice(-40)
+      solidityKeccak256(
+        ['bytes'],
+        [
+          `0xff${create2DeployerAddress.slice(2)}${salt.slice(
+            2
+          )}${solidityKeccak256(['bytes'], [deploymentTx.data]).slice(2)}`,
+        ]
+      ).slice(-40)
     );
   }
 
@@ -150,5 +151,25 @@ export class DeploymentFactory {
     } else {
       return transaction.data !== newData;
     }
+  }
+
+  getDeployedAddress(
+    receipt: TransactionReceipt,
+    options: DeployOptions,
+    create2Address: string | undefined
+  ): string {
+    if (options.deterministicDeployment && create2Address) {
+      return create2Address;
+    }
+
+    if (this.isZkSync) {
+      const deployedAddresses = zk.utils.getDeployedContracts(receipt).map(
+        (info) => info.deployedAddress,
+      );
+
+      return deployedAddresses[deployedAddresses.length - 1];
+    }
+
+    return receipt.contractAddress;
   }
 }
