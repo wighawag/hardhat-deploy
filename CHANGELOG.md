@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.12.2
+
+### Patch Changes
+
+- fix: return valid address for zksync deployment by @kiriyaga
+
 ## 0.12.1
 
 ### Patch Changes
