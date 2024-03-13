@@ -3,14 +3,13 @@ import {
   TransactionRequest,
   TransactionResponse,
 } from '@ethersproject/providers';
-import {ContractFactory, PayableOverrides, Signer, ethers} from 'ethers';
-import {Artifact} from 'hardhat/types';
+import { ContractFactory, PayableOverrides, Signer, ethers } from 'ethers';
+import { Artifact } from 'hardhat/types';
 import * as zk from 'zksync-ethers';
-import {Address, DeployOptions, ExtendedArtifact} from '../types';
-import {getAddress} from '@ethersproject/address';
-import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {hexConcat} from '@ethersproject/bytes';
-import {CONTRACT_DEPLOYER_ADDRESS} from 'zksync-ethers/build/src/utils';
+import { Address, DeployOptions, ExtendedArtifact } from '../types';
+import { getAddress } from '@ethersproject/address';
+import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
+import { hexConcat } from '@ethersproject/bytes';
 
 export class DeploymentFactory {
   private factory: ContractFactory;
@@ -97,14 +96,14 @@ export class DeploymentFactory {
       throw Error('unsigned tx data as bytes not supported');
     return getAddress(
       '0x' +
-        solidityKeccak256(
-          ['bytes'],
-          [
-            `0xff${create2DeployerAddress.slice(2)}${salt.slice(
-              2
-            )}${solidityKeccak256(['bytes'], [deploymentTx.data]).slice(2)}`,
-          ]
-        ).slice(-40)
+      solidityKeccak256(
+        ['bytes'],
+        [
+          `0xff${create2DeployerAddress.slice(2)}${salt.slice(
+            2
+          )}${solidityKeccak256(['bytes'], [deploymentTx.data]).slice(2)}`,
+        ]
+      ).slice(-40)
     );
   }
 
@@ -164,21 +163,11 @@ export class DeploymentFactory {
     }
 
     if (this.isZkSync) {
-      const addressBytesLen = 40;
-      const addresses = receipt.logs
-        .filter(
-          (log) =>
-            log.topics[0] ==
-              ethers.utils.id('ContractDeployed(address,bytes32,address)') &&
-            log.address == CONTRACT_DEPLOYER_ADDRESS
-        )
-        .map((log) => {
-          const address = `0x${log.topics[3].slice(
-            log.topics[3].length - addressBytesLen
-          )}`;
-          return address;
-        });
-      return addresses[addresses.length - 1];
+      const deployedAddresses = zk.utils.getDeployedContracts(receipt).map(
+        (info) => info.deployedAddress,
+      );
+
+      return deployedAddresses[deployedAddresses.length - 1];
     }
 
     return receipt.contractAddress;
