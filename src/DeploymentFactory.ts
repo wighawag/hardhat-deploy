@@ -3,13 +3,12 @@ import {
   TransactionRequest,
   TransactionResponse,
 } from '@ethersproject/providers';
-import { ContractFactory, PayableOverrides, Signer, ethers } from 'ethers';
+import { ContractFactory, PayableOverrides, Signer } from 'ethers';
 import { Artifact } from 'hardhat/types';
 import * as zk from 'zksync-ethers';
 import { Address, DeployOptions, ExtendedArtifact } from '../types';
 import { getAddress } from '@ethersproject/address';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
-import { hexConcat } from '@ethersproject/bytes';
 
 export class DeploymentFactory {
   private factory: ContractFactory;
@@ -141,16 +140,8 @@ export class DeploymentFactory {
   ): Promise<boolean> {
     const newTransaction = await this.getDeployTransaction();
     const newData = newTransaction.data?.toString();
-    if (this.isZkSync) {
-      const deserialize = zk.utils.parseTransaction(transaction.data) as any;
-      const desFlattened = hexConcat(deserialize.customData.factoryDeps);
-      const factoryDeps = await this.extractFactoryDeps(this.artifact);
-      const newFlattened = hexConcat(factoryDeps);
 
-      return deserialize.data !== newData || desFlattened != newFlattened;
-    } else {
-      return transaction.data !== newData;
-    }
+    return transaction.data !== newData;
   }
 
   getDeployedAddress(

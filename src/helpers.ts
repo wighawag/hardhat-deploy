@@ -8,7 +8,6 @@ import {
 import {getAddress} from '@ethersproject/address';
 import {
   Contract,
-  ContractFactory,
   PayableOverrides,
 } from '@ethersproject/contracts';
 import * as zk from 'zksync-ethers';
@@ -16,7 +15,7 @@ import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {zeroPad, hexlify, hexConcat} from '@ethersproject/bytes';
+import {zeroPad, hexlify} from '@ethersproject/bytes';
 import {Interface, FunctionFragment} from '@ethersproject/abi';
 import {
   Deployment,
@@ -1863,12 +1862,14 @@ Note that in this case, the contract deployment will not behave the same if depl
         deterministic: true,
       });
     }
-    facetsSet.push({
-      name: '_DefaultDiamondLoupeFacet',
-      contract: diamondLoupeFacet,
-      args: [],
-      deterministic: true,
-    });
+    if (options.defaultLoupeFacet === undefined || options.defaultLoupeFacet) {
+      facetsSet.push({
+        name: '_DefaultDiamondLoupeFacet',
+        contract: diamondLoupeFacet,
+        args: [],
+        deterministic: true,
+      });
+    }
 
     let changesDetected = !oldDeployment;
     let abi: any[] = diamondArtifact.abi.concat([]);
@@ -2215,7 +2216,10 @@ Note that in this case, the contract deployment will not behave the same if depl
 
         // TODO option to add more to the list
         // else mechanism to set it up differently ? LoupeFacet without supportsInterface
-        const interfaceList = ['0x48e2b093'];
+        const interfaceList = [];
+        if (options.defaultLoupeFacet) {
+          interfaceList.push('0x48e2b093');
+        }
         if (options.defaultCutFacet) {
           interfaceList.push('0x1f931c1c');
         }
@@ -2285,10 +2289,10 @@ Note that in this case, the contract deployment will not behave the same if depl
             }
           } else {
             if (initArgIndex >= 0) {
-              diamondConstructorArgs[initArgIndex] = {
+              diamondConstructorArgs[initArgIndex] = [{
                 initContract: executeAddress,
                 initData: executeData,
-              };
+              }];
             } else if (initDataArgIndex >= 0) {
               diamondConstructorArgs[initDataArgIndex] = executeData;
               if (initAddressArgIndex >= 0) {
