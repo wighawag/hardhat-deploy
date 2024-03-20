@@ -251,22 +251,27 @@ export async function submitSources(
   async function submit(name: string, useSolcInput?: boolean) {
     const deployment = all[name];
     const {address, metadata: metadataString} = deployment;
-    const abiResponse = await axios.get(
-      `${host}/api?module=contract&action=getabi&address=${address}&apikey=${etherscanApiKey}`
-    );
-    const {data: abiData} = abiResponse;
-    let contractABI;
-    if (abiData.status !== '0') {
-      try {
-        contractABI = JSON.parse(abiData.result);
-      } catch (e) {
-        logError(e);
+    try {
+      const abiResponse = await axios.get(
+        `${host}/api?module=contract&action=getabi&address=${address}&apikey=${etherscanApiKey}`
+      );
+      const {data: abiData} = abiResponse;
+      let contractABI;
+      if (abiData.status !== '0') {
+        try {
+          contractABI = JSON.parse(abiData.result);
+        } catch (e) {
+          logError(e);
+          return;
+        }
+      }
+      if (contractABI && contractABI !== '') {
+        log(`already verified: ${name} (${address}), skipping.`);
         return;
       }
-    }
-    if (contractABI && contractABI !== '') {
-      log(`already verified: ${name} (${address}), skipping.`);
-      return;
+    } catch (e) {
+      logError(e);
+      logError("Can't check if contract is already verified. Proceeding with verification.");
     }
 
     if (!metadataString) {
