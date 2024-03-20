@@ -22,6 +22,7 @@ import {
   TASK_TEST,
   TASK_NODE_GET_PROVIDER,
   TASK_NODE_SERVER_READY,
+  TASK_COMPILE,
 } from 'hardhat/builtin-tasks/task-names';
 import {lazyObject} from 'hardhat/plugins';
 
@@ -35,6 +36,10 @@ import {submitSourcesToSourcify} from './sourcify';
 import {Network} from 'hardhat/types/runtime';
 import {store} from './globalStore';
 import {getDeployPaths, getNetworkName} from './utils';
+import {
+  validateAbiCompatibility,
+  IContractDetails,
+} from './checkAbiCompatibility';
 
 export {getNetworkName};
 
@@ -44,6 +49,7 @@ export const TASK_DEPLOY_RUN_DEPLOY = 'deploy:runDeploy';
 export const TASK_EXPORT = 'export';
 export const TASK_ETHERSCAN_VERIFY = 'etherscan-verify';
 export const TASK_SOURCIFY = 'sourcify';
+export const TASK_VALIDATE_ABI_COMPAT = 'validate-abi-compat';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let nodeTaskArgs: Record<string, any> = {};
@@ -439,10 +445,37 @@ subtask(TASK_DEPLOY_RUN_DEPLOY, 'deploy run only')
     undefined,
     types.string
   )
+  .addOptionalParam(
+    'replace',
+    'replace contract name with artifact name',
+    undefined,
+    types.string
+  )
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
   .addFlag('reportGas', 'report gas use')
+  .addFlag(
+    'allowBreakingAbiCompatbility',
+    'not throw an error if there are any breaking abi compatibility changes'
+  )
   .setAction(async (args, hre) => {
+    const allDeployedContracts = Object.entries(await hre.deployments.all());
+    const contracts: IContractDetails[] = [];
+    const parsedReplaceName = args.replace ? JSON.parse(args.replace) : {};
+    for (const [contractName, contractDeployment] of allDeployedContracts) {
+      const prevAbi = contractDeployment.abi;
+      const artifactName = parsedReplaceName[contractName] || contractName;
+      const newAbi = (await hre.deployments.getExtendedArtifact(artifactName))
+        .abi;
+      contracts.push({contractName, prevAbi, newAbi});
+    }
+    validateAbiCompatibility({
+      write: args.export,
+      allowBreakingChanges: args.allowBreakingAbiCompatbilit,
+      dirname: hre.config.paths.deployments,
+      networkName: hre.deployments.getNetworkName(),
+      contracts,
+    });
     let tags = args.tags;
     if (typeof tags === 'string') {
       tags = tags.split(',');
@@ -503,6 +536,12 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
     undefined,
     types.string
   )
+  .addOptionalParam(
+    'replace',
+    'replace contract name with artifact name',
+    undefined,
+    types.string
+  )
   .addFlag('noCompile', 'disable pre compilation')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('log', 'whether to output log')
@@ -512,7 +551,28 @@ subtask(TASK_DEPLOY_MAIN, 'deploy')
     'do not actually deploy, just watch and deploy if changes occurs'
   )
   .addFlag('reportGas', 'report gas use')
+  .addFlag(
+    'allowBreakingAbiCompatbility',
+    'not throw an error if there are any breaking abi compatibility changes'
+  )
   .setAction(async (args, hre) => {
+    const allDeployedContracts = Object.entries(await hre.deployments.all());
+    const contracts: IContractDetails[] = [];
+    const parsedReplaceName = args.replace ? JSON.parse(args.replace) : {};
+    for (const [contractName, contractDeployment] of allDeployedContracts) {
+      const prevAbi = contractDeployment.abi;
+      const artifactName = parsedReplaceName[contractName] || contractName;
+      const newAbi = (await hre.deployments.getExtendedArtifact(artifactName))
+        .abi;
+      contracts.push({contractName, prevAbi, newAbi});
+    }
+    validateAbiCompatibility({
+      write: args.export,
+      allowBreakingChanges: args.allowBreakingAbiCompatbilit,
+      dirname: hre.config.paths.deployments,
+      networkName: hre.deployments.getNetworkName(),
+      contracts,
+    });
     if (args.reset) {
       await deploymentsManager.deletePreviousDeployments(
         args.runAsNode ? 'localhost' : undefined
@@ -662,13 +722,40 @@ task(TASK_DEPLOY, 'Deploy contracts')
     undefined,
     types.string
   )
+  .addOptionalParam(
+    'replace',
+    'replace contract name with artifact name',
+    undefined,
+    types.string
+  )
   .addFlag('noImpersonation', 'do not impersonate unknown accounts')
   .addFlag('noCompile', 'disable pre compilation')
   .addFlag('reset', 'whether to delete deployments files first')
   .addFlag('silent', 'whether to remove log')
   .addFlag('watch', 'redeploy on every change of contract or deploy script')
   .addFlag('reportGas', 'report gas use')
+  .addFlag(
+    'allowBreakingAbiCompatbility',
+    'not throw an error if there are any breaking abi compatibility changes'
+  )
   .setAction(async (args, hre) => {
+    const allDeployedContracts = Object.entries(await hre.deployments.all());
+    const contracts: IContractDetails[] = [];
+    const parsedReplaceName = args.replace ? JSON.parse(args.replace) : {};
+    for (const [contractName, contractDeployment] of allDeployedContracts) {
+      const prevAbi = contractDeployment.abi;
+      const artifactName = parsedReplaceName[contractName] || contractName;
+      const newAbi = (await hre.deployments.getExtendedArtifact(artifactName))
+        .abi;
+      contracts.push({contractName, prevAbi, newAbi});
+    }
+    validateAbiCompatibility({
+      write: args.export,
+      allowBreakingChanges: args.allowBreakingAbiCompatbilit,
+      dirname: hre.config.paths.deployments,
+      networkName: hre.deployments.getNetworkName(),
+      contracts,
+    });
     if (args.noImpersonation) {
       deploymentsManager.disableAutomaticImpersonation();
     }
@@ -1087,5 +1174,67 @@ task('export-artifacts')
 
       fs.ensureFileSync(filepath);
       fs.writeFileSync(filepath, JSON.stringify(dataToWrite, null, '  '));
+    }
+  });
+
+task(
+  TASK_VALIDATE_ABI_COMPAT,
+  "validates compatability of the given contract's new ABI with its currently deployed ABI"
+)
+  .addOptionalParam(
+    'contract',
+    'contract to check ABI compatability for',
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    'replace',
+    'replace contract name with artifact name',
+    undefined,
+    types.string
+  )
+  .addFlag('export', 'export current network deployments')
+  .addFlag('all', 'check all contracts ABI compatability')
+  .setAction(async (taskArgs, hre) => {
+    await hre.run(TASK_COMPILE, {quiet: true}); // compile contracts if necessary
+
+    const {getOrNull, all, getExtendedArtifact, getNetworkName} =
+      hre.deployments;
+
+    const validateAbiCompatibilityParams = {
+      write: taskArgs.export,
+      allowBreakingChanges: true,
+      dirname: hre.config.paths.deployments,
+      networkName: getNetworkName(),
+    };
+    const parsedReplaceName = taskArgs.replace
+      ? JSON.parse(taskArgs.replace)
+      : {};
+
+    const validateAllContracts = taskArgs.all;
+    if (validateAllContracts) {
+      const allDeployedContracts = Object.entries(await all());
+      const contracts: IContractDetails[] = [];
+      for (const [contractName, contractDeployment] of allDeployedContracts) {
+        const prevAbi = contractDeployment.abi;
+        const artifactName = parsedReplaceName[contractName] || contractName;
+        const newAbi = (await getExtendedArtifact(artifactName)).abi;
+        contracts.push({contractName, prevAbi, newAbi});
+      }
+      validateAbiCompatibility({
+        ...validateAbiCompatibilityParams,
+        contracts,
+      });
+    } else {
+      const contractName = taskArgs.contract;
+      const prevAbi = (await getOrNull(contractName))?.abi;
+      const artifactName = parsedReplaceName[contractName] || contractName;
+      const newAbi = (await getExtendedArtifact(artifactName)).abi;
+      if (contractName && prevAbi && newAbi) {
+        validateAbiCompatibility({
+          ...validateAbiCompatibilityParams,
+          contracts: [{contractName, prevAbi, newAbi}],
+        });
+      }
     }
   });
