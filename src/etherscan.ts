@@ -241,6 +241,9 @@ export async function submitSources(
       case '11155111':
         host = 'https://api-sepolia.etherscan.io';
         break;
+      case '11155420':
+        host = 'https://api-sepolia-optimistic.etherscan.io';
+        break;
       default:
         return logError(
           `Network with chainId: ${chainId} not supported. You can specify the url manually via --api-url <url>.`
