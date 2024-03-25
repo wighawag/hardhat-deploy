@@ -1470,10 +1470,11 @@ Note that in this case, the contract deployment will not behave the same if depl
       } else {
         let from = options.from;
 
-        const ownerStorage = await provider.getStorageAt(
-          proxy.address,
-          '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
-        );
+        // Use EIP173 defined owner function
+        const abi = ["function owner() external view returns (address)"];
+        const p = new Contract(proxy.address, abi, provider);
+        const ownerStorage = await p.owner() as string;
+
         const currentOwner = getAddress(`0x${ownerStorage.substr(-40)}`);
         if (currentOwner === AddressZero) {
           if (checkProxyAdmin) {
