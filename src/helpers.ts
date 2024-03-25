@@ -1469,11 +1469,19 @@ Note that in this case, the contract deployment will not behave the same if depl
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
         let from = options.from;
+        let ownerStorage: string;
 
-        const ownerStorage = await provider.getStorageAt(
-          proxy.address,
-          '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
-        );
+        // Use EIP173 defined owner function if present
+        const deployedProxy = new Contract(proxy.address, proxy.abi, provider);
+        if (deployedProxy.functions['owner']) {
+          ownerStorage = await deployedProxy.owner();
+        } else {
+          ownerStorage = await provider.getStorageAt(
+            proxy.address,
+            '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
+          );
+        }
+
         const currentOwner = getAddress(`0x${ownerStorage.substr(-40)}`);
         if (currentOwner === AddressZero) {
           if (checkProxyAdmin) {
