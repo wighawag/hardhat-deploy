@@ -12,7 +12,7 @@ import {
   NetworkConfig,
 } from 'hardhat/types';
 import {createProvider} from 'hardhat/internal/core/providers/construction'; // TODO harhdat argument types not from internal
-import {LazyInitializationProviderAdapter} from "hardhat/internal/core/providers/lazy-initialization";
+import {LazyInitializationProviderAdapter} from 'hardhat/internal/core/providers/lazy-initialization';
 import {Deployment, ExtendedArtifact} from '../types';
 import {extendEnvironment, task, subtask, extendConfig} from 'hardhat/config';
 import {HARDHAT_NETWORK_NAME, HardhatPluginError} from 'hardhat/plugins';
@@ -381,12 +381,8 @@ function initCompanionNetworks(hre: HardhatRuntimeEnvironment) {
     }
 
     network.provider = new LazyInitializationProviderAdapter(() => {
-        return createProvider(
-          hre.config,
-          networkName,
-          hre.artifacts
-        );
-    })
+      return createProvider(hre.config, networkName, hre.artifacts);
+    });
 
     const networkDeploymentsManager = new DeploymentsManager(hre, network);
     deploymentsManager.addCompanionManager(name, networkDeploymentsManager);

@@ -394,6 +394,11 @@ export interface Deployment {
 export interface DeterministicDeploymentInfo {
   factory: string;
   deployer: string;
-  funding: string;
-  signedTx: string;
+  funding?: string;
+  signedTx?: string;
+}
+
+export enum FactoryType {
+  SafeSingletonFactory,
+  ImmutableCreate2Factory,
 }

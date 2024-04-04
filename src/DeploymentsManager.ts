@@ -3,12 +3,13 @@ import {
   DeployFunction,
   Deployment,
   DeploymentsExtension,
-  FixtureFunc,
   DeploymentSubmission,
-  Export,
   DeterministicDeploymentInfo,
+  Export,
+  ExtendedArtifact,
+  FactoryType,
+  FixtureFunc
 } from '../types';
-import {ExtendedArtifact} from '../types';
 import {PartialExtension} from './internal/types';
 
 import fs from 'fs-extra';
@@ -17,24 +18,26 @@ import path from 'path';
 import {BigNumber} from '@ethersproject/bignumber';
 
 import debug from 'debug';
-const log = debug('hardhat:wighawag:hardhat-deploy');
+import {ethers} from 'ethers';
 
 import {
   addDeployments,
-  processNamedAccounts,
-  loadAllDeployments,
-  traverseMultipleDirectory,
   deleteDeployments,
-  getExtendedArtifactFromFolders,
   getArtifactFromFolders,
-  getNetworkName,
   getDeployPaths,
+  getExtendedArtifactFromFolders,
+  getNetworkName,
+  loadAllDeployments,
+  processNamedAccounts,
+  traverseMultipleDirectory,
 } from './utils';
 import {addHelpers, waitForTx} from './helpers';
 import {TransactionResponse} from '@ethersproject/providers';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {store} from './globalStore';
 import {bnReplacer} from './internal/utils';
+
+const log = debug('hardhat:wighawag:hardhat-deploy');
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -586,12 +589,44 @@ export class DeploymentsManager {
   > {
     const chainId = await this.getChainId();
     const config = this.env.config.deterministicDeployment;
-    return typeof config == 'function' ? config(chainId) : config?.[chainId];
+    return (
+      typeof config == 'function' ? config(chainId) : config?.[chainId]
+    ) as DeterministicDeploymentInfo;
   }
 
   public async getDeterministicDeploymentFactoryAddress(): Promise<string> {
     const info = await this.getDeterminisityDeploymentInfo();
     return info?.factory || '0x4e59b44847b379578588920ca78fbf26c0b4956c';
+  }
+
+  public async getDeterministicDeploymentFactoryType(): Promise<FactoryType> {
+    try {
+      const address = await this.getDeterministicDeploymentFactoryAddress();
+
+      const bytecode = await this.network.provider.request({
+        method: 'eth_getCode',
+        params: [address, 'latest'], // Fetch the code at the latest block
+      });
+      // Define the function signature
+      const functionSignature = "hasBeenDeployed(address)";
+      const functionSelector = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(functionSignature)).slice(2, 10); // Take only first 4 bytes (8 characters + '0x')
+
+      if (
+        bytecode &&
+        typeof bytecode === 'string' &&
+        bytecode.includes(functionSelector)
+      ) {
+        return FactoryType.ImmutableCreate2Factory;
+      }
+
+      return FactoryType.SafeSingletonFactory;
+    } catch (error) {
+      console.error(
+        'Error getting deterministic deployment factory type:',
+        error
+      );
+      throw error; // Or handle the error as appropriate for your application
+    }
   }
 
   public async getDeterministicDeploymentFactoryDeployer(): Promise<string> {
@@ -1047,7 +1082,11 @@ export class DeploymentsManager {
         if (externalContracts.deploy) {
           this.db.onlyArtifacts = externalContracts.artifacts;
           try {
-            await this.executeDeployScripts([externalContracts.deploy], tags, options.tagsRequireAll);
+            await this.executeDeployScripts(
+              [externalContracts.deploy],
+              tags,
+              options.tagsRequireAll
+            );
           } finally {
             this.db.onlyArtifacts = undefined;
           }
@@ -1067,7 +1106,7 @@ export class DeploymentsManager {
   public async executeDeployScripts(
     deployScriptsPaths: string[],
     tags: string[] = [],
-    tagsRequireAll = false,
+    tagsRequireAll = false
   ): Promise<void> {
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
     // TODO loop over companion networks ?
@@ -1127,8 +1166,11 @@ export class DeploymentsManager {
         bag.push(scriptFilePath);
       }
       // console.log("tags found " + scriptFilePath, scriptTags);
-      if (tagsRequireAll && tags.every(tag => scriptTags.includes(tag))
-        || !tagsRequireAll && (tags.length == 0 || tags.some(tag => scriptTags.includes(tag)))) {
+      if (
+        (tagsRequireAll && tags.every((tag) => scriptTags.includes(tag))) ||
+        (!tagsRequireAll &&
+          (tags.length == 0 || tags.some((tag) => scriptTags.includes(tag))))
+      ) {
         scriptFilePaths.push(scriptFilePath);
       }
     }

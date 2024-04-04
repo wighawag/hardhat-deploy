@@ -1,42 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {Signer} from '@ethersproject/abstract-signer';
-import {
-  Web3Provider,
-  TransactionResponse,
-  TransactionRequest,
-} from '@ethersproject/providers';
+import {TransactionRequest, TransactionResponse, Web3Provider,} from '@ethersproject/providers';
 import {getAddress} from '@ethersproject/address';
-import {
-  Contract,
-  ContractFactory,
-  PayableOverrides,
-} from '@ethersproject/contracts';
+import {Contract, PayableOverrides,} from '@ethersproject/contracts';
 import * as zk from 'zksync-ethers';
 import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {zeroPad, hexlify, hexConcat} from '@ethersproject/bytes';
-import {Interface, FunctionFragment} from '@ethersproject/abi';
+import {hexlify, zeroPad} from '@ethersproject/bytes';
+import {FunctionFragment, Interface} from '@ethersproject/abi';
 import {
-  Deployment,
-  DeployResult,
-  DeploymentsExtension,
-  DeployOptions,
-  TxOptions,
-  CallOptions,
-  SimpleTx,
-  Receipt,
-  Address,
-  DiamondOptions,
-  Create2DeployOptions,
-  FacetCut,
-  DeploymentSubmission,
-  ExtendedArtifact,
-  FacetCutAction,
-  Facet,
-  ArtifactData,
   ABI,
+  Address,
+  ArtifactData,
+  CallOptions,
+  Create2DeployOptions,
+  Deployment,
+  DeploymentsExtension,
+  DeploymentSubmission,
+  DeployOptions,
+  DeployResult,
+  DiamondOptions,
+  ExtendedArtifact,
+  Facet,
+  FacetCut,
+  FacetCutAction,
+  FactoryType,
+  Receipt,
+  SimpleTx,
+  TxOptions,
 } from '../types';
 import {PartialExtension} from './internal/types';
 import {UnknownSignerError} from './errors';
@@ -55,16 +48,14 @@ import diamondERC165Init from '../extendedArtifacts/DiamondERC165Init.json';
 import diamondCutFacet from '../extendedArtifacts/DiamondCutFacet.json';
 import diamondLoupeFacet from '../extendedArtifacts/DiamondLoupeFacet.json';
 import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
-import {Artifact, EthereumProvider, Network} from 'hardhat/types';
+import {Artifact, EthereumProvider} from 'hardhat/types';
 import {DeploymentsManager} from './DeploymentsManager';
 import enquirer from 'enquirer';
-import {
-  parse as parseTransaction,
-  Transaction,
-} from '@ethersproject/transactions';
+import {parse as parseTransaction, Transaction,} from '@ethersproject/transactions';
 import {getDerivationPath} from './hdpath';
 import {bnReplacer} from './internal/utils';
 import {DeploymentFactory} from './DeploymentFactory';
+import {ethers} from "ethers";
 
 let LedgerSigner: any; // TODO type
 let ethersprojectHardwareWalletsModule: any | undefined;
@@ -412,64 +403,69 @@ export function addHelpers(
     } = await getFrom(options.from);
     const create2DeployerAddress =
       await deploymentManager.getDeterministicDeploymentFactoryAddress();
-    const code = await provider.getCode(create2DeployerAddress);
-    if (code === '0x') {
-      const senderAddress =
-        await deploymentManager.getDeterministicDeploymentFactoryDeployer();
+    const factoryType = await deploymentManager.getDeterministicDeploymentFactoryType()
+    if(factoryType === FactoryType.SafeSingletonFactory) {
+      const code = await provider.getCode(create2DeployerAddress);
+      if (code === '0x') {
+        const senderAddress =
+          await deploymentManager.getDeterministicDeploymentFactoryDeployer();
 
-      // TODO: calculate required funds
-      const txRequest = {
-        to: senderAddress,
-        value: (
-          await deploymentManager.getDeterministicDeploymentFactoryFunding()
-        ).toHexString(),
-        gasPrice: options.gasPrice,
-        maxFeePerGas: options.maxFeePerGas,
-        maxPriorityFeePerGas: options.maxPriorityFeePerGas,
-      };
-      await setupGasPrice(txRequest);
-      await setupNonce(from, txRequest);
+        // TODO: calculate required funds
+        const txRequest = {
+          to: senderAddress,
+          value: (
+            await deploymentManager.getDeterministicDeploymentFactoryFunding()
+          ).toHexString(),
+          gasPrice: options.gasPrice,
+          maxFeePerGas: options.maxFeePerGas,
+          maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+        };
+        await setupGasPrice(txRequest);
+        await setupNonce(from, txRequest);
 
-      if (unknown) {
-        throw new UnknownSignerError({
-          from,
-          ...txRequest,
-        });
-      }
-
-      if (options.log || hardwareWallet) {
-        print(
-          `sending eth to create2 contract deployer address (${senderAddress})`
-        );
-        if (hardwareWallet) {
-          print(` (please confirm on your ${hardwareWallet})`);
+        if (unknown) {
+          throw new UnknownSignerError({
+            from,
+            ...txRequest,
+          });
         }
-      }
 
-      let ethTx = (await handleSpecificErrors(
-        ethersSigner.sendTransaction(txRequest)
-      )) as TransactionResponse;
-      if (options.log || hardwareWallet) {
-        log(` (tx: ${ethTx.hash})...`);
-      }
-      ethTx = await onPendingTx(ethTx);
-      await ethTx.wait(options.waitConfirmations);
-
-      if (options.log || hardwareWallet) {
-        print(
-          `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)`
-        );
-        if (hardwareWallet) {
-          print(` (please confirm on your ${hardwareWallet})`);
+        if (options.log || hardwareWallet) {
+          print(
+            `sending eth to create2 contract deployer address (${senderAddress})`
+          );
+          if (hardwareWallet) {
+            print(` (please confirm on your ${hardwareWallet})`);
+          }
         }
-      }
-      const deployTx = await provider.sendTransaction(
-        await deploymentManager.getDeterministicDeploymentFactoryDeploymentTx()
-      );
-      if (options.log || hardwareWallet) {
-        log(` (tx: ${deployTx.hash})...`);
-      }
-      await deployTx.wait(options.waitConfirmations);
+
+        let ethTx = (await handleSpecificErrors(
+          ethersSigner.sendTransaction(txRequest)
+        )) as TransactionResponse;
+        if (options.log || hardwareWallet) {
+          log(` (tx: ${ethTx.hash})...`);
+        }
+        ethTx = await onPendingTx(ethTx);
+        await ethTx.wait(options.waitConfirmations);
+
+        if (options.log || hardwareWallet) {
+          print(
+            `deploying create2 deployer contract (at ${create2DeployerAddress}) using deterministic deployment (https://github.com/Arachnid/deterministic-deployment-proxy)`
+          );
+          if (hardwareWallet) {
+            print(` (please confirm on your ${hardwareWallet})`);
+          }
+        }
+
+        const deployTx = await provider.sendTransaction(
+          await deploymentManager.getDeterministicDeploymentFactoryDeploymentTx()
+        );
+        if (options.log || hardwareWallet) {
+          log(` (tx: ${deployTx.hash})...`);
+        }
+        await deployTx.wait(options.waitConfirmations);
+    }
+
     }
     return create2DeployerAddress;
   }
@@ -551,20 +547,46 @@ export function addHelpers(
     let create2Address;
     if (options.deterministicDeployment) {
       if (typeof unsignedTx.data === 'string') {
-        const create2DeployerAddress = await ensureCreate2DeployerReady(
-          options
-        );
+        const factoryType = await deploymentManager.getDeterministicDeploymentFactoryType()
+
         const create2Salt =
           typeof options.deterministicDeployment === 'string'
             ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000';
-        create2Address = await factory.getCreate2Address(
-          create2DeployerAddress,
-          create2Salt
-        );
-        unsignedTx.to = create2DeployerAddress;
 
-        unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
+        if(factoryType === FactoryType.SafeSingletonFactory) {
+          const create2DeployerAddress = await ensureCreate2DeployerReady(
+            options
+          );
+          create2Address = await factory.getCreate2Address(
+            create2DeployerAddress,
+            create2Salt
+          );
+          unsignedTx.to = create2DeployerAddress;
+
+          unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
+        } else if (factoryType === FactoryType.ImmutableCreate2Factory) {
+          const factoryAddress = await deploymentManager.getDeterministicDeploymentFactoryAddress()
+          const dataToDeploy = unsignedTx.data;
+          create2Address = await factory.getCreate2Address(
+            factoryAddress,
+            create2Salt
+          );
+
+          unsignedTx.to = factoryAddress;
+
+          // The ABI for the `safeCreate2` function
+          const safeCreate2AbiFragment = [
+            "function safeCreate2(bytes32 salt, bytes calldata initializationCode) external payable returns (address)"
+          ];
+
+          // Contract address and ABI
+          const contractInterface = new ethers.utils.Interface(safeCreate2AbiFragment);
+
+          // Encode the contract function call
+          unsignedTx.data = contractInterface.encodeFunctionData('safeCreate2', [create2Salt, dataToDeploy]);
+        }
+
       } else {
         throw new Error('unsigned tx data as bytes not supported');
       }
