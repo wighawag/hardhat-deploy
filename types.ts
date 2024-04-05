@@ -393,7 +393,7 @@ export interface Deployment {
 
 export interface DeterministicDeploymentInfo {
   factory: string;
-  deployer: string;
+  deployer?: string;
   funding?: string;
   signedTx?: string;
 }
