@@ -415,13 +415,16 @@ Alternatively, you can change the mainnet etherscan api key env var name to some
       ...
       verify: {
         etherscan: {
-          apiUrl: 'http://mynetwork.xyz'
+          apiUrl: 'https://api-testnet.ftmscan.com',
+          apiKey: process.env.ETHERSCAN_API_KEY_FANTOM
         }
       }
     }
   }
 }
 ```
+NOTE: some projects use `apiUrl` like `https://api-testnet.ftmscan.com/api`, but we should remove `/api` path here, just fill in `https://api-testnet.ftmscan.com`
+
 
 `--license <SPDX license id>`: SPDX license (useful if SPDX is not listed in the sources), need to be supported by etherscan: https://etherscan.io/contract-license-types
 
@@ -1310,6 +1313,24 @@ diamond.deploy('ADiamondContract', {
     args: ['one', 2, '0x3'],
   },
 });
+```
+
+### use diamond contract for your scripts
+
+set external typechain in `hardhat.config.ts`, this make sure typechain knows this abi and generate typechain files for the diamond contract
+```ts
+const config: HardhatUserConfig = {
+	typechain: {
+		externalArtifacts: ['deployments/localhost/ADiamondContract.json']
+	},
+  ...
+```
+
+in your scripts
+
+```ts
+const ADiamondContract = await ethers.getContract<ADiamondContract>('ADiamondContract')
+// do your stuff
 ```
 
 ### more...
