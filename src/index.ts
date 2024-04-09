@@ -858,7 +858,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
     'write the post data on file in "etherscan_requests/<network>" folder, for debugging purpose'
   )
   .addFlag(
-    'disableURLAPIPathAppend',
+    'disableApiAppend',
     'disable the append of `/api` to the etherscan apiUrl path, useful for some peticular network'
   )
   .setAction(async (args, hre) => {
@@ -882,7 +882,7 @@ task(TASK_ETHERSCAN_VERIFY, 'submit contract source code to etherscan')
       sleepBetween: args.sleep,
       apiUrl: args.apiUrl || hre.network.verify?.etherscan?.apiUrl,
       writePostData: args.writePostData,
-      disableURLAPIPathAppend: args.disableURLAPIPathAppend
+      disableApiAppend: args.disableApiAppend
     })
   })
 

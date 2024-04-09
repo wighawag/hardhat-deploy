@@ -137,7 +137,7 @@ export async function submitSources(
     sleepBetween?: boolean
     apiUrl?: string
     writePostData?: boolean
-    disableURLAPIPathAppend?: boolean
+    disableApiAppend?: boolean
   }
 ): Promise<void> {
   config = config || {}
@@ -146,7 +146,7 @@ export async function submitSources(
   const forceLicense = config.forceLicense
   const etherscanApiKey = config.etherscanApiKey
   const sleepBetween = config.sleepBetween
-  const disableURLAPIPathAppend = config.disableURLAPIPathAppend
+  const disableApiAppend = config.disableApiAppend
   const all = await hre.deployments.all()
   const networkName = hre.network.name
   let host = config.apiUrl
@@ -253,8 +253,8 @@ export async function submitSources(
     }
   }
 
-  function appendApiPathToHostIfNeeded(host: string | undefined, disableURLAPIPathAppend: boolean | undefined) {
-    if (disableURLAPIPathAppend !== undefined && disableURLAPIPathAppend) {
+  function appendApiPathToHostIfNeeded(host: string | undefined, disableApiAppend: boolean | undefined) {
+    if (disableApiAppend !== undefined && disableApiAppend) {
       return host
     }
     return `${host}/api`
@@ -264,7 +264,7 @@ export async function submitSources(
     const deployment = all[name]
     const { address, metadata: metadataString } = deployment
     const abiResponse = await axios.get(
-      `${appendApiPathToHostIfNeeded(host, disableURLAPIPathAppend)}?module=contract&action=getabi&address=${address}&apikey=${etherscanApiKey}`
+      `${appendApiPathToHostIfNeeded(host, disableApiAppend)}?module=contract&action=getabi&address=${address}&apikey=${etherscanApiKey}`
     )
     const { data: abiData } = abiResponse
     let contractABI
@@ -425,7 +425,7 @@ export async function submitSources(
 
     const formDataAsString = qs.stringify(postData)
     const submissionResponse = await axios.request({
-      url: `${appendApiPathToHostIfNeeded(host, disableURLAPIPathAppend)}`,
+      url: `${appendApiPathToHostIfNeeded(host, disableApiAppend)}`,
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       data: formDataAsString,
@@ -464,7 +464,7 @@ export async function submitSources(
     async function checkStatus(): Promise<string | undefined> {
       // TODO while loop and delay :
       const statusResponse = await axios.get(
-        `${appendApiPathToHostIfNeeded(host, disableURLAPIPathAppend)}?apikey=${etherscanApiKey}`,
+        `${appendApiPathToHostIfNeeded(host, disableApiAppend)}?apikey=${etherscanApiKey}`,
         {
           params: {
             guid,
