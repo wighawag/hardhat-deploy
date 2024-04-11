@@ -1844,31 +1844,103 @@ Note that in this case, the contract deployment will not behave the same if depl
     // console.log({ oldFacets: JSON.stringify(oldFacets, null, "  ") });
 
     const facetsSet = [...options.facets];
-    if (options.defaultCutFacet === undefined || options.defaultCutFacet) {
+    const getContractNameAndArtifact = async (
+      defaultName: string,
+      defaultArtifactData: ArtifactData,
+      args?: boolean | string | {name: string; artifact?: string | ArtifactData}
+    ): Promise<
+      | {
+          name: string;
+          artifact: ArtifactData;
+        }
+      | undefined
+    > => {
+      if (args === false) {
+        return undefined;
+      }
+
+      if (args === undefined || args === true) {
+        return {
+          name: defaultName,
+          artifact: defaultArtifactData,
+        };
+      }
+
+      if (typeof args === 'string') {
+        try {
+          return {
+            name: defaultName,
+            artifact: await partialExtension.getExtendedArtifact(args),
+          };
+        } catch (e) {}
+
+        if (args === defaultName) {
+          return {
+            name: defaultName,
+            artifact: defaultArtifactData,
+          };
+        } else {
+          throw new Error(`no contract found for ${args}`);
+        }
+      }
+
+      const name = args.name;
+      let artifact: ArtifactData | undefined;
+      if (args.artifact === undefined) {
+        artifact = defaultArtifactData;
+      } else if (typeof args.artifact === 'string') {
+        artifact = await partialExtension.getExtendedArtifact(args.artifact);
+      } else {
+        artifact = args.artifact;
+      }
+
+      return {
+        name: name,
+        artifact: artifact,
+      };
+    };
+
+    const diamondCutFacetNameAndArtifact = await getContractNameAndArtifact(
+      '_DefaultDiamondCutFacet',
+      diamondCutFacet,
+      options.defaultCutFacetContract
+    );
+    if (diamondCutFacetNameAndArtifact) {
       facetsSet.push({
-        name: '_DefaultDiamondCutFacet',
-        contract: diamondCutFacet,
+        name: diamondCutFacetNameAndArtifact.name,
+        contract: diamondCutFacetNameAndArtifact.artifact,
         args: [],
         deterministic: true,
       });
     }
-    if (
-      options.defaultOwnershipFacet === undefined ||
-      options.defaultOwnershipFacet
-    ) {
+
+    const ownershipFacetNameAndArtifact = await getContractNameAndArtifact(
+      '_DefaultDiamondOwnershipFacet',
+      ownershipFacet,
+      options.defaultOwnershipFacetContract
+    );
+    if (ownershipFacetNameAndArtifact) {
       facetsSet.push({
-        name: '_DefaultDiamondOwnershipFacet',
-        contract: ownershipFacet,
+        name: ownershipFacetNameAndArtifact.name,
+        contract: ownershipFacetNameAndArtifact.artifact,
         args: [],
         deterministic: true,
       });
     }
-    facetsSet.push({
-      name: '_DefaultDiamondLoupeFacet',
-      contract: diamondLoupeFacet,
-      args: [],
-      deterministic: true,
-    });
+
+    const diamondLoupeFacetNameAndArtifact = await getContractNameAndArtifact(
+      '_DefaultDiamondLoupeFacet',
+      diamondLoupeFacet,
+      options.defaultLoupeFacetContract
+    );
+    if (diamondLoupeFacetNameAndArtifact) {
+      facetsSet.push({
+        name: diamondLoupeFacetNameAndArtifact.name,
+        contract: diamondLoupeFacetNameAndArtifact.artifact,
+        args: [],
+        deterministic: true,
+      });
+    }
 
     let changesDetected = !oldDeployment;
     let abi: any[] = diamondArtifact.abi.concat([]);
@@ -2216,20 +2288,30 @@ Note that in this case, the contract deployment will not behave the same if depl
         // TODO option to add more to the list
         // else mechanism to set it up differently ? LoupeFacet without supportsInterface
         const interfaceList = ['0x48e2b093'];
-        if (options.defaultCutFacet) {
+        if (options.defaultCutFacetContract) {
           interfaceList.push('0x1f931c1c');
         }
-        if (options.defaultOwnershipFacet) {
+        if (options.defaultOwnershipFacetContract) {
           interfaceList.push('0x7f5828d0');
         }
 
         if (initializationsArgIndex >= 0 || erc165InitArgIndex >= 0) {
+          const diamondERC165InitNameAndArtifact =
+            await getContractNameAndArtifact(
+              '_DefaultDiamondERC165Init',
+              diamondERC165Init,
+              options.defaultERC165InitContract
+            );
+          if (!diamondERC165InitNameAndArtifact) {
+            throw new Error('no DiamondERC165Init artifact found');
+          }
+
           const diamondERC165InitDeployment = await _deployOne(
-            '_DefaultDiamondERC165Init',
+            diamondERC165InitNameAndArtifact.name,
             {
               from: options.from,
               deterministicDeployment: true,
-              contract: diamondERC165Init,
+              contract: diamondERC165InitNameAndArtifact.artifact,
               autoMine: options.autoMine,
               estimateGasExtra: options.estimateGasExtra,
               estimatedGasLimit: options.estimatedGasLimit,
