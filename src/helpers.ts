@@ -1,8 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {Signer} from '@ethersproject/abstract-signer';
-import {TransactionRequest, TransactionResponse, Web3Provider,} from '@ethersproject/providers';
+import {
+  TransactionRequest,
+  TransactionResponse,
+  Web3Provider,
+} from '@ethersproject/providers';
 import {getAddress} from '@ethersproject/address';
-import {Contract, PayableOverrides,} from '@ethersproject/contracts';
+import {Contract, PayableOverrides} from '@ethersproject/contracts';
 import * as zk from 'zksync-ethers';
 import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
@@ -51,11 +55,14 @@ import ownershipFacet from '../extendedArtifacts/OwnershipFacet.json';
 import {Artifact, EthereumProvider} from 'hardhat/types';
 import {DeploymentsManager} from './DeploymentsManager';
 import enquirer from 'enquirer';
-import {parse as parseTransaction, Transaction,} from '@ethersproject/transactions';
+import {
+  parse as parseTransaction,
+  Transaction,
+} from '@ethersproject/transactions';
 import {getDerivationPath} from './hdpath';
 import {bnReplacer} from './internal/utils';
 import {DeploymentFactory} from './DeploymentFactory';
-import {ethers} from "ethers";
+import {ethers} from 'ethers';
 
 let LedgerSigner: any; // TODO type
 let ethersprojectHardwareWalletsModule: any | undefined;
@@ -403,8 +410,9 @@ export function addHelpers(
     } = await getFrom(options.from);
     const create2DeployerAddress =
       await deploymentManager.getDeterministicDeploymentFactoryAddress();
-    const factoryType = await deploymentManager.getDeterministicDeploymentFactoryType()
-    if(factoryType === FactoryType.SafeSingletonFactory) {
+    const factoryType =
+      await deploymentManager.getDeterministicDeploymentFactoryType();
+    if (factoryType === FactoryType.SafeSingletonFactory) {
       const code = await provider.getCode(create2DeployerAddress);
       if (code === '0x') {
         const senderAddress =
@@ -464,8 +472,7 @@ export function addHelpers(
           log(` (tx: ${deployTx.hash})...`);
         }
         await deployTx.wait(options.waitConfirmations);
-    }
-
+      }
     }
     return create2DeployerAddress;
   }
@@ -547,14 +554,15 @@ export function addHelpers(
     let create2Address;
     if (options.deterministicDeployment) {
       if (typeof unsignedTx.data === 'string') {
-        const factoryType = await deploymentManager.getDeterministicDeploymentFactoryType()
+        const factoryType =
+          await deploymentManager.getDeterministicDeploymentFactoryType();
 
         const create2Salt =
           typeof options.deterministicDeployment === 'string'
             ? hexlify(zeroPad(options.deterministicDeployment, 32))
             : '0x0000000000000000000000000000000000000000000000000000000000000000';
 
-        if(factoryType === FactoryType.SafeSingletonFactory) {
+        if (factoryType === FactoryType.SafeSingletonFactory) {
           const create2DeployerAddress = await ensureCreate2DeployerReady(
             options
           );
@@ -566,7 +574,8 @@ export function addHelpers(
 
           unsignedTx.data = create2Salt + unsignedTx.data.slice(2);
         } else if (factoryType === FactoryType.ImmutableCreate2Factory) {
-          const factoryAddress = await deploymentManager.getDeterministicDeploymentFactoryAddress()
+          const factoryAddress =
+            await deploymentManager.getDeterministicDeploymentFactoryAddress();
           const dataToDeploy = unsignedTx.data;
           create2Address = await factory.getCreate2Address(
             factoryAddress,
@@ -577,16 +586,20 @@ export function addHelpers(
 
           // The ABI for the `safeCreate2` function
           const safeCreate2AbiFragment = [
-            "function safeCreate2(bytes32 salt, bytes calldata initializationCode) external payable returns (address)"
+            'function safeCreate2(bytes32 salt, bytes calldata initializationCode) external payable returns (address)',
           ];
 
           // Contract address and ABI
-          const contractInterface = new ethers.utils.Interface(safeCreate2AbiFragment);
+          const contractInterface = new ethers.utils.Interface(
+            safeCreate2AbiFragment
+          );
 
           // Encode the contract function call
-          unsignedTx.data = contractInterface.encodeFunctionData('safeCreate2', [create2Salt, dataToDeploy]);
+          unsignedTx.data = contractInterface.encodeFunctionData(
+            'safeCreate2',
+            [create2Salt, dataToDeploy]
+          );
         }
-
       } else {
         throw new Error('unsigned tx data as bytes not supported');
       }
@@ -1487,7 +1500,11 @@ Note that in this case, the contract deployment will not behave the same if depl
           data,
         });
 
-        proxy = await _deployOne(proxyName, proxyOptions, true);
+        proxy = await _deployOne(
+          proxyName,
+          proxyOptions,
+          !proxyOptions.skipIfAlreadyDeployed
+        );
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
         let from = options.from;
