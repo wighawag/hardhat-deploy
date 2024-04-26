@@ -890,6 +890,7 @@ export class DeploymentsManager {
     if (deployment.factoryDeps?.length) {
       obj.factoryDeps = deployment.factoryDeps;
     }
+
     this.db.deployments[name] = obj;
     if (obj.address === undefined && obj.transactionHash !== undefined) {
       let receiptFetched;
@@ -1047,7 +1048,11 @@ export class DeploymentsManager {
         if (externalContracts.deploy) {
           this.db.onlyArtifacts = externalContracts.artifacts;
           try {
-            await this.executeDeployScripts([externalContracts.deploy], tags, options.tagsRequireAll);
+            await this.executeDeployScripts(
+              [externalContracts.deploy],
+              tags,
+              options.tagsRequireAll
+            );
           } finally {
             this.db.onlyArtifacts = undefined;
           }
@@ -1067,7 +1072,7 @@ export class DeploymentsManager {
   public async executeDeployScripts(
     deployScriptsPaths: string[],
     tags: string[] = [],
-    tagsRequireAll = false,
+    tagsRequireAll = false
   ): Promise<void> {
     const wasWrittingToFiles = this.db.writeDeploymentsToFiles;
     // TODO loop over companion networks ?
@@ -1127,8 +1132,11 @@ export class DeploymentsManager {
         bag.push(scriptFilePath);
       }
       // console.log("tags found " + scriptFilePath, scriptTags);
-      if (tagsRequireAll && tags.every(tag => scriptTags.includes(tag))
-        || !tagsRequireAll && (tags.length == 0 || tags.some(tag => scriptTags.includes(tag)))) {
+      if (
+        (tagsRequireAll && tags.every((tag) => scriptTags.includes(tag))) ||
+        (!tagsRequireAll &&
+          (tags.length == 0 || tags.some((tag) => scriptTags.includes(tag))))
+      ) {
         scriptFilePaths.push(scriptFilePath);
       }
     }

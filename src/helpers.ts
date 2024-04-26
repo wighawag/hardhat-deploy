@@ -633,13 +633,16 @@ export function addHelpers(
       options,
       create2Address
     );
+
     const deployment = {
       ...preDeployment,
       address,
       receipt,
       transactionHash: receipt.transactionHash,
       libraries: options.libraries,
+      factoryDeps: unsignedTx.customData?.factoryDeps || [],
     };
+
     await saveDeployment(name, deployment);
     if (options.log || hardwareWallet) {
       print(
@@ -878,7 +881,8 @@ export function addHelpers(
 
       if (transaction) {
         const differences = await factory.compareDeploymentTransaction(
-          transaction
+          transaction,
+          deployment
         );
         return {differences, address: deployment.address};
       } else {
