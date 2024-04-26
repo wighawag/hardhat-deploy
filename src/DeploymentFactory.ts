@@ -3,13 +3,13 @@ import {
   TransactionRequest,
   TransactionResponse,
 } from '@ethersproject/providers';
-import {ContractFactory, PayableOverrides, Signer, ethers} from 'ethers';
-import {Artifact} from 'hardhat/types';
+import { ContractFactory, PayableOverrides, Signer, ethers } from 'ethers';
+import { Artifact } from 'hardhat/types';
 import * as zk from 'zksync-ethers';
-import {Address, Deployment, DeployOptions, ExtendedArtifact} from '../types';
-import {getAddress} from '@ethersproject/address';
-import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {hexConcat} from '@ethersproject/bytes';
+import { Address, Deployment, DeployOptions, ExtendedArtifact } from '../types';
+import { getAddress } from '@ethersproject/address';
+import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
+import { hexConcat } from '@ethersproject/bytes';
 
 export class DeploymentFactory {
   private factory: ContractFactory;
