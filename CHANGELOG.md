@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.12.3
+
+### Patch Changes
+
+- Default use owner function to get address by @aefhm
+
 ## 0.12.2
 
 ### Patch Changes
