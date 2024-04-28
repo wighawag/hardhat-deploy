@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.12.4
+
+### Patch Changes
+
+- Fix factory deps and re-deployment by @novaknole
+
 ## 0.12.3
 
 ### Patch Changes
