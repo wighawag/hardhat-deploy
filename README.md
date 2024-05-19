@@ -147,7 +147,7 @@ if you use `ethers.js` we recommend you also install `hardhat-deploy-ethers` whi
 
 
 ```bash
-npm install --save-dev  @nomicfoundation/hardhat-ethers hardhat-deploy-ethers ethers
+npm install --save-dev @nomicfoundation/hardhat-ethers hardhat-deploy-ethers ethers
 ```
 
 More details on `hardhat-deploy-ethers` repo: https://github.com/wighawag/hardhat-deploy-ethers#readme
