@@ -115,7 +115,7 @@ You'll need to wait the tx resolve, or increase the gas price via --gasprice (th
 }
 
 function fixProvider(providerGiven: any): any {
-  // alow it to be used by ethers without any change
+  // allow it to be used by ethers without any change
   if (providerGiven.sendAsync === undefined) {
     providerGiven.sendAsync = (
       req: {
@@ -2322,7 +2322,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           if (typeof options.deterministicSalt === 'string') {
             if (options.deterministicSalt === salt) {
               throw new Error(
-                `deterministicSalt cannot be 0x000..., it needs to be a non-zero bytes32 salt. This is to ensure you are explicitly specyfying different addresses for multiple diamonds`
+                `deterministicSalt cannot be 0x000..., it needs to be a non-zero bytes32 salt. This is to ensure you are explicitly specifying different addresses for multiple diamonds`
               );
             } else {
               if (options.deterministicSalt.length !== 66) {
@@ -2964,7 +2964,7 @@ data: ${data}
               )) as TransactionResponse;
               txHashToWait = tx.hash;
               if (tx.hash !== txHash) {
-                console.error('non mathcing tx hashes after resubmitting...');
+                console.error('non matching tx hashes after resubmitting...');
               }
               console.log('waiting for newly broadcasted tx ...');
             } else {
@@ -3012,7 +3012,7 @@ data: ${data}
                   );
                 }
                 await onPendingTx(txReq);
-                console.error('non mathcing tx hashes after resubmitting...');
+                console.error('non matching tx hashes after resubmitting...');
               }
             }
           } else if (answer === 'increase gas') {
