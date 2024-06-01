@@ -588,7 +588,7 @@ export function mergeABIs(
           return false;
         }
         if (!existingEthersFragment) {
-          return v.name === fragment.name; // TODO fallback and receive hanlding
+          return v.name === fragment.name; // TODO fallback and receive handling
         }
 
         if (
@@ -606,7 +606,7 @@ export function mergeABIs(
         } else if (newEthersFragment.type === 'event') {
           return existingEthersFragment.format() === newEthersFragment.format();
         } else {
-          return v.name === fragment.name; // TODO fallback and receive hanlding
+          return v.name === fragment.name; // TODO fallback and receive handling
         }
       });
       if (foundSameSig) {
