@@ -207,12 +207,15 @@ export async function submitSources(
         break;
       case '1284':
         host = 'https://api-moonbeam.moonscan.io';
-        break;      
+        break;
       case '1285':
         host = 'https://api-moonriver.moonscan.io';
         break;
       case '80001':
         host = 'https://api-testnet.polygonscan.com';
+        break;
+      case '80002':
+        host = 'https://api-amoy.polygonscan.com';
         break;
       case '4002':
         host = 'https://api-testnet.ftmscan.com';
@@ -226,6 +229,9 @@ export async function submitSources(
       case '421613':
         host = 'https://api-goerli.arbiscan.io';
         break;
+      case '421614':
+        host = 'https://api-sepolia.arbiscan.io';
+        break;
       case '43113':
         host = 'https://api-testnet.snowtrace.io';
         break;
@@ -233,11 +239,11 @@ export async function submitSources(
         host = 'https://api.snowtrace.io';
         break;
       case '338':
-          host = 'https://api-testnet.cronoscan.com/api';
-          break;
+        host = 'https://api-testnet.cronoscan.com/api';
+        break;
       case '25':
-          host = 'https://api.cronoscan.com/api';
-          break;
+        host = 'https://api.cronoscan.com/api';
+        break;
       case '11155111':
         host = 'https://api-sepolia.etherscan.io';
         break;
