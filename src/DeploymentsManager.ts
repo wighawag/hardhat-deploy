@@ -925,6 +925,7 @@ export class DeploymentsManager {
     if (deployment.factoryDeps?.length) {
       obj.factoryDeps = deployment.factoryDeps;
     }
+
     this.db.deployments[name] = obj;
     if (obj.address === undefined && obj.transactionHash !== undefined) {
       let receiptFetched;

@@ -113,7 +113,7 @@ You'll need to wait the tx resolve, or increase the gas price via --gasprice (th
 }
 
 function fixProvider(providerGiven: any): any {
-  // alow it to be used by ethers without any change
+  // allow it to be used by ethers without any change
   if (providerGiven.sendAsync === undefined) {
     providerGiven.sendAsync = (
       req: {
@@ -668,13 +668,16 @@ export function addHelpers(
       options,
       create2Address
     );
+
     const deployment = {
       ...preDeployment,
       address,
       receipt,
       transactionHash: receipt.transactionHash,
       libraries: options.libraries,
+      factoryDeps: unsignedTx.customData?.factoryDeps || [],
     };
+
     await saveDeployment(name, deployment);
     if (options.log || hardwareWallet) {
       print(
@@ -913,7 +916,8 @@ export function addHelpers(
 
       if (transaction) {
         const differences = await factory.compareDeploymentTransaction(
-          transaction
+          transaction,
+          deployment
         );
         return {differences, address: deployment.address};
       } else {
@@ -1508,11 +1512,19 @@ Note that in this case, the contract deployment will not behave the same if depl
         // console.log(`proxy deployed at ${proxy.address} for ${proxy.receipt.gasUsed}`);
       } else {
         let from = options.from;
+        let ownerStorage: string;
 
-        const ownerStorage = await provider.getStorageAt(
-          proxy.address,
-          '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
-        );
+        // Use EIP173 defined owner function if present
+        const deployedProxy = new Contract(proxy.address, proxy.abi, provider);
+        if (deployedProxy.functions['owner']) {
+          ownerStorage = await deployedProxy.owner();
+        } else {
+          ownerStorage = await provider.getStorageAt(
+            proxy.address,
+            '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103'
+          );
+        }
+
         const currentOwner = getAddress(`0x${ownerStorage.substr(-40)}`);
         if (currentOwner === AddressZero) {
           if (checkProxyAdmin) {
@@ -2349,7 +2361,7 @@ Note that in this case, the contract deployment will not behave the same if depl
           if (typeof options.deterministicSalt === 'string') {
             if (options.deterministicSalt === salt) {
               throw new Error(
-                `deterministicSalt cannot be 0x000..., it needs to be a non-zero bytes32 salt. This is to ensure you are explicitly specyfying different addresses for multiple diamonds`
+                `deterministicSalt cannot be 0x000..., it needs to be a non-zero bytes32 salt. This is to ensure you are explicitly specifying different addresses for multiple diamonds`
               );
             } else {
               if (options.deterministicSalt.length !== 66) {
@@ -2991,7 +3003,7 @@ data: ${data}
               )) as TransactionResponse;
               txHashToWait = tx.hash;
               if (tx.hash !== txHash) {
-                console.error('non mathcing tx hashes after resubmitting...');
+                console.error('non matching tx hashes after resubmitting...');
               }
               console.log('waiting for newly broadcasted tx ...');
             } else {
@@ -3039,7 +3051,7 @@ data: ${data}
                   );
                 }
                 await onPendingTx(txReq);
-                console.error('non mathcing tx hashes after resubmitting...');
+                console.error('non matching tx hashes after resubmitting...');
               }
             }
           } else if (answer === 'increase gas') {

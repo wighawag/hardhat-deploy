@@ -1,5 +1,17 @@
 # hardhat-deploy
 
+## 0.12.4
+
+### Patch Changes
+
+- Fix factory deps and re-deployment by @novaknole
+
+## 0.12.3
+
+### Patch Changes
+
+- Default use owner function to get address by @aefhm
+
 ## 0.12.2
 
 ### Patch Changes

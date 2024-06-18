@@ -415,13 +415,16 @@ Alternatively, you can change the mainnet etherscan api key env var name to some
       ...
       verify: {
         etherscan: {
-          apiUrl: 'http://mynetwork.xyz'
+          apiUrl: 'https://api-testnet.ftmscan.com',
+          apiKey: process.env.ETHERSCAN_API_KEY_FANTOM
         }
       }
     }
   }
 }
 ```
+NOTE: some projects use `apiUrl` like `https://api-testnet.ftmscan.com/api`, but we should remove `/api` path here, just fill in `https://api-testnet.ftmscan.com`
+
 
 `--license <SPDX license id>`: SPDX license (useful if SPDX is not listed in the sources), need to be supported by etherscan: https://etherscan.io/contract-license-types
 
@@ -473,7 +476,7 @@ One of the following options need to be set for this task to have any effects :
 
 `--export-all <filepath>`: export one file that contains all contracts across all saved deployment, regardless of the network being invoked. If the extension ends in .ts it will generate a typescript file containing the contracts info.
 
-This last option has some limitations, when combined with the use of external deployments (see [Configuration](#configuration)). If such external deployments were using older version of **hardhat-deploy** or truffle, the chainId might be missing. In order for these to be exported, the hardhat network config need to explicity state the chainId in the `networks` config of `hardhat.config.js`.
+This last option has some limitations, when combined with the use of external deployments (see [Configuration](#configuration)). If such external deployments were using older version of **hardhat-deploy** or truffle, the chainId might be missing. In order for these to be exported, the hardhat network config need to explicitly state the chainId in the `networks` config of `hardhat.config.js`.
 
 With both `--export` and `--export-all`, using the special `<filepath>` value of `-` will output to `STDOUT` rather than writing a normal file.
 
@@ -1291,7 +1294,7 @@ Note that if the code for Facet2 and Facet3 changes, they will also be redeploye
 
 Note that the diamond has 3 facet added by default. These facets are used for ownership, diamondCut and diamond loupe.
 
-The implementation is a sligthly modified version of the [reference implementation by Nick Mudge](https://github.com/mudgen/diamond-3).
+The implementation is a slightly modified version of the [reference implementation by Nick Mudge](https://github.com/mudgen/diamond-3).
 The only difference is the custom constructor that allow multiple initialization, used to allow the default ERC165 facet to be initialised along your custom initialization function.
 
 ### onUpgrade calls
@@ -1310,6 +1313,24 @@ diamond.deploy('ADiamondContract', {
     args: ['one', 2, '0x3'],
   },
 });
+```
+
+### use diamond contract for your scripts
+
+set external typechain in `hardhat.config.ts`, this make sure typechain knows this abi and generate typechain files for the diamond contract
+```ts
+const config: HardhatUserConfig = {
+	typechain: {
+		externalArtifacts: ['deployments/localhost/ADiamondContract.json']
+	},
+  ...
+```
+
+in your scripts
+
+```ts
+const ADiamondContract = await ethers.getContract<ADiamondContract>('ADiamondContract')
+// do your stuff
 ```
 
 ### more...
