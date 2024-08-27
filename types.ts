@@ -8,6 +8,7 @@ import {
 } from 'hardhat/types';
 import type {BigNumber} from '@ethersproject/bignumber';
 import {Signer} from '@ethersproject/abstract-signer';
+import { BytesLike } from 'ethers';
 
 export type ExtendedArtifact = {
   abi: any[];
@@ -168,8 +169,28 @@ export interface DeployOptionsBase extends TxOptions {
   proxy?: boolean | string | ProxyOptions; // TODO support different type of proxies ?
 }
 
-export interface DeployOptions extends DeployOptionsBase {
+export interface ZksyncOverrides {
+  factoryDeps?: BytesLike[],
+  gasPerPubdata?: bigint,
+  deploymentType?: DeploymentType
+  salt?:BytesLike
+}
+
+export type DeploymentType =
+| 'create'
+| 'createAccount'
+| 'create2'
+| 'create2Account';
+
+export interface ZksyncOptions {
+  deploymentType?: DeploymentType | undefined
+  gasPerPubData?: bigint,
+  factoryDeps?: BytesLike[]
+}
+
+export interface DeployOptions extends DeployOptionsBase{
   deterministicDeployment?: boolean | string;
+  zkSync?:ZksyncOptions,
 }
 
 export interface Create2DeployOptions extends DeployOptionsBase {
@@ -357,6 +378,7 @@ export interface DeploymentSubmission {
     methodName: string;
     args: any[];
   };
+  zkSync?:ZksyncOptions,
   storageLayout?: any;
   libraries?: Libraries;
   gasEstimates?: any;

@@ -16,7 +16,7 @@ import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
 import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
-import {zeroPad, hexlify, hexConcat} from '@ethersproject/bytes';
+import {zeroPad, hexlify} from '@ethersproject/bytes';
 import {Interface, FunctionFragment} from '@ethersproject/abi';
 import {
   Deployment,
@@ -65,6 +65,7 @@ import {
 import {getDerivationPath} from './hdpath';
 import {bnReplacer} from './internal/utils';
 import {DeploymentFactory} from './DeploymentFactory';
+import { zkSyncAccounts } from './zksync-constants';
 
 let LedgerSigner: any; // TODO type
 let ethersprojectHardwareWalletsModule: any | undefined;
@@ -279,25 +280,36 @@ export function addHelpers(
     ) => Promise<void>;
   };
 } {
-  let provider: Web3Provider | zk.Web3Provider;
+  let provider: Web3Provider | zk.Web3Provider | zk.Provider;
   const availableAccounts: {[name: string]: boolean} = {};
 
-  async function init(): Promise<Web3Provider | zk.Web3Provider> {
+  async function init(): Promise<Web3Provider | zk.Web3Provider | zk.Provider> {
     if (!provider) {
       await deploymentManager.setupAccounts();
       if (network.zksync) {
-        provider = new zk.Web3Provider(fixProvider(network.provider));
+        if(network.name==='hardhat' || network.name === 'localhost'){
+          provider = new zk.Provider("http://0.0.0.0:3050");
+        }else{
+          provider = new zk.Web3Provider(fixProvider(network.provider));
+        }
       } else {
         provider = new Web3Provider(fixProvider(network.provider));
       }
       try {
-        const accounts = await provider.send('eth_accounts', []);
+        if(!network.zksync){
+          const accounts = await provider.send('eth_accounts', []);
+          for (const account of accounts) {
+            availableAccounts[account.toLowerCase()] = true;
+          }
+          
+          for (const address of deploymentManager.impersonatedAccounts) {
+            availableAccounts[address.toLowerCase()] = true;
+          }
+        } else{
+          const accounts = zkSyncAccounts;
         for (const account of accounts) {
-          availableAccounts[account.toLowerCase()] = true;
+          availableAccounts[account.address.toLowerCase()] = true;
         }
-
-        for (const address of deploymentManager.impersonatedAccounts) {
-          availableAccounts[address.toLowerCase()] = true;
         }
       } catch (e) {}
     }
@@ -537,27 +549,35 @@ export function addHelpers(
       nonce: options.nonce,
     };
 
+    const salt = 
+    typeof options.deterministicDeployment === 'string'
+      ? hexlify(zeroPad(options.deterministicDeployment, 32))
+      : '0x0000000000000000000000000000000000000000000000000000000000000000';
+
     const factory = new DeploymentFactory(
       getArtifact,
       linkedArtifact,
       args,
       network,
       ethersSigner,
-      overrides
+      {
+        ...overrides,
+        deploymentType: options.zkSync?.deploymentType,
+        gasPerPubdata: options.zkSync?.gasPerPubData,
+        salt: salt
+      }
     );
 
     const unsignedTx = await factory.getDeployTransaction();
 
     let create2Address;
-    if (options.deterministicDeployment) {
+    
+    if (options.deterministicDeployment && !network.zksync) {
       if (typeof unsignedTx.data === 'string') {
         const create2DeployerAddress = await ensureCreate2DeployerReady(
           options
         );
-        const create2Salt =
-          typeof options.deterministicDeployment === 'string'
-            ? hexlify(zeroPad(options.deterministicDeployment, 32))
-            : '0x0000000000000000000000000000000000000000000000000000000000000000';
+        const create2Salt = salt;
         create2Address = await factory.getCreate2Address(
           create2DeployerAddress,
           create2Salt
@@ -641,6 +661,11 @@ export function addHelpers(
       transactionHash: receipt.transactionHash,
       libraries: options.libraries,
       factoryDeps: unsignedTx.customData?.factoryDeps || [],
+      zkSync:{
+        deploymentType:options.zkSync?.deploymentType ?? 'create',
+        gasPerPubdata: options.zkSync?.gasPerPubData,
+        salt:options.deterministicDeployment
+      }
     };
 
     await saveDeployment(name, deployment);
@@ -833,19 +858,27 @@ export function addHelpers(
 
     const {ethersSigner} = await getFrom(options.from);
     const {artifact: linkedArtifact} = await getLinkedArtifact(name, options);
+
+    const salt = 
+    typeof options.deterministicDeployment === 'string'
+      ? hexlify(zeroPad(options.deterministicDeployment, 32))
+      : '0x0000000000000000000000000000000000000000000000000000000000000000';
+
     const factory = new DeploymentFactory(
       getArtifact,
       linkedArtifact,
       args,
       network,
-      ethersSigner
+      ethersSigner,
+      {
+        deploymentType: options.zkSync?.deploymentType,
+        gasPerPubdata: options.zkSync?.gasPerPubData,
+        salt: salt
+      }
     );
 
-    if (options.deterministicDeployment) {
-      const create2Salt =
-        typeof options.deterministicDeployment === 'string'
-          ? hexlify(zeroPad(options.deterministicDeployment, 32))
-          : '0x0000000000000000000000000000000000000000000000000000000000000000';
+    if (options.deterministicDeployment && !network.zksync) {
+      const create2Salt = salt;
       const create2DeployerAddress =
         await deploymentManager.getDeterministicDeploymentFactoryAddress();
       const create2Address = await factory.getCreate2Address(
@@ -936,6 +969,11 @@ export function addHelpers(
             linkedData: options.linkedData,
             libraries: options.libraries,
             args: argsArray,
+            zkSync:{
+                deploymentType:options.zkSync?.deploymentType,
+                gasPerPubdata:options.zkSync?.gasPerPubData,
+                factoryDeps:options.zkSync?.factoryDeps
+            }
           };
           await saveDeployment(name, newDeployment, artifactName);
           result = {
@@ -963,6 +1001,11 @@ export function addHelpers(
           linkedData: options.linkedData,
           libraries: options.libraries,
           args: argsArray,
+          zkSync:{
+            deploymentType:options.zkSync?.deploymentType,
+            gasPerPubdata:options.zkSync?.gasPerPubData,
+            factoryDeps:options.zkSync?.factoryDeps
+          }
         };
         await saveDeployment(name, newDeployment, artifactName);
         result = {
@@ -1667,8 +1710,10 @@ Note that in this case, the contract deployment will not behave the same if depl
       from = wallet.address;
     } else {
       if (availableAccounts[from.toLowerCase()]) {
+        network.provider.getSignerFrom(from)
         ethersSigner = provider.getSigner(from);
-      } else {
+      }
+      else {
         // TODO register protocol based account as availableAccounts ? if so do not else here
         const registeredProtocol =
           deploymentManager.addressesToProtocol[from.toLowerCase()];
@@ -2757,7 +2802,7 @@ data: ${data}
     if (typeof args === 'undefined') {
       args = [];
     }
-    let caller: Web3Provider | Signer | zk.Web3Provider | zk.Signer = provider;
+    let caller: Web3Provider | Signer | zk.Web3Provider | zk.Signer | zk.Provider = provider;
     const {ethersSigner} = await getOptionalFrom(options.from);
     if (ethersSigner) {
       caller = ethersSigner;
