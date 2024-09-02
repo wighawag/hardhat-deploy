@@ -891,6 +891,11 @@ export class DeploymentsManager {
       obj.factoryDeps = deployment.factoryDeps;
     }
 
+    if (deployment.zksync?.deploymentType) {
+      obj.zksync = {};
+      obj.zksync.deploymentType = deployment.zksync.deploymentType;
+    }
+
     this.db.deployments[name] = obj;
     if (obj.address === undefined && obj.transactionHash !== undefined) {
       let receiptFetched;

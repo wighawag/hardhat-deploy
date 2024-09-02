@@ -65,7 +65,8 @@ import {
 import {getDerivationPath} from './hdpath';
 import {bnReplacer} from './internal/utils';
 import {DeploymentFactory} from './DeploymentFactory';
-import { zkSyncAccounts } from './zksync-constants';
+import { HardhatZksyncProvider } from './zksync/hardhat-zksync-provider';
+import { getSignerAccounts } from './zksync/utils';
 
 let LedgerSigner: any; // TODO type
 let ethersprojectHardwareWalletsModule: any | undefined;
@@ -280,37 +281,33 @@ export function addHelpers(
     ) => Promise<void>;
   };
 } {
-  let provider: Web3Provider | zk.Web3Provider | zk.Provider;
+  let provider: Web3Provider | HardhatZksyncProvider;
   const availableAccounts: {[name: string]: boolean} = {};
 
-  async function init(): Promise<Web3Provider | zk.Web3Provider | zk.Provider> {
+  async function init(): Promise<Web3Provider | HardhatZksyncProvider> {
     if (!provider) {
       await deploymentManager.setupAccounts();
       if (network.zksync) {
-        if(network.name==='hardhat' || network.name === 'localhost'){
-          provider = new zk.Provider("http://0.0.0.0:3050");
-        }else{
-          provider = new zk.Web3Provider(fixProvider(network.provider));
-        }
+        provider = new HardhatZksyncProvider(network, network.config.url);
       } else {
         provider = new Web3Provider(fixProvider(network.provider));
       }
       try {
-        if(!network.zksync){
-          const accounts = await provider.send('eth_accounts', []);
-          for (const account of accounts) {
-            availableAccounts[account.toLowerCase()] = true;
-          }
-          
-          for (const address of deploymentManager.impersonatedAccounts) {
-            availableAccounts[address.toLowerCase()] = true;
-          }
+        let accounts: string[] = [];
+        if(network.zksync){
+          accounts = await getSignerAccounts(network, provider as HardhatZksyncProvider);
         } else{
-          const accounts = zkSyncAccounts;
+          accounts = await provider.send('eth_accounts', []);
+        }
+
         for (const account of accounts) {
-          availableAccounts[account.address.toLowerCase()] = true;
+          availableAccounts[account.toLowerCase()] = true;
         }
+
+        for (const address of deploymentManager.impersonatedAccounts) {
+          availableAccounts[address.toLowerCase()] = true;
         }
+      
       } catch (e) {}
     }
     return provider;
@@ -540,19 +537,23 @@ export function addHelpers(
       options
     );
 
-    const overrides: PayableOverrides = {
-      gasLimit: options.gasLimit,
-      gasPrice: options.gasPrice,
-      maxFeePerGas: options.maxFeePerGas,
-      maxPriorityFeePerGas: options.maxPriorityFeePerGas,
-      value: options.value,
-      nonce: options.nonce,
-    };
-
     const salt = 
     typeof options.deterministicDeployment === 'string'
       ? hexlify(zeroPad(options.deterministicDeployment, 32))
       : '0x0000000000000000000000000000000000000000000000000000000000000000';
+
+    const overrides: PayableOverrides = {
+        gasLimit: options.gasLimit,
+        gasPrice: options.gasPrice,
+        maxFeePerGas: options.maxFeePerGas,
+        maxPriorityFeePerGas: options.maxPriorityFeePerGas,
+        value: options.value,
+        nonce: options.nonce,
+        customData: options.customData,
+      };
+
+    overrides.customData = overrides.customData ?? {};
+    overrides.customData.salt = salt;
 
     const factory = new DeploymentFactory(
       getArtifact,
@@ -562,9 +563,8 @@ export function addHelpers(
       ethersSigner,
       {
         ...overrides,
-        deploymentType: options.zkSync?.deploymentType,
-        gasPerPubdata: options.zkSync?.gasPerPubData,
-        salt: salt
+        deploymentType: options.zksync?.deploymentType,
+        additionalFactoryDeps: options.zksync?.additionalFactoryDeps,
       }
     );
 
@@ -661,10 +661,8 @@ export function addHelpers(
       transactionHash: receipt.transactionHash,
       libraries: options.libraries,
       factoryDeps: unsignedTx.customData?.factoryDeps || [],
-      zkSync:{
-        deploymentType:options.zkSync?.deploymentType ?? 'create',
-        gasPerPubdata: options.zkSync?.gasPerPubData,
-        salt:options.deterministicDeployment
+      zksync:{
+        deploymentType:options.zksync?.deploymentType ?? 'create',
       }
     };
 
@@ -871,13 +869,11 @@ export function addHelpers(
       network,
       ethersSigner,
       {
-        deploymentType: options.zkSync?.deploymentType,
-        gasPerPubdata: options.zkSync?.gasPerPubData,
-        salt: salt
+        deploymentType: options.zksync?.deploymentType
       }
     );
 
-    if (options.deterministicDeployment && !network.zksync) {
+    if (options.deterministicDeployment) {
       const create2Salt = salt;
       const create2DeployerAddress =
         await deploymentManager.getDeterministicDeploymentFactoryAddress();
@@ -969,10 +965,8 @@ export function addHelpers(
             linkedData: options.linkedData,
             libraries: options.libraries,
             args: argsArray,
-            zkSync:{
-                deploymentType:options.zkSync?.deploymentType,
-                gasPerPubdata:options.zkSync?.gasPerPubData,
-                factoryDeps:options.zkSync?.factoryDeps
+            zksync:{
+                deploymentType:options.zksync?.deploymentType,
             }
           };
           await saveDeployment(name, newDeployment, artifactName);
@@ -1001,10 +995,8 @@ export function addHelpers(
           linkedData: options.linkedData,
           libraries: options.libraries,
           args: argsArray,
-          zkSync:{
-            deploymentType:options.zkSync?.deploymentType,
-            gasPerPubdata:options.zkSync?.gasPerPubData,
-            factoryDeps:options.zkSync?.factoryDeps
+          zksync:{
+            deploymentType:options.zksync?.deploymentType,
           }
         };
         await saveDeployment(name, newDeployment, artifactName);
@@ -1710,8 +1702,12 @@ Note that in this case, the contract deployment will not behave the same if depl
       from = wallet.address;
     } else {
       if (availableAccounts[from.toLowerCase()]) {
-        network.provider.getSignerFrom(from)
-        ethersSigner = provider.getSigner(from);
+        if(network.zksync){
+          ethersSigner = provider.getSigner(from);
+        } else {
+          network.provider.getSignerFrom(from)
+          ethersSigner = provider.getSigner(from);
+        }
       }
       else {
         // TODO register protocol based account as availableAccounts ? if so do not else here

@@ -9,6 +9,7 @@ import {
 import type {BigNumber} from '@ethersproject/bignumber';
 import {Signer} from '@ethersproject/abstract-signer';
 import { BytesLike } from 'ethers';
+import { DeploymentType } from 'zksync-ethers/build/types';
 
 export type ExtendedArtifact = {
   abi: any[];
@@ -169,28 +170,16 @@ export interface DeployOptionsBase extends TxOptions {
   proxy?: boolean | string | ProxyOptions; // TODO support different type of proxies ?
 }
 
-export interface ZksyncOverrides {
-  factoryDeps?: BytesLike[],
-  gasPerPubdata?: bigint,
-  deploymentType?: DeploymentType
-  salt?:BytesLike
-}
-
-export type DeploymentType =
-| 'create'
-| 'createAccount'
-| 'create2'
-| 'create2Account';
-
 export interface ZksyncOptions {
-  deploymentType?: DeploymentType | undefined
-  gasPerPubData?: bigint,
-  factoryDeps?: BytesLike[]
+  deploymentType?: DeploymentType;
+  additionalFactoryDeps?: BytesLike[];
 }
+
+export type ZksyncOverrides = ZksyncOptions
 
 export interface DeployOptions extends DeployOptionsBase{
   deterministicDeployment?: boolean | string;
-  zkSync?:ZksyncOptions,
+  zksync?: ZksyncOptions;
 }
 
 export interface Create2DeployOptions extends DeployOptionsBase {
@@ -207,6 +196,7 @@ export interface CallOptions {
   nonce?: string | number | BigNumber;
   to?: string; // TODO make to and data part of a `SimpleCallOptions` interface
   data?: string;
+  customData?: any;
 }
 
 export interface TxOptions extends CallOptions {
@@ -378,7 +368,7 @@ export interface DeploymentSubmission {
     methodName: string;
     args: any[];
   };
-  zkSync?:ZksyncOptions,
+  zksync?:ZksyncOptions,
   storageLayout?: any;
   libraries?: Libraries;
   gasEstimates?: any;
