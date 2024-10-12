@@ -3,20 +3,20 @@ import {
   TransactionRequest,
   TransactionResponse,
 } from '@ethersproject/providers';
-import { ContractFactory, PayableOverrides, Signer, ethers } from 'ethers';
+import { ContractFactory, PayableOverrides, Signer } from 'ethers';
 import { Artifact } from 'hardhat/types';
 import * as zk from 'zksync-ethers';
-import { Address, Deployment, DeployOptions, ExtendedArtifact } from '../types';
+import { Address, Deployment, DeployOptions, ExtendedArtifact, ZksyncOverrides,  } from '../types';
 import { getAddress } from '@ethersproject/address';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
-import { hexConcat } from '@ethersproject/bytes';
+import { hexConcat, hexlify } from '@ethersproject/bytes';
 
 export class DeploymentFactory {
   private factory: ContractFactory;
   private artifact: Artifact | ExtendedArtifact;
   private isZkSync: boolean;
   private getArtifact: (name: string) => Promise<Artifact>;
-  private overrides: PayableOverrides;
+  private overrides: PayableOverrides & ZksyncOverrides;
   private args: any[];
   constructor(
     getArtifact: (name: string) => Promise<Artifact>,
@@ -24,7 +24,7 @@ export class DeploymentFactory {
     args: any[],
     network: any,
     ethersSigner?: Signer | zk.Signer,
-    overrides: PayableOverrides = {}
+    overrides: PayableOverrides & ZksyncOverrides = {}
   ) {
     this.overrides = overrides;
     this.getArtifact = getArtifact;
@@ -34,7 +34,8 @@ export class DeploymentFactory {
       this.factory = new zk.ContractFactory(
         artifact.abi,
         artifact.bytecode,
-        ethersSigner as zk.Signer
+        ethersSigner as zk.Signer,
+        overrides.deploymentType
       );
     } else {
       this.factory = new ContractFactory(
@@ -85,17 +86,20 @@ export class DeploymentFactory {
   public async getDeployTransaction(): Promise<TransactionRequest> {
     let overrides = this.overrides;
     if (this.isZkSync) {
-      const factoryDeps = await this.extractFactoryDeps(this.artifact);
-      const customData = {
+      const baseDeps = await this.extractFactoryDeps(this.artifact);
+      const additionalDeps = this.overrides.additionalFactoryDeps ? this.overrides.additionalFactoryDeps.map((val) => hexlify(val)) : [];
+      const factoryDeps = [...baseDeps, ...additionalDeps];
+      const { customData, ..._overrides } = overrides ?? {};
+      overrides = {
+        ..._overrides,
         customData: {
           factoryDeps,
-          feeToken: zk.utils.ETH_ADDRESS,
+          ...customData,
         },
       };
-      overrides = {
-        ...overrides,
-        ...customData,
-      };
+      
+      delete overrides.deploymentType;
+      delete overrides.additionalFactoryDeps;
     }
 
     return this.factory.getDeployTransaction(...this.args, overrides);
