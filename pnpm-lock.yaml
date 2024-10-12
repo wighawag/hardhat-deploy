@@ -78,8 +78,8 @@ importers:
         specifier: ^6.9.4
         version: 6.10.1
       zksync-ethers:
-        specifier: ^5.0.0
-        version: 5.3.0(ethers@5.7.2)
+        specifier: ^5.8.0
+        version: 5.9.2(ethers@5.7.2)
     devDependencies:
       '@changesets/cli':
         specifier: ^2.11.1
@@ -101,7 +101,7 @@ importers:
         version: 16.6.2
       '@typescript-eslint/eslint-plugin':
         specifier: ^4.29.2
-        version: 4.29.2(@typescript-eslint/parser@4.29.2)(eslint@7.32.0)(typescript@4.3.5)
+        version: 4.29.2(@typescript-eslint/parser@4.29.2(eslint@7.32.0)(typescript@4.3.5))(eslint@7.32.0)(typescript@4.3.5)
       '@typescript-eslint/parser':
         specifier: ^4.29.2
         version: 4.29.2(eslint@7.32.0)(typescript@4.3.5)
@@ -119,7 +119,7 @@ importers:
         version: 8.3.0(eslint@7.32.0)
       hardhat:
         specifier: ^2.16.0
-        version: 2.18.0(ts-node@10.2.1)(typescript@4.3.5)
+        version: 2.18.0(ts-node@10.2.1(@types/node@16.6.2)(typescript@4.3.5))(typescript@4.3.5)
       mocha:
         specifier: ^9.1.0
         version: 9.1.0
@@ -134,7 +134,7 @@ importers:
         version: 3.3.6
       solhint-plugin-prettier:
         specifier: ^0.0.5
-        version: 0.0.5(prettier-plugin-solidity@1.0.0-beta.17)(prettier@2.3.2)
+        version: 0.0.5(prettier-plugin-solidity@1.0.0-beta.17(prettier@2.3.2))(prettier@2.3.2)
       source-map-support:
         specifier: ^0.5.12
         version: 0.5.19
@@ -1248,7 +1248,6 @@ packages:
   ethjs-util@0.1.6:
     resolution: {integrity: sha512-CUnVOQq7gSpDHZVVrQW8ExxUETWrnrvXYvYz55wOU8Uj4VCgw56XC2B/fVqQN+f7gmrnRHSLVnFAwsCuNwji8w==}
     engines: {node: '>=6.5.0', npm: '>=3'}
-    bundledDependencies: false
 
   evp_bytestokey@1.0.3:
     resolution: {integrity: sha512-/f2Go4TognH/KvCISP7OUsHn85hT9nUkxxA9BEWxFn+Oj9o8ZNLm/40hdlgSLyuOimsrTKLUMEorQexp/aPQeA==}
@@ -2679,8 +2678,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zksync-ethers@5.3.0:
-    resolution: {integrity: sha512-9Gt9WJDxaCdBjr90xCqX0+mNKvIqXotBMAdwD/dVQgaD9DnFJb6m4q2ALOQNxYOn6wl/Wdo5ZNrw7liC0SFaDQ==}
+  zksync-ethers@5.9.2:
+    resolution: {integrity: sha512-Y2Mx6ovvxO6UdC2dePLguVzvNToOY8iLWeq5ne+jgGSJxAi/f4He/NF6FNsf6x1aWX0o8dy4Df8RcOQXAkj5qw==}
+    engines: {node: '>=16.0.0'}
     peerDependencies:
       ethers: ~5.7.0
 
@@ -3486,7 +3486,7 @@ snapshots:
 
   '@types/semver@6.2.2': {}
 
-  '@typescript-eslint/eslint-plugin@4.29.2(@typescript-eslint/parser@4.29.2)(eslint@7.32.0)(typescript@4.3.5)':
+  '@typescript-eslint/eslint-plugin@4.29.2(@typescript-eslint/parser@4.29.2(eslint@7.32.0)(typescript@4.3.5))(eslint@7.32.0)(typescript@4.3.5)':
     dependencies:
       '@typescript-eslint/experimental-utils': 4.29.2(eslint@7.32.0)(typescript@4.3.5)
       '@typescript-eslint/parser': 4.29.2(eslint@7.32.0)(typescript@4.3.5)
@@ -3497,6 +3497,7 @@ snapshots:
       regexpp: 3.1.0
       semver: 7.3.5
       tsutils: 3.21.0(typescript@4.3.5)
+    optionalDependencies:
       typescript: 4.3.5
     transitivePeerDependencies:
       - supports-color
@@ -3521,6 +3522,7 @@ snapshots:
       '@typescript-eslint/typescript-estree': 4.29.2(typescript@4.3.5)
       debug: 4.3.3
       eslint: 7.32.0
+    optionalDependencies:
       typescript: 4.3.5
     transitivePeerDependencies:
       - supports-color
@@ -3541,6 +3543,7 @@ snapshots:
       is-glob: 4.0.1
       semver: 7.3.5
       tsutils: 3.21.0(typescript@4.3.5)
+    optionalDependencies:
       typescript: 4.3.5
     transitivePeerDependencies:
       - supports-color
@@ -3980,6 +3983,7 @@ snapshots:
   debug@4.3.1(supports-color@8.1.1):
     dependencies:
       ms: 2.1.2
+    optionalDependencies:
       supports-color: 8.1.1
 
   debug@4.3.2:
@@ -3993,6 +3997,7 @@ snapshots:
   debug@4.3.4(supports-color@8.1.1):
     dependencies:
       ms: 2.1.2
+    optionalDependencies:
       supports-color: 8.1.1
 
   decamelize-keys@1.1.0:
@@ -4397,11 +4402,11 @@ snapshots:
       imul: 1.0.1
 
   follow-redirects@1.13.3(debug@4.3.2):
-    dependencies:
+    optionalDependencies:
       debug: 4.3.2
 
   follow-redirects@1.13.3(debug@4.3.3):
-    dependencies:
+    optionalDependencies:
       debug: 4.3.3
 
   form-data@4.0.0:
@@ -4506,7 +4511,7 @@ snapshots:
 
   hard-rejection@2.1.0: {}
 
-  hardhat@2.18.0(ts-node@10.2.1)(typescript@4.3.5):
+  hardhat@2.18.0(ts-node@10.2.1(@types/node@16.6.2)(typescript@4.3.5))(typescript@4.3.5):
     dependencies:
       '@ethersproject/abi': 5.7.0
       '@metamask/eth-sig-util': 4.0.0
@@ -4552,12 +4557,13 @@ snapshots:
       solc: 0.7.3(debug@4.3.3)
       source-map-support: 0.5.19
       stacktrace-parser: 0.1.10
-      ts-node: 10.2.1(@types/node@16.6.2)(typescript@4.3.5)
       tsort: 0.0.1
-      typescript: 4.3.5
       undici: 5.26.0
       uuid: 8.3.2
       ws: 7.5.3
+    optionalDependencies:
+      ts-node: 10.2.1(@types/node@16.6.2)(typescript@4.3.5)
+      typescript: 4.3.5
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -5398,7 +5404,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  solhint-plugin-prettier@0.0.5(prettier-plugin-solidity@1.0.0-beta.17)(prettier@2.3.2):
+  solhint-plugin-prettier@0.0.5(prettier-plugin-solidity@1.0.0-beta.17(prettier@2.3.2))(prettier@2.3.2):
     dependencies:
       prettier: 2.3.2
       prettier-linter-helpers: 1.0.0
@@ -5761,6 +5767,6 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zksync-ethers@5.3.0(ethers@5.7.2):
+  zksync-ethers@5.9.2(ethers@5.7.2):
     dependencies:
       ethers: 5.7.2

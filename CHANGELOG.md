@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.13.0
+
+### Minor Changes
+
+- hardhat signer and provider for zksync network and update non-deterministic deployment and extend deployment with custom data
+
 ## 0.12.4
 
 ### Patch Changes
