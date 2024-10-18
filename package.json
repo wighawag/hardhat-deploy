@@ -81,7 +81,7 @@
     "match-all": "^1.2.6",
     "murmur-128": "^0.2.1",
     "qs": "^6.9.4",
-    "zksync-ethers": "^5.8.0"
+    "zksync-ethers": "^5.0.0"
   },
   "scripts": {
     "prepare": "node ./.setup.js",
