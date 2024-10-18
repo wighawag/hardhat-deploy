@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.14.0
+
+### Minor Changes
+
+- revert zksync fixes
+
 ## 0.13.0
 
 ### Minor Changes
