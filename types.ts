@@ -227,7 +227,7 @@ export interface DeploymentsExtension {
     // deploy diamond based contract (see section below)
     deploy(name: string, options: DiamondOptions): Promise<DeployResult>;
   };
-  deterministic( // return the determinsitic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
+  deterministic( // return the deterministic address as well as a function to deploy the contract, can pass the `salt` field in the option to use different salt
     name: string,
     options: Create2DeployOptions
   ): Promise<{
