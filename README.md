@@ -482,6 +482,28 @@ With both `--export` and `--export-all`, using the special `<filepath>` value of
 
 ---
 
+### 7. hardhat validate-abi-compat
+
+---
+
+This plugin adds the _validate-abi-compat_ task to Hardhat.
+
+This task will check if there are breaking changes between the old contract ABI and the new contract ABI.
+
+One of the following options needs to be set for this task to have any effects :
+
+#### **Options**
+
+`--replace <string - JSON object>`: replace contract name by its artifact name. The param should be a JSON object in that the key is the contract name, and the value is the artifact name.
+
+`--all`: validate abi compatibility for all deployed contracts.
+
+`--contract <contract name>`: validate abi comptibility for a specific contract.
+
+`--export`: export the abi compatibility report to JSON files.
+
+---
+
 ---
 
 ## Hardhat Environment Extensions
@@ -796,6 +818,8 @@ const factory = await ethers.getContractFactory(artifactName);
 
 This is a new task that the `hardhat-deploy` adds. As the name suggests it deploys contracts.
 To be exact it will look for files in the folder `deploy` or whatever was configured in `paths.deploy`, see [paths config](#extra-paths-config)
+
+It will validate for abi compatibility in all contracts and throws an error if there are any critical changes(unless you set the argument --allowBreakingAbiCompatbility).
 
 It will scan for files in alphabetical order and execute them in turn.
 
