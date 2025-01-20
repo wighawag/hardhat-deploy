@@ -758,7 +758,7 @@ task(TASK_NODE, 'Starts a JSON-RPC server on top of Hardhat EVM')
         `
 Unsupported network for JSON-RPC server. Only hardhat is currently supported.
 hardhat-deploy cannot run on the hardhat provider when defaultNetwork is not hardhat, see https://github.com/nomiclabs/hardhat/issues/1139 and https://github.com/wighawag/hardhat-deploy/issues/63
-you can specifiy hardhat via "--network hardhat"
+you can specify hardhat via "--network hardhat"
 `
       )
     }

@@ -1,5 +1,29 @@
 # hardhat-deploy
 
+## 0.14.0
+
+### Minor Changes
+
+- revert zksync fixes
+
+## 0.13.0
+
+### Minor Changes
+
+- hardhat signer and provider for zksync network and update non-deterministic deployment and extend deployment with custom data
+
+## 0.12.4
+
+### Patch Changes
+
+- Fix factory deps and re-deployment by @novaknole
+
+## 0.12.3
+
+### Patch Changes
+
+- Default use owner function to get address by @aefhm
+
 ## 0.12.2
 
 ### Patch Changes
