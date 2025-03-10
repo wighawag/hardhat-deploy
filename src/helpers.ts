@@ -535,6 +535,7 @@ export function addHelpers(
       maxPriorityFeePerGas: options.maxPriorityFeePerGas,
       value: options.value,
       nonce: options.nonce,
+      customData: options.customData
     };
 
     const factory = new DeploymentFactory(

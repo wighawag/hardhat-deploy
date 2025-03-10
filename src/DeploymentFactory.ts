@@ -86,15 +86,15 @@ export class DeploymentFactory {
     let overrides = this.overrides;
     if (this.isZkSync) {
       const factoryDeps = await this.extractFactoryDeps(this.artifact);
-      const customData = {
-        customData: {
-          factoryDeps,
-          feeToken: zk.utils.ETH_ADDRESS,
-        },
-      };
+
+      const { customData, ..._overrides } = overrides ?? {};
       overrides = {
-        ...overrides,
-        ...customData,
+        ..._overrides,
+        customData: {
+            ...customData,
+            factoryDeps,
+            feeToken: zk.utils.ETH_ADDRESS,
+        },
       };
     }
 
