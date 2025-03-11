@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 0.14.1
+
+### Patch Changes
+
+- add custom data for zksync by @zjesko
+
 ## 0.14.0
 
 ### Minor Changes
