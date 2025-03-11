@@ -186,6 +186,7 @@ export interface CallOptions {
   nonce?: string | number | BigNumber;
   to?: string; // TODO make to and data part of a `SimpleCallOptions` interface
   data?: string;
+  customData?: Record<string, any>;
 }
 
 export interface TxOptions extends CallOptions {
