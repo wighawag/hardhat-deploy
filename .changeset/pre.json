@@ -1,0 +1,8 @@
+{
+	"mode": "pre",
+	"tag": "next",
+	"initialVersions": {
+		"hardhat-deploy": "1.0.0"
+	},
+	"changesets": []
+}

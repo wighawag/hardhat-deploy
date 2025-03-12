@@ -1,18 +1,18 @@
 {
-  "compilerOptions": {
-    "target": "ES2017",
-    "module": "commonjs",
-    "lib": ["es2020"],
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "strict": true,
-    "rootDirs": ["./src", "./test"],
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true
-  },
-  "exclude": ["dist", "node_modules"],
-  "include": ["./test", "./src", "types.ts"]
+	"compilerOptions": {
+		"strict": true,
+		"strictNullChecks": true,
+		"target": "ESNext",
+		"module": "NodeNext",
+		"lib": ["ESNext", "dom"],
+		"moduleResolution": "NodeNext",
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"rootDir": "./src",
+		"outDir": "./dist/esm"
+	},
+	"include": ["src/**/*.ts"]
 }
