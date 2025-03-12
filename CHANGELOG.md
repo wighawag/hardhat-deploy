@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 1.0.0
+
+### Major Changes
+
+- v1 release, this mark the beginning of v2
+
 ## 0.14.1
 
 ### Patch Changes
