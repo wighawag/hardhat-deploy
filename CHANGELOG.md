@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 1.0.1
+
+### Patch Changes
+
+- fix customData field with undefined by @nataouze
+
 ## 1.0.0
 
 ### Major Changes
