@@ -1,0 +1,54 @@
+{
+	"name": "hardhat-deploy",
+	"version": "2.0.0-next.6",
+	"description": "deployment plugin for hardhat",
+	"publishConfig": {
+		"access": "public"
+	},
+	"type": "module",
+	"main": "dist/esm/index.js",
+	"module": "./dist/esm/index.js",
+	"types": "./dist/esm/index.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/esm/index.d.ts",
+				"default": "./dist/esm/index.js"
+			}
+		},
+		"./helpers": {
+			"import": {
+				"types": "./dist/esm/helpers.d.ts",
+				"default": "./dist/esm/helpers.js"
+			}
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"devDependencies": {
+		"@changesets/cli": "^2.28.1",
+		"@types/node": "^20.14.8",
+		"as-soon": "^0.0.11",
+		"hardhat": "^3.0.0-next.1",
+		"rimraf": "^5.0.7",
+		"rocketh": "1.0.0-next.1",
+		"set-defaults": "^0.0.5",
+		"typescript": "^5.5.2"
+	},
+	"peerDependencies": {
+		"hardhat": "^3.0.0-next.1",
+		"rocketh": "1.0.0-next.1"
+	},
+	"scripts": {
+		"build": "tsc --project tsconfig.json",
+		"dev": "as-soon -w src pnpm build"
+	},
+	"dependencies": {
+		"@nomicfoundation/hardhat-errors": "3.0.0-next.0",
+		"@nomicfoundation/hardhat-zod-utils": "3.0.0-next.0",
+		"@types/debug": "^4.1.12",
+		"debug": "^4.4.0",
+		"zod": "^3.24.2"
+	}
+}

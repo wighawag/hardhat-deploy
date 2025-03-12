@@ -1,0 +1,22 @@
+layout {
+	pane {
+		pane split_direction="vertical" {
+			pane name="shell" command="bash" {
+				args "-c" "${SHELL-bash}"
+			}
+			
+		}
+		pane split_direction="vertical" {
+			pane name="hardhat-deploy" command="bash" {
+				args "-c" "pnpm run --filter ./packages/hardhat-deploy dev; cd packages/hardhat-deploy; ${SHELL-bash}"
+			}
+			
+		}
+		pane split_direction="vertical" {
+			pane name="demoes/basic" command="bash" {
+				args "-c" "pnpm run --filter ./demoes/basic test:watch; cd demoes/basic; ${SHELL-bash}"
+			}
+			
+		}
+	}
+}
