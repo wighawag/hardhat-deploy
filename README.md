@@ -2,8 +2,7 @@
 
 _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Testing_
 
-> **A complete dev template using hardhat-deploy is available here**: https://github.com/wighawag/template-ethereum-contracts
-> It also contains various branches exemplifying the capability of hardhat-deploy. Check it out.
+> **A complete dev template using hardhat-deploy is available on this [repo (branch: hardhat-deploy-v1)](https://github.com/wighawag/template-ethereum-contracts/tree/hardhat-deploy-v1)**
 
 - [What is it for?](#what-is-it-for)
 - [hardhat-deploy in a nutshell](#hardhat-deploy-in-a-nutshell)
@@ -47,8 +46,8 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
 - [Handling contract using libraries](#handling-contract-using-libraries)
 - [Exporting Deployments](#exporting-deployments)
 - [Deploying and Upgrading Proxies](#deploying-and-upgrading-proxies)
-    - [When the constructor and init functions are different](#when-the-constructor-and-init-functions-are-different)
-    - [Proxy deployment options](#proxy-deployment-options)
+  - [When the constructor and init functions are different](#when-the-constructor-and-init-functions-are-different)
+  - [Proxy deployment options](#proxy-deployment-options)
 - [Builtin-In Support For Diamonds (EIP2535)](#builtin-in-support-for-diamonds-eip2535)
   - [deployment / upgrade](#deployment--upgrade)
   - [onUpgrade calls](#onupgrade-calls)
@@ -144,7 +143,6 @@ require('hardhat-deploy');
 ```
 
 if you use `ethers.js` we recommend you also install `hardhat-deploy-ethers` which add extra features to access deployments as ethers contract.
-
 
 ```bash
 npm install --save-dev  @nomiclabs/hardhat-ethers hardhat-deploy-ethers ethers
@@ -403,7 +401,7 @@ Note that hardhat-deploy now use a different config format to not conflict with 
 
 Keep in mind that the `ETHERSCAN_API_KEY` .env variable is read first, before the hardhat.config.ts.  
 If you want to set up multi-network api key support, you can do it by adding an env loader that use .env.<network-name> files and set `ETHERSCAN_API_KEY` for each network this way.  
-Alternatively, you can change the mainnet etherscan api key env var name to something other than `ETHERSCAN_API_KEY`, and specify the other network keys as specified above.  
+Alternatively, you can change the mainnet etherscan api key env var name to something other than `ETHERSCAN_API_KEY`, and specify the other network keys as specified above.
 
 `--api-url <url>`: let you specify your etherscan url to submit the source to. Can also be configured per network in `hardhat.config.js`:
 
@@ -423,8 +421,8 @@ Alternatively, you can change the mainnet etherscan api key env var name to some
   }
 }
 ```
-NOTE: some projects use `apiUrl` like `https://api-testnet.ftmscan.com/api`, but we should remove `/api` path here, just fill in `https://api-testnet.ftmscan.com`
 
+NOTE: some projects use `apiUrl` like `https://api-testnet.ftmscan.com/api`, but we should remove `/api` path here, just fill in `https://api-testnet.ftmscan.com`
 
 `--license <SPDX license id>`: SPDX license (useful if SPDX is not listed in the sources), need to be supported by etherscan: https://etherscan.io/contract-license-types
 
@@ -637,7 +635,7 @@ module.exports = async ({
   getChainId,
   getUnnamedAccounts,
 }) => {
-  const {deploy,execute} = deployments;
+  const {deploy, execute} = deployments;
   const {deployer} = await getNamedAccounts();
 
   const OVM_L1ERC20Gateway = await hre.companionNetworks['l1'].deployments.get(
@@ -1086,7 +1084,7 @@ For both --export and --export-all, if the extension ends in .ts it will generat
 
 ## Deploying and Upgrading Proxies
 
-As mentioned above, the deploy function can also deploy a contract through a proxy. It can be done without modification of the contract *as long as its number of constructor arguments matches the proxy initialization/update function*. If the arguments do not match, see [this section below](#when-the-constructor-and-init-functions-are-different).
+As mentioned above, the deploy function can also deploy a contract through a proxy. It can be done without modification of the contract _as long as its number of constructor arguments matches the proxy initialization/update function_. If the arguments do not match, see [this section below](#when-the-constructor-and-init-functions-are-different).
 
 The default Proxy is both ERC-1967 and ERC-173 Compliant, but other proxy can be specified, like openzeppelin transparent proxies.
 
@@ -1173,20 +1171,22 @@ module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
   // you could pause the deployment here and wait for input to continue
 };
 ```
+
 #### When the constructor and init functions are different
+
 When the constructor and proxy have different signatures, you will not be able to use the top level `args` property. Instead you can use the `execute` property of `proxy` to specify the `init` method and arguments. This will not try to pass any arguments to the constructor.
 
 ```typescript
-const deployed = await deploy("YourContract", {
+const deployed = await deploy('YourContract', {
   from: deployer,
   proxy: {
     execute: {
       init: {
-        methodName: "initialize",
-        args: ["arg1", "arg2"],
+        methodName: 'initialize',
+        args: ['arg1', 'arg2'],
       },
     },
-    proxyContract: "OpenZeppelinTransparentProxy",
+    proxyContract: 'OpenZeppelinTransparentProxy',
   },
   log: true,
   autoMine: true,
@@ -1194,6 +1194,7 @@ const deployed = await deploy("YourContract", {
 ```
 
 #### Proxy deployment options
+
 The full proxy options is as follow:
 
 ```ts
@@ -1245,8 +1246,6 @@ it matches:
   When this option is chosen, the `DefaultProxyAdmin` is also used as admin since Transparent Proxy kind of need an intermediary contract for administration. This can be configured via the `viaAdminContract` option. Note that the DefaultProxyAdmin is slightly different than the one used by openzeppelin as it allow you to set a different owner than msg.sender on first deploy, something openzeppelin version do not allow, see : https://github.com/OpenZeppelin/openzeppelin-contracts/issues/2639
 
 - `OptimizedTransparentProxy`: This contract is similar to above, except that it is optimized to not require storage read for the admin on every call.
-
-
 
 ## Builtin-In Support For Diamonds (EIP2535)
 
@@ -1318,6 +1317,7 @@ diamond.deploy('ADiamondContract', {
 ### use diamond contract for your scripts
 
 set external typechain in `hardhat.config.ts`, this make sure typechain knows this abi and generate typechain files for the diamond contract
+
 ```ts
 const config: HardhatUserConfig = {
 	typechain: {
@@ -1329,7 +1329,9 @@ const config: HardhatUserConfig = {
 in your scripts
 
 ```ts
-const ADiamondContract = await ethers.getContract<ADiamondContract>('ADiamondContract')
+const ADiamondContract = await ethers.getContract<ADiamondContract>(
+  'ADiamondContract'
+);
 // do your stuff
 ```
 
@@ -1482,7 +1484,7 @@ The same applies to the `console` task.
 
 It is possible to execute only specific parts of the deployments with `hardhat deploy --tags <tags>`
 
-`<tags>` is an array of tags, separated by comma, for example `hardhat deploy --tags tag1,tag2` will look for the scripts containing **any** of the tags `tag1`  or `tag2`
+`<tags>` is an array of tags, separated by comma, for example `hardhat deploy --tags tag1,tag2` will look for the scripts containing **any** of the tags `tag1` or `tag2`
 
 To execute only the scripts containing **all** the tags, add `--tags-require-all` flag, for example `hardhat deploy --tags tag1,tag2 --tags-require-all` will look for the scripts containing **all** of the tags `tag1` and `tag2`
 
