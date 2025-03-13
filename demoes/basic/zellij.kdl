@@ -15,11 +15,8 @@ layout {
 			}
 		}
 		pane split_direction="vertical" {
-			pane name="hardhat test" command="pnpm" {
-				args "test"
-			}
-			pane name="forge test" command="forge" {
-				args "test" "--watch"
+			pane name="test" command="pnpm" {
+				args "test:watch"
 			}
 		}
 	}
