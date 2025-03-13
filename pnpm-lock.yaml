@@ -36,8 +36,8 @@ importers:
         specifier: ^3.0.0-next.1
         version: 3.0.0-next.1(hardhat@3.0.0-next.1)(viem@2.23.10(typescript@5.8.2)(zod@3.24.2))
       '@rocketh/deploy':
-        specifier: ^1.0.0-next.2
-        version: 1.0.0-next.2(rocketh@1.0.0-next.2(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^1.0.0-next.3
+        version: 1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@types/node':
         specifier: ^22.13.10
         version: 22.13.10
@@ -66,8 +66,8 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2(prettier@3.5.3)
       rocketh:
-        specifier: ^1.0.0-next.2
-        version: 1.0.0-next.2(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^1.0.0-next.3
+        version: 1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -102,11 +102,17 @@ importers:
         specifier: ^3.0.0-next.1
         version: 3.0.0-next.1(hardhat@3.0.0-next.1)(viem@2.23.10(typescript@5.8.2)(zod@3.24.2))
       '@rocketh/deploy':
-        specifier: ^1.0.0-next.2
-        version: 1.0.0-next.2(rocketh@1.0.0-next.2(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      '@rocketh/deploy-proxy':
         specifier: ^1.0.0-next.3
-        version: 1.0.0-next.3(rocketh@1.0.0-next.2(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        version: 1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+      '@rocketh/deploy-proxy':
+        specifier: ^1.0.0-next.4
+        version: 1.0.0-next.4(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+      '@rocketh/export':
+        specifier: ^1.0.0-next.3
+        version: 1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))
+      '@rocketh/verifier':
+        specifier: ^1.0.0-next.3
+        version: 1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)
       '@types/node':
         specifier: ^22.13.10
         version: 22.13.10
@@ -135,8 +141,8 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2(prettier@3.5.3)
       rocketh:
-        specifier: ^1.0.0-next.2
-        version: 1.0.0-next.2(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^1.0.0-next.3
+        version: 1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -187,8 +193,8 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       rocketh:
-        specifier: 1.0.0-next.2
-        version: 1.0.0-next.2(typescript@5.8.2)(zod@3.24.2)
+        specifier: 1.0.0-next.3
+        version: 1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -722,15 +728,25 @@ packages:
     resolution: {integrity: sha512-dfUnCxiN9H4ap84DvD2ubjw+3vUNpstxa0TneY/Paat8a3R4uQZDLSvWjmznAY/DoahqTHl9V46HF/Zs3F29pg==}
     engines: {node: '>= 10.0.0'}
 
-  '@rocketh/deploy-proxy@1.0.0-next.3':
-    resolution: {integrity: sha512-X9oUc8YxFVSjDvIJsKzmlaiwhF7EOHY9iwkz+zHmyXpqa0GsfWu+cue06W1Go0nhZnFvN6hPMBNXXT8gjvCkxA==}
+  '@rocketh/deploy-proxy@1.0.0-next.4':
+    resolution: {integrity: sha512-s39jOTLJtBt7Einfcm+lqjySnr2eGpefdQgAVoVLwo18B2TjCk2q077AaO7TVUPEOBqqzOfA/7wbwEmOIXw7Zw==}
     peerDependencies:
-      rocketh: 1.0.0-next.2
+      rocketh: 1.0.0-next.3
 
-  '@rocketh/deploy@1.0.0-next.2':
-    resolution: {integrity: sha512-YsZId94GsQhxtqPTk3ZUu+4zeDvQWnCuBEcEnZTkxFrumZ5XfEwBC5jSZ1AWLACCiA8LkBur66cU1nBG0NmWIg==}
+  '@rocketh/deploy@1.0.0-next.3':
+    resolution: {integrity: sha512-Jxk4Ptne7HNLkOUXwjmeVRuuvz+m32CDmXEN8i53JsV2o3OG4npsfO/DRdBb4wcPBO7slxo0HxMr5/RIWCHMww==}
     peerDependencies:
-      rocketh: 1.0.0-next.2
+      rocketh: 1.0.0-next.3
+
+  '@rocketh/export@1.0.0-next.3':
+    resolution: {integrity: sha512-hPn2ioBAMlc+jZnQmc33CQSE73Yj04f9p/c7g8RjEVamDY0CdTZSl9/N+dJHroDT5GLepPic7wZ7+AgRWiWOxA==}
+    hasBin: true
+    peerDependencies:
+      rocketh: 1.0.0-next.3
+
+  '@rocketh/verifier@1.0.0-next.3':
+    resolution: {integrity: sha512-iXQGKdjwem/yxf3BbX0BIQBwU1HmLFbYxsa/KrjU5cjj1/PjRS39q9+y8IP9Syh5V3M23xRHu1g/UPzlfVN3yw==}
+    hasBin: true
 
   '@scure/base@1.1.9':
     resolution: {integrity: sha512-8YKhl8GHiNI/pU2VMaofa2Tor7PJRAjwQLBBuilkJ9L5+13yVbC7JO/wS7piioAvPSwR3JKM1IJ/u4xQzbcXKg==}
@@ -806,6 +822,12 @@ packages:
   '@types/figlet@1.7.0':
     resolution: {integrity: sha512-KwrT7p/8Eo3Op/HBSIwGXOsTZKYiM9NpWRBJ5sVjWP/SmlS+oxxRvJht/FNAtliJvja44N3ul1yATgohnVBV0Q==}
 
+  '@types/fs-extra@11.0.4':
+    resolution: {integrity: sha512-yTbItCNreRooED33qjunPthRcSjERP1r4MqCZc7wv0u2sUkzTFp45tgUfS5+r7FrZPdmCCNflLhVSP/o+SemsQ==}
+
+  '@types/jsonfile@6.1.4':
+    resolution: {integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==}
+
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
@@ -820,6 +842,9 @@ packages:
 
   '@types/prompts@2.4.9':
     resolution: {integrity: sha512-qTxFi6Buiu8+50/+3DGIWLHM6QuWsEKugJnnP6iv2Mc4ncxE4A/OJkjuVOA+5X0X1S/nq5VJRa8Lu+nwcvbrKA==}
+
+  '@types/qs@6.9.18':
+    resolution: {integrity: sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==}
 
   abitype@1.0.8:
     resolution: {integrity: sha512-ZeiI6h3GnW06uYDLx0etQtX/p8E24UaHHBj57RSjK7YBFe7iuVn07EDpOeP451D06sF27VOz9JJPlIKJmXgkEg==}
@@ -903,6 +928,10 @@ packages:
 
   call-bind-apply-helpers@1.0.2:
     resolution: {integrity: sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==}
+    engines: {node: '>= 0.4'}
+
+  call-bound@1.0.4:
+    resolution: {integrity: sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==}
     engines: {node: '>= 0.4'}
 
   callsites@3.1.0:
@@ -1141,6 +1170,10 @@ packages:
     resolution: {integrity: sha512-hGfm/slu0ZabnNt4oaRZ6uREyfCj6P4fT/n6A1rGV+Z0VdGXjfOhVUpkn6qVQONHGIFwmveGXyDs75+nr6FM8w==}
     engines: {node: '>= 6'}
 
+  fs-extra@11.3.0:
+    resolution: {integrity: sha512-Z4XaCL6dUDHfP/jT25jJKMmtxvuwbkrD1vNSMFlo9lNLY2c5FHYSQgHPRZUjAB26TpDEoW9HCOgplrdbaPV/ew==}
+    engines: {node: '>=14.14'}
+
   fs-extra@7.0.1:
     resolution: {integrity: sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==}
     engines: {node: '>=6 <7 || >=8'}
@@ -1326,6 +1359,9 @@ packages:
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
 
+  jsonfile@6.1.0:
+    resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
+
   kleur@3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
@@ -1431,6 +1467,10 @@ packages:
   npm-package-arg@12.0.2:
     resolution: {integrity: sha512-f1NpFjNI9O4VbKMOlA5QoBq/vSQPORHcTZ2feJpFkTHJ9eQkdlmZEKSjcAhxTGInC7RlEyScT9ui67NaOsjFWA==}
     engines: {node: ^18.17.0 || >=20.5.0}
+
+  object-inspect@1.13.4:
+    resolution: {integrity: sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew==}
+    engines: {node: '>= 0.4'}
 
   onetime@7.0.0:
     resolution: {integrity: sha512-VXJjc87FScF88uafS3JllDgvAm+c/Slfz06lorj2uAY34rlUu0Nt+v8wreiImcrgAjjIHp1rXpTDlLOGw29WwQ==}
@@ -1561,6 +1601,10 @@ packages:
   pure-rand@6.1.0:
     resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
 
+  qs@6.14.0:
+    resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
+    engines: {node: '>=0.6'}
+
   quansync@0.2.8:
     resolution: {integrity: sha512-4+saucphJMazjt7iOM27mbFCk+D9dd/zmgMDCzRZ8MEoBfYp7lAvoN38et/phRQF6wOPMy/OROBGgoWeSKyluA==}
 
@@ -1612,8 +1656,8 @@ packages:
     engines: {node: 20 || >=22}
     hasBin: true
 
-  rocketh@1.0.0-next.2:
-    resolution: {integrity: sha512-3ZFXmQACz5C5xvzJOssmUrHJbwVqyiFNVU1PDUD3szwB/qsx40Ak8FGKkGh+zJuoVZinxNGAUXot/KtdAatV+w==}
+  rocketh@1.0.0-next.3:
+    resolution: {integrity: sha512-Zyi1jrx4YefU92FlKa7JPF+O+tKgAUoonxE02V8qZVR3nO94WQuMnIxvRERKQmtsvlZquc2R9TU/D9I8elkclA==}
     hasBin: true
 
   run-parallel@1.2.0:
@@ -1641,6 +1685,22 @@ packages:
   shebang-regex@3.0.0:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
+
+  side-channel-list@1.0.0:
+    resolution: {integrity: sha512-FCLHtRD/gnpCiCHEiJLOwdmFP+wzCmDEkc9y7NsYxeF4u7Btsn1ZuwgwJGxImImHicJArLP4R0yX4c2KCrMrTA==}
+    engines: {node: '>= 0.4'}
+
+  side-channel-map@1.0.1:
+    resolution: {integrity: sha512-VCjCNfgMsby3tTdo02nbjtM/ewra6jPHmpThenkTYh8pG9ucZ/1P8So4u4FGBek/BjpOVsDCMoLA/iuBKIFXRA==}
+    engines: {node: '>= 0.4'}
+
+  side-channel-weakmap@1.0.2:
+    resolution: {integrity: sha512-WPS/HvHQTYnHisLo9McqBHOJk2FkHO/tlpvldyrnem4aeQp4hai3gythswg6p01oSoTl58rcpiFAjF2br2Ak2A==}
+    engines: {node: '>= 0.4'}
+
+  side-channel@1.1.0:
+    resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
+    engines: {node: '>= 0.4'}
 
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
@@ -1770,6 +1830,10 @@ packages:
   universalify@0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
+
+  universalify@2.0.1:
+    resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
+    engines: {node: '>= 10.0.0'}
 
   validate-npm-package-name@6.0.0:
     resolution: {integrity: sha512-d7KLgL1LD3U3fgnvWEY1cQXoO/q6EQ1BSz48Sa149V/5zVTAbgmZIpyI8TRi6U9/JNyeYLlTKsEMPtLC27RFUg==}
@@ -2394,11 +2458,11 @@ snapshots:
       '@parcel/watcher-win32-ia32': 2.5.1
       '@parcel/watcher-win32-x64': 2.5.1
 
-  '@rocketh/deploy-proxy@1.0.0-next.3(rocketh@1.0.0-next.2(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
+  '@rocketh/deploy-proxy@1.0.0-next.4(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
     dependencies:
-      '@rocketh/deploy': 1.0.0-next.2(rocketh@1.0.0-next.2(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+      '@rocketh/deploy': 1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       named-logs: 0.3.2
-      rocketh: 1.0.0-next.2(typescript@5.8.2)(zod@3.24.2)
+      rocketh: 1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)
       solidity-proxy: 0.4.0
       viem: 2.23.10(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
@@ -2407,11 +2471,35 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rocketh/deploy@1.0.0-next.2(rocketh@1.0.0-next.2(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
+  '@rocketh/deploy@1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
     dependencies:
       named-logs: 0.3.2
-      rocketh: 1.0.0-next.2(typescript@5.8.2)(zod@3.24.2)
+      rocketh: 1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)
       viem: 2.23.10(typescript@5.8.2)(zod@3.24.2)
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
+
+  '@rocketh/export@1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))':
+    dependencies:
+      '@types/fs-extra': 11.0.4
+      chalk: 5.4.1
+      commander: 13.1.0
+      fs-extra: 11.3.0
+      rocketh: 1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)
+
+  '@rocketh/verifier@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)':
+    dependencies:
+      '@types/fs-extra': 11.0.4
+      '@types/qs': 6.9.18
+      chalk: 5.4.1
+      commander: 13.1.0
+      fs-extra: 11.3.0
+      ldenv: 0.3.12
+      qs: 6.14.0
+      rocketh: 1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -2515,6 +2603,15 @@ snapshots:
 
   '@types/figlet@1.7.0': {}
 
+  '@types/fs-extra@11.0.4':
+    dependencies:
+      '@types/jsonfile': 6.1.4
+      '@types/node': 22.13.10
+
+  '@types/jsonfile@6.1.4':
+    dependencies:
+      '@types/node': 22.13.10
+
   '@types/ms@2.1.0': {}
 
   '@types/node@12.20.55': {}
@@ -2531,6 +2628,8 @@ snapshots:
     dependencies:
       '@types/node': 22.13.10
       kleur: 3.0.3
+
+  '@types/qs@6.9.18': {}
 
   abitype@1.0.8(typescript@5.8.2)(zod@3.24.2):
     optionalDependencies:
@@ -2604,6 +2703,11 @@ snapshots:
     dependencies:
       es-errors: 1.3.0
       function-bind: 1.1.2
+
+  call-bound@1.0.4:
+    dependencies:
+      call-bind-apply-helpers: 1.0.2
+      get-intrinsic: 1.3.0
 
   callsites@3.1.0: {}
 
@@ -2842,6 +2946,12 @@ snapshots:
       es-set-tostringtag: 2.1.0
       mime-types: 2.1.35
 
+  fs-extra@11.3.0:
+    dependencies:
+      graceful-fs: 4.2.11
+      jsonfile: 6.1.0
+      universalify: 2.0.1
+
   fs-extra@7.0.1:
     dependencies:
       graceful-fs: 4.2.11
@@ -3052,6 +3162,12 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
+  jsonfile@6.1.0:
+    dependencies:
+      universalify: 2.0.1
+    optionalDependencies:
+      graceful-fs: 4.2.11
+
   kleur@3.0.3: {}
 
   ldenv@0.3.12:
@@ -3141,6 +3257,8 @@ snapshots:
       proc-log: 5.0.0
       semver: 7.7.1
       validate-npm-package-name: 6.0.0
+
+  object-inspect@1.13.4: {}
 
   onetime@7.0.0:
     dependencies:
@@ -3259,6 +3377,10 @@ snapshots:
 
   pure-rand@6.1.0: {}
 
+  qs@6.14.0:
+    dependencies:
+      side-channel: 1.1.0
+
   quansync@0.2.8: {}
 
   queue-microtask@1.2.3: {}
@@ -3301,7 +3423,7 @@ snapshots:
       glob: 11.0.1
       package-json-from-dist: 1.0.1
 
-  rocketh@1.0.0-next.2(typescript@5.8.2)(zod@3.24.2):
+  rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2):
     dependencies:
       '@types/figlet': 1.7.0
       '@types/prompts': 2.4.9
@@ -3342,6 +3464,34 @@ snapshots:
       shebang-regex: 3.0.0
 
   shebang-regex@3.0.0: {}
+
+  side-channel-list@1.0.0:
+    dependencies:
+      es-errors: 1.3.0
+      object-inspect: 1.13.4
+
+  side-channel-map@1.0.1:
+    dependencies:
+      call-bound: 1.0.4
+      es-errors: 1.3.0
+      get-intrinsic: 1.3.0
+      object-inspect: 1.13.4
+
+  side-channel-weakmap@1.0.2:
+    dependencies:
+      call-bound: 1.0.4
+      es-errors: 1.3.0
+      get-intrinsic: 1.3.0
+      object-inspect: 1.13.4
+      side-channel-map: 1.0.1
+
+  side-channel@1.1.0:
+    dependencies:
+      es-errors: 1.3.0
+      object-inspect: 1.13.4
+      side-channel-list: 1.0.0
+      side-channel-map: 1.0.1
+      side-channel-weakmap: 1.0.2
 
   signal-exit@4.1.0: {}
 
@@ -3463,6 +3613,8 @@ snapshots:
   unicorn-magic@0.3.0: {}
 
   universalify@0.1.2: {}
+
+  universalify@2.0.1: {}
 
   validate-npm-package-name@6.0.0: {}
 
