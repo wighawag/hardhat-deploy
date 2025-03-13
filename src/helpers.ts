@@ -2656,6 +2656,7 @@ data: ${data}
         : undefined,
       value: options.value ? BigNumber.from(options.value) : undefined,
       nonce: options.nonce,
+      customData: options.customData ? options.customData : undefined,
     };
 
     const ethersContract = new Contract(deployment.address, abi, ethersSigner);
