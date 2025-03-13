@@ -28,10 +28,10 @@
 	],
 	"devDependencies": {
 		"@changesets/cli": "^2.28.1",
-		"@types/node": "^20.14.8",
+		"@types/node": "^22.13.10",
 		"as-soon": "^0.0.11",
 		"hardhat": "^3.0.0-next.1",
-		"rimraf": "^5.0.7",
+		"rimraf": "^6.0.1",
 		"rocketh": "1.0.0-next.1",
 		"set-defaults": "^0.0.5",
 		"typescript": "^5.5.2"
@@ -40,15 +40,16 @@
 		"hardhat": "^3.0.0-next.1",
 		"rocketh": "1.0.0-next.1"
 	},
-	"scripts": {
-		"build": "tsc --project tsconfig.json",
-		"dev": "as-soon -w src pnpm build"
-	},
 	"dependencies": {
 		"@nomicfoundation/hardhat-errors": "3.0.0-next.0",
 		"@nomicfoundation/hardhat-zod-utils": "3.0.0-next.0",
 		"@types/debug": "^4.1.12",
 		"debug": "^4.4.0",
 		"zod": "^3.24.2"
+	},
+	"scripts": {
+		"prepare": "pnpm build",
+		"build": "tsc --project tsconfig.json",
+		"dev": "as-soon -w src pnpm build"
 	}
 }
