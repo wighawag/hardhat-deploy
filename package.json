@@ -5,8 +5,8 @@
   "type": "module",
   "devDependencies": {
     "@changesets/cli": "^2.27.6",
-    "set-defaults": "^0.0.2",
-    "syncpack": "^12.3.3",
+    "set-defaults": "^0.0.5",
+    "syncpack": "^13.0.3",
     "zellij-launcher": "^0.0.1"
   },
   "volta": {
