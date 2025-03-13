@@ -3,9 +3,11 @@
   "tag": "next",
   "initialVersions": {
     "hardhat-deploy": "1.0.0",
-    "hardhat-deploy-demoes-basic": "0.0.0"
+    "hardhat-deploy-demoes-basic": "0.0.0",
+    "hardhat-deploy-demoes-hot-contract-replacement": "0.0.0"
   },
   "changesets": [
-    "tall-doodles-wash"
+    "tall-doodles-wash",
+    "ten-ideas-travel"
   ]
 }
