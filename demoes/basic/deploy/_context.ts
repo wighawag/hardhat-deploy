@@ -3,7 +3,6 @@
 /// to typed artifacts as well as account names
 
 import artifacts from '../generated/artifacts.js';
-import '@rocketh/signer';
 
 export const context = {
 	// this define the named-accounts

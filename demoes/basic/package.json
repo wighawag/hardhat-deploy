@@ -1,5 +1,5 @@
 {
-	"name": "template-contracts",
+	"name": "hardhat-deploy-demoes-basic",
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
@@ -9,12 +9,6 @@
 		"@nomicfoundation/hardhat-node-test-runner": "^3.0.0-next.1",
 		"@nomicfoundation/hardhat-viem": "^3.0.0-next.1",
 		"@rocketh/deploy": "^1.0.0-next.1",
-		"@rocketh/deploy-proxy": "^1.0.0-next.1",
-		"@rocketh/deploy-router": "^1.0.0-next.1",
-		"@rocketh/doc": "^1.0.0-next.1",
-		"@rocketh/export": "^1.0.0-next.1",
-		"@rocketh/signer": "^1.0.0-next.1",
-		"@rocketh/verifier": "^1.0.0-next.1",
 		"@types/fs-extra": "^11.0.4",
 		"@types/node": "^22.13.10",
 		"as-soon": "^0.0.11",
@@ -36,7 +30,7 @@
 		"zellij-launcher": "^0.0.1"
 	},
 	"scripts": {
-		"prepare": "set-defaults .vscode",
+		"prepare": "set-defaults .vscode && pnpm compile",
 		"docgen": "ldenv -m hardhat pnpm run deploy hardhat --save-deployments true --skip-prompts ~~ pnpm rocketh-doc -n @@MODE --except-suffix _Implementation,_Proxy,_Router,_Route ~~ @@",
 		"local_node": "hardhat node",
 		"compile": "hardhat compile",
