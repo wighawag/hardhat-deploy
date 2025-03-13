@@ -15,13 +15,12 @@ Under the hood, hardhat-deploy uses [rocketh](https://github.com/wighawag/rocket
 Everything else is handled by external module. For example `@rocketh/deploy` give you a deploy function that you can use to deploy contracts.
 But you can provide your own module for advanced use case.
 
-There are already a few like `@rocketh/proxy` to deploy proxy declaratively like in hardhat-deploy
-
-> **A complete dev template using hardhat-deploy is available here**: https://github.com/wighawag/template-ethereum-contracts
+There are already a few like `@rocketh/deploy-proxy` to deploy proxy declaratively like in hardhat-deploy v1
 
 ## Table of Content
 
 - [What is it for?](#what-is-it-for)
+- [Install](#install)
 - [Migrating from hardhat-deploy v1](#migrating-from-hardhat-deploy-v1)
 
 ## What is it for?
@@ -45,6 +44,22 @@ This plugin contains a lot more features too, all geared toward a better develop
 - support hardhat's fork feature so deployment can be accessed even when run through fork.
 - declarative proxy deployment with ability to upgrade them transparently, only if code changes.
 - support HRC (Hot Contract Replacement) via special proxy mechanism
+
+## Install
+
+This is an alpha so make sure you specify the version manually (npm will otherwise fallback on old version)
+
+Here is the basic for getting started
+
+```
+pnpm add -D hardhat-deploy@2.0.0-next.11 rocketh@1.0.0-next.4 @rocketh/deploy@1.0.0-next.4 @rocketh/read-execute@1.0.0-next.1
+```
+
+but you can also add these that provide more features
+
+```
+pnpm add -D @rocketh/deploy-proxy@1.0.0-next.5 @rocketh/export@1.0.0-next.4 @rocketh/verifier@1.0.0-next.4 @rocketh/doc@1.0.0-next.4
+```
 
 ## Migrating from hardhat-deploy v1
 
