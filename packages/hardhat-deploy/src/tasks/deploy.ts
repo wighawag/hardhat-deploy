@@ -7,13 +7,16 @@ interface RunActionArguments {
 }
 
 const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (args, hre) => {
-	let saveDeployments = args.saveDeployments == '' ? undefined : args.saveDeployments == 'true' ? true : false;
+	let saveDeployments = true;
 	let skipPrompts = args.skipPrompts ? true : false;
 	const connection = await hre.network.connect();
 	const isMemoryNetwork = connection.networkConfig.type == 'edr';
 	if (isMemoryNetwork) {
 		skipPrompts = true;
 		saveDeployments = false;
+	}
+	if (args.saveDeployments != '') {
+		saveDeployments = args.saveDeployments == 'true' ? true : false;
 	}
 	await loadAndExecuteDeployments({
 		logLevel: 1,

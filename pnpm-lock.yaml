@@ -107,6 +107,9 @@ importers:
       '@rocketh/deploy-proxy':
         specifier: ^1.0.0-next.4
         version: 1.0.0-next.4(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+      '@rocketh/doc':
+        specifier: ^1.0.0-next.3
+        version: 1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))
       '@rocketh/export':
         specifier: ^1.0.0-next.3
         version: 1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))
@@ -738,6 +741,12 @@ packages:
     peerDependencies:
       rocketh: 1.0.0-next.3
 
+  '@rocketh/doc@1.0.0-next.3':
+    resolution: {integrity: sha512-92+RL6jXF+RIMXg940NFgZRif3BGZGDOeA1BQoIhbJoaH1jXynhWLlIof/fdFRdx66pmOk3Wx2wOS7pCwqR5eQ==}
+    hasBin: true
+    peerDependencies:
+      rocketh: 1.0.0-next.3
+
   '@rocketh/export@1.0.0-next.3':
     resolution: {integrity: sha512-hPn2ioBAMlc+jZnQmc33CQSE73Yj04f9p/c7g8RjEVamDY0CdTZSl9/N+dJHroDT5GLepPic7wZ7+AgRWiWOxA==}
     hasBin: true
@@ -1229,6 +1238,11 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
+  handlebars@4.7.8:
+    resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
+    engines: {node: '>=0.4.7'}
+    hasBin: true
+
   hardhat@3.0.0-next.1:
     resolution: {integrity: sha512-DQl5MI+A5hVuGStDk232A2Tb/fmpd6ieckhxOgUnbO4hi6BBvQ2fjI4VPQGgIujsRoaVy7f1Eqbfpu6fKO1isw==}
     hasBin: true
@@ -1460,6 +1474,9 @@ packages:
 
   named-logs@0.3.2:
     resolution: {integrity: sha512-rpgShWrH6NakMKUDK32Pn/FZyPl7QoQRleMekHKkbrExXDymb2wNm3/BUbdTG5f3v7Qa17imVkSWHOfNFhDIPw==}
+
+  neo-async@2.6.2:
+    resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
@@ -1720,6 +1737,10 @@ packages:
   solidity-proxy@0.4.0:
     resolution: {integrity: sha512-0lpQ6nAIb4DOkbVWEfPVKTS//6KoDBulAzQ2xoCO08Ya5IaatmgcT6DOoLBv330COd32Nb+nvAA0wJfUpvKOLg==}
 
+  source-map@0.6.1:
+    resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
+    engines: {node: '>=0.10.0'}
+
   spawndamnit@3.0.1:
     resolution: {integrity: sha512-MmnduQUuHCoFckZoWnXsTg7JaiLBJrKFj9UI2MbRPGaJeVpsLcVBu6P/IGZovziM/YBsellCmsprgNA+w0CzVg==}
 
@@ -1809,6 +1830,11 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  uglify-js@3.19.3:
+    resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
+    engines: {node: '>=0.8.0'}
+    hasBin: true
+
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
 
@@ -1856,6 +1882,9 @@ packages:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
     hasBin: true
+
+  wordwrap@1.0.0:
+    resolution: {integrity: sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==}
 
   wrap-ansi@7.0.0:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
@@ -2482,6 +2511,18 @@ snapshots:
       - utf-8-validate
       - zod
 
+  '@rocketh/doc@1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))':
+    dependencies:
+      '@types/fs-extra': 11.0.4
+      commander: 13.1.0
+      ethers: 6.13.5
+      fs-extra: 11.3.0
+      handlebars: 4.7.8
+      rocketh: 1.0.0-next.3(typescript@5.8.2)(zod@3.24.2)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   '@rocketh/export@1.0.0-next.3(rocketh@1.0.0-next.3(typescript@5.8.2)(zod@3.24.2))':
     dependencies:
       '@types/fs-extra': 11.0.4
@@ -3028,6 +3069,15 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
+  handlebars@4.7.8:
+    dependencies:
+      minimist: 1.2.8
+      neo-async: 2.6.2
+      source-map: 0.6.1
+      wordwrap: 1.0.0
+    optionalDependencies:
+      uglify-js: 3.19.3
+
   hardhat@3.0.0-next.1:
     dependencies:
       '@ignored/edr': 0.8.0-alpha.2
@@ -3248,6 +3298,8 @@ snapshots:
   named-logs@0.2.4: {}
 
   named-logs@0.3.2: {}
+
+  neo-async@2.6.2: {}
 
   node-addon-api@7.1.1: {}
 
@@ -3503,6 +3555,8 @@ snapshots:
 
   solidity-proxy@0.4.0: {}
 
+  source-map@0.6.1: {}
+
   spawndamnit@3.0.1:
     dependencies:
       cross-spawn: 7.0.6
@@ -3600,6 +3654,9 @@ snapshots:
 
   typescript@5.8.2: {}
 
+  uglify-js@3.19.3:
+    optional: true
+
   undici-types@6.19.8: {}
 
   undici-types@6.20.0: {}
@@ -3648,6 +3705,8 @@ snapshots:
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
+
+  wordwrap@1.0.0: {}
 
   wrap-ansi@7.0.0:
     dependencies:
