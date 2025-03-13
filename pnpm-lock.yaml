@@ -118,8 +118,8 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       rocketh:
-        specifier: 1.0.0-next.1
-        version: 1.0.0-next.1(typescript@5.8.2)(zod@3.24.2)
+        specifier: 1.0.0-next.2
+        version: 1.0.0-next.2(typescript@5.8.2)(zod@3.24.2)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -851,10 +851,6 @@ packages:
     resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
     engines: {node: '>=14'}
 
-  commander@12.1.0:
-    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
-    engines: {node: '>=18'}
-
   commander@13.1.0:
     resolution: {integrity: sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw==}
     engines: {node: '>=18'}
@@ -1429,10 +1425,6 @@ packages:
   rimraf@6.0.1:
     resolution: {integrity: sha512-9dkvaxAsk/xNXSJzMgFqqMCuFgt2+KsOFek3TMLfo8NCPfWpBmqwyNn5Y+NX56QUYfCtsyhF3ayiboEoUmJk/A==}
     engines: {node: 20 || >=22}
-    hasBin: true
-
-  rocketh@1.0.0-next.1:
-    resolution: {integrity: sha512-Ivr9ERJMP0JcAFZLOWRJ9H1A7OZdL+FuCyMobkWPzk6iE0PypFNkVLrzYU4IPbdP0cQ6IEdqQ1Qs7bZru6RDFw==}
     hasBin: true
 
   rocketh@1.0.0-next.2:
@@ -2412,8 +2404,6 @@ snapshots:
 
   commander@10.0.1: {}
 
-  commander@12.1.0: {}
-
   commander@13.1.0: {}
 
   cookie@0.4.2: {}
@@ -2990,26 +2980,6 @@ snapshots:
     dependencies:
       glob: 11.0.1
       package-json-from-dist: 1.0.1
-
-  rocketh@1.0.0-next.1(typescript@5.8.2)(zod@3.24.2):
-    dependencies:
-      '@types/figlet': 1.7.0
-      '@types/prompts': 2.4.9
-      commander: 12.1.0
-      eip-1193-jsonrpc-provider: 0.4.2
-      ethers: 6.13.5
-      figlet: 1.8.0
-      ldenv: 0.3.12
-      named-logs: 0.2.4
-      named-logs-console: 0.3.1
-      prompts: 2.4.2
-      tsx: 4.19.3
-      viem: 2.23.10(typescript@5.8.2)(zod@3.24.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - typescript
-      - utf-8-validate
-      - zod
 
   rocketh@1.0.0-next.2(typescript@5.8.2)(zod@3.24.2):
     dependencies:

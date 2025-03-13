@@ -83,6 +83,7 @@ export async function loadEnvironmentFromHardhat<
 		});
 	}
 
+	console.log(`loading environments...`);
 	return loadEnvironment(
 		{
 			provider,

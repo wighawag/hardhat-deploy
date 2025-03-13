@@ -72,8 +72,6 @@ in v2 you will do this instead:
 // deploy/00_deploy_my_contract.js
 // execute is needed to register your script
 import { execute } from "rocketh";
-// here we add the `@rocketh/deploy` extension that let you use the deploy function (hardhat-deploy v2 is fully modular)
-import "@rocketh/deploy";
 // here we import the context, the convention is to import it from a file named `_context.ts`
 // it contains the configuration like artifacts and named accounts
 // see bellow for an example
@@ -101,6 +99,9 @@ export default execute(
 ```typescript
 //deploy/_context.ts
 import artifacts from "../generated/artifacts.js";
+
+// we also add here the module we need
+import "@rocketh/deploy"; // this one provide deploy,read,execute functions...
 
 export const context = {
   // this define the named-accounts

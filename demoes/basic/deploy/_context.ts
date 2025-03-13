@@ -4,6 +4,9 @@
 
 import artifacts from '../generated/artifacts.js';
 
+// we also add here the module we need
+import '@rocketh/deploy'; // this one provide deploy,read,execute functions...
+
 export const context = {
 	// this define the named-accounts
 	// these are transformed into addresses
