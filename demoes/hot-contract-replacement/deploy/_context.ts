@@ -5,8 +5,9 @@
 import artifacts from '../generated/artifacts.js';
 
 // we also add here the module we need
-import '@rocketh/deploy'; // this one provide deploy,read,execute functions...
-import '@rocketh/deploy-proxy';
+import '@rocketh/deploy'; // this one provide a deploy function
+import '@rocketh/read-execute'; // this one provide read,execute functions
+import '@rocketh/deploy-proxy'; // this one provide a deployViaProxy function that let you declaratively deploy proxy based contracts
 
 export const context = {
 	// this define the named-accounts
