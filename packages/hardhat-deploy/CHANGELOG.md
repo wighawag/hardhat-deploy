@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.10
+
+### Patch Changes
+
+- ensure metadata source is inlined
+
 ## 2.0.0-next.9
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 {
-  "address": "0xc1b63db347bda0c7f84483fbd06f4d78cf3b6931",
+  "address": "0xb48b36f03811eb6856f885da733d4303b789c6e5",
   "abi": [
     {
       "inputs": [
@@ -70,11 +70,8 @@
   "deployedBytecode": "0x608060405234801561000f575f5ffd5b5060043610610034575f3560e01c8063368b8772146100385780635fdd59f81461004d575b5f5ffd5b61004b6100463660046101bd565b610076565b005b61006061005b36600461022b565b610126565b60405161006d9190610265565b60405180910390f35b5f5f838360405160200161008c93929190610309565b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0818403018152918152335f9081526001602052209091506100d2828261041c565b503373ffffffffffffffffffffffffffffffffffffffff167f5de788bae851e5b8df641f15cc3e7e401946111d99b835b0e3f619b04f8ce68f826040516101199190610265565b60405180910390a2505050565b60016020525f90815260409020805461013e906102b8565b80601f016020809104026020016040519081016040528092919081815260200182805461016a906102b8565b80156101b55780601f1061018c576101008083540402835291602001916101b5565b820191905f5260205f20905b81548152906001019060200180831161019857829003601f168201915b505050505081565b5f5f602083850312156101ce575f5ffd5b823567ffffffffffffffff8111156101e4575f5ffd5b8301601f810185136101f4575f5ffd5b803567ffffffffffffffff81111561020a575f5ffd5b85602082840101111561021b575f5ffd5b6020919091019590945092505050565b5f6020828403121561023b575f5ffd5b813573ffffffffffffffffffffffffffffffffffffffff8116811461025e575f5ffd5b9392505050565b602081525f82518060208401528060208501604085015e5f6040828501015260407fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f83011684010191505092915050565b600181811c908216806102cc57607f821691505b602082108103610303577f4e487b71000000000000000000000000000000000000000000000000000000005f52602260045260245ffd5b50919050565b5f5f8554610316816102b8565b60018216801561032d57600181146103605761038d565b7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff008316865281151582028601935061038d565b885f5260205f205f5b8381101561038557815488820152600190910190602001610369565b505081860193505b505050838582375f930192835250909392505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b601f82111561041757805f5260205f20601f840160051c810160208510156103f55750805b601f840160051c820191505b81811015610414575f8155600101610401565b50505b505050565b815167ffffffffffffffff811115610436576104366103a3565b61044a8161044484546102b8565b846103d0565b6020601f82116001811461049b575f83156104655750848201515b7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff600385901b1c1916600184901b178455610414565b5f848152602081207fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe08516915b828110156104e857878501518255602094850194600190920191016104c8565b508482101561052457868401517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff600387901b60f8161c191681555b50505050600190811b0190555056fea26469706673582212202ec6c1a7034cd59460f21fa51557e601c0410a7bae510359169681ac03c9008864736f6c634300081c0033",
   "linkReferences": {},
   "deployedLinkReferences": {},
-  "devdoc": {
-    "kind": "dev",
-    "methods": {},
-    "version": 1
-  },
+  "immutableReferences": {},
+  "inputSourceName": "src/GreetingsRegistry/GreetingsRegistry.sol",
   "evm": {
     "bytecode": {
       "functionDebugData": {
@@ -8335,33 +8332,16 @@
     }
   },
   "metadata": "{\"compiler\":{\"version\":\"0.8.28+commit.7893614a\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"prefix\",\"type\":\"string\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"MessageChanged\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"messages\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"setMessage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"events\":{\"MessageChanged(address,string)\":{\"params\":{\"message\":\"the new greeting\",\"user\":\"the account whose greeting was updated\"}}},\"kind\":\"dev\",\"methods\":{\"setMessage(string)\":{\"params\":{\"message\":\"the new greeting\"}}},\"title\":\"Greetings Registry\",\"version\":1},\"userdoc\":{\"events\":{\"MessageChanged(address,string)\":{\"notice\":\"emitted whemever a user update its greeting\"}},\"kind\":\"user\",\"methods\":{\"messages(address)\":{\"notice\":\"the greeting for each account\"},\"setMessage(string)\":{\"notice\":\"called to set your own greeting\"}},\"notice\":\"let user set a greeting 1\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/GreetingsRegistry/GreetingsRegistry.sol\":\"GreetingsRegistry\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":999999},\"remappings\":[\":forge-std/=npm/forge-std@1.9.4/src/\"]},\"sources\":{\"src/GreetingsRegistry/GreetingsRegistry.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n/// @title Greetings Registry\\n/// @notice let user set a greeting 1\\ncontract GreetingsRegistry {\\n    /// @notice emitted whemever a user update its greeting\\n    /// @param user the account whose greeting was updated\\n    /// @param message the new greeting\\n    event MessageChanged(address indexed user, string message);\\n\\n    string internal _prefix;\\n\\n    /// @notice the greeting for each account\\n    mapping(address => string) public messages;\\n\\n    constructor(string memory prefix) {\\n        _prefix = prefix;\\n    }\\n\\n    /// @notice called to set your own greeting\\n    /// @param message the new greeting\\n    function setMessage(string calldata message) external {\\n        string memory actualMessage = string(abi.encodePacked(_prefix, message));\\n        messages[msg.sender] = actualMessage;\\n        emit MessageChanged(msg.sender, actualMessage);\\n    }\\n}\\n\",\"keccak256\":\"0x917b113631eca7e531e15182b8d857989279d3b832ea87606c71f33a1be62e1f\",\"license\":\"MIT\"}},\"version\":1}",
-  "storageLayout": {
-    "storage": [],
-    "types": null
-  },
-  "userdoc": {
-    "kind": "user",
-    "methods": {},
-    "notice": "Proxy implementing ERC173 for ownership management",
-    "version": 1
-  },
-  "argsData": "0x000000000000000000000000b48b36f03811eb6856f885da733d4303b789c6e5000000000000000000000000e53cd71271acadbeb0f64d9c8c62bbddc8ca9e6600000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000000",
-  "linkedData": {
-    "prefix": "proxy:",
-    "admin": "0xe53cd71271acadbeb0f64d9c8c62bbddc8ca9e66"
-  },
+  "argsData": "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000670726f78793a0000000000000000000000000000000000000000000000000000",
   "transaction": {
-    "hash": "0xf2d9b797148484a6240ea92eff30f0a1212816e857244a880add899164fb225a",
-    "nonce": "0x27d",
+    "hash": "0x5b127181b5799c4cbb7d7426ea018b27c971bd3bdb13fc67e78347d80a5098f9",
+    "nonce": "0x27c",
     "origin": "0x61c461ecc993aadeb7e4b47e96d1b8cc37314b20"
   },
   "receipt": {
     "confirmations": 0,
-    "blockHash": "0x8dd73cfbb7cb418157e03ac942a3fee314d7c727e51282d02201075b6b1d2b98",
-    "blockNumber": "0x78777d",
-    "transactionIndex": "0x42"
-  },
-  "updated": true,
-  "immutableReferences": {},
-  "inputSourceName": "src/GreetingsRegistry/GreetingsRegistry.sol"
+    "blockHash": "0x3a049fc90301ae5b83952bfec05ecf003e86cd438f5f450242281902342add45",
+    "blockNumber": "0x78777c",
+    "transactionIndex": "0x84"
+  }
 }

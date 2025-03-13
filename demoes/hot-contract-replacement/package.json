@@ -38,7 +38,7 @@
 		"compile:watch": "as-soon -w src pnpm compile",
 		"execute": "ldenv -n HARDHAT_NETWORK -m localhost tsx @@",
 		"fork:execute": "ldenv -m localhost tsx @=HARDHAT_FORK=@@MODE @@",
-		"deploy": "pnpm compile && ldenv hardhat --network @@MODE deploy @@",
+		"deploy": "pnpm compile --build-profile production && ldenv hardhat --network @@MODE deploy @@",
 		"fork:deploy": "pnpm compile && ldenv hardhat @=HARDHAT_FORK=@@MODE --network @@MODE deploy @@",
 		"deploy:dev": "ldenv hardhat --network @@MODE deploy --skip-prompts @@",
 		"deploy:watch": "wait-on ./generated && ldenv -m localhost as-soon -w generated -w deploy pnpm run deploy:dev @@MODE @@",
