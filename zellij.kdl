@@ -16,6 +16,9 @@ layout {
 			pane name="demoes/basic" command="bash" {
 				args "-c" "pnpm run --filter ./demoes/basic test:watch; cd demoes/basic; ${SHELL-bash}"
 			}
+			pane name="demoes/hot-contract-replacement" command="bash" {
+				args "-c" "pnpm run --filter ./demoes/hot-contract-replacement test:watch; cd demoes/hot-contract-replacement; ${SHELL-bash}"
+			}
 			
 		}
 	}

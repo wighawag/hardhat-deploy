@@ -41,7 +41,6 @@
 		"rocketh": "1.0.0-next.2"
 	},
 	"dependencies": {
-		"@nomicfoundation/hardhat-errors": "3.0.0-next.0",
 		"@nomicfoundation/hardhat-zod-utils": "3.0.0-next.0",
 		"@types/debug": "^4.1.12",
 		"debug": "^4.4.0",

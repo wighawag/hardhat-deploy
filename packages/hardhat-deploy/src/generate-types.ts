@@ -1,6 +1,4 @@
 import type {ArtifactGenerationConfig} from './types.js';
-
-import {assertHardhatInvariant} from '@nomicfoundation/hardhat-errors';
 import debug from 'debug';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -42,6 +40,48 @@ function traverse(
 	return result;
 }
 
+function writeIfDifferent(filePath: string, newTextContent: string) {
+	// Ensure we're working with a string
+	const contentToWrite = String(newTextContent);
+
+	try {
+		let existingContent;
+
+		try {
+			existingContent = fs.readFileSync(filePath, 'utf8');
+		} catch (error) {
+			console.log(`do not exist? => writing ${filePath}`);
+			// File doesn't exist, write and return
+			fs.writeFileSync(filePath, contentToWrite);
+			return {written: true, reason: 'File did not exist'};
+		}
+
+		// Simple string comparison
+		if (contentToWrite !== existingContent) {
+			console.log(`content different => writing ${filePath}`);
+			fs.writeFileSync(filePath, contentToWrite);
+			return {written: true, reason: 'Content was different'};
+		}
+
+		return {written: false, reason: 'Content was identical'};
+	} catch (error) {
+		console.error('Error in writeIfDifferent:', error);
+		throw error;
+	}
+}
+
+function ensureDirExistsSync(folderPath: string) {
+	// Check if directory already exists
+	if (fs.existsSync(folderPath)) {
+		return {created: false, reason: 'Directory already exists'};
+	}
+
+	console.log(`do not exist? => mkdir ${folderPath}`);
+	// Directory doesn't exist, create it
+	fs.mkdirSync(folderPath, {recursive: true});
+	return {created: true, reason: 'Directory was created'};
+}
+
 function writeFiles(name: string | undefined, data: any, config: ArtifactGenerationConfig) {
 	const js = typeof config?.js === 'string' ? [config?.js] : config?.js || [];
 	const ts = typeof config?.ts === 'string' ? [config?.ts] : config?.ts || [];
@@ -56,15 +96,15 @@ function writeFiles(name: string | undefined, data: any, config: ArtifactGenerat
 				if (!name) {
 					const filepath = tsFile;
 					const folderPath = path.dirname(filepath);
-					fs.mkdirSync(folderPath, {recursive: true});
-					fs.writeFileSync(filepath, newContent);
+					ensureDirExistsSync(folderPath);
+					writeIfDifferent(filepath, newContent);
 				}
 			} else {
 				if (name) {
 					const filepath = `${tsFile}/${name}.ts`;
 					const folderPath = path.dirname(filepath);
-					fs.mkdirSync(folderPath, {recursive: true});
-					fs.writeFileSync(filepath, newContent);
+					ensureDirExistsSync(folderPath);
+					writeIfDifferent(filepath, newContent);
 				}
 			}
 		}
@@ -81,19 +121,19 @@ function writeFiles(name: string | undefined, data: any, config: ArtifactGenerat
 				if (!name) {
 					const filepath = jsFile;
 					const folderPath = path.dirname(filepath);
-					fs.mkdirSync(folderPath, {recursive: true});
-					fs.writeFileSync(filepath, newContent);
-					fs.writeFileSync(filepath.replace(/\.js$/, '.d.ts'), dtsContent);
-					fs.writeFileSync(filepath.replace(/\.js$/, '.cjs'), cjsContent);
+					ensureDirExistsSync(folderPath);
+					writeIfDifferent(filepath, newContent);
+					writeIfDifferent(filepath.replace(/\.js$/, '.d.ts'), dtsContent);
+					writeIfDifferent(filepath.replace(/\.js$/, '.cjs'), cjsContent);
 				}
 			} else {
 				if (name) {
 					const filepath = `${jsFile}/${name}.js`;
 					const folderPath = path.dirname(filepath);
-					fs.mkdirSync(folderPath, {recursive: true});
-					fs.writeFileSync(filepath, newContent);
-					fs.writeFileSync(filepath.replace(/\.js$/, '.d.ts'), dtsContent);
-					fs.writeFileSync(filepath.replace(/\.js$/, '.cjs'), cjsContent);
+					ensureDirExistsSync(folderPath);
+					writeIfDifferent(filepath, newContent);
+					writeIfDifferent(filepath.replace(/\.js$/, '.d.ts'), dtsContent);
+					writeIfDifferent(filepath.replace(/\.js$/, '.cjs'), cjsContent);
 				}
 			}
 		}
@@ -106,15 +146,15 @@ function writeFiles(name: string | undefined, data: any, config: ArtifactGenerat
 				if (!name) {
 					const filepath = jsonFile;
 					const folderPath = path.dirname(filepath);
-					fs.mkdirSync(folderPath, {recursive: true});
-					fs.writeFileSync(filepath, newContent);
+					ensureDirExistsSync(folderPath);
+					writeIfDifferent(filepath, newContent);
 				}
 			} else {
 				if (name) {
 					const filepath = `${jsonFile}/${name}.json`;
 					const folderPath = path.dirname(filepath);
-					fs.mkdirSync(folderPath, {recursive: true});
-					fs.writeFileSync(filepath, newContent);
+					ensureDirExistsSync(folderPath);
+					writeIfDifferent(filepath, newContent);
 				}
 			}
 		}
@@ -129,8 +169,8 @@ function writeFiles(name: string | undefined, data: any, config: ArtifactGenerat
 			for (const tsFile of tsm) {
 				const filepath = tsFile;
 				const folderPath = path.dirname(filepath);
-				fs.mkdirSync(folderPath, {recursive: true});
-				fs.writeFileSync(filepath, newContent);
+				ensureDirExistsSync(folderPath);
+				writeIfDifferent(filepath, newContent);
 			}
 		}
 
@@ -142,8 +182,8 @@ function writeFiles(name: string | undefined, data: any, config: ArtifactGenerat
 			for (const jsFile of jsm) {
 				const filepath = jsFile;
 				const folderPath = path.dirname(filepath);
-				fs.mkdirSync(folderPath, {recursive: true});
-				fs.writeFileSync(filepath, newContent);
+				ensureDirExistsSync(folderPath);
+				writeIfDifferent(filepath, newContent);
 			}
 		}
 	}
@@ -157,7 +197,16 @@ export async function generateTypes(
 	const allArtifacts: {[name: string]: any} = {};
 	const shortNameDict: {[shortName: string]: boolean} = {};
 
-	const files: FileTraversed[] = traverse(paths.artifacts, [], paths.artifacts, (name) => name != 'build-info');
+	const files: FileTraversed[] = traverse(
+		paths.artifacts,
+		[],
+		paths.artifacts,
+		(name) => name != 'build-info' && !name.endsWith('.t.sol')
+	);
+
+	// console.log('--------------------------');
+	// console.log(files);
+	// console.log('--------------------------');
 
 	for (const file of files) {
 		const filepath = file.path;
@@ -179,27 +228,28 @@ export async function generateTypes(
 
 		// console.log({buildInfoFilepath});
 
-		const backupBuildInfoFilepath = path.join(
-			'./generated',
-			buildInfoFilepath.slice(buildInfoFilepath.indexOf('/', 1))
-		);
+		// const backupBuildInfoFilepath = path.join(
+		// 	'./generated',
+		// 	buildInfoFilepath.slice(buildInfoFilepath.indexOf('/', 1))
+		// );
 		let buildInfoFilepathToUse = buildInfoFilepath;
-		if (!fs.existsSync(buildInfoFilepathToUse)) {
-			buildInfoFilepathToUse = backupBuildInfoFilepath;
-		}
+		// if (!fs.existsSync(buildInfoFilepathToUse)) {
+		// 	buildInfoFilepathToUse = backupBuildInfoFilepath;
+		// }
 		if (fs.existsSync(buildInfoFilepathToUse)) {
 			const buildInfoContent = fs.readFileSync(buildInfoFilepathToUse, 'utf-8');
 
-			if (buildInfoFilepathToUse !== backupBuildInfoFilepath) {
-				fs.mkdirSync(path.dirname(backupBuildInfoFilepath), {recursive: true});
-				fs.writeFileSync(backupBuildInfoFilepath, buildInfoContent);
-			}
+			// if (buildInfoFilepathToUse !== backupBuildInfoFilepath) {
+			// 	ensureDirExistsSync(path.dirname(backupBuildInfoFilepath));
+			// 	writeIfDifferent(backupBuildInfoFilepath, buildInfoContent);
+			// }
 
 			const parsedBuildInfo = JSON.parse(buildInfoContent);
 			// console.log({dirname, contractName});
 			const solidityOutput = parsedBuildInfo.output.contracts[dirname][contractName];
 
-			const artifactObject = {...parsed, ...solidityOutput};
+			const hardhatArtifactObject = {...parsed, ...solidityOutput};
+			const {buildInfoId, _format, ...artifactObject} = hardhatArtifactObject;
 			const fullName = `${dirname}/${contractName}`;
 			allArtifacts[fullName] = artifactObject;
 			if (shortNameDict[contractName]) {
