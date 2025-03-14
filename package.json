@@ -7,6 +7,7 @@
     "@changesets/cli": "^2.27.6",
     "set-defaults": "^0.0.5",
     "syncpack": "^13.0.3",
+    "vitepress": "^1.6.3",
     "zellij-launcher": "^0.0.1"
   },
   "volta": {
@@ -14,6 +15,9 @@
   },
   "scripts": {
     "prepare": "set-defaults .vscode",
+    "docs:dev": "vitepress dev",
+    "docs:build": "pnpm prepare && vitepress build",
+    "docs:preview": "vitepress preview",
     "prepublish": "pnpm build",
     "build": "pnpm -r build",
     "sync-deps": "syncpack fix-mismatches",

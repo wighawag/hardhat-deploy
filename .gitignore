@@ -2,3 +2,5 @@ node_modules/
 
 .vscode/*
 !*.default
+
+.vitepress/cache
