@@ -22,7 +22,10 @@ export default defineConfig({
     // ],
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/wighawag/hardhat-deploy" },
+      {
+        icon: "github",
+        link: "https://github.com/wighawag/hardhat-deploy/tree/v2#readme",
+      },
     ],
   },
 
