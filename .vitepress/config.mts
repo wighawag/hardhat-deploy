@@ -26,6 +26,8 @@ export default defineConfig({
     ],
   },
 
+  srcExclude: ["packages/*", "demoes/*"],
+
   rewrites(id) {
     // console.log({ id });
     if (id === "README.md") {
