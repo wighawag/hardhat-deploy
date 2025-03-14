@@ -29,6 +29,8 @@ export default defineConfig({
     ],
   },
 
+  base: process.env.VITEPRESS_BASE || undefined,
+
   srcExclude: ["packages/*", "demoes/*"],
 
   rewrites(id) {
