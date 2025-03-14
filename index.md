@@ -4,7 +4,7 @@ layout: home
 
 hero:
   name: "hardhat-deploy"
-  text: "A deployment system for EVM Smart Contracts"
+  text: "A Hardhat Plugin For Replicable Deployments And Easy Testing"
   tagline: Easy And Flexible Deployment for both development and production
   image:
     dark: /logo.svg
