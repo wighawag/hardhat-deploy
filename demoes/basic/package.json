@@ -23,7 +23,7 @@
 		"set-defaults": "^0.0.5",
 		"tsx": "^4.19.3",
 		"typescript": "^5.8.2",
-		"viem": "^2.23.10",
+		"viem": "^2.23.11",
 		"wait-on": "^8.0.3",
 		"zellij-launcher": "^0.0.1"
 	},
