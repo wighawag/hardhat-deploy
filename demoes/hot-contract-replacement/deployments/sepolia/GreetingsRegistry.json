@@ -8346,10 +8346,6 @@
     "version": 1
   },
   "argsData": "0x000000000000000000000000b48b36f03811eb6856f885da733d4303b789c6e5000000000000000000000000e53cd71271acadbeb0f64d9c8c62bbddc8ca9e6600000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000000",
-  "linkedData": {
-    "prefix": "proxy:",
-    "admin": "0xe53cd71271acadbeb0f64d9c8c62bbddc8ca9e66"
-  },
   "transaction": {
     "hash": "0xf2d9b797148484a6240ea92eff30f0a1212816e857244a880add899164fb225a",
     "nonce": "0x27d",
@@ -8361,7 +8357,10 @@
     "blockNumber": "0x78777d",
     "transactionIndex": "0x42"
   },
-  "updated": true,
   "immutableReferences": {},
-  "inputSourceName": "src/GreetingsRegistry/GreetingsRegistry.sol"
+  "inputSourceName": "src/GreetingsRegistry/GreetingsRegistry.sol",
+  "linkedData": {
+    "prefix": "proxy:",
+    "admin": "0xe53cd71271acadbeb0f64d9c8c62bbddc8ca9e66"
+  }
 }
