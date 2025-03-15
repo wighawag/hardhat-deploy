@@ -14,12 +14,12 @@ import {Environment, ProvidedContext, UnknownArtifacts, UnresolvedUnknownNamedAc
 
 export async function loadEnvironmentFromHardhat<
 	Artifacts extends UnknownArtifacts = UnknownArtifacts,
-	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts
+	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
 >(
 	{hre, context}: {hre: HardhatRuntimeEnvironment; context?: ProvidedContext<Artifacts, NamedAccounts>},
 	options?: {
 		useChainIdOfForkedNetwork?: boolean;
-	}
+	},
 ): Promise<Environment> {
 	const connection = await hre.network.connect();
 	let provider: any = connection.provider;
@@ -89,16 +89,28 @@ export async function loadEnvironmentFromHardhat<
 			provider,
 			network,
 		},
-		context || {artifacts: {} as any} // TODO
+		context || {artifacts: {} as any}, // TODO
 	);
 }
 
-export function getRPC(networkName: string): string | SensitiveString | undefined {
-	const variableName = 'ETH_NODE_URI_' + networkName;
+function getVariable(prefix: string, name: string): string | SensitiveString | undefined {
+	const variableName = prefix + name;
 	let uri = process.env[variableName];
 	if (uri === 'SECRET') {
 		return configVariable(`SECRET_${variableName}`);
+	} else if (uri?.startsWith('SECRET:')) {
+		const splitted = uri.split(':');
+		if (splitted.length !== 2) {
+			throw new Error(`invalid secret uri ${uri}`);
+		}
+		return configVariable(`SECRET_${prefix + splitted[1]}`);
 	}
+	return undefined;
+}
+
+export function getRPC(networkName: string): string | SensitiveString | undefined {
+	let uri = getVariable('ETH_NODE_URI_', networkName);
+
 	if (uri && uri !== '') {
 		return uri;
 	}
@@ -123,11 +135,8 @@ export function getRPC(networkName: string): string | SensitiveString | undefine
 
 export function getMnemonic(networkName?: string): string | SensitiveString {
 	if (networkName) {
-		const variableName = 'MNEMONIC_' + networkName;
-		const mnemonic = process.env[variableName];
-		if (mnemonic === 'SECRET') {
-			return configVariable(`SECRET_${variableName}`);
-		}
+		const mnemonic = getVariable('MNEMONIC_', networkName);
+
 		if (mnemonic && mnemonic !== '') {
 			return mnemonic;
 		}
@@ -170,7 +179,7 @@ export function addNetworksFromEnv(networks?: Record<string, EdrNetworkUserConfi
 }
 
 export function populateNetworksFromEnv(
-	networks: Record<string, Omit<NetworkUserConfig, 'accounts' | 'url'> | EdrNetworkUserConfig>
+	networks: Record<string, Omit<NetworkUserConfig, 'accounts' | 'url'> | EdrNetworkUserConfig>,
 ): Record<string, NetworkUserConfig> {
 	const newNetworks: Record<string, NetworkUserConfig> = {};
 	for (const networkName of Object.keys(networks)) {
@@ -241,7 +250,7 @@ export function addForkConfiguration(networks: Record<string, NetworkUserConfig>
 					? {
 							url: forkURL,
 							blockNumber: process.env.HARDHAT_FORK_NUMBER ? parseInt(process.env.HARDHAT_FORK_NUMBER) : undefined,
-					  }
+						}
 					: undefined,
 			},
 		},

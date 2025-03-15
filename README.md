@@ -52,13 +52,13 @@ This is an alpha so make sure you specify the version manually (npm will otherwi
 Here is the basic for getting started
 
 ```
-pnpm add -D hardhat-deploy@2.0.0-next.11 rocketh@1.0.0-next.4 @rocketh/deploy@1.0.0-next.4 @rocketh/read-execute@1.0.0-next.1
+pnpm add -D hardhat-deploy@2.0.0-next.12 rocketh@1.0.0-next.5 @rocketh/deploy@1.0.0-next.5 @rocketh/read-execute@1.0.0-next.2
 ```
 
 but you can also add these that provide more features
 
 ```
-pnpm add -D @rocketh/deploy-proxy@1.0.0-next.5 @rocketh/export@1.0.0-next.4 @rocketh/verifier@1.0.0-next.4 @rocketh/doc@1.0.0-next.4
+pnpm add -D @rocketh/deploy-proxy@1.0.0-next.6 @rocketh/export@1.0.0-next.5 @rocketh/verifier@1.0.0-next.5 @rocketh/doc@1.0.0-next.5
 ```
 
 ## Migrating from hardhat-deploy v1
