@@ -51,15 +51,31 @@ Here is the basic for getting started
 
 Note: hardhat-deploy is alpha, see @next to get alpha version, if you do not specify @nextyou'll get v1
 
+::: code-group
+
+```bash [npm]
+npm install -D hardhat-deploy@next rocketh @rocketh/deploy @rocketh/read-execute
 ```
+
+```bash [pnpm]
 pnpm add -D hardhat-deploy@next rocketh @rocketh/deploy @rocketh/read-execute
 ```
 
+:::
+
 but you can also add these that provide more features
 
+::: code-group
+
+```bash [npm]
+npm install -D @rocketh/deploy-proxy @rocketh/export @rocketh/verifier @rocketh/doc
 ```
+
+```bash [pnpm]
 pnpm add -D @rocketh/deploy-proxy @rocketh/export @rocketh/verifier @rocketh/doc
 ```
+
+:::
 
 ## Migrating from hardhat-deploy v1
 
