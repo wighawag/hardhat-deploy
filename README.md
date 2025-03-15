@@ -47,18 +47,18 @@ This plugin contains a lot more features too, all geared toward a better develop
 
 ## Install
 
-This is an alpha so make sure you specify the version manually (npm will otherwise fallback on old version)
-
 Here is the basic for getting started
 
+Note: hardhat-deploy is alpha, see @next to get alpha version, if you do not specify @nextyou'll get v1
+
 ```
-pnpm add -D hardhat-deploy@2.0.0-next.12 rocketh@1.0.0-next.5 @rocketh/deploy@1.0.0-next.5 @rocketh/read-execute@1.0.0-next.2
+pnpm add -D hardhat-deploy@next rocketh @rocketh/deploy @rocketh/read-execute
 ```
 
 but you can also add these that provide more features
 
 ```
-pnpm add -D @rocketh/deploy-proxy@1.0.0-next.6 @rocketh/export@1.0.0-next.5 @rocketh/verifier@1.0.0-next.5 @rocketh/doc@1.0.0-next.5
+pnpm add -D @rocketh/deploy-proxy @rocketh/export @rocketh/verifier @rocketh/doc
 ```
 
 ## Migrating from hardhat-deploy v1
