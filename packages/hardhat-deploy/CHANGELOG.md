@@ -1,5 +1,12 @@
 # hardhat-deploy
 
+## 2.0.0-next.14
+
+### Patch Changes
+
+- adbe641: generate types too if ts output is chosen
+- d93918d: use latest rocketh
+
 ## 2.0.0-next.13
 
 ### Patch Changes
