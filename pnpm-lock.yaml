@@ -112,7 +112,7 @@ importers:
         version: 0.11.1(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/diamond':
         specifier: ^0.11.2
-        version: 0.11.2(@rocketh/deploy@0.11.1(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.1(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        version: link:../../../rocketh/packages/rocketh-diamond
       '@rocketh/read-execute':
         specifier: ^0.11.1
         version: 0.11.1(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
@@ -145,7 +145,7 @@ importers:
         version: 1.4.2(prettier@3.5.3)
       rocketh:
         specifier: ^0.11.1
-        version: 0.11.1(typescript@5.8.2)(zod@3.24.2)
+        version: link:../../../rocketh/packages/rocketh
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -278,7 +278,7 @@ importers:
         version: 6.0.1
       rocketh:
         specifier: ^0.11.1
-        version: 0.11.1(typescript@5.8.2)(zod@3.24.2)
+        version: link:../../../rocketh/packages/rocketh
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -1077,13 +1077,6 @@ packages:
   '@rocketh/deploy@0.11.1':
     resolution: {integrity: sha512-Fb+BZ9v7MYJ/qBTp3LI/QWKiF0tMsnHNu6J1/INf92jjKIKYvShdT+iWqIDLdDm3pETYMCDV9/edQZbVmNNv7w==}
     peerDependencies:
-      rocketh: 0.11.1
-
-  '@rocketh/diamond@0.11.2':
-    resolution: {integrity: sha512-Qeq0As1wp6ZLpxTybtulrpGopLzwY69ozznnig9mxdbX95r+uaFXShOb0GGUze0nOWstkgn4hyk990JGkg98Gw==}
-    peerDependencies:
-      '@rocketh/deploy': 0.11.1
-      '@rocketh/read-execute': 0.11.1
       rocketh: 0.11.1
 
   '@rocketh/doc@0.11.1':
@@ -3552,20 +3545,6 @@ snapshots:
     dependencies:
       named-logs: 0.3.2
       rocketh: 0.11.1(typescript@5.8.2)(zod@3.24.2)
-      viem: 2.23.11(typescript@5.8.2)(zod@3.24.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - typescript
-      - utf-8-validate
-      - zod
-
-  '@rocketh/diamond@0.11.2(@rocketh/deploy@0.11.1(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.1(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
-    dependencies:
-      '@rocketh/deploy': 0.11.1(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      '@rocketh/read-execute': 0.11.1(rocketh@0.11.1(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      named-logs: 0.3.2
-      rocketh: 0.11.1(typescript@5.8.2)(zod@3.24.2)
-      solidity-proxy: 0.4.0
       viem: 2.23.11(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
       - bufferutil

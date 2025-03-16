@@ -1,6 +1,8 @@
 import {loadAndExecuteDeployments} from 'rocketh';
 import {context} from '../../deploy/_context.js';
 import {EthereumProvider} from 'hardhat/types/providers';
+import {Abi_GetMessageFacet} from '../../generated/types/GetMessageFacet.js';
+import {Abi_SetMessageFacet} from '../../generated/types/SetMessageFacet.js';
 
 export function setupFixtures(provider: EthereumProvider) {
 	return {
@@ -14,8 +16,8 @@ export function setupFixtures(provider: EthereumProvider) {
 
 			// Deployment are inherently untyped since they can vary from network or even before different from current artifacts
 			// so here we type them manually assuming the artifact is still matching
-			const GreetingsRegistryRead = env.get<typeof env.artifacts.GetMessageFacet.abi>('GreetingsRegistry');
-			const GreetingsRegistryWrite = env.get<typeof env.artifacts.SetMessageFacet.abi>('GreetingsRegistry');
+			const GreetingsRegistryRead = env.get<Abi_GetMessageFacet>('GreetingsRegistry');
+			const GreetingsRegistryWrite = env.get<Abi_SetMessageFacet>('GreetingsRegistry');
 
 			return {
 				env,

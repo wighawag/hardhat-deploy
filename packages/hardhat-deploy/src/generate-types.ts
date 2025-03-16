@@ -1,7 +1,7 @@
 import type {ArtifactGenerationConfig} from './types.js';
 import debug from 'debug';
 import fs from 'node:fs';
-import path from 'node:path';
+import path, {basename, dirname} from 'node:path';
 
 const log = debug('hardhat-deploy:generate-types');
 
@@ -17,7 +17,7 @@ function traverse(
 	dir: string,
 	result: any[] = [],
 	topDir?: string,
-	filter?: (name: string, stats: any) => boolean // TODO any is Stats
+	filter?: (name: string, stats: any) => boolean, // TODO any is Stats
 ): Array<FileTraversed> {
 	fs.readdirSync(dir).forEach((name) => {
 		const fPath = path.resolve(dir, name);
@@ -50,7 +50,7 @@ function writeIfDifferent(filePath: string, newTextContent: string) {
 		try {
 			existingContent = fs.readFileSync(filePath, 'utf8');
 		} catch (error) {
-			console.log(`do not exist? => writing ${filePath}`);
+			// console.log(`do not exist? => writing ${filePath}`);
 			// File doesn't exist, write and return
 			fs.writeFileSync(filePath, contentToWrite);
 			return {written: true, reason: 'File did not exist'};
@@ -58,7 +58,7 @@ function writeIfDifferent(filePath: string, newTextContent: string) {
 
 		// Simple string comparison
 		if (contentToWrite !== existingContent) {
-			console.log(`content different => writing ${filePath}`);
+			// console.log(`content different => writing ${filePath}`);
 			fs.writeFileSync(filePath, contentToWrite);
 			return {written: true, reason: 'Content was different'};
 		}
@@ -76,7 +76,7 @@ function ensureDirExistsSync(folderPath: string) {
 		return {created: false, reason: 'Directory already exists'};
 	}
 
-	console.log(`do not exist? => mkdir ${folderPath}`);
+	// console.log(`do not exist? => mkdir ${folderPath}`);
 	// Directory doesn't exist, create it
 	fs.mkdirSync(folderPath, {recursive: true});
 	return {created: true, reason: 'Directory was created'};
@@ -98,6 +98,23 @@ function writeFiles(name: string | undefined, data: any, config: ArtifactGenerat
 					const folderPath = path.dirname(filepath);
 					ensureDirExistsSync(folderPath);
 					writeIfDifferent(filepath, newContent);
+
+					ensureDirExistsSync(`${folderPath}/types`);
+					for (const name of Object.keys(data)) {
+						const splitted = name.split('/');
+						const numPath = splitted.length;
+						let pathToBase = '';
+						for (let i = 0; i < numPath; i++) {
+							pathToBase += '../';
+						}
+						let lastName = splitted.pop() || name;
+						const content = `
+import artifacts from '${pathToBase}${basename(tsFile.replace('.ts', '.js'))}';
+export type Abi_${lastName} = typeof artifacts["${name}"]["abi"];
+`;
+						ensureDirExistsSync(dirname(`${folderPath}/types/${name}`));
+						writeIfDifferent(`${folderPath}/types/${name}.ts`, content);
+					}
 				}
 			} else {
 				if (name) {
@@ -105,6 +122,18 @@ function writeFiles(name: string | undefined, data: any, config: ArtifactGenerat
 					const folderPath = path.dirname(filepath);
 					ensureDirExistsSync(folderPath);
 					writeIfDifferent(filepath, newContent);
+				} else {
+					let indexFileContent = ``;
+
+					for (const name of Object.keys(data)) {
+						let transformedName = name.replaceAll('/', '_').replaceAll('.', '_');
+						indexFileContent += `
+import ${transformedName} from './${name}.js';
+export {${transformedName}};
+export type Abi_${transformedName} = typeof ${transformedName}.abi;
+`;
+					}
+					writeIfDifferent(`${tsFile}/index.ts`, indexFileContent);
 				}
 			}
 		}
@@ -192,7 +221,7 @@ function writeFiles(name: string | undefined, data: any, config: ArtifactGenerat
 export async function generateTypes(
 	paths: {root: string; artifacts: string},
 	config: ArtifactGenerationConfig,
-	artifactsPaths: string[]
+	artifactsPaths: string[],
 ): Promise<void> {
 	const allArtifacts: {[name: string]: any} = {};
 	const shortNameDict: {[shortName: string]: boolean} = {};
@@ -201,7 +230,7 @@ export async function generateTypes(
 		paths.artifacts,
 		[],
 		paths.artifacts,
-		(name) => name != 'build-info' && !name.endsWith('.t.sol')
+		(name) => name != 'build-info' && !name.endsWith('.t.sol'),
 	);
 
 	// console.log('--------------------------');
