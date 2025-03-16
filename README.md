@@ -15,7 +15,7 @@ Under the hood, hardhat-deploy uses [rocketh](https://github.com/wighawag/rocket
 Everything else is handled by external module. For example `@rocketh/deploy` give you a deploy function that you can use to deploy contracts.
 But you can provide your own module for advanced use case.
 
-There are already a few like `@rocketh/deploy-proxy` to deploy proxy declaratively like in hardhat-deploy v1
+There are already a few like `@rocketh/proxy` to deploy proxy declaratively like in hardhat-deploy v1 or `@rocketh/diamond` to deploy diamond declaratively.
 
 ## Table of Content
 
@@ -68,11 +68,11 @@ but you can also add these that provide more features
 ::: code-group
 
 ```bash [npm]
-npm install -D @rocketh/deploy-proxy @rocketh/export @rocketh/verifier @rocketh/doc
+npm install -D @rocketh/proxy @rocketh/export @rocketh/verifier @rocketh/doc
 ```
 
 ```bash [pnpm]
-pnpm add -D @rocketh/deploy-proxy @rocketh/export @rocketh/verifier @rocketh/doc
+pnpm add -D @rocketh/proxy @rocketh/export @rocketh/verifier @rocketh/doc
 ```
 
 :::
