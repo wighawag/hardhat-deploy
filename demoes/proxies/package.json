@@ -12,7 +12,7 @@
 		"@rocketh/deploy": "^0.11.5",
 		"@rocketh/doc": "^0.11.5",
 		"@rocketh/export": "^0.11.5",
-		"@rocketh/proxy": "^0.11.6",
+		"@rocketh/proxy": "^0.11.7",
 		"@rocketh/read-execute": "^0.11.5",
 		"@rocketh/verifier": "^0.11.5",
 		"@types/node": "^22.13.10",

@@ -192,8 +192,8 @@ importers:
         specifier: ^0.11.5
         version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))
       '@rocketh/proxy':
-        specifier: ^0.11.6
-        version: 0.11.6(@rocketh/deploy@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.7
+        version: 0.11.7(@rocketh/deploy@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/read-execute':
         specifier: ^0.11.5
         version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
@@ -1097,8 +1097,8 @@ packages:
     peerDependencies:
       rocketh: 0.11.5
 
-  '@rocketh/proxy@0.11.6':
-    resolution: {integrity: sha512-JhKUEwG2mTaKWxafk5h2X3YY+bZtw3lFp2IrzGhDfUkMM4qx9GYi0KzVbGGvZHRm0iEBKwbKyWLlympGWmPLrg==}
+  '@rocketh/proxy@0.11.7':
+    resolution: {integrity: sha512-EZMT/qAxfOzbQGK5rSy5rNzPPVPAG5P2D4FFIU5puvYsRGZ+04aow46ZxSPb2spdceKWyFgRoWNN37x/99atQg==}
     peerDependencies:
       '@rocketh/deploy': 0.11.5
       '@rocketh/read-execute': 0.11.5
@@ -3583,7 +3583,7 @@ snapshots:
       fs-extra: 11.3.0
       rocketh: 0.11.5(typescript@5.8.2)(zod@3.24.2)
 
-  '@rocketh/proxy@0.11.6(@rocketh/deploy@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
+  '@rocketh/proxy@0.11.7(@rocketh/deploy@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
     dependencies:
       '@rocketh/deploy': 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/read-execute': 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
