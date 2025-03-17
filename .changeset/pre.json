@@ -5,13 +5,15 @@
     "hardhat-deploy": "1.0.0",
     "hardhat-deploy-demoes-basic": "0.0.0",
     "hardhat-deploy-demoes-hot-contract-replacement": "0.0.0",
-    "hardhat-deploy-demoes-diamond": "0.0.0"
+    "hardhat-deploy-demoes-diamond": "0.0.0",
+    "hardhat-deploy-demoes-proxies": "0.0.0"
   },
   "changesets": [
     "brave-times-jog",
     "chubby-ties-sit",
     "five-lands-say",
     "hip-towns-cheat",
+    "late-humans-dig",
     "lucky-ghosts-drum",
     "nasty-foxes-smell",
     "rotten-bears-feel",

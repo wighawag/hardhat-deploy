@@ -1,15 +1,9 @@
-// execute is needed to register your script
-import {execute} from 'rocketh';
-// here we import the context, the convention is to import it from a file named `_context.ts`
-import {context} from './_context.js';
+// we import what we need from the @rocketh alias, see ../rocketh.ts
+import {execute, artifacts} from '@rocketh';
 
 export default execute(
-	// we pass the context to the "execute" function
-	// it will transform it while keeping type safety (in particular namedAccounts)
-	context,
-	// then you pass in your function that can do whatever it wants
-	async ({diamond, namedAccounts, artifacts}) => {
-		const {deployer} = namedAccounts;
+	async ({diamond, namedAccounts}) => {
+		const {deployer, admin} = namedAccounts;
 
 		await diamond(
 			'GreetingsRegistry',
@@ -24,11 +18,8 @@ export default execute(
 						num: 2,
 					},
 				],
+				owner: admin,
 			},
-			// execute: {
-			// 	methodName: 'init',
-			// 	args: [],
-			//  },
 		);
 	},
 	// finally you can pass tags and dependencies
