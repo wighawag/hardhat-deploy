@@ -9,7 +9,7 @@
 		"@nomicfoundation/hardhat-node-test-runner": "^3.0.0-next.1",
 		"@nomicfoundation/hardhat-viem": "^3.0.0-next.1",
 		"@rocketh/deploy": "^0.11.3",
-		"@rocketh/diamond": "^0.11.4",
+		"@rocketh/diamond": "^0.11.5",
 		"@rocketh/read-execute": "^0.11.3",
 		"@types/node": "^22.13.10",
 		"as-soon": "^0.0.11",

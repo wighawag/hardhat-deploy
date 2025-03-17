@@ -111,92 +111,11 @@ importers:
         specifier: ^0.11.3
         version: 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/diamond':
-        specifier: ^0.11.4
-        version: 0.11.4(@rocketh/deploy@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.5
+        version: 0.11.5(@rocketh/deploy@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/read-execute':
         specifier: ^0.11.3
         version: 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      '@types/node':
-        specifier: ^22.13.10
-        version: 22.13.10
-      as-soon:
-        specifier: ^0.0.11
-        version: 0.0.11
-      earl:
-        specifier: ^1.3.0
-        version: 1.3.0
-      forge-std:
-        specifier: github:foundry-rs/forge-std#v1.9.4
-        version: https://codeload.github.com/foundry-rs/forge-std/tar.gz/1eea5bae12ae557d589f9f0f0edae2faa47cb262
-      hardhat:
-        specifier: ^3.0.0-next.1
-        version: 3.0.0-next.1
-      hardhat-deploy:
-        specifier: workspace:*
-        version: link:../../packages/hardhat-deploy
-      ldenv:
-        specifier: ^0.3.12
-        version: 0.3.12
-      prettier:
-        specifier: ^3.5.3
-        version: 3.5.3
-      prettier-plugin-solidity:
-        specifier: ^1.4.2
-        version: 1.4.2(prettier@3.5.3)
-      rocketh:
-        specifier: ^0.11.3
-        version: 0.11.3(typescript@5.8.2)(zod@3.24.2)
-      set-defaults:
-        specifier: ^0.0.5
-        version: 0.0.5
-      tsx:
-        specifier: ^4.19.3
-        version: 4.19.3
-      typescript:
-        specifier: ^5.8.2
-        version: 5.8.2
-      viem:
-        specifier: ^2.23.11
-        version: 2.23.11(typescript@5.8.2)(zod@3.24.2)
-      wait-on:
-        specifier: ^8.0.3
-        version: 8.0.3
-      zellij-launcher:
-        specifier: ^0.0.1
-        version: 0.0.1
-
-  demoes/hot-contract-replacement:
-    devDependencies:
-      '@nomicfoundation/hardhat-keystore':
-        specifier: ^3.0.0-next.1
-        version: 3.0.0-next.1(hardhat@3.0.0-next.1)
-      '@nomicfoundation/hardhat-network-helpers':
-        specifier: ^3.0.0-next.1
-        version: 3.0.0-next.1(hardhat@3.0.0-next.1)
-      '@nomicfoundation/hardhat-node-test-runner':
-        specifier: ^3.0.0-next.1
-        version: 3.0.0-next.1(hardhat@3.0.0-next.1)
-      '@nomicfoundation/hardhat-viem':
-        specifier: ^3.0.0-next.1
-        version: 3.0.0-next.1(hardhat@3.0.0-next.1)(viem@2.23.11(typescript@5.8.2)(zod@3.24.2))
-      '@rocketh/deploy':
-        specifier: ^0.11.3
-        version: 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      '@rocketh/doc':
-        specifier: ^0.11.3
-        version: 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))
-      '@rocketh/export':
-        specifier: ^0.11.3
-        version: 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))
-      '@rocketh/proxy':
-        specifier: ^0.11.3
-        version: 0.11.3(@rocketh/deploy@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      '@rocketh/read-execute':
-        specifier: ^0.11.3
-        version: 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      '@rocketh/verifier':
-        specifier: ^0.11.3
-        version: 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))
       '@types/node':
         specifier: ^22.13.10
         version: 22.13.10
@@ -1159,8 +1078,8 @@ packages:
     peerDependencies:
       rocketh: 0.11.3
 
-  '@rocketh/diamond@0.11.4':
-    resolution: {integrity: sha512-Mn7qOMi06cdhsGFmfyMMm7sIUku4vVjixcDYzaq5Xwg8TFiA3RvIhxEbGSSkOj5Qf4oyC2BjVtsE51aI/psLHg==}
+  '@rocketh/diamond@0.11.5':
+    resolution: {integrity: sha512-iwKhQEla3wtH0ktFQQ+ehXHnwm6MnfECCudccYGKgGiHmVaofNzZuh7IUU+EubuarFbbyFumUDY/WltYZ9UY/w==}
     peerDependencies:
       '@rocketh/deploy': 0.11.3
       '@rocketh/read-execute': 0.11.3
@@ -1176,13 +1095,6 @@ packages:
     resolution: {integrity: sha512-UC2wnXBriuR8bkLhOozVK6kt0GzaWvVXPpnn7tAcIqaFDENwTo0RhdDoMhEx+w9mYlV+uTErDd42XU3T5HTsrQ==}
     hasBin: true
     peerDependencies:
-      rocketh: 0.11.3
-
-  '@rocketh/proxy@0.11.3':
-    resolution: {integrity: sha512-854uaBZC64WvFFds9JV9iV606jRki08zWT7yqFOUC5jRs2p3KuI9ivje5bAvfhAlVk/KzwODsPoa8tDkty5r0A==}
-    peerDependencies:
-      '@rocketh/deploy': 0.11.3
-      '@rocketh/read-execute': 0.11.3
       rocketh: 0.11.3
 
   '@rocketh/proxy@0.11.4':
@@ -3638,7 +3550,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rocketh/diamond@0.11.4(@rocketh/deploy@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
+  '@rocketh/diamond@0.11.5(@rocketh/deploy@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
     dependencies:
       '@rocketh/deploy': 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/read-execute': 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
@@ -3670,19 +3582,6 @@ snapshots:
       commander: 13.1.0
       fs-extra: 11.3.0
       rocketh: 0.11.3(typescript@5.8.2)(zod@3.24.2)
-
-  '@rocketh/proxy@0.11.3(@rocketh/deploy@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
-    dependencies:
-      '@rocketh/deploy': 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      '@rocketh/read-execute': 0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      named-logs: 0.3.2
-      rocketh: 0.11.3(typescript@5.8.2)(zod@3.24.2)
-      viem: 2.23.11(typescript@5.8.2)(zod@3.24.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - typescript
-      - utf-8-validate
-      - zod
 
   '@rocketh/proxy@0.11.4(@rocketh/deploy@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.3(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.3(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
     dependencies:
