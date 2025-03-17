@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.17
+
+### Patch Changes
+
+- u[pdate rocketh
+
 ## 2.0.0-next.16
 
 ### Patch Changes

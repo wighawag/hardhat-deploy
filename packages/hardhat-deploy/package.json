@@ -1,6 +1,6 @@
 {
 	"name": "hardhat-deploy",
-	"version": "2.0.0-next.16",
+	"version": "2.0.0-next.17",
 	"description": "deployment plugin for hardhat",
 	"publishConfig": {
 		"access": "public"
@@ -32,7 +32,7 @@
 		"as-soon": "^0.0.11",
 		"hardhat": "^3.0.0-next.1",
 		"rimraf": "^6.0.1",
-		"rocketh": "^0.11.3",
+		"rocketh": "^0.11.5",
 		"set-defaults": "^0.0.5",
 		"typescript": "^5.5.2"
 	},
