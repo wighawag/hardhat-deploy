@@ -20,7 +20,7 @@ There are already a few like `@rocketh/proxy` to deploy proxy declaratively like
 ## Table of Content
 
 - [What is it for?](#what-is-it-for)
-- [Install](#install)
+- [Setup](#setup)
 - [Migrating from hardhat-deploy v1](#migrating-from-hardhat-deploy-v1)
 
 ## What is it for?
@@ -45,7 +45,7 @@ This plugin contains a lot more features too, all geared toward a better develop
 - declarative proxy deployment with ability to upgrade them transparently, only if code changes.
 - support HRC (Hot Contract Replacement) via special proxy mechanism
 
-## Install
+## Setup
 
 Here is the basic for getting started
 
@@ -68,14 +68,97 @@ but you can also add these that provide more features
 ::: code-group
 
 ```bash [npm]
-npm install -D @rocketh/proxy @rocketh/export @rocketh/verifier @rocketh/doc
+npm install -D @rocketh/proxy @rocketh/diamond @rocketh/export @rocketh/verifier @rocketh/doc
 ```
 
 ```bash [pnpm]
-pnpm add -D @rocketh/proxy @rocketh/export @rocketh/verifier @rocketh/doc
+pnpm add -D @rocketh/proxy @rocketh/diamond @rocketh/export @rocketh/verifier @rocketh/doc
 ```
 
 :::
+
+Then you need import them in your deploy script.
+
+But we recommend you import them in one location that you then import in your deploy script so you can share it to all of them.
+
+We recommend to actuall use the `rocketh.ts/js` config file to do that in one place.
+
+if you use typescript, we also recommend you add the to `tsconfig.json` so you can import with `import .. from "@rocketh"` it from anywhere:
+
+```json
+{
+	"compilerOptions": {
+	  ...
+		"paths": {
+			"@rocketh": ["./rocketh.ts"]
+		}
+	}
+}
+```
+
+Example of `rocketh.ts` file:
+
+```typescript
+// ------------------------------------------------------------------------------------------------
+// Typed Config
+// ------------------------------------------------------------------------------------------------
+import { UserConfig } from "rocketh";
+export const config = {
+  accounts: {
+    deployer: {
+      default: 0,
+    },
+  },
+} as const satisfies UserConfig;
+
+// ------------------------------------------------------------------------------------------------
+// Imports and Re-exports
+// ------------------------------------------------------------------------------------------------
+// We regroup all what is needed for the deploy scripts
+// so that they just need to import this file
+// We also added an alias (@rocketh) in tsconfig.json
+// so they just need to do `import {execute, artifacts} from '@rocketh';`
+// and this work anywhere in the file hierarchy
+// ------------------------------------------------------------------------------------------------
+// we add here the module we need, so that they are available in the deploy scripts
+import "@rocketh/deploy"; // this one provide a deploy function
+import "@rocketh/read-execute"; // this one provide read,execute functions
+// ------------------------------------------------------------------------------------------------
+// we re-export the artifacts, so they are easily available from the alias
+import artifacts from "./generated/artifacts.js";
+export { artifacts };
+// ------------------------------------------------------------------------------------------------
+// while not necessary, we also converted the execution function type to know about the named accounts
+// this way you get type safe accounts
+import {
+  execute as _execute,
+  loadAndExecuteDeployments,
+  type NamedAccountExecuteFunction,
+} from "rocketh";
+const execute = _execute as NamedAccountExecuteFunction<typeof config.accounts>;
+export { execute, loadAndExecuteDeployments };
+```
+
+You can them create a deploy script in the `deploy` folder like so:
+
+```typescript
+// we import what we need from the @rocketh alias, see ../rocketh.ts
+import { execute, artifacts } from "@rocketh";
+
+export default execute(
+  async ({ deploy, namedAccounts }) => {
+    const { deployer } = namedAccounts;
+
+    await deploy("GreetingsRegistry", {
+      account: deployer,
+      artifact: artifacts.GreetingsRegistry,
+      args: [""],
+    });
+  },
+  // finally you can pass tags and dependencies
+  { tags: ["GreetingsRegistry", "GreetingsRegistry_deploy"] }
+);
+```
 
 ## Migrating from hardhat-deploy v1
 
@@ -109,51 +192,22 @@ and you would have configuraiton in hardhat.config.ts
 in v2 you will do this instead:
 
 ```typescript
-// deploy/00_deploy_my_contract.js
-// execute is needed to register your script
-import { execute } from "rocketh";
-// here we import the context, the convention is to import it from a file named `_context.ts`
-// it contains the configuration like artifacts and named accounts
-// see bellow for an example
-import { context } from "./_context.js";
+/// we import what we need from the @rocketh alias, see ../rocketh.ts
+import { execute, artifacts } from "@rocketh";
 
 export default execute(
-  // we pass the context to the "execute" function
-  // it will transform it while keeping type safety (in particular namedAccounts)
-  context,
-  // then you pass in your function that can do whatever it wants
-  async ({ deploy, namedAccounts, artifacts }) => {
+  async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;
 
     await deploy("MyContract", {
       account: deployer,
-      artifact: artifacts.GreetingsRegistry,
-      args: [""], // type-safe checking
+      artifact: artifacts.MyContract,
+      args: ["Hello"],
     });
   },
   // finally you can pass tags and dependencies
-  { tags: ["MyContract", "MyContract_deploy"] }
+  { tags: ["MyContract"] }
 );
 ```
 
-```typescript
-//deploy/_context.ts
-import artifacts from "../generated/artifacts.js";
-
-// we also add here the module we need
-import "@rocketh/deploy"; // this one provide a deploy function
-import "@rocketh/read-execute"; // this one provide read,execute functions
-
-export const context = {
-  // this define the named-accounts
-  // these are transformed into addresses
-  // so when your deploy function get executed it have access to them while keeping type-safety
-  accounts: {
-    deployer: {
-      default: 0,
-    },
-  },
-  // the artifacts are viem compatible and you can use them to have type-safe calls or deployments
-  artifacts,
-} as const;
-```
+and you would have a `rocketh.ts/js` file as described in the [Setup](#setup)
