@@ -1,22 +1,19 @@
 import {configVariable} from 'hardhat/config';
 import {
-	EdrNetworkAccountConfig,
-	EdrNetworkAccountUserConfig,
 	EdrNetworkHDAccountsUserConfig,
 	EdrNetworkUserConfig,
-	HttpNetworkHDAccountsUserConfig,
 	HttpNetworkUserConfig,
 	NetworkUserConfig,
 	SensitiveString,
 } from 'hardhat/types/config';
 import {HardhatRuntimeEnvironment} from 'hardhat/types/hre';
-import {Environment, ProvidedContext, UnknownArtifacts, UnresolvedUnknownNamedAccounts, loadEnvironment} from 'rocketh';
+import {Environment, UnknownArtifacts, UnresolvedUnknownNamedAccounts, loadEnvironment} from 'rocketh';
 
 export async function loadEnvironmentFromHardhat<
 	Artifacts extends UnknownArtifacts = UnknownArtifacts,
 	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
 >(
-	{hre, context}: {hre: HardhatRuntimeEnvironment; context?: ProvidedContext<Artifacts, NamedAccounts>},
+	{hre}: {hre: HardhatRuntimeEnvironment},
 	options?: {
 		useChainIdOfForkedNetwork?: boolean;
 	},
@@ -84,13 +81,10 @@ export async function loadEnvironmentFromHardhat<
 	}
 
 	console.log(`loading environments...`);
-	return loadEnvironment(
-		{
-			provider,
-			network,
-		},
-		context || {artifacts: {} as any}, // TODO
-	);
+	return loadEnvironment({
+		provider,
+		network,
+	});
 }
 
 function getVariable(prefix: string, name: string): string | SensitiveString | undefined {
