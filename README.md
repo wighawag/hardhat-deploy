@@ -17,28 +17,6 @@ But you can provide your own module for advanced use case.
 
 There are already a few like `@rocketh/proxy` to deploy proxy declaratively like in hardhat-deploy v1 or `@rocketh/diamond` to deploy diamond declaratively.
 
-- [What is it for?](#what-is-it-for)
-- [hardhat-deploy in a nutshell](#hardhat-deploy-in-a-nutshell)
-- [Installation](#installation)
-- [Migrating from hardhat-deploy v1](#migrating-from-hardhat-deploy-v1)
-  - [Migrating existing deployment to hardhat-deploy](#migrating-existing-deployment-to-hardhat-deploy)
-- [Hardhat Tasks Available/Updated](#hardhat-tasks-availableupdated)
-  - [1. hardhat deploy](#1-hardhat-deploy)
-  - [2. rocketh-verify](#2-rocketh-verify)
-  - [3. rocketh-export](#3-rocketh-export)
-- [Environment object and extension](#environment-object-and-extension)
-- [Configuration](#configuration)
-  - [**1. namedAccounts (ability to name addresses)**](#1-namedaccounts-ability-to-name-addresses)
-  - [**4. deterministicDeployment (ability to specify a deployment factory)**](#4-deterministicdeployment-ability-to-specify-a-deployment-factory)
-- [How to Deploy Contracts](#how-to-deploy-contracts)
-  - [The `deploy` Task](#the-deploy-task)
-  - [Deploy Scripts](#deploy-scripts)
-  - [Environment and function provided by rocketh modules](#environment-and-function-provided-by-rocketh-modules)
-    - [`@rocketh/deploy`](#rockethdeploy)
-    - [`@rocketh/proxy`](#rockethproxy)
-    - [`@rocketh/diamond`](#rockethdiamond)
-- [Handling contract using libraries](#handling-contract-using-libraries)
-
 ## What is it for?
 
 This hardhat plugin adds a mechanism to deploy contracts to any network, keeping track of them and replicating the same environment for testing.
