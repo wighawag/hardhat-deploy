@@ -36,7 +36,7 @@
 		"prepare": "set-defaults .vscode && pnpm compile",
 		"docgen": "ldenv -m hardhat pnpm run deploy hardhat --save-deployments true --skip-prompts ~~ pnpm rocketh-doc -n @@MODE --except-suffix _Implementation,_Proxy,_Router,_Route ~~ @@",
 		"local_node": "hardhat node",
-		"compile": "hardhat compile src/**/*.sol",
+		"compile": "hardhat compile",
 		"compile:watch": "as-soon -w src pnpm compile",
 		"execute": "ldenv -n HARDHAT_NETWORK -m localhost tsx @@",
 		"fork:execute": "ldenv -m localhost tsx @=HARDHAT_FORK=@@MODE @@",

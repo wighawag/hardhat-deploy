@@ -12,7 +12,7 @@ layout {
 			pane name="demoes/basic" command="pnpm" {
 				args "--filter" "./demoes/basic" "test:watch"
 			}
-			pane name="demoes/hot-contract-replacement" command="pnpm" {
+			pane name="demoes/proxies" command="pnpm" {
 				args "--filter" "./demoes/proxies" "test:watch"
 			}
 			

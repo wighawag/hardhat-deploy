@@ -1,5 +1,4 @@
 import type {HookContext, SolidityHooks} from 'hardhat/types/hooks';
-import type {CompilationJob} from 'hardhat/types/solidity';
 
 import {generateTypes} from '../generate-types.js';
 

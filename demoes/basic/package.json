@@ -30,7 +30,7 @@
 	"scripts": {
 		"prepare": "set-defaults .vscode && pnpm compile",
 		"local_node": "hardhat node",
-		"compile": "hardhat compile src/**/*.sol",
+		"compile": "hardhat compile",
 		"compile:watch": "as-soon -w src pnpm compile",
 		"execute": "ldenv -n HARDHAT_NETWORK -m localhost tsx @@",
 		"fork:execute": "ldenv -m localhost tsx @=HARDHAT_FORK=@@MODE @@",
