@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.18
+
+### Patch Changes
+
+- hardhat@3.0.0-next.2
+
 ## 2.0.0-next.17
 
 ### Patch Changes
