@@ -1,23 +1,19 @@
 layout {
 	pane {
 		pane split_direction="vertical" {
-			pane name="shell" command="bash" {
-				args "-c" "${SHELL-bash}"
+		}
+		pane split_direction="vertical" {
+			pane name="hardhat-deploy" command="pnpm" {
+				args "--filter" "./packages/hardhat-deploy" "dev"
 			}
 			
 		}
 		pane split_direction="vertical" {
-			pane name="hardhat-deploy" command="bash" {
-				args "-c" "pnpm run --filter ./packages/hardhat-deploy dev; cd packages/hardhat-deploy; ${SHELL-bash}"
+			pane name="demoes/basic" command="pnpm" {
+				args "--filter" "./demoes/basic" "test:watch"
 			}
-			
-		}
-		pane split_direction="vertical" {
-			pane name="demoes/basic" command="bash" {
-				args "-c" "pnpm run --filter ./demoes/basic test:watch; cd demoes/basic; ${SHELL-bash}"
-			}
-			pane name="demoes/hot-contract-replacement" command="bash" {
-				args "-c" "pnpm run --filter ./demoes/hot-contract-replacement test:watch; cd demoes/hot-contract-replacement; ${SHELL-bash}"
+			pane name="demoes/hot-contract-replacement" command="pnpm" {
+				args "--filter" "./demoes/proxies" "test:watch"
 			}
 			
 		}
