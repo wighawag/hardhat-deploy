@@ -19,7 +19,7 @@ importers:
         version: 13.0.3(typescript@5.8.2)
       vitepress:
         specifier: ^1.6.3
-        version: 1.6.3(@algolia/client-search@5.21.0)(@types/node@22.13.10)(axios@1.8.3)(postcss@8.5.3)(search-insights@2.17.3)(typescript@5.8.2)
+        version: 1.6.3(@algolia/client-search@5.21.0)(@types/node@22.13.10)(axios@1.8.4)(postcss@8.5.3)(search-insights@2.17.3)(typescript@5.8.2)
       zellij-launcher:
         specifier: ^0.0.1
         version: 0.0.1
@@ -37,13 +37,13 @@ importers:
         version: 3.0.0-next.2(hardhat@3.0.0-next.2)
       '@nomicfoundation/hardhat-viem':
         specifier: ^3.0.0-next.2
-        version: 3.0.0-next.2(hardhat@3.0.0-next.2)(viem@2.23.11(typescript@5.8.2)(zod@3.24.2))
+        version: 3.0.0-next.2(hardhat@3.0.0-next.2)(viem@2.23.13(typescript@5.8.2)(zod@3.24.2))
       '@rocketh/deploy':
-        specifier: ^0.11.5
-        version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/read-execute':
-        specifier: ^0.11.5
-        version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@types/node':
         specifier: ^22.13.10
         version: 22.13.10
@@ -72,8 +72,8 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2(prettier@3.5.3)
       rocketh:
-        specifier: ^0.11.5
-        version: 0.11.5(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(typescript@5.8.2)(zod@3.24.2)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -84,8 +84,8 @@ importers:
         specifier: ^5.8.2
         version: 5.8.2
       viem:
-        specifier: ^2.23.11
-        version: 2.23.11(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^2.23.13
+        version: 2.23.13(typescript@5.8.2)(zod@3.24.2)
       wait-on:
         specifier: ^8.0.3
         version: 8.0.3
@@ -106,16 +106,16 @@ importers:
         version: 3.0.0-next.2(hardhat@3.0.0-next.2)
       '@nomicfoundation/hardhat-viem':
         specifier: ^3.0.0-next.2
-        version: 3.0.0-next.2(hardhat@3.0.0-next.2)(viem@2.23.11(typescript@5.8.2)(zod@3.24.2))
+        version: 3.0.0-next.2(hardhat@3.0.0-next.2)(viem@2.23.13(typescript@5.8.2)(zod@3.24.2))
       '@rocketh/deploy':
-        specifier: ^0.11.5
-        version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/diamond':
-        specifier: ^0.11.7
-        version: 0.11.7(@rocketh/deploy@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.11
+        version: 0.11.11(@rocketh/deploy@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/read-execute':
-        specifier: ^0.11.5
-        version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@types/node':
         specifier: ^22.13.10
         version: 22.13.10
@@ -144,8 +144,8 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2(prettier@3.5.3)
       rocketh:
-        specifier: ^0.11.5
-        version: 0.11.5(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(typescript@5.8.2)(zod@3.24.2)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -156,8 +156,8 @@ importers:
         specifier: ^5.8.2
         version: 5.8.2
       viem:
-        specifier: ^2.23.11
-        version: 2.23.11(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^2.23.13
+        version: 2.23.13(typescript@5.8.2)(zod@3.24.2)
       wait-on:
         specifier: ^8.0.3
         version: 8.0.3
@@ -178,28 +178,28 @@ importers:
         version: 3.0.0-next.2(hardhat@3.0.0-next.2)
       '@nomicfoundation/hardhat-viem':
         specifier: ^3.0.0-next.2
-        version: 3.0.0-next.2(hardhat@3.0.0-next.2)(viem@2.23.11(typescript@5.8.2)(zod@3.24.2))
+        version: 3.0.0-next.2(hardhat@3.0.0-next.2)(viem@2.23.13(typescript@5.8.2)(zod@3.24.2))
       '@openzeppelin/contracts':
         specifier: ^5.2.0
         version: 5.2.0
       '@rocketh/deploy':
-        specifier: ^0.11.5
-        version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/doc':
-        specifier: ^0.11.5
-        version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))
+        specifier: ^0.11.9
+        version: 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))
       '@rocketh/export':
-        specifier: ^0.11.5
-        version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))
+        specifier: ^0.11.9
+        version: 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))
       '@rocketh/proxy':
-        specifier: ^0.11.7
-        version: 0.11.7(@rocketh/deploy@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.11
+        version: 0.11.11(@rocketh/deploy@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/read-execute':
-        specifier: ^0.11.5
-        version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       '@rocketh/verifier':
-        specifier: ^0.11.5
-        version: 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))
+        specifier: ^0.11.9
+        version: 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))
       '@types/node':
         specifier: ^22.13.10
         version: 22.13.10
@@ -228,8 +228,8 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2(prettier@3.5.3)
       rocketh:
-        specifier: ^0.11.5
-        version: 0.11.5(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(typescript@5.8.2)(zod@3.24.2)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -240,8 +240,8 @@ importers:
         specifier: ^5.8.2
         version: 5.8.2
       viem:
-        specifier: ^2.23.11
-        version: 2.23.11(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^2.23.13
+        version: 2.23.13(typescript@5.8.2)(zod@3.24.2)
       wait-on:
         specifier: ^8.0.3
         version: 8.0.3
@@ -280,8 +280,8 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       rocketh:
-        specifier: ^0.11.5
-        version: 0.11.5(typescript@5.8.2)(zod@3.24.2)
+        specifier: ^0.11.9
+        version: 0.11.9(typescript@5.8.2)(zod@3.24.2)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -1272,47 +1272,47 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.8
 
-  '@rocketh/deploy@0.11.5':
-    resolution: {integrity: sha512-t1kRf74jWzNFd3JCGMPwQpl+6uIn3GtFCxF3O+dwqeSAb0iDAkOlZorbVipHBUDiC2pv1T6v2u/ePoO2CnjXTA==}
+  '@rocketh/deploy@0.11.9':
+    resolution: {integrity: sha512-qot0ECQoaHR26RwcZFnvJwtguHA3Yk4UNB7U8kZQUZqaJuXWcw0siCPIB8+bn6D+bub5Chq+S1O7sELVF+t3VQ==}
     peerDependencies:
-      rocketh: 0.11.5
+      rocketh: 0.11.9
 
-  '@rocketh/diamond@0.11.7':
-    resolution: {integrity: sha512-5LRdgSCi7d9K6dw1Q5hoxQaItz7gM8NB1920od6T7qj0Jl6Dug2bxK6XS4R1YTQnqHAP0w/ZqA3wcn7PrqcrLQ==}
+  '@rocketh/diamond@0.11.11':
+    resolution: {integrity: sha512-PPaZ6PBCmDNdtSQ+wSP52BDfRcUMqZwuD4L5C2tlvIIgvcrDSgyLo1JMz3iFXoNtyqcYAyn2ck6ur4jcFwDENw==}
     peerDependencies:
-      '@rocketh/deploy': 0.11.5
-      '@rocketh/read-execute': 0.11.5
-      rocketh: 0.11.5
+      '@rocketh/deploy': 0.11.9
+      '@rocketh/read-execute': 0.11.9
+      rocketh: 0.11.9
 
-  '@rocketh/doc@0.11.5':
-    resolution: {integrity: sha512-6//51iHLvNJnGGmH+fFX/SkXuXuoGfJfCJnh2IvUOLFwvn0ba5EgY8IY4w53W8Xq+M2fj1+JeWbdNlVUtW7geQ==}
+  '@rocketh/doc@0.11.9':
+    resolution: {integrity: sha512-2pt1VW1wtBpWD6gTtwUfu8nPA5tFCfHND1v13McbrDJaVXfDl/x52JUFmQgF/I/tfueWnVy+x+lTQ2rMv8tOcQ==}
     hasBin: true
     peerDependencies:
-      rocketh: 0.11.5
+      rocketh: 0.11.9
 
-  '@rocketh/export@0.11.5':
-    resolution: {integrity: sha512-eP1h+ZLnztl0tSvnhYeHIujQ39XpSEHT0uy13lb+u6JUdq2Dw7LqxnaEbwnuwALBrT5MRjXIIv8gzPJnZfUJQw==}
+  '@rocketh/export@0.11.9':
+    resolution: {integrity: sha512-qDQKGMlAO0XtHb0f2wnYzI+GGr6LqeOLPGBZtjN/39aMuy4Jyk12mgW2r0g25M0hXJJ3VRcp3raiOYn/wExCPg==}
     hasBin: true
     peerDependencies:
-      rocketh: 0.11.5
+      rocketh: 0.11.9
 
-  '@rocketh/proxy@0.11.7':
-    resolution: {integrity: sha512-EZMT/qAxfOzbQGK5rSy5rNzPPVPAG5P2D4FFIU5puvYsRGZ+04aow46ZxSPb2spdceKWyFgRoWNN37x/99atQg==}
+  '@rocketh/proxy@0.11.11':
+    resolution: {integrity: sha512-0Po3KqpnUrTDyqvwMU25ffYleCF/IZaZEs4oGRdq9OPKJVDRRaQfDl5zm4luBCgWNqu5o4hXftZvjx/jfEpgEw==}
     peerDependencies:
-      '@rocketh/deploy': 0.11.5
-      '@rocketh/read-execute': 0.11.5
-      rocketh: 0.11.5
+      '@rocketh/deploy': 0.11.9
+      '@rocketh/read-execute': 0.11.9
+      rocketh: 0.11.9
 
-  '@rocketh/read-execute@0.11.5':
-    resolution: {integrity: sha512-INzO1T1G2QfvVkBp1IKepc1YBD1fr85/Qd+I/zHet01NnuvknbASm/XL4jgmGvol2XLeZNLN0QlXNO+U55H6MQ==}
+  '@rocketh/read-execute@0.11.9':
+    resolution: {integrity: sha512-jiVKQg+OBW9vyS7lAU1543/cAupgqmrmr9HI09uACmim8Poar+Aqq7kXXC63/n4JvdYM5xjZYRg6WaxuV3XTxQ==}
     peerDependencies:
-      rocketh: 0.11.5
+      rocketh: 0.11.9
 
-  '@rocketh/verifier@0.11.5':
-    resolution: {integrity: sha512-/zUmTh2Iv51gaHkgp0BvbVlM9qtk2xdP9LHpo4Dopb8yNuKXOjNAH7hmQqqVUMpca2U/giz5Ea0zfhellhKefA==}
+  '@rocketh/verifier@0.11.9':
+    resolution: {integrity: sha512-m8lKdQrVnuhHj3PoIJ3PQkfnxBZPcc0Zc7FIaVRLmIO7xJwKFHNOGwT8OikE0S0nGwvQ2t4SfHiTIAzmvoMuSA==}
     hasBin: true
     peerDependencies:
-      rocketh: 0.11.5
+      rocketh: 0.11.9
 
   '@rollup/rollup-android-arm-eabi@4.35.0':
     resolution: {integrity: sha512-uYQ2WfPaqz5QtVgMxfN6NpLD+no0MYHDBywl7itPYd3K5TjjSghNKmX8ic9S8NU8w81NVhJv/XojcHptRly7qQ==}
@@ -1738,6 +1738,9 @@ packages:
   axios@1.8.3:
     resolution: {integrity: sha512-iP4DebzoNlP/YN2dpwCgb8zoCmhtkajzS48JvwmkSkXvPI3DHc7m+XYL5tGnSlJtR6nImXZmdCuN5aP8dh1d8A==}
 
+  axios@1.8.4:
+    resolution: {integrity: sha512-eBSYY4Y68NNlHbHBMdeDmKNtDgXWhQsJcGqzO3iLUM0GraQFSS9cVgPX5I9b3lbdFKyYoAEGAZF1DwhTaljNAw==}
+
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
@@ -1906,8 +1909,8 @@ packages:
   effect@3.13.10:
     resolution: {integrity: sha512-f2n51BJJ25G9rb/C1ClkgsVFXH6YTkCHmd6ebpu6cAkwQxfhnfbkVWKgkn3nyW9YnC9z4K8bGohRYaZ+HyWtLg==}
 
-  eip-1193-jsonrpc-provider@0.4.2:
-    resolution: {integrity: sha512-0bdxVkdFzUR/fzTat2Rv0gBdPjdYAGy3SX3HjQFgOI5bqkvRr9SWrXjx+r/URPk7r130x5KYCUn1lDJ4TL+L8g==}
+  eip-1193-jsonrpc-provider@0.4.3:
+    resolution: {integrity: sha512-xcrz22ArOqvbXt4LHOeV5JooL8jTt/sv8WIH7MLQTn8z7fQwRDDzUECgIwZaX1Irpn/HIZGiu6YZwIoRVfPEow==}
 
   emoji-regex-xs@1.0.0:
     resolution: {integrity: sha512-LRlerrMYoIDrT6jgpeZ2YYl/L8EulRTt5hQcYjy5AInh7HWXKimpqx68aknBFpGL2+/IcogTcaydJEgaTmOpDg==}
@@ -2657,8 +2660,8 @@ packages:
     engines: {node: 20 || >=22}
     hasBin: true
 
-  rocketh@0.11.5:
-    resolution: {integrity: sha512-2DPuiMeJpN5M5UzkGLPTYrbOmELBZ1cpjuXPEWfIA6tMeCqEdNH81eCWPkk+EtpwiQx7OpkCyvRAeVa3G21cEA==}
+  rocketh@0.11.9:
+    resolution: {integrity: sha512-rYAelKiO2PQsWdzimV6uoPz9Tukm0C+DhbnjWNb5zUcHXkq+7i0DtjK2r11bkIp+SKAgQ+wYFYzAZuRJT3vS9w==}
     hasBin: true
 
   rollup@4.35.0:
@@ -2906,8 +2909,8 @@ packages:
   vfile@6.0.3:
     resolution: {integrity: sha512-KzIbH/9tXat2u30jf+smMwFCsno4wHVdNmzFyL+T/L3UGqqk6JKfVqOFOZEpZSHADH1k40ab6NUIXZq422ov3Q==}
 
-  viem@2.23.11:
-    resolution: {integrity: sha512-yPkHJt4Vn88kLlrv8mrtVN54PW4vNLWRWDScf8SaHK2f44VlMk5IZbMJw4ycUoW9K9GUvCMrYuUa34MAcwYHIg==}
+  viem@2.23.13:
+    resolution: {integrity: sha512-f3RkcrzGhU79GfBb9GHUL0m3e3LUsNudXIQTFp4fit5hUGb0ew9KOYZ6cCY5d4Melj3noBy2zq0K2fV+mp+Cpg==}
     peerDependencies:
       typescript: '>=5.0.4'
     peerDependenciesMeta:
@@ -3689,12 +3692,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@nomicfoundation/hardhat-viem@3.0.0-next.2(hardhat@3.0.0-next.2)(viem@2.23.11(typescript@5.8.2)(zod@3.24.2))':
+  '@nomicfoundation/hardhat-viem@3.0.0-next.2(hardhat@3.0.0-next.2)(viem@2.23.13(typescript@5.8.2)(zod@3.24.2))':
     dependencies:
       '@nomicfoundation/hardhat-errors': 3.0.0-next.2
       '@nomicfoundation/hardhat-utils': 3.0.0-next.2
       hardhat: 3.0.0-next.2
-      viem: 2.23.11(typescript@5.8.2)(zod@3.24.2)
+      viem: 2.23.13(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -4063,75 +4066,75 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@rocketh/deploy@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
+  '@rocketh/deploy@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
     dependencies:
       named-logs: 0.3.2
-      rocketh: 0.11.5(typescript@5.8.2)(zod@3.24.2)
-      viem: 2.23.11(typescript@5.8.2)(zod@3.24.2)
+      rocketh: 0.11.9(typescript@5.8.2)(zod@3.24.2)
+      viem: 2.23.13(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
       - bufferutil
       - typescript
       - utf-8-validate
       - zod
 
-  '@rocketh/diamond@0.11.7(@rocketh/deploy@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
+  '@rocketh/diamond@0.11.11(@rocketh/deploy@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
     dependencies:
-      '@rocketh/deploy': 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      '@rocketh/read-execute': 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+      '@rocketh/deploy': 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+      '@rocketh/read-execute': 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       named-logs: 0.3.2
-      rocketh: 0.11.5(typescript@5.8.2)(zod@3.24.2)
-      viem: 2.23.11(typescript@5.8.2)(zod@3.24.2)
+      rocketh: 0.11.9(typescript@5.8.2)(zod@3.24.2)
+      viem: 2.23.13(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
       - bufferutil
       - typescript
       - utf-8-validate
       - zod
 
-  '@rocketh/doc@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))':
+  '@rocketh/doc@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))':
     dependencies:
       '@types/fs-extra': 11.0.4
       commander: 13.1.0
       ethers: 6.13.5
       fs-extra: 11.3.0
       handlebars: 4.7.8
-      rocketh: 0.11.5(typescript@5.8.2)(zod@3.24.2)
+      rocketh: 0.11.9(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@rocketh/export@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))':
+  '@rocketh/export@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))':
     dependencies:
       '@types/fs-extra': 11.0.4
       chalk: 5.4.1
       commander: 13.1.0
       fs-extra: 11.3.0
-      rocketh: 0.11.5(typescript@5.8.2)(zod@3.24.2)
+      rocketh: 0.11.9(typescript@5.8.2)(zod@3.24.2)
 
-  '@rocketh/proxy@0.11.7(@rocketh/deploy@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
+  '@rocketh/proxy@0.11.11(@rocketh/deploy@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(@rocketh/read-execute@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2))(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
     dependencies:
-      '@rocketh/deploy': 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
-      '@rocketh/read-execute': 0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+      '@rocketh/deploy': 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
+      '@rocketh/read-execute': 0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)
       named-logs: 0.3.2
-      rocketh: 0.11.5(typescript@5.8.2)(zod@3.24.2)
-      viem: 2.23.11(typescript@5.8.2)(zod@3.24.2)
+      rocketh: 0.11.9(typescript@5.8.2)(zod@3.24.2)
+      viem: 2.23.13(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
       - bufferutil
       - typescript
       - utf-8-validate
       - zod
 
-  '@rocketh/read-execute@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
+  '@rocketh/read-execute@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))(typescript@5.8.2)(zod@3.24.2)':
     dependencies:
       named-logs: 0.3.2
-      rocketh: 0.11.5(typescript@5.8.2)(zod@3.24.2)
-      viem: 2.23.11(typescript@5.8.2)(zod@3.24.2)
+      rocketh: 0.11.9(typescript@5.8.2)(zod@3.24.2)
+      viem: 2.23.13(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
       - bufferutil
       - typescript
       - utf-8-validate
       - zod
 
-  '@rocketh/verifier@0.11.5(rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2))':
+  '@rocketh/verifier@0.11.9(rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2))':
     dependencies:
       '@types/fs-extra': 11.0.4
       '@types/qs': 6.9.18
@@ -4140,7 +4143,7 @@ snapshots:
       fs-extra: 11.3.0
       ldenv: 0.3.12
       qs: 6.14.0
-      rocketh: 0.11.5(typescript@5.8.2)(zod@3.24.2)
+      rocketh: 0.11.9(typescript@5.8.2)(zod@3.24.2)
 
   '@rollup/rollup-android-arm-eabi@4.35.0':
     optional: true
@@ -4501,13 +4504,13 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@vueuse/integrations@12.8.2(axios@1.8.3)(focus-trap@7.6.4)(typescript@5.8.2)':
+  '@vueuse/integrations@12.8.2(axios@1.8.4)(focus-trap@7.6.4)(typescript@5.8.2)':
     dependencies:
       '@vueuse/core': 12.8.2(typescript@5.8.2)
       '@vueuse/shared': 12.8.2(typescript@5.8.2)
       vue: 3.5.13(typescript@5.8.2)
     optionalDependencies:
-      axios: 1.8.3
+      axios: 1.8.4
       focus-trap: 7.6.4
     transitivePeerDependencies:
       - typescript
@@ -4589,6 +4592,15 @@ snapshots:
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
+
+  axios@1.8.4:
+    dependencies:
+      follow-redirects: 1.15.9
+      form-data: 4.0.2
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+    optional: true
 
   balanced-match@1.0.2: {}
 
@@ -4727,9 +4739,9 @@ snapshots:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.2
 
-  eip-1193-jsonrpc-provider@0.4.2:
+  eip-1193-jsonrpc-provider@0.4.3:
     dependencies:
-      named-logs: 0.2.4
+      named-logs: 0.3.2
       promise-throttle: 1.1.2
 
   emoji-regex-xs@1.0.0: {}
@@ -5535,12 +5547,12 @@ snapshots:
       glob: 11.0.1
       package-json-from-dist: 1.0.1
 
-  rocketh@0.11.5(typescript@5.8.2)(zod@3.24.2):
+  rocketh@0.11.9(typescript@5.8.2)(zod@3.24.2):
     dependencies:
       '@types/figlet': 1.7.0
       '@types/prompts': 2.4.9
       commander: 13.1.0
-      eip-1193-jsonrpc-provider: 0.4.2
+      eip-1193-jsonrpc-provider: 0.4.3
       ethers: 6.13.5
       figlet: 1.8.0
       ldenv: 0.3.12
@@ -5548,7 +5560,7 @@ snapshots:
       named-logs-console: 0.3.1
       prompts: 2.4.2
       tsx: 4.19.3
-      viem: 2.23.11(typescript@5.8.2)(zod@3.24.2)
+      viem: 2.23.13(typescript@5.8.2)(zod@3.24.2)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -5825,7 +5837,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.2
 
-  viem@2.23.11(typescript@5.8.2)(zod@3.24.2):
+  viem@2.23.13(typescript@5.8.2)(zod@3.24.2):
     dependencies:
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1
@@ -5851,7 +5863,7 @@ snapshots:
       '@types/node': 22.13.10
       fsevents: 2.3.3
 
-  vitepress@1.6.3(@algolia/client-search@5.21.0)(@types/node@22.13.10)(axios@1.8.3)(postcss@8.5.3)(search-insights@2.17.3)(typescript@5.8.2):
+  vitepress@1.6.3(@algolia/client-search@5.21.0)(@types/node@22.13.10)(axios@1.8.4)(postcss@8.5.3)(search-insights@2.17.3)(typescript@5.8.2):
     dependencies:
       '@docsearch/css': 3.8.2
       '@docsearch/js': 3.8.2(@algolia/client-search@5.21.0)(search-insights@2.17.3)
@@ -5864,7 +5876,7 @@ snapshots:
       '@vue/devtools-api': 7.7.2
       '@vue/shared': 3.5.13
       '@vueuse/core': 12.8.2(typescript@5.8.2)
-      '@vueuse/integrations': 12.8.2(axios@1.8.3)(focus-trap@7.6.4)(typescript@5.8.2)
+      '@vueuse/integrations': 12.8.2(axios@1.8.4)(focus-trap@7.6.4)(typescript@5.8.2)
       focus-trap: 7.6.4
       mark.js: 8.11.1
       minisearch: 7.1.2

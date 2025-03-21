@@ -7,17 +7,17 @@ import {
 	SensitiveString,
 } from 'hardhat/types/config';
 import {HardhatRuntimeEnvironment} from 'hardhat/types/hre';
-import {Environment, UnknownArtifacts, UnresolvedUnknownNamedAccounts, loadEnvironment} from 'rocketh';
+import {Environment, UnresolvedUnknownNamedAccounts, UnresolvedNetworkSpecificData, loadEnvironment} from 'rocketh';
 
 export async function loadEnvironmentFromHardhat<
-	Artifacts extends UnknownArtifacts = UnknownArtifacts,
 	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
+	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData,
 >(
 	{hre}: {hre: HardhatRuntimeEnvironment},
 	options?: {
 		useChainIdOfForkedNetwork?: boolean;
 	},
-): Promise<Environment> {
+): Promise<Environment<NamedAccounts, Data>> {
 	const connection = await hre.network.connect();
 	let provider: any = connection.provider;
 	let network: string | {fork: string} = connection.networkName;

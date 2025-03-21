@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.19
+
+### Patch Changes
+
+- latest rocketh with network specific data
+
 ## 2.0.0-next.18
 
 ### Patch Changes
