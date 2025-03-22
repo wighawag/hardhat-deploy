@@ -99,7 +99,7 @@ function getVariable(prefix: string, name: string): string | SensitiveString | u
 		}
 		return configVariable(`SECRET_${prefix + splitted[1]}`);
 	}
-	return undefined;
+	return uri;
 }
 
 export function getRPC(networkName: string): string | SensitiveString | undefined {
