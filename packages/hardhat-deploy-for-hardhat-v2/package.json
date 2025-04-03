@@ -1,0 +1,43 @@
+{
+	"name": "hardhat-deploy-for-hardhat-v2",
+	"version": "0.0.1-next.0",
+	"description": "hardhat-deploy for hardhat v2",
+	"publishConfig": {
+		"access": "public"
+	},
+	"main": "./dist/cjs/index.js",
+	"types": "./dist/cjs/index.d.ts",
+	"exports": {
+		".": {
+			"require": {
+				"types": "./dist/cjs/index.d.ts",
+				"default": "./dist/cjs/index.js"
+			}
+		},
+		"./helpers": {
+			"require": {
+				"types": "./dist/cjs/helpers.d.ts",
+				"default": "./dist/cjs/helpers.js"
+			}
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"devDependencies": {
+		"@types/node": "^20.14.8",
+		"as-soon": "^0.0.11",
+		"hardhat": "^2.22.5",
+		"rimraf": "^5.0.7",
+		"rocketh": "^0.11.17",
+		"typescript": "^5.5.2"
+	},
+	"peerDependencies": {
+		"hardhat": "^2.22.5",
+		"rocketh": "^0.11.17"
+	},
+	"scripts": {
+		"build": "tsc --project tsconfig.json",
+		"dev": "as-soon -w src pnpm build"
+	}
+}

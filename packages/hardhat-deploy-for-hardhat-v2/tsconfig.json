@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "Node",
+		"lib": ["ES2020", "DOM"],
+		"target": "ES2020",
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"resolveJsonModule": true,
+		"module": "commonjs",
+		"rootDir": "./src",
+		"outDir": "./dist/cjs"
+	},
+	"include": ["src/**/*.ts"]
+}

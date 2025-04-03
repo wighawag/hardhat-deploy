@@ -6,7 +6,8 @@
     "hardhat-deploy-demoes-basic": "0.0.0",
     "hardhat-deploy-demoes-hot-contract-replacement": "0.0.0",
     "hardhat-deploy-demoes-diamond": "0.0.0",
-    "hardhat-deploy-demoes-proxies": "0.0.0"
+    "hardhat-deploy-demoes-proxies": "0.0.0",
+    "hardhat-deploy-for-hardhat-v2": "0.0.0"
   },
   "changesets": [
     "brave-times-jog",
@@ -25,6 +26,7 @@
     "spicy-parents-reply",
     "tall-doodles-wash",
     "ten-ideas-travel",
-    "tidy-rats-write"
+    "tidy-rats-write",
+    "wild-needles-double"
   ]
 }
