@@ -2645,7 +2645,7 @@ data: ${data}
     let tx;
     const deployment = await partialExtension.get(name);
     const abi = deployment.abi;
-    const overrides = {
+    const overrides: PayableOverrides = {
       gasLimit: options.gasLimit,
       gasPrice: options.gasPrice ? BigNumber.from(options.gasPrice) : undefined, // TODO cinfig
       maxFeePerGas: options.maxFeePerGas
@@ -2656,8 +2656,11 @@ data: ${data}
         : undefined,
       value: options.value ? BigNumber.from(options.value) : undefined,
       nonce: options.nonce,
-      customData: options.customData ? options.customData : undefined,
     };
+
+    if (options.customData !== undefined) {
+      overrides.customData = options.customData;
+    }
 
     const ethersContract = new Contract(deployment.address, abi, ethersSigner);
     if (!ethersContract.functions[methodName]) {
