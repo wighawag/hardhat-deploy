@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 1.0.2
+
+### Patch Changes
+
+- add custom data field to execute
+
 ## 1.0.1
 
 ### Patch Changes
