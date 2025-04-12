@@ -13,7 +13,7 @@
   "volta": {
     "node": "22.14.0"
   },
-  "packageManager": "pnpm@9.3.0",
+  "packageManager": "pnpm@10.6.5",
   "scripts": {
     "prepare": "set-defaults .vscode",
     "docs:dev": "vitepress dev",

@@ -10,6 +10,7 @@
     "hardhat-deploy-for-hardhat-v2": "0.0.0"
   },
   "changesets": [
+    "blue-stars-carry",
     "brave-times-jog",
     "chubby-ties-sit",
     "cold-cooks-shout",
