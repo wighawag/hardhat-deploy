@@ -145,7 +145,7 @@ require('hardhat-deploy');
 if you use `ethers.js` we recommend you also install `hardhat-deploy-ethers` which add extra features to access deployments as ethers contract.
 
 ```bash
-npm install --save-dev  @nomiclabs/hardhat-ethers hardhat-deploy-ethers ethers
+npm install --save-dev @nomicfoundation/hardhat-ethers hardhat-deploy-ethers ethers
 ```
 
 More details on `hardhat-deploy-ethers` repo: https://github.com/wighawag/hardhat-deploy-ethers#readme
