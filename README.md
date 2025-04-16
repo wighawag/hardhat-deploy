@@ -89,7 +89,7 @@ This is a huge benefit for testing since you are not required to replicate the d
 
 You can even group deploy scripts in different sub-folders and ensure they are executed in their logical order.
 
-## Installations
+## Installation
 
 Here is the basic for getting started
 
