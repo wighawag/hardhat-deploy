@@ -23,6 +23,12 @@ const hardhatPlugin: HardhatPlugin = {
 				defaultValue: '',
 				type: ArgumentType.STRING,
 			})
+			.addOption({
+				name: 'tags',
+				description: 'specify which tags to deploy',
+				defaultValue: '',
+				type: ArgumentType.STRING,
+			})
 			.setAction(import.meta.resolve('./tasks/deploy.js'))
 			.build(),
 	],

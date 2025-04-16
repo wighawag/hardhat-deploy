@@ -1,6 +1,6 @@
 {
 	"name": "hardhat-deploy-for-hardhat-v2",
-	"version": "0.0.1-next.0",
+	"version": "0.0.1-next.1",
 	"description": "hardhat-deploy for hardhat v2",
 	"publishConfig": {
 		"access": "public"
@@ -25,15 +25,15 @@
 		"dist"
 	],
 	"devDependencies": {
-		"@types/node": "^20.14.8",
+		"@types/node": "^22.14.1",
 		"as-soon": "^0.0.11",
-		"hardhat": "^2.22.5",
-		"rimraf": "^5.0.7",
+		"hardhat": "^2.23.0",
+		"rimraf": "^6.0.1",
 		"rocketh": "^0.11.17",
-		"typescript": "^5.5.2"
+		"typescript": "^5.8.3"
 	},
 	"peerDependencies": {
-		"hardhat": "^2.22.5",
+		"hardhat": "^2.23.0",
 		"rocketh": "^0.11.17"
 	},
 	"scripts": {

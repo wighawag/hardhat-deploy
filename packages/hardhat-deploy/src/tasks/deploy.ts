@@ -1,9 +1,10 @@
 import {NewTaskActionFunction} from 'hardhat/types/tasks';
-import {ConfigOptions, loadAndExecuteDeployments} from 'rocketh';
+import {loadAndExecuteDeployments} from 'rocketh';
 
 interface RunActionArguments {
 	saveDeployments: string;
 	skipPrompts: boolean;
+	tags?: string;
 }
 
 const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (args, hre) => {
@@ -18,12 +19,15 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 	if (args.saveDeployments != '') {
 		saveDeployments = args.saveDeployments == 'true' ? true : false;
 	}
+	const tags = args.tags && args.tags != '' ? args.tags : undefined;
+
 	await loadAndExecuteDeployments({
 		logLevel: 1,
 		provider: connection.provider as unknown as any, // TODO type
 		network: process.env.HARDHAT_FORK ? {fork: process.env.HARDHAT_FORK} : connection.networkName,
 		saveDeployments,
 		askBeforeProceeding: skipPrompts ? false : true,
+		tags,
 		// reportGasUse: args.skipGasReport ? false : true,
 	});
 };

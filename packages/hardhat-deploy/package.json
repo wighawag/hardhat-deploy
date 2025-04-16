@@ -1,6 +1,6 @@
 {
 	"name": "hardhat-deploy",
-	"version": "2.0.0-next.23",
+	"version": "2.0.0-next.25",
 	"description": "deployment plugin for hardhat",
 	"publishConfig": {
 		"access": "public"
@@ -28,17 +28,17 @@
 	],
 	"devDependencies": {
 		"@changesets/cli": "^2.28.1",
-		"@types/node": "^22.13.13",
+		"@types/node": "^22.14.1",
 		"as-soon": "^0.0.11",
-		"hardhat": "^3.0.0-next.2",
+		"hardhat": "3.0.0-next.4",
 		"rimraf": "^6.0.1",
-		"rocketh": "^0.11.15",
+		"rocketh": "^0.11.17",
 		"set-defaults": "^0.0.5",
-		"typescript": "^5.5.2"
+		"typescript": "^5.8.3"
 	},
 	"peerDependencies": {
-		"hardhat": "^3.0.0-next.2",
-		"rocketh": "^0.11.15"
+		"hardhat": "^3.0.0-next.4",
+		"rocketh": "^0.11.17"
 	},
 	"dependencies": {
 		"@nomicfoundation/hardhat-zod-utils": "3.0.0-next.0",
