@@ -395,9 +395,8 @@ it contains at least the following fields :
 
 ```typescript
 export interface Environment<
-  NamedAccounts extends
-    UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
-  Deployments extends UnknownDeployments = UnknownDeployments,
+  NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
+  Deployments extends UnknownDeployments = UnknownDeployments
 > {
   network: {
     chain: Chain;
