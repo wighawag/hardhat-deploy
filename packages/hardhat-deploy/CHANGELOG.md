@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.25
+
+### Patch Changes
+
+- add --tags
+
 ## 2.0.0-next.24
 
 ### Patch Changes
