@@ -342,8 +342,16 @@ function transformNamedAccounts(
               protocolSplit[0].toLowerCase() === 'trezor'
             ) {
               address = protocolSplit[1];
-              addressesToProtocol[address.toLowerCase()] =
-                protocolSplit[0].toLowerCase();
+              const addressSplit = protocolSplit[1].split(':');
+              if (addressSplit.length > 1) {
+                address = addressSplit[1];
+                addressesToProtocol[
+                  address.toLowerCase()
+                  ] = `trezor://${addressSplit[0]}`;
+              } else {
+                addressesToProtocol[address.toLowerCase()] =
+                  protocolSplit[0].toLowerCase();
+              }
             } else if (protocolSplit[0].toLowerCase() === 'ledger') {
               const addressSplit = protocolSplit[1].split(':');
               if (addressSplit.length > 1) {
