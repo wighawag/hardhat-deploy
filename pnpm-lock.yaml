@@ -260,6 +260,9 @@ importers:
       debug:
         specifier: ^4.4.1
         version: 4.4.1(supports-color@8.1.1)
+      slash:
+        specifier: ^5.1.0
+        version: 5.1.0
       zod:
         specifier: ^3.24.4
         version: 3.24.4
@@ -280,8 +283,8 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       rocketh:
-        specifier: ^0.11.19
-        version: 0.11.19(typescript@5.8.3)(zod@3.24.4)
+        specifier: ^0.11.20
+        version: 0.11.20(typescript@5.8.3)(zod@3.24.4)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -3242,6 +3245,10 @@ packages:
 
   rocketh@0.11.19:
     resolution: {integrity: sha512-RBj8BeoHxEIsG2cArhNSz4TjPyRsL1pXRlOrjQYWVZlbyY98C5kiIVkEPWk3p66WsyEMlHTfJhn4PMM66sFpWA==}
+    hasBin: true
+
+  rocketh@0.11.20:
+    resolution: {integrity: sha512-44bQy1UBAUm/7714/vwlTNRdMsrLkmG9+lo4v0MFkWnDXB6ecSXcx9IoitvlqFXSba7xwTEUSafYMcLbwG4Sng==}
     hasBin: true
 
   rollup@4.35.0:
@@ -6999,6 +7006,26 @@ snapshots:
       package-json-from-dist: 1.0.1
 
   rocketh@0.11.19(typescript@5.8.3)(zod@3.24.4):
+    dependencies:
+      '@types/figlet': 1.7.0
+      '@types/prompts': 2.4.9
+      commander: 13.1.0
+      eip-1193-jsonrpc-provider: 0.4.3
+      ethers: 6.14.0
+      figlet: 1.8.1
+      ldenv: 0.3.12
+      named-logs: 0.3.2
+      named-logs-console: 0.3.1
+      prompts: 2.4.2
+      tsx: 4.19.4
+      viem: 2.29.3(typescript@5.8.3)(zod@3.24.4)
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
+
+  rocketh@0.11.20(typescript@5.8.3)(zod@3.24.4):
     dependencies:
       '@types/figlet': 1.7.0
       '@types/prompts': 2.4.9

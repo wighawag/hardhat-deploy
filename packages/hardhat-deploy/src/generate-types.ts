@@ -2,6 +2,7 @@ import type {ArtifactGenerationConfig} from './types.js';
 import debug from 'debug';
 import fs from 'node:fs';
 import path, {basename, dirname} from 'node:path';
+import slash from 'slash';
 
 const log = debug('hardhat-deploy:generate-types');
 
@@ -242,8 +243,8 @@ export async function generateTypes(
 		if (file.directory || !filepath.endsWith('.json')) {
 			continue;
 		}
-		const filename = path.basename(filepath);
-		const dirname = path.dirname(file.relativePath);
+		const filename = slash(path.basename(filepath));
+		const dirname = slash(path.dirname(file.relativePath));
 
 		// const namePath = dirname.replace('.sol', '');
 		const contractName = filename.replace('.json', '');

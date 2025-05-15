@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.27
+
+### Patch Changes
+
+- fix windows
+
 ## 2.0.0-next.26
 
 ### Patch Changes
