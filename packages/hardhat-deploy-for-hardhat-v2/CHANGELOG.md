@@ -1,5 +1,11 @@
 # hardhat-deploy-for-hardhat-v2
 
+## 0.0.1-next.3
+
+### Patch Changes
+
+- change config + upgrade to latest hardhat
+
 ## 0.0.1-next.2
 
 ### Patch Changes

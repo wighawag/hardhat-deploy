@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.28
+
+### Patch Changes
+
+- change config + upgrade to latest hardhat
+
 ## 2.0.0-next.27
 
 ### Patch Changes
