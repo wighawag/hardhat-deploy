@@ -71,7 +71,7 @@ export default async (): Promise<Partial<ConfigHooks>> => {
 			return {
 				...resolvedConfig,
 				solidity,
-				generateArtifacts: getConfig(userConfig.generateArtifacts),
+				generateTypedArtifacts: getConfig(userConfig.generateTypedArtifacts),
 			};
 		},
 	};

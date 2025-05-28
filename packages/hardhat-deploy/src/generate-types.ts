@@ -3,43 +3,9 @@ import debug from 'debug';
 import fs from 'node:fs';
 import path, {basename, dirname} from 'node:path';
 import slash from 'slash';
+import {FileTraversed, traverse} from './utils/files.js';
 
 const log = debug('hardhat-deploy:generate-types');
-
-type FileTraversed = {
-	name: string;
-	path: string;
-	relativePath: string;
-	mtimeMs: number;
-	directory: boolean;
-};
-
-function traverse(
-	dir: string,
-	result: any[] = [],
-	topDir?: string,
-	filter?: (name: string, stats: any) => boolean, // TODO any is Stats
-): Array<FileTraversed> {
-	fs.readdirSync(dir).forEach((name) => {
-		const fPath = path.resolve(dir, name);
-		const stats = fs.statSync(fPath);
-		if ((!filter && !name.startsWith('.')) || (filter && filter(name, stats))) {
-			const fileStats = {
-				name,
-				path: fPath,
-				relativePath: path.relative(topDir || dir, fPath),
-				mtimeMs: stats.mtimeMs,
-				directory: stats.isDirectory(),
-			};
-			if (fileStats.directory) {
-				result.push(fileStats);
-				return traverse(fPath, result, topDir || dir, filter);
-			}
-			result.push(fileStats);
-		}
-	});
-	return result;
-}
 
 function writeIfDifferent(filePath: string, newTextContent: string) {
 	// Ensure we're working with a string
@@ -84,11 +50,12 @@ function ensureDirExistsSync(folderPath: string) {
 }
 
 function writeFiles(name: string | undefined, data: any, config: ArtifactGenerationConfig) {
-	const js = typeof config?.js === 'string' ? [config?.js] : config?.js || [];
-	const ts = typeof config?.ts === 'string' ? [config?.ts] : config?.ts || [];
-	const json = typeof config?.json === 'string' ? [config?.json] : config?.json || [];
-	const jsm = typeof config?.jsm === 'string' ? [config?.jsm] : config?.jsm || [];
-	const tsm = typeof config?.tsm === 'string' ? [config?.tsm] : config?.tsm || [];
+	const destinations = config.destinations;
+	const js = typeof destinations?.js === 'string' ? [destinations?.js] : destinations?.js || [];
+	const ts = typeof destinations?.ts === 'string' ? [destinations?.ts] : destinations?.ts || [];
+	const json = typeof destinations?.json === 'string' ? [destinations?.json] : destinations?.json || [];
+	const jsm = typeof destinations?.jsm === 'string' ? [destinations?.jsm] : destinations?.jsm || [];
+	const tsm = typeof destinations?.tsm === 'string' ? [destinations?.tsm] : destinations?.tsm || [];
 
 	if (ts.length > 0) {
 		const newContent = `export default ${JSON.stringify(data, null, 2)} as const;`;
@@ -219,77 +186,93 @@ export type Abi_${transformedName} = typeof ${transformedName}.abi;
 	}
 }
 
-export async function generateTypes(
-	paths: {root: string; artifacts: string},
-	config: ArtifactGenerationConfig,
-	artifactsPaths: string[],
-): Promise<void> {
+export async function generateTypes(paths: {artifacts: string[]}, config: ArtifactGenerationConfig): Promise<void> {
 	const allArtifacts: {[name: string]: any} = {};
 	const shortNameDict: {[shortName: string]: boolean} = {};
 
-	const files: FileTraversed[] = traverse(
-		paths.artifacts,
-		[],
-		paths.artifacts,
-		(name) => name != 'build-info' && !name.endsWith('.t.sol'),
-	);
+	for (const artifactsPath of paths.artifacts) {
+		const files: FileTraversed[] = traverse(
+			artifactsPath,
+			[],
+			artifactsPath,
+			(name) => name != 'build-info' && !name.endsWith('.t.sol') && !name.endsWith('.dbg.json')
+		);
 
-	// console.log('--------------------------');
-	// console.log(files);
-	// console.log('--------------------------');
+		// console.log('--------------------------');
+		// console.log(files);
+		// console.log('--------------------------');
 
-	for (const file of files) {
-		const filepath = file.path;
-		if (file.directory || !filepath.endsWith('.json')) {
-			continue;
-		}
-		const filename = slash(path.basename(filepath));
-		const dirname = slash(path.dirname(file.relativePath));
+		for (const file of files) {
+			const filepath = file.path;
+			if (file.directory || !filepath.endsWith('.json')) {
+				continue;
+			}
+			const filename = slash(path.basename(filepath));
+			const dirname = slash(path.dirname(file.relativePath));
 
-		// const namePath = dirname.replace('.sol', '');
-		const contractName = filename.replace('.json', '');
-		// const shortName = artifact.artifactsEmitted[i];
-		// console.log({path: filepath});
-		const content = fs.readFileSync(filepath, 'utf-8');
-		const parsed = JSON.parse(content);
+			// const namePath = dirname.replace('.sol', '');
+			const contractName = filename.replace('.json', '');
+			// const shortName = artifact.artifactsEmitted[i];
+			// console.log({path: filepath});
+			const content = fs.readFileSync(filepath, 'utf-8');
+			const parsed = JSON.parse(content);
 
-		// TODO read config for artifacts folder
-		const buildInfoFilepath = path.join('artifacts', 'build-info', `${parsed.buildInfoId}.output.json`);
+			// TODO read config for artifacts folder
+			let buildInfoFilepath = path.join(artifactsPath, 'build-info', `${parsed.buildInfoId}.output.json`);
 
-		// console.log({buildInfoFilepath});
+			if (!parsed.buildInfoId) {
+				// support hardhat v2 artifacts files
+				if (fs.existsSync(filepath.replace('.json', '.dbg.json'))) {
+					// console.warn(`Artifact ${filepath} does not have a buildInfoId, but found a .dbg.json file. Using that instead.`);
+					const dbgContent = fs.readFileSync(filepath.replace('.json', '.dbg.json'), 'utf-8');
+					const dbgParsed = JSON.parse(dbgContent);
+					const buildInfoRelativePath = dbgParsed.buildInfo;
+					parsed.buildInfoId = path.basename(buildInfoRelativePath, '.json');
+					// console.log({buildInfoRelativePath, buildInfoId: parsed.buildInfoId});
+					buildInfoFilepath = path.join(artifactsPath, 'build-info', `${parsed.buildInfoId}.json`);
+				}
+			}
 
-		// const backupBuildInfoFilepath = path.join(
-		// 	'./generated',
-		// 	buildInfoFilepath.slice(buildInfoFilepath.indexOf('/', 1))
-		// );
-		let buildInfoFilepathToUse = buildInfoFilepath;
-		// if (!fs.existsSync(buildInfoFilepathToUse)) {
-		// 	buildInfoFilepathToUse = backupBuildInfoFilepath;
-		// }
-		if (fs.existsSync(buildInfoFilepathToUse)) {
-			const buildInfoContent = fs.readFileSync(buildInfoFilepathToUse, 'utf-8');
+			// console.log({buildInfoFilepath});
 
-			// if (buildInfoFilepathToUse !== backupBuildInfoFilepath) {
-			// 	ensureDirExistsSync(path.dirname(backupBuildInfoFilepath));
-			// 	writeIfDifferent(backupBuildInfoFilepath, buildInfoContent);
+			// const backupBuildInfoFilepath = path.join(
+			// 	'./generated',
+			// 	buildInfoFilepath.slice(buildInfoFilepath.indexOf('/', 1))
+			// );
+			let buildInfoFilepathToUse = buildInfoFilepath;
+			// if (!fs.existsSync(buildInfoFilepathToUse)) {
+			// 	buildInfoFilepathToUse = backupBuildInfoFilepath;
 			// }
+			if (fs.existsSync(buildInfoFilepathToUse)) {
+				const buildInfoContent = fs.readFileSync(buildInfoFilepathToUse, 'utf-8');
 
-			const parsedBuildInfo = JSON.parse(buildInfoContent);
-			// console.log({dirname, contractName});
-			const solidityOutput = parsedBuildInfo.output.contracts[dirname][contractName];
+				// if (buildInfoFilepathToUse !== backupBuildInfoFilepath) {
+				// 	ensureDirExistsSync(path.dirname(backupBuildInfoFilepath));
+				// 	writeIfDifferent(backupBuildInfoFilepath, buildInfoContent);
+				// }
 
-			const hardhatArtifactObject = {...parsed, ...solidityOutput};
-			const {buildInfoId, _format, ...artifactObject} = hardhatArtifactObject;
-			const fullName = `${dirname}/${contractName}`;
-			allArtifacts[fullName] = artifactObject;
-			if (shortNameDict[contractName]) {
-				delete allArtifacts[contractName];
+				const parsedBuildInfo = JSON.parse(buildInfoContent);
+				// console.log({dirname, contractName});
+				const solidityOutput = parsedBuildInfo.output.contracts[dirname][contractName];
+
+				const hardhatArtifactObject = {...parsed, ...solidityOutput};
+				const {buildInfoId, _format, ...artifactObject} = hardhatArtifactObject;
+				const fullName = `${dirname}/${contractName}`;
+				allArtifacts[fullName] = artifactObject;
+				if (shortNameDict[contractName]) {
+					delete allArtifacts[contractName];
+				} else {
+					allArtifacts[contractName] = artifactObject;
+					shortNameDict[contractName] = true;
+				}
 			} else {
-				allArtifacts[contractName] = artifactObject;
-				shortNameDict[contractName] = true;
+				// console.warn(
+				// 	`Build info file ${buildInfoFilepathToUse} not found for artifact ${filepath}. This might be due to a missing build-info file or an incorrect path.`
+				// );
 			}
 		}
 	}
+
 	for (const key of Object.keys(allArtifacts)) {
 		if (key.indexOf('/') >= 0) {
 			const split = key.split('/');
@@ -306,11 +289,9 @@ export async function generateTypes(
 		const artifact = allArtifacts[key];
 		writeFiles(key, artifact, config);
 	}
-	// const json = hre.config.generateArtifacts.json || [];
+	// const json = hre.config.generateTypedArtifacts.json || [];
 	// json.push('./generated/_artifacts.json');
-	// writeFiles(undefined, allArtifacts, {...hre.config.generateArtifacts, json: json});
+	// writeFiles(undefined, allArtifacts, {...hre.config.generateTypedArtifacts, json: json});
 
 	writeFiles(undefined, allArtifacts, config);
-
-	log(`Successfully generated ${artifactsPaths.length} files!`);
 }

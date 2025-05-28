@@ -4,7 +4,10 @@ import {DEFAULT_CONFIG} from './default.js';
 
 export function getConfig(userConfig: ArtifactGenerationUserConfig | undefined): ArtifactGenerationConfig {
 	return {
-		...DEFAULT_CONFIG,
-		...userConfig,
+		destinations: {
+			...DEFAULT_CONFIG.destinations,
+			...(userConfig?.destinations || {}),
+		},
+		// externalArtifacts: userConfig?.externalArtifacts || DEFAULT_CONFIG.externalArtifacts,
 	};
 }

@@ -59,14 +59,17 @@ function setupExtraSolcSettings(settings: {
 }
 
 extendConfig((config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
-	config.generateArtifacts = {
-		ts: ['./generated/artifacts.ts'],
-		js: [],
-		json: [],
-		tsm: [],
-		jsm: [],
-		directories: [userConfig.paths?.sources || 'contracts'],
-		...userConfig.generateArtifacts,
+	config.generateTypedArtifacts = {
+		destinations: {
+			ts: ['./generated/artifacts.ts'],
+			js: [],
+			json: [],
+			tsm: [],
+			jsm: [],
+			directories: [userConfig.paths?.sources || 'contracts'],
+			...(userConfig.generateTypedArtifacts?.destinations || {}),
+		},
+		// externalArtifacts: userConfig.generateTypedArtifacts?.externalArtifacts || [],
 	};
 
 	for (const compiler of config.solidity.compilers) {
@@ -110,7 +113,7 @@ function traverse(
 	dir: string,
 	result: any[] = [],
 	topDir?: string,
-	filter?: (name: string, stats: any) => boolean, // TODO any is Stats
+	filter?: (name: string, stats: any) => boolean // TODO any is Stats
 ): Array<FileTraversed> {
 	fs.readdirSync(dir).forEach((name) => {
 		const fPath = path.resolve(dir, name);
@@ -134,11 +137,12 @@ function traverse(
 }
 
 function writeFiles(name: string | undefined, data: any, config: ArtifactGenerationConfig) {
-	const js = typeof config?.js === 'string' ? [config?.js] : config?.js || [];
-	const ts = typeof config?.ts === 'string' ? [config?.ts] : config?.ts || [];
-	const json = typeof config?.json === 'string' ? [config?.json] : config?.json || [];
-	const jsm = typeof config?.jsm === 'string' ? [config?.jsm] : config?.jsm || [];
-	const tsm = typeof config?.tsm === 'string' ? [config?.tsm] : config?.tsm || [];
+	const destinations = config.destinations;
+	const js = typeof destinations?.js === 'string' ? [destinations?.js] : destinations?.js || [];
+	const ts = typeof destinations?.ts === 'string' ? [destinations?.ts] : destinations?.ts || [];
+	const json = typeof destinations?.json === 'string' ? [destinations?.json] : destinations?.json || [];
+	const jsm = typeof destinations?.jsm === 'string' ? [destinations?.jsm] : destinations?.jsm || [];
+	const tsm = typeof destinations?.tsm === 'string' ? [destinations?.tsm] : destinations?.tsm || [];
 
 	if (ts.length > 0) {
 		const newContent = `export default ${JSON.stringify(data, null, 2)} as const;`;
@@ -289,7 +293,7 @@ task(TASK_COMPILE).setAction(async (args, hre, runSuper): Promise<any> => {
 	// }
 
 	const files: FileTraversed[] = [];
-	for (const directory of hre.config.generateArtifacts.directories) {
+	for (const directory of hre.config.generateTypedArtifacts.destinations.directories) {
 		const filesToAdd = traverse(`./artifacts/${directory}`, [], './artifacts', (name) => name != 'build-info');
 		files.push(...filesToAdd);
 	}
@@ -313,7 +317,7 @@ task(TASK_COMPILE).setAction(async (args, hre, runSuper): Promise<any> => {
 
 		const backupBuildInfoFilepath = path.join(
 			'./generated',
-			buildInfoFilepath.slice(buildInfoFilepath.indexOf('/', 1)),
+			buildInfoFilepath.slice(buildInfoFilepath.indexOf('/', 1))
 		);
 		let buildInfoFilepathToUse = buildInfoFilepath;
 		if (!fs.existsSync(buildInfoFilepathToUse)) {
@@ -355,13 +359,13 @@ task(TASK_COMPILE).setAction(async (args, hre, runSuper): Promise<any> => {
 
 	for (const key of Object.keys(allArtifacts)) {
 		const artifact = allArtifacts[key];
-		writeFiles(key, artifact, hre.config.generateArtifacts);
+		writeFiles(key, artifact, hre.config.generateTypedArtifacts);
 	}
-	// const json = hre.config.generateArtifacts.json || [];
+	// const json = hre.config.generateTypedArtifacts.json || [];
 	// json.push('./generated/_artifacts.json');
-	// writeFiles(undefined, allArtifacts, {...hre.config.generateArtifacts, json: json});
+	// writeFiles(undefined, allArtifacts, {...hre.config.generateTypedArtifacts, json: json});
 
-	writeFiles(undefined, allArtifacts, hre.config.generateArtifacts);
+	writeFiles(undefined, allArtifacts, hre.config.generateTypedArtifacts);
 
 	return compilationResult;
 });
