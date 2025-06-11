@@ -69,7 +69,6 @@
     "@ethersproject/solidity": "^5.7.0",
     "@ethersproject/transactions": "^5.7.0",
     "@ethersproject/wallet": "^5.7.0",
-    "@types/qs": "^6.9.7",
     "axios": "^0.21.1",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.2",
@@ -80,7 +79,7 @@
     "fs-extra": "^10.0.0",
     "match-all": "^1.2.6",
     "murmur-128": "^0.2.1",
-    "qs": "^6.9.4",
+    "neoqs": "^6.13.0",
     "zksync-ethers": "^5.0.0"
   },
   "scripts": {
