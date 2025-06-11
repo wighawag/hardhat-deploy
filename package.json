@@ -55,7 +55,7 @@
     "solhint-plugin-prettier": "^0.0.5",
     "source-map-support": "^0.5.12",
     "ts-node": "^10.2.1",
-    "typescript": "^4.3.5"
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.7.0",
