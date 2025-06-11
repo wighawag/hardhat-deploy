@@ -95,5 +95,6 @@
     "publish:next": "npm publish --tag next",
     "publish:release": "npm publish",
     "prepublishOnly": "npm run build"
-  }
+  },
+  "packageManager": "pnpm@10.12.1"
 }
