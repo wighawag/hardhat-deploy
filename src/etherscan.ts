@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from 'fs';
 import axios from 'axios';
-import qs from 'neoqs/legacy';
+import qs from 'qs';
 import path from 'path';
 import {defaultAbiCoder, ParamType} from '@ethersproject/abi';
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
