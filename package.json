@@ -1,6 +1,6 @@
 {
   "name": "hardhat-deploy",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Hardhat Plugin For Replicable Deployments And Tests",
   "repository": "github:wighawag/hardhat-deploy",
   "author": "wighawag",

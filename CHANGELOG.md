@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 1.0.3
+
+### Patch Changes
+
+- remove dependencies from qs
+
 ## 1.0.2
 
 ### Patch Changes
