@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.29
+
+### Patch Changes
+
+- update latest hardhat v3
+
 ## 2.0.0-next.28
 
 ### Patch Changes
