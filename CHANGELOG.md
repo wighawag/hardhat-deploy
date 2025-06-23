@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 1.0.4
+
+### Patch Changes
+
+- use etherscan v2 api
+
 ## 1.0.3
 
 ### Patch Changes
