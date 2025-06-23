@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from 'fs';
 import axios from 'axios';
-import qs from 'neoqs/legacy';
+import {stringify} from 'neoqs/legacy';
 import path from 'path';
 import {defaultAbiCoder, ParamType} from '@ethersproject/abi';
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import chalk from 'chalk';
 import matchAll from 'match-all';
+
+const defaultEndpoint = `https://api.etherscan.io/v2/api`;
 
 function log(...args: any[]) {
   console.log(...args);
@@ -147,115 +149,19 @@ export async function submitSources(
   const sleepBetween = config.sleepBetween;
   const all = await hre.deployments.all();
   const networkName = hre.network.name;
-  let host = config.apiUrl;
-  if (!host) {
-    const chainId = await hre.getChainId();
-    switch (chainId) {
-      case '1':
-        host = 'https://api.etherscan.io';
-        break;
-      case '3':
-        host = 'https://api-ropsten.etherscan.io';
-        break;
-      case '4':
-        host = 'https://api-rinkeby.etherscan.io';
-        break;
-      case '5':
-        host = 'https://api-goerli.etherscan.io';
-        break;
-      case '10':
-        host = 'https://api-optimistic.etherscan.io';
-        break;
-      case '42':
-        host = 'https://api-kovan.etherscan.io';
-        break;
-      case '97':
-        host = 'https://api-testnet.bscscan.com';
-        break;
-      case '56':
-        host = 'https://api.bscscan.com';
-        break;
-      case '69':
-        host = 'https://api-kovan-optimistic.etherscan.io';
-        break;
-      case '70':
-        host = 'https://api.hooscan.com';
-        break;
-      case '77':
-        host = 'https://blockscout.com/poa/sokol';
-        break;
-      case '128':
-        host = 'https://api.hecoinfo.com';
-        break;
-      case '137':
-        host = 'https://api.polygonscan.com';
-        break;
-      case '250':
-        host = 'https://api.ftmscan.com';
-        break;
-      case '256':
-        host = 'https://api-testnet.hecoinfo.com';
-        break;
-      case '420':
-        host = 'https://api-goerli-optimism.etherscan.io';
-        break;
-      case '588':
-        host = 'https://stardust-explorer.metis.io';
-        break;
-      case '1088':
-        host = 'https://andromeda-explorer.metis.io';
-        break;
-      case '1284':
-        host = 'https://api-moonbeam.moonscan.io';
-        break;      
-      case '1285':
-        host = 'https://api-moonriver.moonscan.io';
-        break;
-      case '80001':
-        host = 'https://api-testnet.polygonscan.com';
-        break;
-      case '4002':
-        host = 'https://api-testnet.ftmscan.com';
-        break;
-      case '42161':
-        host = 'https://api.arbiscan.io';
-        break;
-      case '421611':
-        host = 'https://api-testnet.arbiscan.io';
-        break;
-      case '421613':
-        host = 'https://api-goerli.arbiscan.io';
-        break;
-      case '43113':
-        host = 'https://api-testnet.snowtrace.io';
-        break;
-      case '43114':
-        host = 'https://api.snowtrace.io';
-        break;
-      case '338':
-          host = 'https://api-testnet.cronoscan.com/api';
-          break;
-      case '25':
-          host = 'https://api.cronoscan.com/api';
-          break;
-      case '11155111':
-        host = 'https://api-sepolia.etherscan.io';
-        break;
-      case '11155420':
-        host = 'https://api-sepolia-optimistic.etherscan.io';
-        break;
-      default:
-        return logError(
-          `Network with chainId: ${chainId} not supported. You can specify the url manually via --api-url <url>.`
-        );
-    }
+
+  const chainId = await hre.getChainId();
+
+  let endpoint = config.apiUrl;
+  if (!endpoint) {
+    endpoint = defaultEndpoint;
   }
 
   async function submit(name: string, useSolcInput?: boolean) {
     const deployment = all[name];
     const {address, metadata: metadataString} = deployment;
     const abiResponse = await axios.get(
-      `${host}/api?module=contract&action=getabi&address=${address}&apikey=${etherscanApiKey}`
+      `${endpoint}?chainid=${chainId}&module=contract&action=getabi&address=${address}&apikey=${etherscanApiKey}`
     );
     const {data: abiData} = abiResponse;
     let contractABI;
@@ -410,13 +316,14 @@ export async function submitSources(
       codeformat: 'solidity-standard-json-input',
       contractname: contractNamePath,
       compilerversion: `v${metadata.compiler.version}`, // see http://etherscan.io/solcversions for list of support versions
-      constructorArguements,
+      constructorArguements, // note the spelling mistake by etherscan
       licenseType,
     };
 
-    const formDataAsString = qs.stringify(postData);
+    const formDataAsString = stringify(postData);
+
     const submissionResponse = await axios.request({
-      url: `${host}/api`,
+      url: `${endpoint}?chainid=${chainId}`,
       method: 'POST',
       headers: {'content-type': 'application/x-www-form-urlencoded'},
       data: formDataAsString,
@@ -454,8 +361,9 @@ export async function submitSources(
 
     async function checkStatus(): Promise<string | undefined> {
       // TODO while loop and delay :
+      // console.log(`checking status for ${name} (${address})...`);
       const statusResponse = await axios.get(
-        `${host}/api?apikey=${etherscanApiKey}`,
+        `${endpoint}?chainid=${chainId}&apikey=${etherscanApiKey}`,
         {
           params: {
             guid,
