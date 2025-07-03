@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.31
+
+### Patch Changes
+
+- fix: update type gen
+
 ## 2.0.0-next.30
 
 ### Patch Changes
