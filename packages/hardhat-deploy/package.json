@@ -31,18 +31,18 @@
 		"@changesets/cli": "^2.29.4",
 		"@types/node": "^22.15.23",
 		"as-soon": "^0.0.11",
-		"hardhat": "3.0.0-next.18",
+		"hardhat": "3.0.0-next.20",
 		"rimraf": "^6.0.1",
 		"rocketh": "^0.11.20",
 		"set-defaults": "^0.0.5",
 		"typescript": "^5.8.3"
 	},
 	"peerDependencies": {
-		"hardhat": "^3.0.0-next.18",
-		"rocketh": "^0.11.20"
+		"hardhat": "^3.0.0-next.20",
+		"rocketh": "^0.11.21"
 	},
 	"dependencies": {
-		"@nomicfoundation/hardhat-zod-utils": "3.0.0-next.18",
+		"@nomicfoundation/hardhat-zod-utils": "3.0.0-next.20",
 		"@types/debug": "^4.1.12",
 		"debug": "^4.4.1",
 		"slash": "^5.1.0",

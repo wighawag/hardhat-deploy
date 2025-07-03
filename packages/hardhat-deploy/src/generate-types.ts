@@ -187,6 +187,7 @@ export type Abi_${transformedName} = typeof ${transformedName}.abi;
 }
 
 export async function generateTypes(paths: {artifacts: string[]}, config: ArtifactGenerationConfig): Promise<void> {
+	const buildInfoCache = new Map<string, any>();
 	const allArtifacts: {[name: string]: any} = {};
 	const shortNameDict: {[shortName: string]: boolean} = {};
 
@@ -217,6 +218,8 @@ export async function generateTypes(paths: {artifacts: string[]}, config: Artifa
 			const content = fs.readFileSync(filepath, 'utf-8');
 			const parsed = JSON.parse(content);
 
+			if (!parsed.buildInfoId) continue;
+
 			// TODO read config for artifacts folder
 			let buildInfoFilepath = path.join(artifactsPath, 'build-info', `${parsed.buildInfoId}.output.json`);
 
@@ -233,8 +236,6 @@ export async function generateTypes(paths: {artifacts: string[]}, config: Artifa
 				}
 			}
 
-			// console.log({buildInfoFilepath});
-
 			// const backupBuildInfoFilepath = path.join(
 			// 	'./generated',
 			// 	buildInfoFilepath.slice(buildInfoFilepath.indexOf('/', 1))
@@ -243,32 +244,26 @@ export async function generateTypes(paths: {artifacts: string[]}, config: Artifa
 			// if (!fs.existsSync(buildInfoFilepathToUse)) {
 			// 	buildInfoFilepathToUse = backupBuildInfoFilepath;
 			// }
-			if (fs.existsSync(buildInfoFilepathToUse)) {
+			let parsedBuildInfo;
+			if (!buildInfoCache.has(buildInfoFilepathToUse)) {
+				if (!fs.existsSync(buildInfoFilepathToUse)) continue;
 				const buildInfoContent = fs.readFileSync(buildInfoFilepathToUse, 'utf-8');
-
-				// if (buildInfoFilepathToUse !== backupBuildInfoFilepath) {
-				// 	ensureDirExistsSync(path.dirname(backupBuildInfoFilepath));
-				// 	writeIfDifferent(backupBuildInfoFilepath, buildInfoContent);
-				// }
-
-				const parsedBuildInfo = JSON.parse(buildInfoContent);
-				// console.log({dirname, contractName});
-				const solidityOutput = parsedBuildInfo.output.contracts[dirname][contractName];
-
-				const hardhatArtifactObject = {...parsed, ...solidityOutput};
-				const {buildInfoId, _format, ...artifactObject} = hardhatArtifactObject;
-				const fullName = `${dirname}/${contractName}`;
-				allArtifacts[fullName] = artifactObject;
-				if (shortNameDict[contractName]) {
-					delete allArtifacts[contractName];
-				} else {
-					allArtifacts[contractName] = artifactObject;
-					shortNameDict[contractName] = true;
-				}
+				parsedBuildInfo = JSON.parse(buildInfoContent);
+				buildInfoCache.set(buildInfoFilepathToUse, parsedBuildInfo);
 			} else {
-				// console.warn(
-				// 	`Build info file ${buildInfoFilepathToUse} not found for artifact ${filepath}. This might be due to a missing build-info file or an incorrect path.`
-				// );
+				parsedBuildInfo = buildInfoCache.get(buildInfoFilepathToUse);
+			}
+
+			const solidityOutput = parsedBuildInfo.output.contracts[parsed.inputSourceName][contractName];
+			const hardhatArtifactObject = {...parsed, ...solidityOutput};
+			const {buildInfoId, _format, ...artifactObject} = hardhatArtifactObject;
+			const fullName = `${dirname}/${contractName}`;
+			allArtifacts[fullName] = artifactObject;
+			if (shortNameDict[contractName]) {
+				delete allArtifacts[contractName];
+			} else {
+				allArtifacts[contractName] = artifactObject;
+				shortNameDict[contractName] = true;
 			}
 		}
 	}
