@@ -223,6 +223,7 @@ export async function generateTypes(
 	config: ArtifactGenerationConfig,
 	artifactsPaths: string[],
 ): Promise<void> {
+	const buildInfoCache = new Map<string, any>();
 	const allArtifacts: {[name: string]: any} = {};
 	const shortNameDict: {[shortName: string]: boolean} = {};
 
@@ -252,6 +253,8 @@ export async function generateTypes(
 		const content = fs.readFileSync(filepath, 'utf-8');
 		const parsed = JSON.parse(content);
 
+		if (!parsed.buildInfoId) continue;
+
 		// TODO read config for artifacts folder
 		const buildInfoFilepath = path.join('artifacts', 'build-info', `${parsed.buildInfoId}.output.json`);
 
@@ -265,28 +268,26 @@ export async function generateTypes(
 		// if (!fs.existsSync(buildInfoFilepathToUse)) {
 		// 	buildInfoFilepathToUse = backupBuildInfoFilepath;
 		// }
-		if (fs.existsSync(buildInfoFilepathToUse)) {
+		let parsedBuildInfo;
+		if (!buildInfoCache.has(buildInfoFilepathToUse)) {
+			if (!fs.existsSync(buildInfoFilepathToUse)) continue;
 			const buildInfoContent = fs.readFileSync(buildInfoFilepathToUse, 'utf-8');
+			parsedBuildInfo = JSON.parse(buildInfoContent);
+			buildInfoCache.set(buildInfoFilepathToUse, parsedBuildInfo);
+		} else {
+			parsedBuildInfo = buildInfoCache.get(buildInfoFilepathToUse);
+		}
 
-			// if (buildInfoFilepathToUse !== backupBuildInfoFilepath) {
-			// 	ensureDirExistsSync(path.dirname(backupBuildInfoFilepath));
-			// 	writeIfDifferent(backupBuildInfoFilepath, buildInfoContent);
-			// }
-
-			const parsedBuildInfo = JSON.parse(buildInfoContent);
-			// console.log({dirname, contractName});
-			const solidityOutput = parsedBuildInfo.output.contracts[dirname][contractName];
-
-			const hardhatArtifactObject = {...parsed, ...solidityOutput};
-			const {buildInfoId, _format, ...artifactObject} = hardhatArtifactObject;
-			const fullName = `${dirname}/${contractName}`;
-			allArtifacts[fullName] = artifactObject;
-			if (shortNameDict[contractName]) {
-				delete allArtifacts[contractName];
-			} else {
-				allArtifacts[contractName] = artifactObject;
-				shortNameDict[contractName] = true;
-			}
+		const solidityOutput = parsedBuildInfo.output.contracts[parsed.inputSourceName][contractName];
+		const hardhatArtifactObject = {...parsed, ...solidityOutput};
+		const {buildInfoId, _format, ...artifactObject} = hardhatArtifactObject;
+		const fullName = `${dirname}/${contractName}`;
+		allArtifacts[fullName] = artifactObject;
+		if (shortNameDict[contractName]) {
+			delete allArtifacts[contractName];
+		} else {
+			allArtifacts[contractName] = artifactObject;
+			shortNameDict[contractName] = true;
 		}
 	}
 	for (const key of Object.keys(allArtifacts)) {

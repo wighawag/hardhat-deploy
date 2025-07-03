@@ -37,11 +37,11 @@
 		"typescript": "^5.8.3"
 	},
 	"peerDependencies": {
-		"hardhat": "^3.0.0-next.4",
+		"hardhat": "^3.0.0-next.20",
 		"rocketh": "^0.11.17"
 	},
 	"dependencies": {
-		"@nomicfoundation/hardhat-zod-utils": "3.0.0-next.0",
+		"@nomicfoundation/hardhat-zod-utils": "3.0.0-next.20",
 		"@types/debug": "^4.1.12",
 		"debug": "^4.4.0",
 		"zod": "^3.24.2"
