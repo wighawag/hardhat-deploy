@@ -10,8 +10,8 @@ import {ArgumentType} from 'hardhat/types/arguments';
 const hardhatPlugin: HardhatPlugin = {
 	id: 'hardhat-deploy',
 	hookHandlers: {
-		config: import.meta.resolve('./hook-handlers/config.js'),
-		solidity: import.meta.resolve('./hook-handlers/solidity.js'),
+		config: () => import('./hook-handlers/config.js'),
+		solidity: () => import('./hook-handlers/solidity.js'),
 	},
 	tasks: [
 		task('deploy', 'Deploy contracts')
@@ -29,7 +29,7 @@ const hardhatPlugin: HardhatPlugin = {
 				defaultValue: '',
 				type: ArgumentType.STRING,
 			})
-			.setAction(import.meta.resolve('./tasks/deploy.js'))
+			.setAction(() => import('./tasks/deploy.js'))
 			.build(),
 	],
 	npmPackage: 'hardhat-deploy',

@@ -1,6 +1,6 @@
 {
 	"name": "hardhat-deploy",
-	"version": "2.0.0-next.31",
+	"version": "2.0.0-next.32",
 	"description": "deployment plugin for hardhat",
 	"publishConfig": {
 		"access": "public"
@@ -31,14 +31,14 @@
 		"@changesets/cli": "^2.29.4",
 		"@types/node": "^22.15.23",
 		"as-soon": "^0.0.11",
-		"hardhat": "3.0.0-next.20",
+		"hardhat": "3.0.0",
 		"rimraf": "^6.0.1",
 		"rocketh": "^0.11.20",
 		"set-defaults": "^0.0.5",
 		"typescript": "^5.8.3"
 	},
 	"peerDependencies": {
-		"hardhat": "^3.0.0-next.20",
+		"hardhat": "^3.0.0",
 		"rocketh": "^0.11.21"
 	},
 	"dependencies": {

@@ -11,7 +11,7 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 	let saveDeployments = true;
 	let skipPrompts = args.skipPrompts ? true : false;
 	const connection = await hre.network.connect();
-	const isMemoryNetwork = connection.networkConfig.type == 'edr';
+	const isMemoryNetwork = connection.networkConfig.type == 'edr-simulated';
 	if (isMemoryNetwork) {
 		skipPrompts = true;
 		saveDeployments = false;

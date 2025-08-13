@@ -11,12 +11,12 @@ import {Environment, UnresolvedUnknownNamedAccounts, UnresolvedNetworkSpecificDa
 
 export async function loadEnvironmentFromHardhat<
 	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
-	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData,
+	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
 >(
 	{hre}: {hre: HardhatRuntimeEnvironment},
 	options?: {
 		useChainIdOfForkedNetwork?: boolean;
-	},
+	}
 ): Promise<Environment<NamedAccounts, Data>> {
 	const connection = await hre.network.connect();
 	let provider: any = connection.provider;
@@ -27,7 +27,7 @@ export async function loadEnvironmentFromHardhat<
 		if (options?.useChainIdOfForkedNetwork) {
 			const forkNetworkConfig = hre.config.networks[fork];
 
-			if (forkNetworkConfig.type === 'edr') {
+			if (forkNetworkConfig.type === 'edr-simulated') {
 				forkChainId = forkNetworkConfig.chainId;
 			} else if (forkNetworkConfig.chainId) {
 				forkChainId = forkNetworkConfig.chainId;
@@ -173,12 +173,12 @@ export function addNetworksFromEnv(networks?: Record<string, EdrNetworkUserConfi
 }
 
 export function populateNetworksFromEnv(
-	networks: Record<string, Omit<NetworkUserConfig, 'accounts' | 'url'> | EdrNetworkUserConfig>,
+	networks: Record<string, Omit<NetworkUserConfig, 'accounts' | 'url'> | EdrNetworkUserConfig>
 ): Record<string, NetworkUserConfig> {
 	const newNetworks: Record<string, NetworkUserConfig> = {};
 	for (const networkName of Object.keys(networks)) {
 		const network = networks[networkName];
-		if (network.type === 'edr') {
+		if (network.type === 'edr-simulated') {
 			// we leave memory network alone
 			newNetworks[networkName] = network as EdrNetworkUserConfig;
 		} else {
@@ -232,7 +232,9 @@ export function addForkConfiguration(networks: Record<string, NetworkUserConfig>
 	}
 
 	const existingHardhat: EdrNetworkUserConfig =
-		networks.hardhat && networks.hardhat.type === 'edr' ? networks.hardhat : {type: 'edr', chainType: 'l1'};
+		networks.hardhat && networks.hardhat.type === 'edr-simulated'
+			? networks.hardhat
+			: {type: 'edr-simulated', chainType: 'l1'};
 
 	const newNetworks: Record<string, NetworkUserConfig> = {
 		...populateNetworksFromEnv(networks),
@@ -244,7 +246,7 @@ export function addForkConfiguration(networks: Record<string, NetworkUserConfig>
 					? {
 							url: forkURL,
 							blockNumber: process.env.HARDHAT_FORK_NUMBER ? parseInt(process.env.HARDHAT_FORK_NUMBER) : undefined,
-						}
+					  }
 					: undefined,
 			},
 		},
