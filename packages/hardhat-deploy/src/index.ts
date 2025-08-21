@@ -3,6 +3,8 @@ import {task} from 'hardhat/config';
 
 import './type-extensions.js';
 import {ArgumentType} from 'hardhat/types/arguments';
+import {Environment} from 'rocketh';
+import type {NetworkConnection} from 'hardhat/types/network';
 
 // const deployTask = import.meta.resolve('./tasks/deploy.js').replace('.ts', '.js');
 // console.log({deployTask});
@@ -36,3 +38,10 @@ const hardhatPlugin: HardhatPlugin = {
 };
 
 export default hardhatPlugin;
+
+export function getHardhatConnection(env: Environment): NetworkConnection<'generic'> {
+	if (!env.extra?.connection) {
+		throw new Error('Hardhat deploy connection not found in the environment');
+	}
+	return env.extra.connection as NetworkConnection<'generic'>;
+}

@@ -29,6 +29,7 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 		askBeforeProceeding: skipPrompts ? false : true,
 		tags,
 		// reportGasUse: args.skipGasReport ? false : true,
+		extra: {connection},
 	});
 };
 export default runScriptWithHardhat;

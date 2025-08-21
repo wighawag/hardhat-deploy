@@ -1,7 +1,7 @@
 // we import what we need from the @rocketh alias, see ../rocketh.ts
-import {execute, artifacts} from '@rocketh';
+import {deployScript, artifacts} from '@rocketh';
 
-export default execute(
+export default deployScript(
 	async ({diamond, namedAccounts}) => {
 		const {deployer, admin} = namedAccounts;
 

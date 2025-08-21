@@ -84,6 +84,9 @@ export async function loadEnvironmentFromHardhat<
 	return loadEnvironment({
 		provider,
 		network,
+		extra: {
+			connection,
+		},
 	});
 }
 

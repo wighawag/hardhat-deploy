@@ -18,21 +18,22 @@ export const config = {
 // ------------------------------------------------------------------------------------------------
 // We regroup all what is needed for the deploy scripts
 // so that they just need to import this file
-// We also added an alias (@rocketh) in tsconfig.json
-// so they just need to do `import {execute, artifacts} from '@rocketh';`
-// and this work anywhere in the file hierarchy
-// ------------------------------------------------------------------------------------------------
-// we add here the module we need, so that they are available in the deploy scripts
-import '@rocketh/deploy'; // this one provide a deploy function
-import '@rocketh/read-execute'; // this one provide read,execute functions
-import '@rocketh/proxy'; // this one provide a deployViaProxy function that let you declaratively deploy proxy based contracts
+
+// we add here the extension we need, so that they are available in the deploy scripts
+// extensions are simply function that accept as their first argument the Environment
+// by passing them to the setup function (see below) you get to access them trhough the environment object with type-safety
+import * as deployFunctions from '@rocketh/deploy'; // this one provide a deploy function
+import * as readExecuteFunctions from '@rocketh/read-execute'; // this one provide read,execute functions
+import * as proxyFunctions from '@rocketh/proxy'; // this one provide functions to declare proxy deployments
+const functions = {...deployFunctions, ...readExecuteFunctions, ...proxyFunctions};
 // ------------------------------------------------------------------------------------------------
 // we re-export the artifacts, so they are easily available from the alias
 import artifacts from './generated/artifacts.js';
 export {artifacts};
 // ------------------------------------------------------------------------------------------------
-// while not necessary, we also converted the execution function type to know about the named accounts
-// this way you get type safe accounts
-import {execute as _execute, loadAndExecuteDeployments, type NamedAccountExecuteFunction} from 'rocketh';
-const execute = _execute as NamedAccountExecuteFunction<typeof config.accounts>;
-export {execute, loadAndExecuteDeployments};
+// we then create the deployScript function taht we use in our deploy script, you can call it whatever you want
+import {setup, loadAndExecuteDeployments} from 'rocketh';
+// the setup function can take functions, accounts and data and will ensure you have type-safety
+const deployScript = setup<typeof functions, typeof config.accounts>(functions);
+// we also export loadAndExecuteDeployments for tests
+export {loadAndExecuteDeployments, deployScript};

@@ -50,9 +50,9 @@ Before going into the details, here is a very simple summary of the basic featur
 
 ```js
 // we import what we need from the @rocketh alias, see below for setup
-import { execute, artifacts } from "@rocketh";
+import { deployScript, artifacts } from "@rocketh";
 
-export default execute(
+export default deployScript(
   // this allow us to define our deploy function which takes as first argument an environment object
   // This contaisn the function provided by the modules imported in 'rocketh.ts'
   // along with other built-in functions and the named accounts
@@ -160,36 +160,32 @@ export const config = {
 // ------------------------------------------------------------------------------------------------
 // We regroup all what is needed for the deploy scripts
 // so that they just need to import this file
-// We also added an alias (@rocketh) in tsconfig.json
-// so they just need to do `import {execute, artifacts} from '@rocketh';`
-// and this work anywhere in the file hierarchy
-// ------------------------------------------------------------------------------------------------
-// we add here the module we need, so that they are available in the deploy scripts
-import "@rocketh/deploy"; // this one provide a deploy function
-import "@rocketh/read-execute"; // this one provide read,execute functions
+// we add here the extension we need, so that they are available in the deploy scripts
+// extensions are simply function that accept as their first argument the Environment
+// by passing them to the setup function (see below) you get to access them trhough the environment object with type-safety
+import * as deployFunctions from '@rocketh/deploy'; // this one provide a deploy function
+import * as readExecuteFunctions from '@rocketh/read-execute'; // this one provide read,execute functions
+const functions = {...deployFunctions, ...readExecuteFunctions};
 // ------------------------------------------------------------------------------------------------
 // we re-export the artifacts, so they are easily available from the alias
-import artifacts from "./generated/artifacts.js";
-export { artifacts };
+import artifacts from './generated/artifacts.js';
+export {artifacts};
 // ------------------------------------------------------------------------------------------------
-// while not necessary, we also converted the execution function type to know about the named accounts
-// this way you get type safe accounts
-import {
-  execute as _execute,
-  loadAndExecuteDeployments,
-  type NamedAccountExecuteFunction,
-} from "rocketh";
-const execute = _execute as NamedAccountExecuteFunction<typeof config.accounts>;
-export { execute, loadAndExecuteDeployments };
+// we then create the deployScript function taht we use in our deploy script, you can call it whatever you want
+import {setup, loadAndExecuteDeployments} from 'rocketh';
+// the setup function can take functions, accounts and data and will ensure you have type-safety 
+const deployScript = setup<typeof functions, typeof config.accounts, typeof config.data>(functions);
+// we also export loadAndExecuteDeployments for tests
+export {loadAndExecuteDeployments, deployScript};
 ```
 
 You can them create a deploy script in the `deploy` folder like so:
 
 ```typescript
 // we import what we need from the @rocketh alias, see ../rocketh.ts
-import { execute, artifacts } from "@rocketh";
+import { deployScript, artifacts } from "@rocketh";
 
-export default execute(
+export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;
 
@@ -239,9 +235,9 @@ in v2 you will do this instead:
 
 ```typescript
 /// we import what we need from the @rocketh alias, see ../rocketh.ts
-import { execute, artifacts } from "@rocketh";
+import { deployScript, artifacts } from "@rocketh";
 
-export default execute(
+export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;
 
@@ -461,10 +457,6 @@ export const config = {
 	},
 } as const satisfies UserConfig;
 
-// we add here the module we need, so that they are available in the deploy scripts
-import '@rocketh/deploy'; // this one provide a deploy function
-import '@rocketh/read-execute'; // this one provide read,execute functions
-import '@rocketh/proxy'; // this one provide a deployViaProxy function that let you declaratively deploy proxy based contracts
 import artifacts from './generated/artifacts.js';
 export {artifacts};
 ```
@@ -539,8 +531,8 @@ The execute expect as first argument a function
 For example this script will deploy the `GreetingsRegistry` contract
 
 ```typescript
-import { execute, artifacts } from "@rocketh";
-export default execute(
+import { deployScript, artifacts } from "@rocketh";
+export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;
 

@@ -1,7 +1,7 @@
 // we import what we need from the @rocketh alias, see ../rocketh.ts
-import {execute, artifacts} from '@rocketh';
+import {deployScript, artifacts} from '@rocketh';
 
-export default execute(
+export default deployScript(
 	// this allow us to define a functiong which takes as first argument an environment object
 	async ({deployViaProxy, namedAccounts}) => {
 		// you can get named accounts from the environment object
