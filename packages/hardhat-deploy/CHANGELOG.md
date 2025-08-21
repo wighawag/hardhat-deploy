@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.35
+
+### Patch Changes
+
+- use latest rocketh
+
 ## 2.0.0-next.34
 
 ### Patch Changes
