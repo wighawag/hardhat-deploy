@@ -38,14 +38,6 @@ const config: HardhatUserConfig = {
 				chainType: 'l1',
 				initialBaseFeePerGas: 0,
 			},
-			hardhatMainnet: {
-				type: 'edr-simulated',
-				chainType: 'l1',
-			},
-			hardhatOp: {
-				type: 'edr-simulated',
-				chainType: 'op',
-			},
 		}),
 	),
 	paths: {

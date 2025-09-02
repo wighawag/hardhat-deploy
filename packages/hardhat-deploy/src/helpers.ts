@@ -176,7 +176,7 @@ export function getAccounts(networkName?: string): {mnemonic: string | Sensitive
 	return {mnemonic: getMnemonic(networkName)};
 }
 
-export function addNetworksFromEnv(networks?: Record<string, EdrNetworkUserConfig>): Record<string, NetworkUserConfig> {
+export function addNetworksFromEnv(networks?: Record<string, NetworkUserConfig>): Record<string, NetworkUserConfig> {
 	const newNetworks: Record<string, NetworkUserConfig> = networks ? {...networks} : {};
 	const allEnv = Object.keys(process.env);
 	for (const envKey of allEnv) {
@@ -236,6 +236,7 @@ export function addForkConfiguration(networks: Record<string, NetworkUserConfig>
 		currentNetworkName &&
 		currentNetworkName !== 'hardhat' &&
 		currentNetworkName !== 'edr' &&
+		currentNetworkName !== 'edr-simulated' &&
 		currentNetworkName !== 'memory'
 	) {
 		const currentNetwork = networks[currentNetworkName] as HttpNetworkUserConfig;

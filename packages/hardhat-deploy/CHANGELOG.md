@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.41
+
+### Patch Changes
+
+- allow to add non edr network
+
 ## 2.0.0-next.40
 
 ### Patch Changes
