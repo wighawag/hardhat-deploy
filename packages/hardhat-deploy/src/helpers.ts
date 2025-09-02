@@ -7,7 +7,33 @@ import {
 	SensitiveString,
 } from 'hardhat/types/config';
 import {HardhatRuntimeEnvironment} from 'hardhat/types/hre';
-import {Environment, UnresolvedUnknownNamedAccounts, UnresolvedNetworkSpecificData, loadEnvironment} from 'rocketh';
+import {
+	Environment,
+	UnresolvedUnknownNamedAccounts,
+	UnresolvedNetworkSpecificData,
+	loadEnvironment,
+	enhanceEnvIfNeeded,
+} from 'rocketh';
+
+export async function setupHardhatDeploy<
+	Extensions extends Record<string, (env: Environment<any, any, any>) => any> = {},
+	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
+	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
+>(extensions: Extensions) {
+	async function loadEnvironmentFromHardhatWithExtensions(
+		required: {hre: HardhatRuntimeEnvironment},
+		options?: {
+			useChainIdOfForkedNetwork?: boolean;
+		}
+	) {
+		const env = await loadEnvironmentFromHardhat<NamedAccounts, Data>(required, options);
+		return enhanceEnvIfNeeded(env, extensions);
+	}
+
+	return {
+		loadEnvironmentFromHardhat: loadEnvironmentFromHardhatWithExtensions,
+	};
+}
 
 export async function loadEnvironmentFromHardhat<
 	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
@@ -80,8 +106,8 @@ export async function loadEnvironmentFromHardhat<
 		});
 	}
 
-	console.log(`loading environments...`);
-	return loadEnvironment({
+	// console.log(`loading environments...`);
+	return loadEnvironment<NamedAccounts, Data>({
 		provider,
 		network,
 		extra: {
