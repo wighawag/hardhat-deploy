@@ -15,7 +15,7 @@ import {
 	enhanceEnvIfNeeded,
 } from 'rocketh';
 
-export async function setupHardhatDeploy<
+export function setupHardhatDeploy<
 	Extensions extends Record<string, (env: Environment<any, any, any>) => any> = {},
 	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
 	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
