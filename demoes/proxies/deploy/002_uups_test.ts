@@ -1,4 +1,4 @@
-import {deployScript, artifacts} from '@rocketh';
+import {deployScript, artifacts} from '#rocketh';
 
 export default deployScript(
 	async ({deployViaProxy, namedAccounts}) => {

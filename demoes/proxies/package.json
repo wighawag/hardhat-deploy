@@ -32,6 +32,10 @@
 		"wait-on": "^8.0.4",
 		"zellij-launcher": "^0.0.1"
 	},
+	"imports": {
+		"#rocketh": "./rocketh.js",
+		"#generated/*.js": "./generated/*.js"
+	},
 	"scripts": {
 		"prepare": "set-defaults .vscode && pnpm compile",
 		"docgen": "ldenv -m hardhat pnpm run deploy hardhat --save-deployments true --skip-prompts ~~ pnpm rocketh-doc -n @@MODE --except-suffix _Implementation,_Proxy,_Router,_Route ~~ @@",

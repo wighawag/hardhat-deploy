@@ -1,6 +1,5 @@
-import {artifacts} from '@rocketh';
+import {artifacts, loadEnvironmentFromHardhat} from '#rocketh';
 import hre from 'hardhat';
-import {loadEnvironmentFromHardhat} from 'hardhat-deploy/helpers';
 
 async function main() {
 	const env = await loadEnvironmentFromHardhat({hre});

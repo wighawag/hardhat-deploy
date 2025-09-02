@@ -1,4 +1,3 @@
-/* Based on https://github.com/tsconfig/bases/blob/501da2bcd640cf95c95805783e1012b992338f28/bases/node22.json */
 {
 	"compilerOptions": {
 		"lib": ["es2023"],
@@ -9,8 +8,6 @@
 		"skipLibCheck": true,
 		"moduleResolution": "node16",
 		"outDir": "dist",
-		"paths": {
-			"@rocketh": ["./rocketh.ts"]
-		}
+		"rootDir": "."
 	}
 }

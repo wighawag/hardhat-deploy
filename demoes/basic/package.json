@@ -27,6 +27,10 @@
 		"wait-on": "^8.0.4",
 		"zellij-launcher": "^0.0.1"
 	},
+	"imports": {
+		"#rocketh": "./rocketh.js",
+		"#generated/*.js": "./generated/*.js"
+	},
 	"scripts": {
 		"prepare": "set-defaults .vscode && pnpm compile",
 		"local_node": "hardhat node",

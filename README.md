@@ -49,8 +49,8 @@ Before going into the details, here is a very simple summary of the basic featur
 **hardhat-deploy** allows you to write [`deploy scripts`](#deploy-scripts) in the `deploy` folder. Each of these files that look as follows will be executed in turn when you execute the following task: `hardhat --network <networkName> deploy`
 
 ```js
-// we import what we need from the @rocketh alias, see below for setup
-import { deployScript, artifacts } from "@rocketh";
+// we import what we need from the #rocketh alias, see below for setup
+import { deployScript, artifacts } from "#rocketh";
 
 export default deployScript(
   // this allow us to define our deploy function which takes as first argument an environment object
@@ -125,16 +125,28 @@ Then you need import them in your deploy script.
 
 But we recommend you import them in one location that you then import in your deploy script so you can share it to all of them.
 
-We recommend to actuall use the `rocketh.ts/js` config file to do that in one place.
+We recommend to actually use the `rocketh.ts/js` config file to do that in one place.
+We also recommend you setup an alias for it  so you can import with `import .. from "#rocketh"` it from anywhere:
+You can set it up by settings imports in `package.json`
 
-if you use typescript, we also recommend you add the to `tsconfig.json` so you can import with `import .. from "@rocketh"` it from anywhere:
+
+```json
+{
+...
+"imports": {
+		"#rocketh": "./rocketh.js",
+	},
+}
+```
+
+Alternatively if you use typescript, you can instead use `tsconfig.json`
 
 ```json
 {
 	"compilerOptions": {
 	  ...
 		"paths": {
-			"@rocketh": ["./rocketh.ts"]
+			"#rocketh": ["./rocketh.ts"]
 		}
 	}
 }
@@ -163,27 +175,33 @@ export const config = {
 // we add here the extension we need, so that they are available in the deploy scripts
 // extensions are simply function that accept as their first argument the Environment
 // by passing them to the setup function (see below) you get to access them trhough the environment object with type-safety
-import * as deployFunctions from '@rocketh/deploy'; // this one provide a deploy function
+import * as deployExtensions from '@rocketh/deploy'; // this one provide a deploy function
 import * as readExecuteFunctions from '@rocketh/read-execute'; // this one provide read,execute functions
-const functions = {...deployFunctions, ...readExecuteFunctions};
+const extensions = {...deployExtensions, ...readExecuteExtensions};
 // ------------------------------------------------------------------------------------------------
 // we re-export the artifacts, so they are easily available from the alias
 import artifacts from './generated/artifacts.js';
 export {artifacts};
 // ------------------------------------------------------------------------------------------------
-// we then create the deployScript function taht we use in our deploy script, you can call it whatever you want
+// we create the rocketh function we need by passing the extensions
 import {setup} from 'rocketh';
-// the setup function can take functions, accounts and data and will ensure you have type-safety 
-const {deployScript, loadAndExecuteDeployments} = setup<typeof functions, typeof config.accounts, typeof config.data>(functions);
-// we also export loadAndExecuteDeployments for tests
-export {loadAndExecuteDeployments, deployScript};
+const {deployScript, loadAndExecuteDeployments} = setup<typeof extensions, typeof config.accounts, typeof config.data>(
+	extensions,
+);
+// ------------------------------------------------------------------------------------------------
+// we do the same for hardhat-deploy
+import {setupHardhatDeploy} from 'hardhat-deploy/helpers';
+const {loadEnvironmentFromHardhat} = setupHardhatDeploy(extensions);
+// ------------------------------------------------------------------------------------------------
+// finally we export them
+export {loadAndExecuteDeployments, deployScript, loadEnvironmentFromHardhat};
 ```
 
 You can them create a deploy script in the `deploy` folder like so:
 
 ```typescript
-// we import what we need from the @rocketh alias, see ../rocketh.ts
-import { deployScript, artifacts } from "@rocketh";
+// we import what we need from the #rocketh alias, see ../rocketh.ts
+import { deployScript, artifacts } from "#rocketh";
 
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
@@ -234,8 +252,8 @@ and you would have configuraiton in hardhat.config.ts
 in v2 you will do this instead:
 
 ```typescript
-/// we import what we need from the @rocketh alias, see ../rocketh.ts
-import { deployScript, artifacts } from "@rocketh";
+/// we import what we need from the #rocketh alias, see ../rocketh.ts
+import { deployScript, artifacts } from "#rocketh";
 
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
@@ -531,7 +549,7 @@ The execute expect as first argument a function
 For example this script will deploy the `GreetingsRegistry` contract
 
 ```typescript
-import { deployScript, artifacts } from "@rocketh";
+import { deployScript, artifacts } from "#rocketh";
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;

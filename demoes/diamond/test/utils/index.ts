@@ -1,7 +1,7 @@
-import {loadAndExecuteDeployments} from 'rocketh';
 import {EthereumProvider} from 'hardhat/types/providers';
 import {Abi_GetMessageFacet} from '../../generated/types/GetMessageFacet.js';
 import {Abi_SetMessageFacet} from '../../generated/types/SetMessageFacet.js';
+import {loadAndExecuteDeployments} from '#rocketh';
 
 export function setupFixtures(provider: EthereumProvider) {
 	return {

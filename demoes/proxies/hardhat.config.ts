@@ -25,17 +25,6 @@ const config: HardhatUserConfig = {
 				},
 			},
 		},
-
-		remappings: [
-			/*
-			 * This remapping is added to the example because most people import
-			 * forge-std/Test.sol, not forge-std/src/Test.sol.
-			 *
-			 * Note: The config currently leaks internal IDs, but this will be fixed
-			 * in the future.
-			 */
-			'forge-std/=npm/forge-std@1.9.4/src/',
-		],
 	},
 	networks: addForkConfiguration(
 		// this add network for each respective env var found (ETH_NODE_URI_<network>)
@@ -44,13 +33,18 @@ const config: HardhatUserConfig = {
 		//  configVariable('ETH_NODE_URI_<network>')
 		//  configVariable('MNEMONIC_<network>')
 		addNetworksFromEnv({
+			hardhat: {
+				type: 'edr-simulated',
+				chainType: 'l1',
+				initialBaseFeePerGas: 0,
+			},
 			hardhatMainnet: {
-				type: 'edr',
+				type: 'edr-simulated',
 				chainType: 'l1',
 			},
 			hardhatOp: {
-				type: 'edr',
-				chainType: 'optimism',
+				type: 'edr-simulated',
+				chainType: 'op',
 			},
 		}),
 	),

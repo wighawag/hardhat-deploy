@@ -1,5 +1,4 @@
-import {loadAndExecuteDeployments} from 'rocketh';
-import {artifacts} from '@rocketh';
+import {artifacts, loadAndExecuteDeployments} from '#rocketh';
 import {EthereumProvider} from 'hardhat/types/providers';
 
 export function setupFixtures(provider: EthereumProvider) {
