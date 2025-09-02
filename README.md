@@ -172,9 +172,9 @@ import artifacts from './generated/artifacts.js';
 export {artifacts};
 // ------------------------------------------------------------------------------------------------
 // we then create the deployScript function taht we use in our deploy script, you can call it whatever you want
-import {setup, loadAndExecuteDeployments} from 'rocketh';
+import {setup} from 'rocketh';
 // the setup function can take functions, accounts and data and will ensure you have type-safety 
-const deployScript = setup<typeof functions, typeof config.accounts, typeof config.data>(functions);
+const {deployScript, loadAndExecuteDeployments} = setup<typeof functions, typeof config.accounts, typeof config.data>(functions);
 // we also export loadAndExecuteDeployments for tests
 export {loadAndExecuteDeployments, deployScript};
 ```
