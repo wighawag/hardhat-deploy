@@ -18,7 +18,7 @@ export const config = {
 
 // we add here the extension we need, so that they are available in the deploy scripts
 // extensions are simply function that accept as their first argument the Environment
-// by passing them to the setup function (see below) you get to access them trhough the environment object with type-safety
+// by passing them to the setup function (see below) you get to access them through the environment object with type-safety
 import * as deployExtensions from '@rocketh/deploy'; // this one provide a deploy function
 import * as readExecuteExtensions from '@rocketh/read-execute'; // this one provide read,execute extensions
 const extensions = {...deployExtensions, ...readExecuteExtensions};
