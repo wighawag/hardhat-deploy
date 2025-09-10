@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.42
+
+### Patch Changes
+
+- better type generator for artifact and Abi + allow to provide hre connection manually when using loadEnvironmentFromHardhat
+
 ## 2.0.0-next.41
 
 ### Patch Changes
