@@ -22,7 +22,7 @@ export function setupHardhatDeploy<
 	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
 >(extensions: Extensions) {
 	async function loadEnvironmentFromHardhatWithExtensions(
-		required: {hre: HardhatRuntimeEnvironment},
+		required: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection},
 		options?: {
 			useChainIdOfForkedNetwork?: boolean;
 		}
