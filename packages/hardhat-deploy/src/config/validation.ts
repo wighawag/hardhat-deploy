@@ -8,14 +8,12 @@ const artifactGenerationUserConfigSchema = z
 	.object({
 		// externalArtifacts: z.array(z.string()).optional(),
 		destinations: z
-			.object({
-				js: z.array(z.string()).optional(),
-				ts: z.array(z.string()).optional(),
-				json: z.array(z.string()).optional(),
-				jsm: z.array(z.string()).optional(),
-				tsm: z.array(z.string()).optional(),
-				directories: z.array(z.string()).optional(),
-			})
+			.array(
+				z.object({
+					mode: z.union([z.literal('javascript'), z.literal('typescript')]).optional(),
+					folder: z.string().optional(),
+				})
+			)
 			.optional(),
 	})
 	.optional();
