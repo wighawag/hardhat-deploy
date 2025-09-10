@@ -57,18 +57,18 @@ type Artifact = {
 
 type Artifacts = {[key: string]: Artifact};
 
-function writeArtifactToFile(folder: string, name: string, data: Artifact, mode: 'typescript' | 'javascript') {
-	const transformedName = name.replaceAll('/', '_').replaceAll('.', '_');
-	const tsFilepath = path.join(folder, 'values', name) + '.ts';
+function writeArtifactToFile(folder: string, canonicalName: string, data: Artifact, mode: 'typescript' | 'javascript') {
+	const name = canonicalName.split('/').pop();
+	const tsFilepath = path.join(folder, 'values', canonicalName) + '.ts';
 	const folderPath = path.dirname(tsFilepath);
 	ensureDirExistsSync(folderPath);
 	if (mode === 'typescript') {
-		const newContent = `export const ${transformedName} = ${JSON.stringify(data, null, 2)} as const;`;
+		const newContent = `export const ${name} = ${JSON.stringify(data, null, 2)} as const;`;
 		writeIfDifferent(tsFilepath, newContent);
 	} else if (mode === 'javascript') {
-		const newContent = `export const ${transformedName} = /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
-		const dtsContent = `export declare const ${transformedName}: ${JSON.stringify(data, null, 2)};`;
-		const jsFilepath = path.join(folder, 'values', name) + '.js';
+		const newContent = `export const ${name} = /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
+		const dtsContent = `export declare const ${name}: ${JSON.stringify(data, null, 2)};`;
+		const jsFilepath = path.join(folder, 'values', canonicalName) + '.js';
 		writeIfDifferent(jsFilepath, newContent);
 		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
 	}
@@ -80,15 +80,21 @@ function writeArtifactIndexToFile(folder: string, data: Artifacts, mode: 'typesc
 	ensureDirExistsSync(folderPath);
 	if (mode === 'typescript') {
 		let newContent = '';
-		for (const name of Object.keys(data)) {
-			newContent += `export * from './values/${name}.js';\n`;
+		for (const canonicalName of Object.keys(data)) {
+			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
+			const name = canonicalName.split('/').pop();
+			const importNaming = canonicalName != name ? `${name} as ${transformedName}` : name;
+			newContent += `export {${importNaming}} from './values/${canonicalName}.js';\n`;
 		}
 
 		writeIfDifferent(tsFilepath, newContent);
 	} else if (mode === 'javascript') {
 		let newContent = '';
-		for (const name of Object.keys(data)) {
-			newContent += `export * from './values/${name}.js';\n`;
+		for (const canonicalName of Object.keys(data)) {
+			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
+			const name = canonicalName.split('/').pop();
+			const importNaming = canonicalName != name ? `${name} as ${transformedName}` : name;
+			newContent += `export {${importNaming}} from './values/${canonicalName}.js';\n`;
 		}
 		const jsFilepath = path.join(folder, 'artifacts') + '.js';
 		writeIfDifferent(jsFilepath, newContent);
@@ -96,20 +102,27 @@ function writeArtifactIndexToFile(folder: string, data: Artifacts, mode: 'typesc
 	}
 }
 
-function writeABIDefinitionToFile(folder: string, name: string, data: Artifact, mode: 'typescript' | 'javascript') {
-	const tsFilepath = path.join(folder, 'types', name) + '.ts';
+function writeABIDefinitionToFile(
+	folder: string,
+	canonicalName: string,
+	data: Artifact,
+	mode: 'typescript' | 'javascript'
+) {
+	const nameAsPath = canonicalName.split('/');
+	const name = nameAsPath[nameAsPath.length - 1];
+	const relativePath = `../`.repeat(nameAsPath.length);
+	const tsFilepath = path.join(folder, 'types', canonicalName) + '.ts';
 	const folderPath = path.dirname(tsFilepath);
-	const transformedName = name.replaceAll('/', '_').replaceAll('.', '_');
 	ensureDirExistsSync(folderPath);
 	if (mode === 'typescript') {
-		const newContent = `import * as artifacts from '../artifacts.js';
-export type Abi_${transformedName} = (typeof artifacts['${name}'])['abi'];\n`;
+		const newContent = `import {${name}} from '${relativePath}values/${canonicalName}.js';
+export type Abi_${name} = (typeof ${name})['abi'];\n`;
 		writeIfDifferent(tsFilepath, newContent);
 	} else if (mode === 'javascript') {
-		const jsFilepath = path.join(folder, 'types', name) + '.js';
+		const jsFilepath = path.join(folder, 'types', canonicalName) + '.js';
 		const newContent = `export {};\n`;
-		const dtsContent = `import * as artifacts from '../artifacts.js';
-export type Abi_${transformedName} = (typeof artifacts)['${name}']['abi'];\n`;
+		const dtsContent = `import {${name}} from '${relativePath}values/${canonicalName}.js';
+export type Abi_${name} = (typeof ${name})['abi'];\n`;
 		writeIfDifferent(jsFilepath, newContent);
 		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
 	}
@@ -120,15 +133,21 @@ function writeABIDefinitionIndexToFile(folder: string, data: Artifacts, mode: 't
 	ensureDirExistsSync(folderPath);
 	if (mode === 'typescript') {
 		let newContent = '';
-		for (const name of Object.keys(data)) {
-			newContent += `export * from "./${name}.js"\n`;
+		for (const canonicalName of Object.keys(data)) {
+			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
+			const name = canonicalName.split('/').pop();
+			const importNaming = canonicalName != name ? `${name} as ${transformedName}` : name;
+			newContent += `export {${importNaming}} from "./${canonicalName}.js"\n`;
 		}
 		writeIfDifferent(tsFilepath, newContent);
 	} else if (mode === 'javascript') {
 		const jsFilepath = path.join(folder, 'types', 'index') + '.js';
 		let newContent = '';
-		for (const name of Object.keys(data)) {
-			newContent += `export * from "./${name}.js"\n`;
+		for (const canonicalName of Object.keys(data)) {
+			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
+			const name = canonicalName.split('/').pop();
+			const importNaming = canonicalName != name ? `${name} as ${transformedName}` : name;
+			newContent += `export {${importNaming}} from "./${canonicalName}.js"\n`;
 		}
 		writeIfDifferent(jsFilepath, newContent);
 		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), newContent);
