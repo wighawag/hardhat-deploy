@@ -59,15 +59,16 @@ type Artifacts = {[key: string]: Artifact};
 
 function writeArtifactToFile(folder: string, canonicalName: string, data: Artifact, mode: 'typescript' | 'javascript') {
 	const name = canonicalName.split('/').pop();
+	const artifactName = `Artifact_${name}`;
 	const tsFilepath = path.join(folder, 'values', canonicalName) + '.ts';
 	const folderPath = path.dirname(tsFilepath);
 	ensureDirExistsSync(folderPath);
 	if (mode === 'typescript') {
-		const newContent = `export const ${name} = ${JSON.stringify(data, null, 2)} as const;`;
+		const newContent = `export const ${artifactName} = ${JSON.stringify(data, null, 2)} as const;`;
 		writeIfDifferent(tsFilepath, newContent);
 	} else if (mode === 'javascript') {
-		const newContent = `export const ${name} = /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
-		const dtsContent = `export declare const ${name}: ${JSON.stringify(data, null, 2)};`;
+		const newContent = `export const ${artifactName} = /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
+		const dtsContent = `export declare const ${artifactName}: ${JSON.stringify(data, null, 2)};`;
 		const jsFilepath = path.join(folder, 'values', canonicalName) + '.js';
 		writeIfDifferent(jsFilepath, newContent);
 		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
@@ -83,7 +84,9 @@ function writeArtifactIndexToFile(folder: string, data: Artifacts, mode: 'typesc
 		for (const canonicalName of Object.keys(data)) {
 			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
 			const name = canonicalName.split('/').pop();
-			const importNaming = canonicalName != name ? `${name} as ${transformedName}` : name;
+			const artifactName = `Artifact_${name}`;
+			const importNaming =
+				canonicalName != name ? `${artifactName} as ${transformedName}` : `${artifactName} as ${name}`;
 			newContent += `export {${importNaming}} from './values/${canonicalName}.js';\n`;
 		}
 
@@ -93,7 +96,9 @@ function writeArtifactIndexToFile(folder: string, data: Artifacts, mode: 'typesc
 		for (const canonicalName of Object.keys(data)) {
 			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
 			const name = canonicalName.split('/').pop();
-			const importNaming = canonicalName != name ? `${name} as ${transformedName}` : name;
+			const artifactName = `Artifact_${name}`;
+			const importNaming =
+				canonicalName != name ? `${artifactName} as ${transformedName}` : `${artifactName} as ${name}`;
 			newContent += `export {${importNaming}} from './values/${canonicalName}.js';\n`;
 		}
 		const jsFilepath = path.join(folder, 'artifacts') + '.js';
@@ -110,19 +115,21 @@ function writeABIDefinitionToFile(
 ) {
 	const nameAsPath = canonicalName.split('/');
 	const name = nameAsPath[nameAsPath.length - 1];
+	const abiName = `Abi_${name}`;
+	const artifactName = `Artifact_${name}`;
 	const relativePath = `../`.repeat(nameAsPath.length);
 	const tsFilepath = path.join(folder, 'types', canonicalName) + '.ts';
 	const folderPath = path.dirname(tsFilepath);
 	ensureDirExistsSync(folderPath);
 	if (mode === 'typescript') {
-		const newContent = `import {${name}} from '${relativePath}values/${canonicalName}.js';
-export type Abi_${name} = (typeof ${name})['abi'];\n`;
+		const newContent = `import {${artifactName}} from '${relativePath}values/${canonicalName}.js';
+export type ${abiName} = (typeof ${artifactName})['abi'];\n`;
 		writeIfDifferent(tsFilepath, newContent);
 	} else if (mode === 'javascript') {
 		const jsFilepath = path.join(folder, 'types', canonicalName) + '.js';
 		const newContent = `export {};\n`;
-		const dtsContent = `import {${name}} from '${relativePath}values/${canonicalName}.js';
-export type Abi_${name} = (typeof ${name})['abi'];\n`;
+		const dtsContent = `import {${artifactName}} from '${relativePath}values/${canonicalName}.js';
+export type ${abiName} = (typeof ${artifactName})['abi'];\n`;
 		writeIfDifferent(jsFilepath, newContent);
 		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
 	}
@@ -136,7 +143,8 @@ function writeABIDefinitionIndexToFile(folder: string, data: Artifacts, mode: 't
 		for (const canonicalName of Object.keys(data)) {
 			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
 			const name = canonicalName.split('/').pop();
-			const importNaming = canonicalName != name ? `${name} as ${transformedName}` : name;
+			const abiName = `Abi_${name}`;
+			const importNaming = canonicalName != name ? `${abiName} as ${transformedName}` : `${abiName} as ${name}`;
 			newContent += `export {${importNaming}} from "./${canonicalName}.js"\n`;
 		}
 		writeIfDifferent(tsFilepath, newContent);
@@ -146,7 +154,8 @@ function writeABIDefinitionIndexToFile(folder: string, data: Artifacts, mode: 't
 		for (const canonicalName of Object.keys(data)) {
 			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
 			const name = canonicalName.split('/').pop();
-			const importNaming = canonicalName != name ? `${name} as ${transformedName}` : name;
+			const abiName = `Abi_${name}`;
+			const importNaming = canonicalName != name ? `${abiName} as ${transformedName}` : `${abiName} as ${name}`;
 			newContent += `export {${importNaming}} from "./${canonicalName}.js"\n`;
 		}
 		writeIfDifferent(jsFilepath, newContent);
