@@ -107,7 +107,19 @@ pnpm add -D hardhat-deploy@next rocketh @rocketh/deploy @rocketh/read-execute
 
 :::
 
-but you can also add these that provide more features
+
+Then you need to add it to the plugins list of hardhat in hardhat.config.ts:
+
+```ts
+import HardhatDeploy from 'hardhat-deploy';
+...
+const config: HardhatUserConfig = {
+	plugins: [..., HardhatDeploy],
+...
+```
+
+
+We also recommend you add these to provide more features
 
 ::: code-group
 
@@ -121,11 +133,9 @@ pnpm add -D @rocketh/proxy @rocketh/diamond @rocketh/export @rocketh/verifier @r
 
 :::
 
-Then you need import them in your deploy script.
+Note that extensions like `@rocketh/proxy` need to be passed into the rocketh setup function so they can be used.
 
-But we recommend you import them in one location that you then import in your deploy script so you can share it to all of them.
-
-We recommend to actually use the `rocketh.ts/js` config file to do that in one place.
+The best way to do that is actually use the `rocketh.ts/js` config file itself to do that in one place.
 We also recommend you setup an alias for it  so you can import with `import .. from "#rocketh"` it from anywhere:
 You can set it up by settings imports in `package.json`
 
@@ -388,6 +398,9 @@ To execute that command, you need to specify the network to run against :
 ```bash
 pnpm rocketh-verify -n <network-name> <etherscan|sourcify|blockscout>
 ```
+
+For etherscan verification, you just need the ETHERSCAN_API_KEY en variable to be set.
+you can use a .env or .env.local file for that as rocketh will load them automatically.
 
 ### 3. rocketh-export
 
