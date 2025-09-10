@@ -7,6 +7,7 @@ import {
 	SensitiveString,
 } from 'hardhat/types/config';
 import {HardhatRuntimeEnvironment} from 'hardhat/types/hre';
+import {NetworkConnection} from 'hardhat/types/network';
 import {
 	Environment,
 	UnresolvedUnknownNamedAccounts,
@@ -39,19 +40,19 @@ export async function loadEnvironmentFromHardhat<
 	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
 	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
 >(
-	{hre}: {hre: HardhatRuntimeEnvironment},
+	params: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection},
 	options?: {
 		useChainIdOfForkedNetwork?: boolean;
 	}
 ): Promise<Environment<NamedAccounts, Data>> {
-	const connection = await hre.network.connect();
+	const connection = params.connection || (await params.hre.network.connect());
 	let provider: any = connection.provider;
 	let network: string | {fork: string} = connection.networkName;
 	let forkChainId: number | undefined;
 	const fork = process.env.HARDHAT_FORK as string | undefined;
 	if (fork) {
 		if (options?.useChainIdOfForkedNetwork) {
-			const forkNetworkConfig = hre.config.networks[fork];
+			const forkNetworkConfig = params.hre.config.networks[fork];
 
 			if (forkNetworkConfig.type === 'edr-simulated') {
 				forkChainId = forkNetworkConfig.chainId;
