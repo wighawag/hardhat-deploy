@@ -49,142 +49,228 @@ function ensureDirExistsSync(folderPath: string) {
 	return {created: true, reason: 'Directory was created'};
 }
 
-function writeFiles(name: string | undefined, data: any, config: ArtifactGenerationConfig) {
-	const destinations = config.destinations;
-	const js = typeof destinations?.js === 'string' ? [destinations?.js] : destinations?.js || [];
-	const ts = typeof destinations?.ts === 'string' ? [destinations?.ts] : destinations?.ts || [];
-	const json = typeof destinations?.json === 'string' ? [destinations?.json] : destinations?.json || [];
-	const jsm = typeof destinations?.jsm === 'string' ? [destinations?.jsm] : destinations?.jsm || [];
-	const tsm = typeof destinations?.tsm === 'string' ? [destinations?.tsm] : destinations?.tsm || [];
+type Artifact = {
+	contractName: string;
+	abi: any[];
+	// ...
+};
 
-	if (ts.length > 0) {
-		const newContent = `export default ${JSON.stringify(data, null, 2)} as const;`;
-		for (const tsFile of ts) {
-			if (tsFile.endsWith('.ts')) {
-				if (!name) {
-					const filepath = tsFile;
-					const folderPath = path.dirname(filepath);
-					ensureDirExistsSync(folderPath);
-					writeIfDifferent(filepath, newContent);
+type Artifacts = {[key: string]: Artifact};
 
-					ensureDirExistsSync(`${folderPath}/types`);
-					for (const name of Object.keys(data)) {
-						const splitted = name.split('/');
-						const numPath = splitted.length;
-						let pathToBase = '';
-						for (let i = 0; i < numPath; i++) {
-							pathToBase += '../';
-						}
-						let lastName = splitted.pop() || name;
-						const content = `
-import artifacts from '${pathToBase}${basename(tsFile.replace('.ts', '.js'))}';
-export type Abi_${lastName} = typeof artifacts["${name}"]["abi"];
-`;
-						ensureDirExistsSync(dirname(`${folderPath}/types/${name}`));
-						writeIfDifferent(`${folderPath}/types/${name}.ts`, content);
-					}
-				}
-			} else {
-				if (name) {
-					const filepath = `${tsFile}/${name}.ts`;
-					const folderPath = path.dirname(filepath);
-					ensureDirExistsSync(folderPath);
-					writeIfDifferent(filepath, newContent);
-				} else {
-					let indexFileContent = ``;
-
-					for (const name of Object.keys(data)) {
-						let transformedName = name.replaceAll('/', '_').replaceAll('.', '_');
-						indexFileContent += `
-import ${transformedName} from './${name}.js';
-export {${transformedName}};
-export type Abi_${transformedName} = typeof ${transformedName}.abi;
-`;
-					}
-					writeIfDifferent(`${tsFile}/index.ts`, indexFileContent);
-				}
-			}
-		}
-	}
-
-	if (js.length > 0) {
-		const newContent = `export default /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
-		// const dtsContent = `export = ${JSON.stringify(data, null, 2)} as const;`;
-		const dtsContent = `declare const _default: ${JSON.stringify(data, null, 2)};export default _default;`;
-		// const dtsContent = `declare const _default: ${JSON.stringify(data, null, 2)};export = _default;`;
-		const cjsContent = `module.exports = /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
-		for (const jsFile of js) {
-			if (jsFile.endsWith('.js')) {
-				if (!name) {
-					const filepath = jsFile;
-					const folderPath = path.dirname(filepath);
-					ensureDirExistsSync(folderPath);
-					writeIfDifferent(filepath, newContent);
-					writeIfDifferent(filepath.replace(/\.js$/, '.d.ts'), dtsContent);
-					writeIfDifferent(filepath.replace(/\.js$/, '.cjs'), cjsContent);
-				}
-			} else {
-				if (name) {
-					const filepath = `${jsFile}/${name}.js`;
-					const folderPath = path.dirname(filepath);
-					ensureDirExistsSync(folderPath);
-					writeIfDifferent(filepath, newContent);
-					writeIfDifferent(filepath.replace(/\.js$/, '.d.ts'), dtsContent);
-					writeIfDifferent(filepath.replace(/\.js$/, '.cjs'), cjsContent);
-				}
-			}
-		}
-	}
-
-	if (json.length > 0) {
-		const newContent = JSON.stringify(data, null, 2);
-		for (const jsonFile of json) {
-			if (jsonFile.endsWith('.json')) {
-				if (!name) {
-					const filepath = jsonFile;
-					const folderPath = path.dirname(filepath);
-					ensureDirExistsSync(folderPath);
-					writeIfDifferent(filepath, newContent);
-				}
-			} else {
-				if (name) {
-					const filepath = `${jsonFile}/${name}.json`;
-					const folderPath = path.dirname(filepath);
-					ensureDirExistsSync(folderPath);
-					writeIfDifferent(filepath, newContent);
-				}
-			}
-		}
-	}
-
-	if (!name) {
-		if (tsm.length > 0) {
-			let newContent = '';
-			for (const key of Object.keys(data)) {
-				newContent += `export const ${key} = ${JSON.stringify(data[key], null, 2)} as const;`;
-			}
-			for (const tsFile of tsm) {
-				const filepath = tsFile;
-				const folderPath = path.dirname(filepath);
-				ensureDirExistsSync(folderPath);
-				writeIfDifferent(filepath, newContent);
-			}
-		}
-
-		if (jsm.length > 0) {
-			let newContent = '';
-			for (const key of Object.keys(data)) {
-				newContent += `export const ${key} = /** @type {const} **/ (${JSON.stringify(data[key], null, 2)});`;
-			}
-			for (const jsFile of jsm) {
-				const filepath = jsFile;
-				const folderPath = path.dirname(filepath);
-				ensureDirExistsSync(folderPath);
-				writeIfDifferent(filepath, newContent);
-			}
-		}
+function writeArtifactToFile(folder: string, name: string, data: Artifact, mode: 'typescript' | 'javascript') {
+	const transformedName = name.replaceAll('/', '_').replaceAll('.', '_');
+	const tsFilepath = path.join(folder, 'values', name) + '.ts';
+	const folderPath = path.dirname(tsFilepath);
+	ensureDirExistsSync(folderPath);
+	if (mode === 'typescript') {
+		const newContent = `export const ${transformedName} = ${JSON.stringify(data, null, 2)} as const;`;
+		writeIfDifferent(tsFilepath, newContent);
+	} else if (mode === 'javascript') {
+		const newContent = `export const ${transformedName} = /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
+		const dtsContent = `export declare const ${transformedName}: ${JSON.stringify(data, null, 2)};`;
+		const jsFilepath = path.join(folder, 'values', name) + '.js';
+		writeIfDifferent(jsFilepath, newContent);
+		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
 	}
 }
+
+function writeArtifactIndexToFile(folder: string, data: Artifacts, mode: 'typescript' | 'javascript') {
+	const tsFilepath = path.join(folder, 'artifacts') + '.ts';
+	const folderPath = path.dirname(tsFilepath);
+	ensureDirExistsSync(folderPath);
+	if (mode === 'typescript') {
+		let newContent = '';
+		for (const name of Object.keys(data)) {
+			newContent += `export * from './values/${name}.js';\n`;
+		}
+
+		writeIfDifferent(tsFilepath, newContent);
+	} else if (mode === 'javascript') {
+		let newContent = '';
+		for (const name of Object.keys(data)) {
+			newContent += `export * from './values/${name}.js';\n`;
+		}
+		const jsFilepath = path.join(folder, 'artifacts') + '.js';
+		writeIfDifferent(jsFilepath, newContent);
+		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), newContent);
+	}
+}
+
+function writeABIDefinitionToFile(folder: string, name: string, data: Artifact, mode: 'typescript' | 'javascript') {
+	const tsFilepath = path.join(folder, 'types', name) + '.ts';
+	const folderPath = path.dirname(tsFilepath);
+	const transformedName = name.replaceAll('/', '_').replaceAll('.', '_');
+	ensureDirExistsSync(folderPath);
+	if (mode === 'typescript') {
+		const newContent = `import * as artifacts from '../artifacts.js';
+export type Abi_${transformedName} = (typeof artifacts['${name}'])['abi'];\n`;
+		writeIfDifferent(tsFilepath, newContent);
+	} else if (mode === 'javascript') {
+		const jsFilepath = path.join(folder, 'types', name) + '.js';
+		const newContent = `export {};\n`;
+		const dtsContent = `import * as artifacts from '../artifacts.js';
+export type Abi_${transformedName} = (typeof artifacts)['${name}']['abi'];\n`;
+		writeIfDifferent(jsFilepath, newContent);
+		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
+	}
+}
+function writeABIDefinitionIndexToFile(folder: string, data: Artifacts, mode: 'typescript' | 'javascript') {
+	const tsFilepath = path.join(folder, 'types', 'index') + '.ts';
+	const folderPath = path.dirname(tsFilepath);
+	ensureDirExistsSync(folderPath);
+	if (mode === 'typescript') {
+		let newContent = '';
+		for (const name of Object.keys(data)) {
+			newContent += `export * from "./${name}.js"\n`;
+		}
+		writeIfDifferent(tsFilepath, newContent);
+	} else if (mode === 'javascript') {
+		const jsFilepath = path.join(folder, 'types', 'index') + '.js';
+		let newContent = '';
+		for (const name of Object.keys(data)) {
+			newContent += `export * from "./${name}.js"\n`;
+		}
+		writeIfDifferent(jsFilepath, newContent);
+		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), newContent);
+	}
+}
+
+// function writeFiles(name: string | undefined, data: any, config: ArtifactGenerationConfig) {
+// 	const destinations = config.destinations;
+// 	const js = typeof destinations?.js === 'string' ? [destinations?.js] : destinations?.js || [];
+// 	const ts = typeof destinations?.ts === 'string' ? [destinations?.ts] : destinations?.ts || [];
+// 	const json = typeof destinations?.json === 'string' ? [destinations?.json] : destinations?.json || [];
+// 	const jsm = typeof destinations?.jsm === 'string' ? [destinations?.jsm] : destinations?.jsm || [];
+// 	const tsm = typeof destinations?.tsm === 'string' ? [destinations?.tsm] : destinations?.tsm || [];
+
+// 	if (ts.length > 0) {
+// 		const newContent = `export default ${JSON.stringify(data, null, 2)} as const;`;
+// 		for (const tsFile of ts) {
+// 			if (tsFile.endsWith('.ts')) {
+// 				if (!name) {
+// 					const filepath = tsFile;
+// 					const folderPath = path.dirname(filepath);
+// 					ensureDirExistsSync(folderPath);
+// 					writeIfDifferent(filepath, newContent);
+
+// 					ensureDirExistsSync(`${folderPath}/types`);
+// 					for (const name of Object.keys(data)) {
+// 						const splitted = name.split('/');
+// 						const numPath = splitted.length;
+// 						let pathToBase = '';
+// 						for (let i = 0; i < numPath; i++) {
+// 							pathToBase += '../';
+// 						}
+// 						let lastName = splitted.pop() || name;
+// 						const content = `
+// import artifacts from '${pathToBase}${basename(tsFile.replace('.ts', '.js'))}';
+// export type Abi_${lastName} = typeof artifacts["${name}"]["abi"];
+// `;
+// 						ensureDirExistsSync(dirname(`${folderPath}/types/${name}`));
+// 						writeIfDifferent(`${folderPath}/types/${name}.ts`, content);
+// 					}
+// 				}
+// 			} else {
+// 				if (name) {
+// 					const filepath = `${tsFile}/${name}.ts`;
+// 					const folderPath = path.dirname(filepath);
+// 					ensureDirExistsSync(folderPath);
+// 					writeIfDifferent(filepath, newContent);
+// 				} else {
+// 					let indexFileContent = ``;
+
+// 					for (const name of Object.keys(data)) {
+// 						let transformedName = name.replaceAll('/', '_').replaceAll('.', '_');
+// 						indexFileContent += `
+// import ${transformedName} from './${name}.js';
+// export {${transformedName}};
+// export type Abi_${transformedName} = typeof ${transformedName}.abi;
+// `;
+// 					}
+// 					writeIfDifferent(`${tsFile}/index.ts`, indexFileContent);
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	if (js.length > 0) {
+// 		const newContent = `export default /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
+// 		// const dtsContent = `export = ${JSON.stringify(data, null, 2)} as const;`;
+// 		const dtsContent = `declare const _default: ${JSON.stringify(data, null, 2)};export default _default;`;
+// 		// const dtsContent = `declare const _default: ${JSON.stringify(data, null, 2)};export = _default;`;
+// 		const cjsContent = `module.exports = /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
+// 		for (const jsFile of js) {
+// 			if (jsFile.endsWith('.js')) {
+// 				if (!name) {
+// 					const filepath = jsFile;
+// 					const folderPath = path.dirname(filepath);
+// 					ensureDirExistsSync(folderPath);
+// 					writeIfDifferent(filepath, newContent);
+// 					writeIfDifferent(filepath.replace(/\.js$/, '.d.ts'), dtsContent);
+// 					writeIfDifferent(filepath.replace(/\.js$/, '.cjs'), cjsContent);
+// 				}
+// 			} else {
+// 				if (name) {
+// 					const filepath = `${jsFile}/${name}.js`;
+// 					const folderPath = path.dirname(filepath);
+// 					ensureDirExistsSync(folderPath);
+// 					writeIfDifferent(filepath, newContent);
+// 					writeIfDifferent(filepath.replace(/\.js$/, '.d.ts'), dtsContent);
+// 					writeIfDifferent(filepath.replace(/\.js$/, '.cjs'), cjsContent);
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	if (json.length > 0) {
+// 		const newContent = JSON.stringify(data, null, 2);
+// 		for (const jsonFile of json) {
+// 			if (jsonFile.endsWith('.json')) {
+// 				if (!name) {
+// 					const filepath = jsonFile;
+// 					const folderPath = path.dirname(filepath);
+// 					ensureDirExistsSync(folderPath);
+// 					writeIfDifferent(filepath, newContent);
+// 				}
+// 			} else {
+// 				if (name) {
+// 					const filepath = `${jsonFile}/${name}.json`;
+// 					const folderPath = path.dirname(filepath);
+// 					ensureDirExistsSync(folderPath);
+// 					writeIfDifferent(filepath, newContent);
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	if (!name) {
+// 		if (tsm.length > 0) {
+// 			let newContent = '';
+// 			for (const key of Object.keys(data)) {
+// 				newContent += `export const ${key} = ${JSON.stringify(data[key], null, 2)} as const;`;
+// 			}
+// 			for (const tsFile of tsm) {
+// 				const filepath = tsFile;
+// 				const folderPath = path.dirname(filepath);
+// 				ensureDirExistsSync(folderPath);
+// 				writeIfDifferent(filepath, newContent);
+// 			}
+// 		}
+
+// 		if (jsm.length > 0) {
+// 			let newContent = '';
+// 			for (const key of Object.keys(data)) {
+// 				newContent += `export const ${key} = /** @type {const} **/ (${JSON.stringify(data[key], null, 2)});`;
+// 			}
+// 			for (const jsFile of jsm) {
+// 				const filepath = jsFile;
+// 				const folderPath = path.dirname(filepath);
+// 				ensureDirExistsSync(folderPath);
+// 				writeIfDifferent(filepath, newContent);
+// 			}
+// 		}
+// 	}
+// }
 
 export async function generateTypes(paths: {artifacts: string[]}, config: ArtifactGenerationConfig): Promise<void> {
 	const buildInfoCache = new Map<string, any>();
@@ -280,13 +366,23 @@ export async function generateTypes(paths: {artifacts: string[]}, config: Artifa
 		}
 	}
 
-	for (const key of Object.keys(allArtifacts)) {
-		const artifact = allArtifacts[key];
-		writeFiles(key, artifact, config);
-	}
-	// const json = hre.config.generateTypedArtifacts.json || [];
-	// json.push('./generated/_artifacts.json');
-	// writeFiles(undefined, allArtifacts, {...hre.config.generateTypedArtifacts, json: json});
+	// for (const key of Object.keys(allArtifacts)) {
+	// 	const artifact = allArtifacts[key];
+	// 	writeFiles(key, artifact, config);
+	// }
+	// // const json = hre.config.generateTypedArtifacts.json || [];
+	// // json.push('./generated/_artifacts.json');
+	// // writeFiles(undefined, allArtifacts, {...hre.config.generateTypedArtifacts, json: json});
 
-	writeFiles(undefined, allArtifacts, config);
+	// writeFiles(undefined, allArtifacts, config);
+
+	const generatedFolder = 'generated';
+	const mode = 'javascript';
+	for (const key of Object.keys(allArtifacts)) {
+		writeABIDefinitionToFile(generatedFolder, key, allArtifacts[key], mode);
+		writeArtifactToFile(generatedFolder, key, allArtifacts[key], mode);
+	}
+
+	writeArtifactIndexToFile(generatedFolder, allArtifacts, mode);
+	writeABIDefinitionIndexToFile(generatedFolder, allArtifacts, mode);
 }

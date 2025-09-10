@@ -7,7 +7,7 @@ export default deployScript(
 
 		await deploy('GreetingsRegistry', {
 			account: deployer,
-			artifact: artifacts.GreetingsRegistry,
+			artifact: artifacts.src_GreetingsRegistry_GreetingsRegistry_sol_GreetingsRegistry,
 			args: [''],
 		});
 	},
