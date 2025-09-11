@@ -87,7 +87,7 @@ function writeArtifactIndexToFile(folder: string, data: Artifacts, mode: 'typesc
 			const artifactName = `Artifact_${name}`;
 			const importNaming =
 				canonicalName != name ? `${artifactName} as ${transformedName}` : `${artifactName} as ${name}`;
-			newContent += `export {${importNaming}} from './artifacts/${canonicalName}.js';\n`;
+			newContent += `export {${importNaming}} from './${canonicalName}.js';\n`;
 		}
 
 		writeIfDifferent(tsFilepath, newContent);
@@ -99,7 +99,7 @@ function writeArtifactIndexToFile(folder: string, data: Artifacts, mode: 'typesc
 			const artifactName = `Artifact_${name}`;
 			const importNaming =
 				canonicalName != name ? `${artifactName} as ${transformedName}` : `${artifactName} as ${name}`;
-			newContent += `export {${importNaming}} from './artifacts/${canonicalName}.js';\n`;
+			newContent += `export {${importNaming}} from './${canonicalName}.js';\n`;
 		}
 		const jsFilepath = path.join(folder, 'artifacts', 'index') + '.js';
 		writeIfDifferent(jsFilepath, newContent);
