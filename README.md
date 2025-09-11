@@ -54,7 +54,7 @@ import { deployScript, artifacts } from "#rocketh";
 
 export default deployScript(
   // this allow us to define our deploy function which takes as first argument an environment object
-  // This contaisn the function provided by the modules imported in 'rocketh.ts'
+  // This contains the function provided by the modules imported in 'rocketh.ts'
   // along with other built-in functions and the named accounts
   async ({ deployViaProxy, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;
@@ -250,7 +250,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 module.exports.tags = ["MyContract"];
 ```
 
-and you would have configuraiton in hardhat.config.ts
+and you would have configuration in hardhat.config.ts
 
 ```typescript
  namedAccounts: {
@@ -373,7 +373,7 @@ The reason why **hardhat-deploy** save chainId and genesisHash in the `.chain` f
 
 ## Hardhat Tasks Available/Updated
 
-hardhat deploy currently add one task to hardhat. But since hardhat-deploy is now just a tiny wrapper arround rocketh, you can use rocketh commands too
+hardhat deploy currently add one task to hardhat. But since hardhat-deploy is now just a tiny wrapper around rocketh, you can use rocketh commands too
 
 ### 1. hardhat deploy
 
@@ -492,7 +492,7 @@ import * as artifacts from './generated/artifacts.js';
 export {artifacts};
 ```
 
-This config file import modules too so that deploy script can simply import rocketh.js to have access to artifacts and specifc environment functions
+This config file import modules too so that deploy script can simply import rocketh.js to have access to artifacts and specific environment functions
 
 The named account feature allow you to define accounts by name and have them configurable by network
 
