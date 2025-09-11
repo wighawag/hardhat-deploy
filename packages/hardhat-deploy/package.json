@@ -1,6 +1,6 @@
 {
 	"name": "hardhat-deploy",
-	"version": "2.0.0-next.43",
+	"version": "2.0.0-next.44",
 	"description": "deployment plugin for hardhat",
 	"publishConfig": {
 		"access": "public"

@@ -1,5 +1,5 @@
 // we import what we need from the #rocketh alias, see ../rocketh.ts
-import {Artifact_GreetingsRegistry} from '#generated/values/src/GreetingsRegistry/GreetingsRegistry.sol/GreetingsRegistry.js';
+import {Artifact_GreetingsRegistry} from '#generated/artifacts/src/GreetingsRegistry/GreetingsRegistry.sol/GreetingsRegistry.js';
 import {deployScript, artifacts} from '#rocketh';
 
 export default deployScript(
@@ -8,7 +8,7 @@ export default deployScript(
 
 		await deploy('GreetingsRegistry', {
 			account: deployer,
-			artifact: Artifact_GreetingsRegistry,
+			artifact: artifacts.GreetingsRegistry2,
 			args: [''],
 		});
 	},

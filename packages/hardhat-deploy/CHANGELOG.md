@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.44
+
+### Patch Changes
+
+- better org for generated artifacts
+
 ## 2.0.0-next.43
 
 ### Patch Changes
