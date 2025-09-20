@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.49
+
+### Patch Changes
+
+- option to not default on test mnemonic
+
 ## 2.0.0-next.48
 
 ### Patch Changes

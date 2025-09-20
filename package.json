@@ -21,6 +21,7 @@
     "docs:preview": "vitepress preview",
     "prepublish": "pnpm build",
     "build": "pnpm -r build && cp ./README.md ./packages/hardhat-deploy/",
+    "dev": "pnpm -r dev",
     "sync-deps": "syncpack fix-mismatches",
     "start": "pnpm zellij-launcher --layout zellij.kdl a $npm_package_name || zellij --layout zellij.kdl -s $npm_package_name"
   }

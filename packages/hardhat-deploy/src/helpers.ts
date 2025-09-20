@@ -176,7 +176,7 @@ export function getRPC(networkName: string): string | SensitiveString | undefine
 	return uri;
 }
 
-export function getMnemonic(networkName?: string, failsOnNoMnemonicSet?: boolean): string | SensitiveString {
+export function getMnemonic(networkName?: string, doNotDefault?: boolean): string | SensitiveString | undefined {
 	if (networkName) {
 		const mnemonic = getVariable('MNEMONIC_', networkName);
 
@@ -187,10 +187,8 @@ export function getMnemonic(networkName?: string, failsOnNoMnemonicSet?: boolean
 
 	const mnemonic = process.env.MNEMONIC;
 	if (!mnemonic || mnemonic === '') {
-		if (failsOnNoMnemonicSet) {
-			throw new Error(
-				`no mnemonic set for ${networkName} (via env variable 'MNEMONIC_${networkName}') or globally (via 'MNEMONIC_')`
-			);
+		if (doNotDefault) {
+			return undefined;
 		}
 		return 'test test test test test test test test test test test junk';
 	}
@@ -199,9 +197,13 @@ export function getMnemonic(networkName?: string, failsOnNoMnemonicSet?: boolean
 
 export function getAccounts(
 	networkName?: string,
-	failsOnNoMnemonicSet?: boolean
-): {mnemonic: string | SensitiveString} {
-	return {mnemonic: getMnemonic(networkName, failsOnNoMnemonicSet)};
+	doNotDefault?: boolean
+): {mnemonic: string | SensitiveString} | undefined {
+	const mnemonic = getMnemonic(networkName, doNotDefault);
+	if (!mnemonic) {
+		return undefined;
+	}
+	return {mnemonic};
 }
 
 export function addNetworksFromEnv(networks?: Record<string, NetworkUserConfig>): Record<string, NetworkUserConfig> {
@@ -229,6 +231,7 @@ export function addNetworksFromEnv(networks?: Record<string, NetworkUserConfig>)
 	return newNetworks;
 }
 
+const listOfNetworkNamesWithTestAccountAllowed = ['hardhat', 'localhost', 'memory', 'test'];
 export function addNetworksFromKnownList(
 	networks?: Record<string, NetworkUserConfig>
 ): Record<string, NetworkUserConfig> {
@@ -243,7 +246,7 @@ export function addNetworksFromKnownList(
 				newNetworks[canonicalName] = {
 					type: 'http',
 					url,
-					accounts: getAccounts(canonicalName),
+					accounts: getAccounts(canonicalName, !listOfNetworkNamesWithTestAccountAllowed.includes(canonicalName)),
 				};
 			} else {
 				console.error(`no url for chain ${canonicalName}`);
