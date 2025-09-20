@@ -229,7 +229,6 @@ export function addNetworksFromEnv(networks?: Record<string, NetworkUserConfig>)
 	return newNetworks;
 }
 
-const listOfNetworkNamesWithTestAccountAllowed = ['hardhat', 'localhost', 'memory', 'test'];
 export function addNetworksFromKnownList(
 	networks?: Record<string, NetworkUserConfig>
 ): Record<string, NetworkUserConfig> {
@@ -244,7 +243,7 @@ export function addNetworksFromKnownList(
 				newNetworks[canonicalName] = {
 					type: 'http',
 					url,
-					accounts: getAccounts(canonicalName, !listOfNetworkNamesWithTestAccountAllowed.includes(canonicalName)),
+					accounts: getAccounts(canonicalName),
 				};
 			} else {
 				console.error(`no url for chain ${canonicalName}`);

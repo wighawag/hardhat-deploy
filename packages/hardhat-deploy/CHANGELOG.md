@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.48
+
+### Patch Changes
+
+- fix
+
 ## 2.0.0-next.47
 
 ### Patch Changes
