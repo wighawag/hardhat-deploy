@@ -159,7 +159,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 module.exports.tags = ["MyContract"];
 ```
 
-and you would have configuraiton in hardhat.config.ts
+and you would have configuration in hardhat.config.ts
 
 ```typescript
  namedAccounts: {

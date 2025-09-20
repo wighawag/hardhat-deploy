@@ -29,7 +29,7 @@ import * as artifacts from './generated/artifacts.js';
 export {artifacts};
 ```
 
-This config file import modules too so that deploy script can simply import rocketh.js to have access to artifacts and specifc  functions
+This config file import modules too so that deploy script can simply import rocketh.js to have access to artifacts and specific  functions
 
 The named account feature allow you to define accounts by name and have them configurable by environment
 

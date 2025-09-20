@@ -13,7 +13,7 @@ import { deployScript, artifacts } from "#rocketh";
 
 export default deployScript(
   // this allow us to define our deploy function which takes as first argument an environment object
-  // This contaisn the function provided by the modules imported in 'rocketh.ts'
+  // This contains the function provided by the modules imported in 'rocketh.ts'
   // along with other built-in functions and the named accounts
   async ({ deployViaProxy, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;

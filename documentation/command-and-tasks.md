@@ -1,6 +1,6 @@
 # Hardhat Tasks Available/Updated
 
-hardhat deploy currently add one task to hardhat. But since hardhat-deploy is now just a tiny wrapper arround rocketh, you can use rocketh commands too
+hardhat deploy currently add one task to hardhat. But since hardhat-deploy is now just a tiny wrapper around rocketh, you can use rocketh commands too
 
 ### 1. hardhat deploy
 
