@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.47
+
+### Patch Changes
+
+- use RPC set via env variable or secret
+
 ## 2.0.0-next.46
 
 ### Patch Changes
