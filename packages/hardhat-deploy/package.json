@@ -28,25 +28,25 @@
 		"src"
 	],
 	"devDependencies": {
-		"@changesets/cli": "^2.29.6",
-		"@types/node": "^24.3.0",
+		"@changesets/cli": "^2.29.7",
+		"@types/node": "^24.5.2",
 		"as-soon": "^0.0.11",
-		"hardhat": "3.0.3",
+		"hardhat": "3.0.6",
 		"rimraf": "^6.0.1",
-		"rocketh": "^0.14.4",
+		"rocketh": "0.15.0-testing.13",
 		"set-defaults": "^0.0.5",
 		"typescript": "^5.9.2"
 	},
 	"peerDependencies": {
-		"hardhat": "^3.0.0",
-		"rocketh": "^0.14.4"
+		"hardhat": "^3.0.6",
+		"rocketh": "^0.15.0-testing.13"
 	},
 	"dependencies": {
-		"@nomicfoundation/hardhat-zod-utils": "3.0.0",
+		"@nomicfoundation/hardhat-zod-utils": "3.0.1",
 		"@types/debug": "^4.1.12",
-		"debug": "^4.4.1",
+		"debug": "^4.4.3",
 		"slash": "^5.1.0",
-		"zod": "^4.1.5"
+		"zod": "^4.1.9"
 	},
 	"scripts": {
 		"prepare": "pnpm build",

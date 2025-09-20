@@ -14,6 +14,7 @@ import {
 	UnresolvedNetworkSpecificData,
 	loadEnvironment,
 	enhanceEnvIfNeeded,
+	chainByCanonicalName,
 } from 'rocketh';
 
 export function setupHardhatDeploy<
@@ -22,12 +23,12 @@ export function setupHardhatDeploy<
 	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
 >(extensions: Extensions) {
 	async function loadEnvironmentFromHardhatWithExtensions(
-		required: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection},
-		options?: {
-			useChainIdOfForkedNetwork?: boolean;
-		}
+		required: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection}
+		// options?: {
+		// 	useChainIdOfForkedNetwork?: boolean;
+		// }
 	) {
-		const env = await loadEnvironmentFromHardhat<NamedAccounts, Data>(required, options);
+		const env = await loadEnvironmentFromHardhat<NamedAccounts, Data>(required);
 		return enhanceEnvIfNeeded(env, extensions);
 	}
 
@@ -36,52 +37,55 @@ export function setupHardhatDeploy<
 	};
 }
 
-export async function loadEnvironmentFromHardhat<
-	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
-	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
->(
-	params: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection},
-	options?: {
-		useChainIdOfForkedNetwork?: boolean;
-	}
-): Promise<Environment<NamedAccounts, Data>> {
-	const connection = params.connection || (await params.hre.network.connect());
-	let provider: any = connection.provider;
-	let network: string | {fork: string} = connection.networkName;
-	let forkChainId: number | undefined;
+export async function generateForkConfig(
+	params: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection}
+	// options?: {
+	// 	useChainIdOfForkedNetwork?: boolean;
+	// }
+): Promise<{provider: any; environment: string | {fork: string}; connection: NetworkConnection; isFork: boolean}> {
 	const fork = process.env.HARDHAT_FORK as string | undefined;
+
+	const connection =
+		params.connection || fork
+			? await params.hre.network.connect({network: 'fork'})
+			: await params.hre.network.connect();
+
+	let provider: any = connection.provider;
+	let environment: string | {fork: string} = connection.networkName;
+	let forkChainId: number | undefined;
+
 	if (fork) {
-		if (options?.useChainIdOfForkedNetwork) {
-			const forkNetworkConfig = params.hre.config.networks[fork];
+		// if (options?.useChainIdOfForkedNetwork) {
+		// 	const forkNetworkConfig = params.hre.config.networks[fork];
 
-			if (forkNetworkConfig.type === 'edr-simulated') {
-				forkChainId = forkNetworkConfig.chainId;
-			} else if (forkNetworkConfig.chainId) {
-				forkChainId = forkNetworkConfig.chainId;
-			} else {
-				if ('url' in forkNetworkConfig) {
-					const url = await forkNetworkConfig.url.getUrl();
-					const response = await fetch(url, {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-						body: JSON.stringify({
-							jsonrpc: '2.0',
-							id: 1,
-							method: 'eth_chainId',
-							params: [],
-						}),
-					});
-					const json = (await response.json()) as {result: string};
-					forkChainId = Number(json.result);
-				} else {
-					throw new Error(`cannot fetch chainId`);
-				}
-			}
-		}
+		// 	if (forkNetworkConfig.type === 'edr-simulated') {
+		// 		forkChainId = forkNetworkConfig.chainId;
+		// 	} else if (forkNetworkConfig.chainId) {
+		// 		forkChainId = forkNetworkConfig.chainId;
+		// 	} else {
+		// 		if ('url' in forkNetworkConfig) {
+		// 			const url = await forkNetworkConfig.url.getUrl();
+		// 			const response = await fetch(url, {
+		// 				method: 'POST',
+		// 				headers: {
+		// 					'Content-Type': 'application/json',
+		// 				},
+		// 				body: JSON.stringify({
+		// 					jsonrpc: '2.0',
+		// 					id: 1,
+		// 					method: 'eth_chainId',
+		// 					params: [],
+		// 				}),
+		// 			});
+		// 			const json = (await response.json()) as {result: string};
+		// 			forkChainId = Number(json.result);
+		// 		} else {
+		// 			throw new Error(`cannot fetch chainId`);
+		// 		}
+		// 	}
+		// }
 
-		network = {
+		environment = {
 			fork,
 		};
 	}
@@ -107,13 +111,28 @@ export async function loadEnvironmentFromHardhat<
 		});
 	}
 
+	return {provider, environment, connection, isFork: !!fork};
+}
+
+export async function loadEnvironmentFromHardhat<
+	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
+	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
+>(
+	params: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection}
+	// TODO ?
+	// options?: {
+	// 	useChainIdOfForkedNetwork?: boolean;
+	// }
+): Promise<Environment<NamedAccounts, Data>> {
+	const {connection, environment, provider, isFork} = await generateForkConfig(params);
 	// console.log(`loading environments...`);
 	return loadEnvironment<NamedAccounts, Data>({
 		provider,
-		network,
+		environment,
 		extra: {
 			connection,
 		},
+		saveDeployments: isFork ? false : undefined,
 	});
 }
 
@@ -202,28 +221,27 @@ export function addNetworksFromEnv(networks?: Record<string, NetworkUserConfig>)
 	return newNetworks;
 }
 
-export function populateNetworksFromEnv(
-	networks: Record<string, Omit<NetworkUserConfig, 'accounts' | 'url'> | EdrNetworkUserConfig>
+export function addNetworksFromKnownList(
+	networks?: Record<string, NetworkUserConfig>
 ): Record<string, NetworkUserConfig> {
-	const newNetworks: Record<string, NetworkUserConfig> = {};
-	for (const networkName of Object.keys(networks)) {
-		const network = networks[networkName];
-		if (network.type === 'edr-simulated') {
-			// we leave memory network alone
-			newNetworks[networkName] = network as EdrNetworkUserConfig;
-		} else {
-			const url = getRPC(networkName);
+	const newNetworks: Record<string, NetworkUserConfig> = networks ? {...networks} : {};
+	const canonicalNames = Object.keys(chainByCanonicalName);
+
+	for (const canonicalName of canonicalNames) {
+		const chain = chainByCanonicalName[canonicalName];
+		const url = chain.rpcUrls.default.http[0];
+		if (!newNetworks[canonicalName]) {
 			if (url) {
-				newNetworks[networkName] = {
-					...network,
+				newNetworks[canonicalName] = {
+					type: 'http',
 					url,
-					accounts: getAccounts(networkName),
+					accounts: getAccounts(canonicalName),
 				};
 			} else {
-				if (!('url' in network) || !network.url) {
-					console.error(`no url for network ${networkName}`);
-				}
+				console.error(`no url for chain ${canonicalName}`);
 			}
+		} else {
+			// console.error(`duplicated chain ${canonicalName}`);
 		}
 	}
 	return newNetworks;
@@ -262,17 +280,15 @@ export function addForkConfiguration(networks: Record<string, NetworkUserConfig>
 		}
 	}
 
-	const existingHardhat: EdrNetworkUserConfig =
-		networks.hardhat && networks.hardhat.type === 'edr-simulated'
-			? networks.hardhat
-			: {type: 'edr-simulated', chainType: 'l1'};
+	const existingForkConfiguration: EdrNetworkUserConfig =
+		networks.fork && networks.fork.type === 'edr-simulated' ? networks.fork : {type: 'edr-simulated', chainType: 'l1'};
 
 	const newNetworks: Record<string, NetworkUserConfig> = {
-		...populateNetworksFromEnv(networks),
-		hardhat: {
-			...existingHardhat,
+		...networks,
+		fork: {
+			...existingForkConfiguration,
 			...{
-				accounts: hardhatAccounts || existingHardhat?.accounts,
+				accounts: hardhatAccounts || existingForkConfiguration?.accounts,
 				forking: forkURL
 					? {
 							url: forkURL,

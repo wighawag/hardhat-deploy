@@ -8,18 +8,43 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: "Home", link: "/" },
-      { text: "Introduction", link: "/introduction" },
+      { text: "Documentation", link: "/documentation/introduction" },
     ],
 
-    // sidebar: [
-    // 	{
-    // 		text: 'Examples',
-    // 		items: [
-    // 			{text: 'Markdown Examples', link: '/markdown-examples'},
-    // 			{text: 'Runtime API Examples', link: '/api-examples'},
-    // 		],
-    // 	},
-    // ],
+    sidebar: [
+      {
+        text: "Introduction",
+        link: "/documentation/introduction",
+      },
+      {
+        text: "What Is It For?",
+        link: "/documentation/what-is-it-for",
+      },
+      {
+        text: "In A Nutshell",
+        link: "/documentation/in-a-nutshell",
+      },
+      {
+        text: "Installation",
+        link: "/documentation/installation",
+      },
+      {
+        text: "Command And Tasks",
+        link: "/documentation/command-and-tasks",
+      },
+      {
+        text: "Rocketh Environment",
+        link: "/documentation/environment",
+      },
+      {
+        text: "Configuration",
+        link: "/documentation/configuration",
+      },
+      {
+        text: "How to deploy contracts",
+        link: "/documentation/how-to-deploy-contracts",
+      },
+    ],
 
     socialLinks: [
       {
@@ -33,11 +58,11 @@ export default defineConfig({
 
   srcExclude: ["packages/*", "demoes/*"],
 
-  rewrites(id) {
-    // console.log({ id });
-    if (id === "README.md") {
-      return "introduction.md";
-    }
-    return id;
-  },
+  // rewrites(id) {
+  //   // console.log({ id });
+  //   if (id === "README.md") {
+  //     return "documentation/introduction.md";
+  //   }
+  //   return id;
+  // },
 });

@@ -16,7 +16,3 @@ Everything else is handled by external module. For example `@rocketh/deploy` giv
 But you can provide your own module for advanced use case.
 
 There are already a few like `@rocketh/proxy` to deploy proxy declaratively like in hardhat-deploy v1 or `@rocketh/diamond` to deploy diamond declaratively.
-
-## Documentation:
-
-Please find the [documentation here](https://rocketh.dev/hardhat-deploy)
