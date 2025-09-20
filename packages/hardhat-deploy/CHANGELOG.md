@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.46
+
+### Patch Changes
+
+- rocketh v 0.15.0
+
 ## 2.0.0-next.45
 
 ### Patch Changes
