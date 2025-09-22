@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.50
+
+### Patch Changes
+
+- detect op chains
+
 ## 2.0.0-next.49
 
 ### Patch Changes

@@ -247,6 +247,8 @@ export function addNetworksFromKnownList(
 					type: 'http',
 					url,
 					accounts: getAccounts(canonicalName, !listOfNetworkNamesWithTestAccountAllowed.includes(canonicalName)),
+					chainType: chain.chainType === 'op-stack' ? 'op' : undefined,
+					chainId: chain.id,
 				};
 			} else {
 				console.error(`no url for chain ${canonicalName}`);
