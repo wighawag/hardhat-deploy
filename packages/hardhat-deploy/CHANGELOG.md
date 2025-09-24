@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.51
+
+### Patch Changes
+
+- We transform dash into underscore as dash are not supported everywhwre in env var names
+
 ## 2.0.0-next.50
 
 ### Patch Changes
