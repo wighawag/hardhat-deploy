@@ -52,6 +52,10 @@ export default defineConfig({
         link: "https://github.com/wighawag/hardhat-deploy/tree/v2#readme",
       },
     ],
+
+    search: {
+      provider: "local",
+    },
   },
 
   base: process.env.VITEPRESS_BASE || undefined,
