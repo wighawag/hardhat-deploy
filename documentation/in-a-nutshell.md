@@ -44,6 +44,6 @@ Furthermore you can also ensure these scripts are executed in test too by callin
 
 Amd you can call these in hardhat test fixture to benefit from caching optimization.
 
-This is a huge benefit for testing since you are not required to replicate the deployment procedure in your tests. The tag feature (as seen in the script above) and [dependencies](#deploy-scripts-tags-and-dependencies) will also make your life easier when writing complex deployment procedures.
+This is a huge benefit for testing since you are not required to replicate the deployment procedure in your tests. 
 
 You can even group deploy scripts in different sub-folders and ensure they are executed in their logical order.

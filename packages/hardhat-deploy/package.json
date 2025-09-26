@@ -46,7 +46,7 @@
 		"@types/debug": "^4.1.12",
 		"debug": "^4.4.3",
 		"slash": "^5.1.0",
-		"zod": "^4.1.9"
+		"zod": "^3.25.76"
 	},
 	"scripts": {
 		"prepare": "pnpm build",
