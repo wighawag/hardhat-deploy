@@ -246,28 +246,4 @@ deployments/
 ## Next Steps
 
 - [Configure Named Accounts](./configure-named-accounts.md) for better account management
-- [Write Your First Deploy Script](./write-first-deploy-script.md) for more advanced deployment patterns
 - [Use Tags and Dependencies](./use-tags-and-dependencies.md) to organize complex deployments
-
-## Common Issues
-
-### Import Resolution Error
-
-If you get import errors with `#rocketh`, ensure:
-1. Your import alias is correctly configured
-2. The `rocketh.ts` file exists in your project root
-3. You've compiled your contracts to generate artifacts
-
-### Missing Artifacts
-
-If artifacts are not found:
-1. Run `npx hardhat compile` first
-2. Check that your contract files are in the correct location
-3. Verify the artifact import path in `rocketh.ts`
-
-### Network Configuration
-
-If deployment fails:
-1. Check your network configuration in `hardhat.config.ts`
-2. Ensure you have the correct RPC URL and private key
-3. Verify you have sufficient funds for deployment

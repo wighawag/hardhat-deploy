@@ -257,6 +257,5 @@ If scripts run in the wrong order:
 
 ## Next Steps
 
-- [Deploy Script Execution Order](./deploy-script-execution-order.md) for advanced ordering techniques
 - [Deploy with Proxies](./deploy-with-proxies.md) for upgradeable contracts
 - [Deployment Fixtures in Tests](./deployment-fixtures-in-tests.md) for testing integration

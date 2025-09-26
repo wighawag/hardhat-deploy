@@ -110,6 +110,5 @@ describe('MyContract', function () {
 
 ## Next Steps
 
-- [Write Your First Deploy Script](./write-first-deploy-script.md) to use named accounts in practice
 - [Use Tags and Dependencies](./use-tags-and-dependencies.md) for organizing deployments
 - [Deploy with Proxies](./deploy-with-proxies.md) for upgradeable contracts

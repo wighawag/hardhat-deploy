@@ -31,6 +31,6 @@ This section contains comprehensive step-by-step guides for using hardhat-deploy
 <!-- ## Environment-Specific
 - [Configure Different Networks](./configure-networks.md) -->
 
-## Integration & Automation
-- [Integrate with Frontend Applications](./frontend-integration.md)
+<!-- ## Integration & Automation
+- [Integrate with Frontend Applications](./frontend-integration.md) -->
 <!-- - [Hot Contract Replacement (HRC)](./hot-contract-replacement.md) -->
