@@ -61,6 +61,10 @@ export default defineConfig({
                 link: "/documentation/how-to/setup-first-project",
               },
               {
+                text: "Configure Network Helpers",
+                link: "/documentation/how-to/configure-network-helpers",
+              },
+              {
                 text: "Configure Named Accounts",
                 link: "/documentation/how-to/configure-named-accounts",
               },
@@ -71,15 +75,15 @@ export default defineConfig({
             ],
           },
           {
-            text: "Advanced Deployments",
+            text: "Contract Patterns",
             collapsed: true,
             items: [
               {
-                text: "Deploy with Proxies",
+                text: "Proxy Contracts",
                 link: "/documentation/how-to/deploy-with-proxies",
               },
               {
-                text: "Deploy Diamond Contracts",
+                text: "Diamond Contracts",
                 link: "/documentation/how-to/deploy-diamond-contracts",
               },
             ],
@@ -92,12 +96,24 @@ export default defineConfig({
                 text: "Use Deployment Fixtures in Tests",
                 link: "/documentation/how-to/deployment-fixtures-in-tests",
               },
+              {
+                text: "Use Fork Testing",
+                link: "/documentation/how-to/use-fork-testing",
+              },
             ],
           },
           {
             text: "Development Workflow",
             collapsed: true,
             items: [
+              {
+                text: "Use Viem Integration",
+                link: "/documentation/how-to/use-viem-integration",
+              },
+              {
+                text: "Configure Private Key Signing",
+                link: "/documentation/how-to/configure-private-key-signing",
+              },
               {
                 text: "Verify Contracts",
                 link: "/documentation/how-to/verify-contracts",
@@ -115,7 +131,7 @@ export default defineConfig({
     socialLinks: [
       {
         icon: "github",
-        link: "https://github.com/wighawag/hardhat-deploy",
+        link: "https://github.com/wighawag/hardhat-deploy#readme",
       },
     ],
 
