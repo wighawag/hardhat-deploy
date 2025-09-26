@@ -4,6 +4,12 @@
 
 ### Patch Changes
 
+- forgot to build?
+
+## 2.0.0-next.52
+
+### Patch Changes
+
 - fixes + docs
 
 ## 2.0.0-next.51
