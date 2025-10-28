@@ -6,7 +6,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
 /// @title Greetings Registry
 /// @notice let user set a greeting 1
 contract UUPSImplementation2 is UUPSUpgradeable {
-    /// @notice emitted whemever a user update its greeting
+    /// @notice emitted whenever a user update its greeting
     /// @param user the account whose greeting was updated
     /// @param message the new greeting
     event MessageChanged(address indexed user, string message);
