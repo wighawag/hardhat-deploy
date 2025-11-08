@@ -137,7 +137,7 @@ export async function loadEnvironmentFromHardhat<
 }
 
 function getVariable(prefix: string, name: string): string | SensitiveString | undefined {
-	// We transform dash into underscore as dash are not supported everywhwre in env var names
+	// We transform dash into underscore as dash are not supported everywhere in env var names
 	const variableName = (prefix + name).replaceAll('-', '_');
 	let uri = process.env[variableName];
 	if (uri === 'SECRET') {

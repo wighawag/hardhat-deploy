@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 /// @title Greetings Registry
 /// @notice let user set a greeting
 contract GreetingsRegistry {
-    /// @notice emitted whemever a user update its greeting
+    /// @notice emitted whenever a user update its greeting
     /// @param user the account whose greeting was updated
     /// @param message the new greeting
     event MessageChanged(address indexed user, string message);
