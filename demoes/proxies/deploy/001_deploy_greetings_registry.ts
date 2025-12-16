@@ -1,5 +1,4 @@
-// we import what we need from the @rocketh alias, see ../rocketh.ts
-import {deployScript, artifacts} from '#rocketh';
+import {deployScript, artifacts} from '../rocketh/deploy.js';
 
 export default deployScript(
 	// this allow us to define a functiong which takes as first argument an environment object
@@ -9,7 +8,6 @@ export default deployScript(
 
 		const prefix = 'proxy:';
 		// you can use the deployViaProxy function to deploy a contract via a proxy
-		// see `import "@rocketh/proxy"` in ../rocketh.ts
 		await deployViaProxy(
 			'GreetingsRegistry',
 			{

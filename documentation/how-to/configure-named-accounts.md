@@ -11,7 +11,7 @@ Instead of using `accounts[0]`, `accounts[1]`, etc., you can use meaningful name
 Configure named accounts in your `rocketh.ts` file:
 
 ```typescript
-import { UserConfig } from "rocketh";
+import type {UserConfig} from 'rocketh/types';
 
 export const config = {
   accounts: {
@@ -33,6 +33,7 @@ export const config = {
 You can override account assignments for specific networks:
 
 ```typescript
+import type {UserConfig} from 'rocketh/types';
 export const config = {
   accounts: {
     deployer: {
@@ -58,7 +59,7 @@ export const config = {
 Access named accounts in your deploy scripts:
 
 ```typescript
-import { deployScript, artifacts } from "#rocketh";
+import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
   async ({ deploy, namedAccounts }) => {

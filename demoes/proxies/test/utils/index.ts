@@ -1,10 +1,10 @@
-import {loadAndExecuteDeployments, artifacts} from '#rocketh';
+import {loadAndExecuteDeploymentsFromFiles, artifacts} from '../../rocketh/environment.js';
 import {EthereumProvider} from 'hardhat/types/providers';
 
 export function setupFixtures(provider: EthereumProvider) {
 	return {
 		async deployAll() {
-			const env = await loadAndExecuteDeployments({
+			const env = await loadAndExecuteDeploymentsFromFiles({
 				provider: provider,
 			});
 

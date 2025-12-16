@@ -12,7 +12,7 @@ The rocketh.js file need to export a config object
 For example
 
 ```js
-import {UserConfig} from 'rocketh';
+import type {UserConfig} from 'rocketh/types';
 export const config = {
 	accounts: {
 		deployer: {
@@ -46,7 +46,7 @@ The config also allow you to set an optional `deterministicDeployment` field.
 Using the `deterministicDeployment` it is possible to define a different setup for the deterministic deployment. One use case for this is the deterministic deployment on networks that required replay protection (such as Celo or Avalanche). The [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy) can only be deployed on networks that don't enforce replay protection, therefore on other networks an alternative library has to be used. An example for this would be the [Safe Singleton Factory](https://github.com/gnosis/safe-singleton-factory) that is an adjusted version of the [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy) that contains signed transactions that include replay protection.
 
 ```js
-import {UserConfig} from 'rocketh';
+import type {UserConfig} from 'rocketh/types';
 export const config = {
 	accounts: {
 		deployer: {

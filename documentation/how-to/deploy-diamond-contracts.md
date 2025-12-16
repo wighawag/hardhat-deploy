@@ -18,7 +18,7 @@ pnpm add -D @rocketh/diamond
 
 :::
 
-Add it to your `rocketh.ts`:
+Add it to your `rocketh/config.ts`:
 
 ```typescript
 import * as diamondExtensions from '@rocketh/diamond';
@@ -40,8 +40,6 @@ Diamond contracts consist of:
 ### Simple Diamond with Facets
 
 ```typescript
-import { deployScript, artifacts } from "#rocketh";
-
 export default deployScript(
   async ({ diamond, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;

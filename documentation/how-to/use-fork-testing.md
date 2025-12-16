@@ -44,7 +44,7 @@ The network helpers automatically:
 ### Testing Against Live Protocols
 
 ```typescript
-import { deployScript, artifacts } from "#rocketh";
+import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
   async (env) => {

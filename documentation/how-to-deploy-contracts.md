@@ -28,7 +28,7 @@ The execute expect as first argument a function
 For example this script will deploy the `GreetingsRegistry` contract
 
 ```typescript
-import { deployScript, artifacts } from "#rocketh";
+import { deployScript, artifacts } from "../rocketh/deploy.js";
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;

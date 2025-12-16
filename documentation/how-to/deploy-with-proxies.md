@@ -50,8 +50,6 @@ hardhat-deploy supports several proxy patterns:
 ### Transparent Proxy
 
 ```typescript
-import { deployScript, artifacts } from "#rocketh";
-
 export default deployScript(
   async ({ deployViaProxy, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;
@@ -112,8 +110,6 @@ When you modify your contract and redeploy, hardhat-deploy automatically detects
 For contracts that need initialization after deployment:
 
 ```typescript
-import { artifacts, deployScript } from "#rocketh";
-
 export default deployScript(
   async ({ deployViaProxy, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;

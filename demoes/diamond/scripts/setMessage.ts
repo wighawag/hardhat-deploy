@@ -1,4 +1,4 @@
-import {artifacts, loadEnvironmentFromHardhat} from '#rocketh';
+import {artifacts, loadEnvironmentFromHardhat} from '../rocketh/environment.js';
 import hre from 'hardhat';
 
 async function main() {

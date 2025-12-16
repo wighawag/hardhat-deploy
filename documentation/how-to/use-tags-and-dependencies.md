@@ -20,7 +20,7 @@ Dependencies specify which tags must be executed before the current script runs,
 Add tags to your deploy scripts:
 
 ```typescript
-import { deployScript, artifacts } from "#rocketh";
+import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
   async ({ deploy, namedAccounts }) => {

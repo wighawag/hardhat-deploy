@@ -8,8 +8,7 @@ Before going into the details, here is a very simple summary of the basic featur
 Note that while hardhat call "network "the environment on which the contract will be deployed, multiple network can point to the same chain. We thus prefers to call them "environment"
 
 ```js
-// we import what we need from the #rocketh alias, see below for setup
-import { deployScript, artifacts } from "#rocketh";
+import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
   // this allow us to define our deploy function which takes as first argument an environment object

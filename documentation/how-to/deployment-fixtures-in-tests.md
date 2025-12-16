@@ -18,13 +18,12 @@ Create a test utilities file to set up fixtures:
 
 ```typescript
 // test/utils/index.ts
-import { artifacts, loadAndExecuteDeployments } from "#rocketh";
 import { EthereumProvider } from "hardhat/types/providers";
 
 export function setupFixtures(provider: EthereumProvider) {
   return {
     async deployAll() {
-      const env = await loadAndExecuteDeployments({
+      const env = await loadAndExecuteDeploymentsFromFiles({
         provider: provider,
       });
 

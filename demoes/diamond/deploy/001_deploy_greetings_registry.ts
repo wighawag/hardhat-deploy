@@ -1,5 +1,4 @@
-// we import what we need from the @rocketh alias, see ../rocketh.ts
-import {deployScript, artifacts} from '#rocketh';
+import {deployScript, artifacts} from '../rocketh/deploy.js';
 
 export default deployScript(
 	async ({diamond, namedAccounts}) => {

@@ -17,12 +17,14 @@ Install hardhat-deploy and the core rocketh packages:
 ::: code-group
 
 ```bash [npm]
-npm install -D hardhat-deploy@next rocketh @rocketh/deploy @rocketh/read-execute
+npm install -D hardhat-deploy@next rocketh @rocketh/node @rocketh/deploy @rocketh/read-execute
 ```
 
 ```bash [pnpm]
-pnpm add -D hardhat-deploy@next rocketh @rocketh/deploy @rocketh/read-execute
+pnpm add -D hardhat-deploy@next rocketh @rocketh/node @rocketh/deploy @rocketh/read-execute
 ```
+
+Note that both `rocketh` and `@rocketh/node` are necessary.
 
 :::
 
@@ -64,105 +66,109 @@ const config: HardhatUserConfig = {
 
 export default config;
 ```
+## Step 4: Create rocketh/config.ts Configuration along rocketh/deploy.ts and rocketh/environment.ts
 
-## Step 4: Set Up Import Alias
-
-Choose one of these methods to set up the `#rocketh` alias:
-
-### Option A: Using package.json (Recommended)
-
-Add to your `package.json`:
-
-```json
-{
-  "imports": {
-    "#rocketh": "./rocketh.js"
-  }
-}
-```
-
-You will also want to add the `rootDir` field if not already set, in the `tsconfig.json` to remove ambiguity regarding the import aliases:
-
-```json
-{
-  "compilerOptions": {
-    ...,
-    "rootDir": "./"
-  }
-}
-```
-
-### Option B: Using tsconfig.json
-
-Add to your `tsconfig.json`:
-
-```json
-{
-  "compilerOptions": {
-    ...,
-    "paths": {
-      "#rocketh": ["./rocketh.ts"]
-    }
-  }
-}
-```
-
-
-## Step 5: Create rocketh.ts Configuration
-
-Create a `rocketh.ts` file in your project root:
+Create a `rocketh` folder and a `rocketh/config.ts` file in your project:
 
 ```typescript
-// ------------------------------------------------------------------------------------------------
+// rocketh/config.ts
+// ----------------------------------------------------------------------------
 // Typed Config
-// ------------------------------------------------------------------------------------------------
-import { UserConfig } from "rocketh";
+// ----------------------------------------------------------------------------
+import type {UserConfig} from 'rocketh/types';
+
+// this one provide a protocol supporting private key as account
+import {privateKey} from '@rocketh/signer';
+
+
+// we define our config and export it as "config"
 export const config = {
-  accounts: {
-    deployer: {
-      default: 0, // Use first account by default
+    accounts: {
+        deployer: {
+            default: 0,
+        },
+        admin: {
+            default: 1,
+        },
     },
-    admin: {
-      default: 1, // Use second account by default
+    data: {},
+    signerProtocols: {
+        privateKey,
     },
-  },
-  data: {},
 } as const satisfies UserConfig;
 
-// ------------------------------------------------------------------------------------------------
-// Imports and Re-exports
-// ------------------------------------------------------------------------------------------------
-// Import extensions we need for deploy scripts
-import * as deployExtensions from '@rocketh/deploy';
-import * as readExecuteExtensions from '@rocketh/read-execute';
-const extensions = {...deployExtensions, ...readExecuteExtensions};
+// then we import each extensions we are interested in using in our deploy script or elsewhere
 
-// Re-export artifacts for easy access
-import * as artifacts from './generated/artifacts/index.js';
-export {artifacts};
+// this one provide a deploy function
+import * as deployExtension from '@rocketh/deploy';
+// this one provide read,execute functions
+import * as readExecuteExtension from '@rocketh/read-execute';
+// this one provide a deployViaProxy function that let you declaratively
+//  deploy proxy based contracts
+import * as deployProxyExtension from '@rocketh/proxy';
+// this one provide a viem handle to clients and contracts
+import * as viemExtension from '@rocketh/viem';
 
-// ------------------------------------------------------------------------------------------------
-// Setup rocketh with extensions
-// ------------------------------------------------------------------------------------------------
-import {setup} from 'rocketh';
-const {deployScript, loadAndExecuteDeployments} = setup<typeof extensions, typeof config.accounts, typeof config.data>(
-    extensions,
-);
+// and export them as a unified object
+const extensions = {
+	...deployExtension,
+	...readExecuteExtension,
+	...deployProxyExtension,
+	...viemExtension,
+};
+export {extensions};
 
-// Setup hardhat-deploy integration
-import {setupHardhatDeploy} from 'hardhat-deploy/helpers';
-const {loadEnvironmentFromHardhat} = setupHardhatDeploy(extensions);
+// then we also export the types that our config ehibit so other can use it
 
-// Export everything needed for deploy scripts and tests
-export {loadAndExecuteDeployments, deployScript, loadEnvironmentFromHardhat};
+type Extensions = typeof extensions;
+type Accounts = typeof config.accounts;
+type Data = typeof config.data;
+
+export type {Extensions, Accounts, Data};
 ```
 
+Then add these 2 files in the same folder
+
+- `rocketh/deploy.ts` make use of only `rocketh` and allow deploy script to run in a web runtime if desired.
+- `rocketh/environment.ts` make use of `rocketh/node` to read the config file and is export function to be used in tests or scripts
+
+```typescript
+// rocketh/deploy.ts
+import {type Accounts, type Data, type Extensions, extensions} from './config.js';
+
+// ----------------------------------------------------------------------------
+// we re-export the artifacts, so they are easily available from the alias
+import * as artifacts from '../generated/artifacts/index.js';
+export {artifacts};
+// ----------------------------------------------------------------------------
+// we create the rocketh functions we need by passing the extensions to the
+//  setup function
+import {setupDeployScripts} from 'rocketh';
+const {deployScript} = setupDeployScripts<Extensions,Accounts,Data>(extensions);
+
+export {deployScript};
+
+```
+
+```typescript
+// rocketh/environment.ts
+import {type Accounts, type Data, type Extensions, extensions} from './config.js';
+import {setupEnvironmentFromFiles} from '@rocketh/node';
+import {setupHardhatDeploy} from 'hardhat-deploy/helpers';
+
+// useful for test and scripts, uses file-system
+const {loadAndExecuteDeploymentsFromFiles} = setupEnvironmentFromFiles<Extensions,Accounts,Data>(extensions);
+const {loadEnvironmentFromHardhat} = setupHardhatDeploy<Extensions,Accounts,Data>(extensions)
+
+export {loadEnvironmentFromHardhat, loadAndExecuteDeploymentsFromFiles};
+
+```
 
 Note that the `./generated` folder will only be present after you compile the contracts (`pnpm hardhat build`).
 
 And you ll probably want to add this folder to your `.gitignore` file
 
-## Step 6: Create Your First Contract
+## Step 5: Create Your First Contract
 
 Create a simple contract in `contracts/Greeter.sol`:
 
@@ -187,16 +193,16 @@ contract Greeter {
 }
 ```
 
-## Step 7: Create Deploy Directory
+## Step 6: Create Deploy Directory
 
 Create a `deploy/` directory in your project root.
 
-## Step 8: Write Your First Deploy Script
+## Step 7: Write Your First Deploy Script
 
 Create `deploy/001_deploy_greeter.ts`:
 
 ```typescript
-import { deployScript, artifacts } from "#rocketh";
+import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
@@ -212,7 +218,7 @@ export default deployScript(
 );
 ```
 
-## Step 9: Compile and Deploy
+## Step 8: Compile and Deploy
 
 Compile your contracts:
 
@@ -232,7 +238,7 @@ Deploy to testnet (e.g., Sepolia):
 npx hardhat --network sepolia deploy
 ```
 
-## Step 10: Verify Deployment
+## Step 9: Verify Deployment
 
 Check the `deployments/` directory for your deployment files. You should see:
 

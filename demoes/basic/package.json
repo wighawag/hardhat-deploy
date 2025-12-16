@@ -8,8 +8,9 @@
 		"@nomicfoundation/hardhat-network-helpers": "^3.0.3",
 		"@nomicfoundation/hardhat-node-test-runner": "^3.0.8",
 		"@nomicfoundation/hardhat-viem": "^3.0.1",
-		"@rocketh/deploy": "^0.16.0",
-		"@rocketh/read-execute": "^0.16.0",
+		"@rocketh/deploy": "^0.17.0-next.0",
+		"@rocketh/node": "^0.17.0-next.0",
+		"@rocketh/read-execute": "^0.17.0-next.0",
 		"@types/node": "^25.0.2",
 		"as-soon": "^0.0.11",
 		"earl": "^2.0.0",
@@ -19,17 +20,13 @@
 		"ldenv": "^0.3.16",
 		"prettier": "^3.7.4",
 		"prettier-plugin-solidity": "^2.2.0",
-		"rocketh": "^0.16.0",
+		"rocketh": "^0.17.0-next.0",
 		"set-defaults": "^0.0.5",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
 		"viem": "^2.42.1",
 		"wait-on": "^9.0.3",
 		"zellij-launcher": "^0.0.1"
-	},
-	"imports": {
-		"#rocketh": "./rocketh.js",
-		"#generated/*.js": "./generated/*.js"
 	},
 	"scripts": {
 		"prepare": "set-defaults .vscode && pnpm compile",

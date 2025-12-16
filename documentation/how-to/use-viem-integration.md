@@ -20,37 +20,43 @@ pnpm add -D @rocketh/viem
 
 ## Basic Configuration
 
-Add viem support to your `rocketh.ts` by importing and spreading the extension:
+Add viem support to your `rocketh/config.ts` by importing and spreading the extension:
 
 ```typescript
-import type { UserConfig } from 'rocketh';
+import type {UserConfig} from 'rocketh/types';
 
+// we define our config and export it as "config"
 export const config = {
-  accounts: {
-    deployer: { default: 0 },
-    admin: { default: 1 },
-  },
-  data: {},
+    accounts: {
+        deployer: {
+            default: 0,
+        },
+        admin: {
+            default: 1,
+        },
+    },
+    data: {},
+    signerProtocols: {
+        privateKey,
+    },
 } as const satisfies UserConfig;
 
-// Import the viem extension
+// this one provide a viem handle to clients and contracts
 import * as viemExtension from '@rocketh/viem';
 
-// Create extensions object with viem support
+// and export them as a unified object
 const extensions = {
-  ...viemExtension,
-  // Add other extensions as needed
+	...viemExtension,
 };
+export {extensions};
 
-// Set up rocketh with extensions
-import { setup } from 'rocketh';
-const { deployScript } = setup<
-  typeof extensions,
-  typeof config.accounts,
-  typeof config.data
->(extensions);
+// then we also export the types that our config ehibit so other can use it
 
-export { deployScript };
+type Extensions = typeof extensions;
+type Accounts = typeof config.accounts;
+type Data = typeof config.data;
+
+export type {Extensions, Accounts, Data};
 ```
 
 ## Template Import Pattern
@@ -58,7 +64,7 @@ export { deployScript };
 The [template-ethereum-contracts](https://github.com/wighawag/template-ethereum-contracts) shows the clean import pattern:
 
 ```typescript
-import { deployScript, artifacts } from "#rocketh";
+import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
   async (env) => {
@@ -77,7 +83,7 @@ The viem extension adds several utilities to the environment:
 Get a type-safe contract instance from a deployment. if you provide a name only (as opposed to a typed deployment object), you will need to provide the generic type from the generated ABI since `getContract` cannot infer the type from the deployment name alone:
 
 ```typescript
-import { deployScript, artifacts } from "#rocketh";
+import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
   async (env) => {

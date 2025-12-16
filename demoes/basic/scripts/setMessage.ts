@@ -1,9 +1,9 @@
-import {artifacts, loadEnvironmentFromHardhat} from '#rocketh';
+import {artifacts, loadEnvironmentFromHardhat} from '../rocketh/environment.js';
 import hre from 'hardhat';
 
 async function main() {
 	const env = await loadEnvironmentFromHardhat({hre});
-	const GreetingsRegistry = env.get<typeof artifacts.GreetingsRegistry.abi>('GreetingsRegistry');
+	const GreetingsRegistry = env.get<typeof artifacts.GreetingsRegistry2.abi>('GreetingsRegistry');
 
 	const before_messages = await env.read(GreetingsRegistry, {
 		functionName: 'messages',

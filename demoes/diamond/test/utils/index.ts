@@ -1,12 +1,12 @@
 import {EthereumProvider} from 'hardhat/types/providers';
-import {Abi_GetMessageFacet} from '../../generated/types/GetMessageFacet.js';
-import {Abi_SetMessageFacet} from '../../generated/types/SetMessageFacet.js';
-import {loadAndExecuteDeployments} from '#rocketh';
+import {loadAndExecuteDeploymentsFromFiles} from '../../rocketh/environment.js';
+import {Abi_GetMessageFacet} from '../../generated/abis/GetMessageFacet.js';
+import {Abi_SetMessageFacet} from '../../generated/abis/SetMessageFacet.js';
 
 export function setupFixtures(provider: EthereumProvider) {
 	return {
 		async deployAll() {
-			const env = await loadAndExecuteDeployments({
+			const env = await loadAndExecuteDeploymentsFromFiles({
 				provider: provider,
 			});
 
