@@ -1,5 +1,5 @@
 import {NewTaskActionFunction} from 'hardhat/types/tasks';
-import {loadAndExecuteDeployments} from 'rocketh';
+import {loadAndExecuteDeploymentsFromFiles} from '@rocketh/node';
 import {generateForkConfig} from '../helpers.js';
 
 interface RunActionArguments {
@@ -24,7 +24,7 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 	}
 	const tags = args.tags && args.tags != '' ? args.tags : undefined;
 
-	await loadAndExecuteDeployments({
+	await loadAndExecuteDeploymentsFromFiles({
 		logLevel: 1,
 		provider,
 		environment: environment,

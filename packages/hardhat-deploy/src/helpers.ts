@@ -8,22 +8,17 @@ import {
 } from 'hardhat/types/config';
 import {HardhatRuntimeEnvironment} from 'hardhat/types/hre';
 import {NetworkConnection} from 'hardhat/types/network';
-import {
-	Environment,
-	UnresolvedUnknownNamedAccounts,
-	UnresolvedNetworkSpecificData,
-	loadEnvironment,
-	enhanceEnvIfNeeded,
-	chainByCanonicalName,
-} from 'rocketh';
+import type {Environment, UnresolvedUnknownNamedAccounts, UnresolvedNetworkSpecificData} from 'rocketh/types';
+import {enhanceEnvIfNeeded, chainByCanonicalName} from 'rocketh';
+import {loadEnvironmentFromFiles} from '@rocketh/node';
 
 export function setupHardhatDeploy<
 	Extensions extends Record<string, (env: Environment<any, any, any>) => any> = {},
 	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
-	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
+	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData,
 >(extensions: Extensions) {
 	async function loadEnvironmentFromHardhatWithExtensions(
-		required: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection}
+		required: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection},
 		// options?: {
 		// 	useChainIdOfForkedNetwork?: boolean;
 		// }
@@ -38,7 +33,7 @@ export function setupHardhatDeploy<
 }
 
 export async function generateForkConfig(
-	params: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection}
+	params: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection},
 	// options?: {
 	// 	useChainIdOfForkedNetwork?: boolean;
 	// }
@@ -116,9 +111,9 @@ export async function generateForkConfig(
 
 export async function loadEnvironmentFromHardhat<
 	NamedAccounts extends UnresolvedUnknownNamedAccounts = UnresolvedUnknownNamedAccounts,
-	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData
+	Data extends UnresolvedNetworkSpecificData = UnresolvedNetworkSpecificData,
 >(
-	params: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection}
+	params: {hre: HardhatRuntimeEnvironment; connection?: NetworkConnection},
 	// TODO ?
 	// options?: {
 	// 	useChainIdOfForkedNetwork?: boolean;
@@ -126,7 +121,7 @@ export async function loadEnvironmentFromHardhat<
 ): Promise<Environment<NamedAccounts, Data>> {
 	const {connection, environment, provider, isFork} = await generateForkConfig(params);
 	// console.log(`loading environments...`);
-	return loadEnvironment<NamedAccounts, Data>({
+	return loadEnvironmentFromFiles<NamedAccounts, Data>({
 		provider,
 		environment,
 		extra: {
@@ -198,7 +193,7 @@ export function getMnemonic(networkName?: string, doNotDefault?: boolean): strin
 
 export function getAccounts(
 	networkName?: string,
-	doNotDefault?: boolean
+	doNotDefault?: boolean,
 ): {mnemonic: string | SensitiveString} | undefined {
 	const mnemonic = getMnemonic(networkName, doNotDefault);
 	if (!mnemonic) {
@@ -234,7 +229,7 @@ export function addNetworksFromEnv(networks?: Record<string, NetworkUserConfig>)
 
 const listOfNetworkNamesWithTestAccountAllowed = ['hardhat', 'localhost', 'memory', 'test'];
 export function addNetworksFromKnownList(
-	networks?: Record<string, NetworkUserConfig>
+	networks?: Record<string, NetworkUserConfig>,
 ): Record<string, NetworkUserConfig> {
 	const newNetworks: Record<string, NetworkUserConfig> = networks ? {...networks} : {};
 	const canonicalNames = Object.keys(chainByCanonicalName);
@@ -307,7 +302,7 @@ export function addForkConfiguration(networks: Record<string, NetworkUserConfig>
 					? {
 							url: forkURL,
 							blockNumber: process.env.HARDHAT_FORK_NUMBER ? parseInt(process.env.HARDHAT_FORK_NUMBER) : undefined,
-					  }
+						}
 					: undefined,
 			},
 		},
