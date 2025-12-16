@@ -241,6 +241,5 @@ await env.execute(deployment, {
 
 ## Next Steps
 
-- [Write Deploy Scripts](./write-deploy-scripts.md) to see viem integration in deploy scripts
 - [Use Fork Testing](./use-fork-testing.md) for testing with existing contracts using viem
 - [Use Deployment Fixtures in Tests](./deployment-fixtures-in-tests.md) for comprehensive testing patterns

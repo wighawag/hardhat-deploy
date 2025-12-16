@@ -418,4 +418,3 @@ HARDHAT_FORK=ethereum
 
 - [Use Fork Testing](./use-fork-testing.md) to leverage the automatic fork configuration
 - [Configure Named Accounts](./configure-named-accounts.md) for account management
-- [Configure Private Key Signing](./configure-private-key-signing.md) for production deployments

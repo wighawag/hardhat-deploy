@@ -115,6 +115,5 @@ ldenv -n HARDHAT_FORK=mainnet hardhat deploy
 
 ## Next Steps
 
-- [Configure Private Key Signing](./configure-private-key-signing.md) for production deployments with forks
 - [Verify Contracts](./verify-contracts.md) for contract verification after fork testing
 - [Use Viem Integration](./use-viem-integration.md) for type-safe fork interactions
