@@ -35,11 +35,11 @@ For advanced features like proxies and diamonds:
 ::: code-group
 
 ```bash [npm]
-npm install -D @rocketh/proxy @rocketh/diamond @rocketh/export @rocketh/verifier @rocketh/doc
+npm install -D @rocketh/proxy @rocketh/diamond @rocketh/export @rocketh/verifier @rocketh/doc @rocketh/signer
 ```
 
 ```bash [pnpm]
-pnpm add -D @rocketh/proxy @rocketh/diamond @rocketh/export @rocketh/verifier @rocketh/doc
+pnpm add -D @rocketh/proxy @rocketh/diamond @rocketh/export @rocketh/verifier @rocketh/doc @rocketh/signer
 ```
 
 :::
