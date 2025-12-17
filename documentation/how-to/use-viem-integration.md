@@ -35,10 +35,7 @@ export const config = {
             default: 1,
         },
     },
-    data: {},
-    signerProtocols: {
-        privateKey,
-    },
+    data: {}
 } as const satisfies UserConfig;
 
 // this one provide a viem handle to clients and contracts

@@ -77,10 +77,6 @@ Create a `rocketh` folder and a `rocketh/config.ts` file in your project:
 // ----------------------------------------------------------------------------
 import type {UserConfig} from 'rocketh/types';
 
-// this one provide a protocol supporting private key as account
-import {privateKey} from '@rocketh/signer';
-
-
 // we define our config and export it as "config"
 export const config = {
     accounts: {
@@ -91,10 +87,7 @@ export const config = {
             default: 1,
         },
     },
-    data: {},
-    signerProtocols: {
-        privateKey,
-    },
+    data: {}
 } as const satisfies UserConfig;
 
 // then we import each extensions we are interested in using in our deploy script or elsewhere
