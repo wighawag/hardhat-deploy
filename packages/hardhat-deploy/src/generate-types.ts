@@ -111,7 +111,7 @@ function writeABIDefinitionToFile(
 	folder: string,
 	canonicalName: string,
 	data: Artifact,
-	mode: 'typescript' | 'javascript'
+	mode: 'typescript' | 'javascript',
 ) {
 	const nameAsPath = canonicalName.split('/');
 	const name = nameAsPath[nameAsPath.length - 1];
@@ -173,7 +173,7 @@ export async function generateTypes(paths: {artifacts: string[]}, config: Artifa
 			artifactsPath,
 			[],
 			artifactsPath,
-			(name) => name != 'build-info' && !name.endsWith('.t.sol') && !name.endsWith('.dbg.json')
+			(name) => name != 'build-info' && !name.endsWith('.t.sol') && !name.endsWith('.dbg.json'),
 		);
 
 		// console.log('--------------------------');
@@ -267,13 +267,15 @@ export async function generateTypes(paths: {artifacts: string[]}, config: Artifa
 
 	// writeFiles(undefined, allArtifacts, config);
 
-	const generatedFolder = 'generated';
-	const mode = 'javascript';
-	for (const key of Object.keys(allArtifacts)) {
-		writeABIDefinitionToFile(generatedFolder, key, allArtifacts[key], mode);
-		writeArtifactToFile(generatedFolder, key, allArtifacts[key], mode);
-	}
+	for (const destination of config.destinations) {
+		const generatedFolder = destination.folder;
+		const mode = destination.mode;
+		for (const key of Object.keys(allArtifacts)) {
+			writeABIDefinitionToFile(generatedFolder, key, allArtifacts[key], mode);
+			writeArtifactToFile(generatedFolder, key, allArtifacts[key], mode);
+		}
 
-	writeArtifactIndexToFile(generatedFolder, allArtifacts, mode);
-	writeABIDefinitionIndexToFile(generatedFolder, allArtifacts, mode);
+		writeArtifactIndexToFile(generatedFolder, allArtifacts, mode);
+		writeABIDefinitionIndexToFile(generatedFolder, allArtifacts, mode);
+	}
 }

@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.57
+
+### Patch Changes
+
+- fix : was not reading generateTypedArtifacts config
+
 ## 2.0.0-next.56
 
 ### Patch Changes
