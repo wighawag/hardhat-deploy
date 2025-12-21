@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.56
+
+### Patch Changes
+
+- update rocketh + fix peer deps
+
 ## 2.0.0-next.55
 
 ### Patch Changes
