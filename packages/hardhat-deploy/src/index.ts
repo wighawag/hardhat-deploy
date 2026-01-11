@@ -12,7 +12,7 @@ import type {NetworkConnection} from 'hardhat/types/network';
 
 setupLogger(['rocketh', '@rocketh/node'], {
 	enabled: true,
-	level: 1,
+	level: 3,
 });
 
 const hardhatPlugin: HardhatPlugin = {

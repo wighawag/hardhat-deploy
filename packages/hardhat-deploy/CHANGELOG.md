@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.60
+
+### Patch Changes
+
+- use log level 3 by default
+
 ## 2.0.0-next.59
 
 ### Patch Changes

@@ -10,7 +10,7 @@
 		"@nomicfoundation/hardhat-viem": "^3.0.1",
 		"@rocketh/deploy": "^0.17.7",
 		"@rocketh/diamond": "^0.17.10",
-		"@rocketh/node": "^0.17.14",
+		"@rocketh/node": "^0.17.15",
 		"@rocketh/read-execute": "^0.17.7",
 		"@types/node": "^25.0.6",
 		"as-soon": "^0.0.11",

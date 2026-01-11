@@ -27,7 +27,7 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 
 	setupLogger(['rocketh', '@rocketh/node'], {
 		enabled: true,
-		level: 1,
+		level: 3,
 	});
 
 	await loadAndExecuteDeploymentsFromFiles({
