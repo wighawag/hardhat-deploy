@@ -25,7 +25,6 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 	const tags = args.tags && args.tags != '' ? args.tags : undefined;
 
 	await loadAndExecuteDeploymentsFromFiles({
-		logLevel: 1,
 		provider,
 		environment: environment,
 		saveDeployments: isFork ? false : saveDeployments,
