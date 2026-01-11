@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.59
+
+### Patch Changes
+
+- fix logger
+
 ## 2.0.0-next.58
 
 ### Patch Changes

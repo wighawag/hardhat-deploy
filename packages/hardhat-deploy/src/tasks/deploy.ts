@@ -1,6 +1,7 @@
 import {NewTaskActionFunction} from 'hardhat/types/tasks';
 import {loadAndExecuteDeploymentsFromFiles} from '@rocketh/node';
 import {generateForkConfig} from '../helpers.js';
+import {setupLogger} from 'named-logs-console';
 
 interface RunActionArguments {
 	saveDeployments: string;
@@ -23,6 +24,11 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 		saveDeployments = args.saveDeployments == 'true' ? true : false;
 	}
 	const tags = args.tags && args.tags != '' ? args.tags : undefined;
+
+	setupLogger(['rocketh', '@rocketh/node'], {
+		enabled: true,
+		level: 1,
+	});
 
 	await loadAndExecuteDeploymentsFromFiles({
 		provider,
