@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.58
+
+### Patch Changes
+
+- 56722fc: use latest deps
+
 ## 2.0.0-next.57
 
 ### Patch Changes
