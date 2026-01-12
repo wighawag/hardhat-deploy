@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.61
+
+### Patch Changes
+
+- force the type for artifact so typescript does not need to infer (which cause issue on large artifact files)
+
 ## 2.0.0-next.60
 
 ### Patch Changes

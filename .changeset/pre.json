@@ -10,6 +10,7 @@
     "hardhat-deploy-for-hardhat-v2": "0.0.0"
   },
   "changesets": [
+    "blue-pens-lie",
     "blue-stars-carry",
     "brave-friends-judge",
     "brave-times-jog",

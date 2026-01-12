@@ -64,7 +64,7 @@ function writeArtifactToFile(folder: string, canonicalName: string, data: Artifa
 	const folderPath = path.dirname(tsFilepath);
 	ensureDirExistsSync(folderPath);
 	if (mode === 'typescript') {
-		const newContent = `export const ${artifactName} = ${JSON.stringify(data, null, 2)} as const;`;
+		const newContent = `export const ${artifactName}: ${JSON.stringify(data, null, 2)} = ${JSON.stringify(data, null, 2)} as const;`;
 		writeIfDifferent(tsFilepath, newContent);
 	} else if (mode === 'javascript') {
 		const newContent = `export const ${artifactName} = /** @type {const} **/ (${JSON.stringify(data, null, 2)});`;
