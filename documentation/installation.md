@@ -2,26 +2,133 @@
 
 Here is the basic for getting started
 
-Note: hardhat-deploy is alpha, see `@next` to get alpha version, if you do not specify `@next` you'll get v1
+## initialize a new hardhat project
 
-::: code-group
+First we setup an basic npm project
 
-```bash [npm]
-npm install -D hardhat-deploy@next rocketh @rocketh/node @rocketh/deploy @rocketh/read-execute
+```bash
+mkdir my-project
+# set the current directory
+cd my-project
 ```
 
-```bash [pnpm]
+Just create a new `package.json` file with the following content:
+
+> file: `package.json`
+
+```json
+{
+  "name": "my-project",
+  "version": "0.0.0",
+  "type": "module"
+}
+```
+
+We then install the basic package for a working hardhat project
+
+```bash
+pnpm add -D hardhat @types/node typescript forge-std@github:foundry-rs/forge-std#v1.9.4
+```
+
+We then create a new directory for our solidity files.
+
+```bash
+mkdir src
+```
+
+and create a new solidity file in that folder.
+
+> file: `src/Counter.sol`
+
+```solidity
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.28;
+
+contract Counter {
+  uint public x;
+
+  event Increment(uint by);
+
+  function inc() public {
+    x++;
+    emit Increment(1);
+  }
+
+  function incBy(uint by) public {
+    require(by > 0, "incBy: increment should be positive");
+    x += by;
+    emit Increment(by);
+  }
+}
+```
+
+We also need to create a new hardhat config file.
+
+> file: `hardhat.config.ts`
+
+```typescript
+import { defineConfig } from "hardhat/config";
+import HardhatDeploy from "hardhat-deploy";
+
+export default defineConfig({
+  plugins: [HardhatDeploy],
+  solidity: {
+    profiles: {
+      default: {
+        version: "0.8.28",
+      },
+      production: {
+        version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    },
+  },
+  networks: {
+    hardhatMainnet: {
+      type: "edr-simulated",
+      chainType: "l1",
+    },
+    hardhatOp: {
+      type: "edr-simulated",
+      chainType: "op",
+    },
+  },
+
+  // we always prefers to name our contracts source folder "src" as this usualy sit in a contract folder itself
+  paths: {
+    sources: ["src"],
+  },
+  // Since we use typescript we also set hardhat-deploy to generate them in typescript
+  generateTypedArtifacts: {
+    destinations: [
+      {
+        mode: "typescript",
+      },
+    ],
+  },
+});
+```
+
+## install hardhat-deploy and the other packages needed
+
+After we got hardhat project setup, it is time to install hardhat-deploy and the other packages required.
+
+Note: hardhat-deploy is alpha, see `@next` to get alpha version, if you do not specify `@next` you'll get v1
+
+```bash
 pnpm add -D hardhat-deploy@next rocketh @rocketh/node @rocketh/deploy @rocketh/read-execute
 ```
 
-:::
-
 Note that both `rocketh` and `@rocketh/node` are necessary
-
 
 Then you need to add it to the plugins list of hardhat in hardhat.config.ts:
 
-```ts
+```ts skip
 import HardhatDeploy from 'hardhat-deploy';
 ...
 const config: HardhatUserConfig = {
@@ -29,62 +136,60 @@ const config: HardhatUserConfig = {
 ...
 ```
 
-
 We also recommend you add these to provide more features
 
-::: code-group
-
-```bash [npm]
-npm install -D @rocketh/proxy @rocketh/diamond @rocketh/export @rocketh/verifier @rocketh/doc
+```bash
+pnpm add -D @rocketh/proxy @rocketh/export @rocketh/verifier @rocketh/doc
 ```
-
-```bash [pnpm]
-pnpm add -D @rocketh/proxy @rocketh/diamond @rocketh/export @rocketh/verifier @rocketh/doc
-```
-
-:::
 
 Note that extensions like `@rocketh/proxy` need to be passed into the rocketh setup function so they can be used.
 
+The recommended way to setup rocketh for hardhat-deploy is to create a `rocketh` folder and add the following files inside it:
 
-Example of `rocketh/config.ts` file:
+so first the folder:
+
+```bash
+mkdir rocketh
+```
+
+then the files:
+
+the config.ts file is used to define the config and the extensions we are interested in using in our deploy script or elsewhere
+
+> file: `rocketh/config.ts`
 
 ```typescript
-import type {UserConfig} from 'rocketh/types';
+/// ----------------------------------------------------------------------------
+// Typed Config
+// ----------------------------------------------------------------------------
+import type { UserConfig } from "rocketh/types";
 
 // we define our config and export it as "config"
 export const config = {
-    accounts: {
-        deployer: {
-            default: 0,
-        },
-        admin: {
-            default: 1,
-        },
+  accounts: {
+    deployer: {
+      default: 0,
     },
-    data: {}
+    admin: {
+      default: 1,
+    },
+  },
+  data: {},
 } as const satisfies UserConfig;
 
 // then we import each extensions we are interested in using in our deploy script or elsewhere
 
 // this one provide a deploy function
-import * as deployExtension from '@rocketh/deploy';
+import * as deployExtension from "@rocketh/deploy";
 // this one provide read,execute functions
-import * as readExecuteExtension from '@rocketh/read-execute';
-// this one provide a deployViaProxy function that let you declaratively
-//  deploy proxy based contracts
-import * as deployProxyExtension from '@rocketh/proxy';
-// this one provide a viem handle to clients and contracts
-import * as viemExtension from '@rocketh/viem';
+import * as readExecuteExtension from "@rocketh/read-execute";
 
 // and export them as a unified object
 const extensions = {
-	...deployExtension,
-	...readExecuteExtension,
-	...deployProxyExtension,
-	...viemExtension,
+  ...deployExtension,
+  ...readExecuteExtension,
 };
-export {extensions};
+export { extensions };
 
 // then we also export the types that our config ehibit so other can use it
 
@@ -92,10 +197,76 @@ type Extensions = typeof extensions;
 type Accounts = typeof config.accounts;
 type Data = typeof config.data;
 
-export type {Extensions, Accounts, Data};
+export type { Extensions, Accounts, Data };
 ```
 
+the rocketh deploy file is used to export the deploy script function and the artifacts.
+
+> file: `rocketh/deploy.ts`
+
+```typescript
+import {
+  type Accounts,
+  type Data,
+  type Extensions,
+  extensions,
+} from "./config.js";
+
+// ----------------------------------------------------------------------------
+// we re-export the artifacts, so they are easily available from the alias
+import * as artifacts from "../generated/artifacts/index.js";
+export { artifacts };
+// ----------------------------------------------------------------------------
+// we create the rocketh functions we need by passing the extensions to the
+//  setup function
+import { setupDeployScripts } from "rocketh";
+const { deployScript } = setupDeployScripts<Extensions, Accounts, Data>(
+  extensions,
+);
+
+export { deployScript };
+```
+
+the environment file is used to export the environment functions, to be used in test and scripts.
+
+> file: `rocketh/environment.ts`
+
+```typescript
+import {
+  type Accounts,
+  type Data,
+  type Extensions,
+  extensions,
+} from "./config.js";
+import { setupEnvironmentFromFiles } from "@rocketh/node";
+import { setupHardhatDeploy } from "hardhat-deploy/helpers";
+
+// useful for test and scripts, uses file-system
+const { loadAndExecuteDeploymentsFromFiles } = setupEnvironmentFromFiles<
+  Extensions,
+  Accounts,
+  Data
+>(extensions);
+const { loadEnvironmentFromHardhat } = setupHardhatDeploy<
+  Extensions,
+  Accounts,
+  Data
+>(extensions);
+
+export { loadEnvironmentFromHardhat, loadAndExecuteDeploymentsFromFiles };
+```
+
+## adding deploy scripts
+
 You can them create a deploy script in the `deploy` folder like so:
+
+```bash
+mkdir deploy
+```
+
+And create a deploy script file like this:
+
+> file: `deploy/deploy_Counter.ts`
 
 ```typescript
 import { deployScript, artifacts } from "../rocketh/deploy.js";
@@ -104,24 +275,38 @@ export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;
 
-    await deploy("GreetingsRegistry", {
+    await deploy("Counter", {
       account: deployer,
-      artifact: artifacts.GreetingsRegistry,
-      args: [""],
+      artifact: artifacts.Counter,
     });
   },
-  // finally you can pass tags and dependencies
-  { tags: ["GreetingsRegistry", "GreetingsRegistry_deploy"] }
+  { tags: ["Counter", "Counter_deploy"] },
 );
 ```
 
-See a template that uses **hardhat-deploy** here: https://github.com/wighawag/template-ethereum-contracts
+And with that you are ready to go!
+
+compile your contracts:
+
+```bash
+pnpm hardhat compile
+```
+
+And then test deployment against in in-memory node by running:
+
+```bash
+pnpm hardhat deploy
+```
+
+hardhat-deploy and rocketh provides many features to help you deploy your contracts.
+
+See a template that uses them here: https://github.com/wighawag/template-ethereum-contracts
 
 ## Migrating from hardhat-deploy v1
 
 in v1 you would create a deploy file like this:
 
-```typescript
+```typescript skip
 // deploy/00_deploy_my_contract.js
 // export a function that get passed the Hardhat runtime environment
 module.exports = async ({ getNamedAccounts, deployments }) => {
@@ -139,7 +324,7 @@ module.exports.tags = ["MyContract"];
 
 and you would have configuration in hardhat.config.ts
 
-```typescript
+```typescript skip
  namedAccounts: {
     deployer: 0,
     ...
@@ -148,7 +333,7 @@ and you would have configuration in hardhat.config.ts
 
 in v2 you will do this instead:
 
-```typescript
+```typescript skip
 import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
@@ -162,7 +347,7 @@ export default deployScript(
     });
   },
   // finally you can pass tags and dependencies
-  { tags: ["MyContract"] }
+  { tags: ["MyContract"] },
 );
 ```
 
@@ -184,13 +369,16 @@ If coming from hardhat-deploy v1, it will also accept a `.chainId` file containi
 
 For example for an environment named "sepolia" (for the corresponding network) the file `deployments/sepolia/.chain` would be
 
-```
-{"chainId":"11155111","genesisHash":"0x25a5cc106eea7138acab33231d7160d69cb777ee0c2c553fcddf5138993e6dd9"}
+```json skip
+{
+  "chainId": "11155111",
+  "genesisHash": "0x25a5cc106eea7138acab33231d7160d69cb777ee0c2c553fcddf5138993e6dd9"
+}
 ```
 
 Each contract file must follow this type (as defined in [types.ts](types.ts)) :
 
-```typescript
+```typescript skip
 export type Deployment<TAbi extends Abi> = {
   readonly address: EIP1193Account;
   readonly abi: Narrow<TAbi>;
@@ -237,7 +425,7 @@ Let's say you have:
 
 You would get the following folder structure:
 
-```
+```text skip
 deployments/
   mainnet/
     .chain

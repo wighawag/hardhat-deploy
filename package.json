@@ -5,6 +5,7 @@
   "type": "module",
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
+    "ezx": "^0.0.11",
     "set-defaults": "^0.0.5",
     "syncpack": "^13.0.4",
     "vitepress": "^1.6.4",
@@ -13,7 +14,7 @@
   "volta": {
     "node": "22.14.0"
   },
-  "packageManager": "pnpm@10.6.5",
+  "packageManager": "pnpm@10.28.1",
   "scripts": {
     "prepare": "set-defaults .vscode",
     "docs:dev": "vitepress dev",
@@ -23,6 +24,8 @@
     "build": "pnpm -r build && cp ./README.md ./packages/hardhat-deploy/",
     "dev": "pnpm -r dev",
     "sync-deps": "syncpack fix-mismatches",
+    "test": "pnpm -r test",
+    "test:installation": "pnpm ezx --verbose documentation/installation.md",
     "start": "pnpm zellij-launcher --layout zellij.kdl a $npm_package_name || zellij --layout zellij.kdl -s $npm_package_name"
   }
 }

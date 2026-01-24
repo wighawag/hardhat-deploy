@@ -51,6 +51,7 @@
 		"zod": "^3.25.76"
 	},
 	"scripts": {
+		"prepublish": "cp ../../README.md ./",
 		"prepare": "pnpm build",
 		"build": "tsc --project tsconfig.json",
 		"dev": "as-soon -w src pnpm build"
