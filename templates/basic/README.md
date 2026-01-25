@@ -10,7 +10,7 @@ This example project includes:
 
 - A simple Hardhat configuration file.
 - Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html) and the built-in mechanism to load deployments in test via hardhat-deploy and rocketh.
+- Built-in mechanism to load deployments in test via hardhat-deploy and rocketh.
 
 ## Usage
 
