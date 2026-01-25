@@ -6,20 +6,20 @@
 		"access": "public"
 	},
 	"type": "module",
-	"main": "dist/esm/index.js",
-	"module": "./dist/esm/index.js",
-	"types": "./dist/esm/index.d.ts",
+	"main": "dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
 			"import": {
-				"types": "./dist/esm/index.d.ts",
-				"default": "./dist/esm/index.js"
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
 			}
 		},
 		"./helpers": {
 			"import": {
-				"types": "./dist/esm/helpers.d.ts",
-				"default": "./dist/esm/helpers.js"
+				"types": "./dist/helpers.d.ts",
+				"default": "./dist/helpers.js"
 			}
 		}
 	},
@@ -30,8 +30,8 @@
 		"templates"
 	],
 	"bin": {
-		"hardhat-deploy": "./dist/esm/cli.js"
-	},
+		"hardhat-deploy": "./dist/cli.js"
+	  	},
 	"devDependencies": {
 		"@changesets/cli": "^2.29.8",
 		"@rocketh/node": "0.17.15",

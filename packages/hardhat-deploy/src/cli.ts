@@ -5,11 +5,17 @@ import { readFileSync, readdirSync, mkdirSync, copyFileSync, existsSync, writeFi
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 import * as readline from 'readline';
+import pkg from '../package.json' with { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const program = new Command();
+
+// Get the current version of hardhat-deploy
+const getHardhatDeployVersion = (): string => {
+  return pkg.version;
+};
 
 const askFolder = async (): Promise<string> => {
   const rl = readline.createInterface({
@@ -54,7 +60,21 @@ const isFolderEmpty = (folderPath: string): boolean => {
   }
 };
 
-const copyFile = (source: string, target: string, replacements: Record<string, string> = {}): void => {
+const copyFile = (
+  source: string,
+  target: string,
+  replacements: Record<string, string> = {},
+  gitignorePatterns: string[] = []
+): void => {
+  const fileName = basename(source);
+  
+  // Check if file should be skipped based on gitignore patterns
+  for (const pattern of gitignorePatterns) {
+    if (fileName === pattern || fileName.endsWith(pattern.replace('*', ''))) {
+      return; // Skip this file
+    }
+  }
+  
   let content = readFileSync(source, 'utf-8');
   
   // Apply replacements
@@ -72,7 +92,24 @@ const copyFile = (source: string, target: string, replacements: Record<string, s
   }
 };
 
-const copyFolder = (source: string, target: string, replacements: Record<string, string> = {}): void => {
+const parseGitignore = (gitignorePath: string): string[] => {
+  if (!existsSync(gitignorePath)) {
+    return [];
+  }
+  
+  const content = readFileSync(gitignorePath, 'utf-8');
+  return content
+    .split('\n')
+    .map((line: string) => line.trim())
+    .filter((line: string) => line && !line.startsWith('#'));
+};
+
+const copyFolder = (
+  source: string,
+  target: string,
+  replacements: Record<string, string> = {},
+  gitignorePatterns: string[] = []
+): void => {
   if (!existsSync(target)) {
     mkdirSync(target, { recursive: true });
   }
@@ -86,26 +123,41 @@ const copyFolder = (source: string, target: string, replacements: Record<string,
     const stat = statSync(sourcePath);
 
     if (stat.isDirectory()) {
-      copyFolder(sourcePath, targetPath, replacements);
+      // Check if directory should be skipped based on gitignore patterns
+      const shouldSkip = gitignorePatterns.some(pattern =>
+        file === pattern.replace('/', '') || pattern.startsWith('/') && file === pattern.slice(1)
+      );
+      
+      if (!shouldSkip) {
+        copyFolder(sourcePath, targetPath, replacements, gitignorePatterns);
+      }
     } else {
-      copyFile(sourcePath, targetPath, replacements);
+      copyFile(sourcePath, targetPath, replacements, gitignorePatterns);
     }
   });
 };
 
 const generateProject = (targetFolder: string, projectName?: string): void => {
   // Template path is at repository root, not in packages/hardhat-deploy
-  const templatePath = join(__dirname, '../../../../templates/basic');
+  const templatePath = join(__dirname, '../../../templates/basic');
+  const gitignorePath = join(templatePath, '.gitignore');
+  
+  // Parse gitignore patterns
+  const gitignorePatterns = parseGitignore(gitignorePath);
   
   // Determine project name from folder or use placeholder
   const folderName = projectName || basename(targetFolder === './' ? process.cwd() : targetFolder);
   
+  // Get the current version of hardhat-deploy
+  const hardhatDeployVersion = getHardhatDeployVersion();
+  
   const replacements: Record<string, string> = {
-    'template-hardhat-node-test-runner': `hardhat-${folderName}`,
+    'template-hardhat-node-test-runner': `${folderName}`,
+    'workspace:*': hardhatDeployVersion,
   };
   
   console.log(`Generating project in: ${targetFolder}`);
-  copyFolder(templatePath, targetFolder, replacements);
+  copyFolder(templatePath, targetFolder, replacements, gitignorePatterns);
   console.log('✓ Project initialized successfully!');
 };
 
@@ -137,7 +189,7 @@ const runPnpmInstall = async (folderPath: string): Promise<void> => {
 program
   .name('hardhat-deploy')
   .description('CLI for hardhat-deploy')
-  .version('2.0.0-next.61');
+  .version(pkg.version);
 
 program
   .command('init')

@@ -12,7 +12,7 @@
 		"declaration": true,
 		"declarationMap": true,
 		"rootDir": "./src",
-		"outDir": "./dist/esm"
+		"outDir": "./dist"
 	},
 	"include": ["src/**/*.ts"]
 }
