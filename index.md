@@ -16,7 +16,7 @@ hero:
       link: /documentation/introduction
     - theme: alt
       text: github
-      link: https://github.com/wighawag/hardhat-deploy/tree/v2#readme
+      link: https://github.com/wighawag/hardhat-deploy#readme
 
 features:
   - title: Declarative Deployments
