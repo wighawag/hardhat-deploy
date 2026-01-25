@@ -1,0 +1,31 @@
+{
+  "name": "template-hardhat-node-test-runner",
+  "version": "0.0.0",
+  "description": "A TypeScript Hardhat project using Node Test Runner",
+  "type": "module",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-keystore": "^3.0.3",
+    "@nomicfoundation/hardhat-network-helpers": "^3.0.3",
+    "@nomicfoundation/hardhat-node-test-runner": "^3.0.8",
+    "@nomicfoundation/hardhat-viem": "^3.0.2",
+    "@nomicfoundation/hardhat-viem-assertions": "^3.0.5",
+    "@rocketh/deploy": "^0.17.9",
+    "@rocketh/doc": "^0.17.18",
+    "@rocketh/export": "^0.17.18",
+    "@rocketh/node": "^0.17.18",
+    "@rocketh/proxy": "^0.17.13",
+    "@rocketh/read-execute": "^0.17.9",
+    "@rocketh/verifier": "^0.17.18",
+    "@rocketh/viem": "^0.17.6",
+    "@types/node": "^25.0.10",
+    "forge-std": "foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.1.5",
+    "hardhat-deploy": "2.0.0-next.61",
+    "rocketh": "^0.17.14",
+    "typescript": "~5.9.3",
+    "viem": "^2.43.0"
+  },
+  "scripts": {
+    "test": "hardhat test"
+  }
+}
