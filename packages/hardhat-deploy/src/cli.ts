@@ -168,7 +168,7 @@ const runPnpmInstall = async (folderPath: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Use --ignore-workspace to ensure dependencies are installed locally
     // This prevents pnpm from treating the target folder as part of a parent workspace
-    const pnpm = spawn('pnpm', ['install', '--ignore-workspace'], {
+    const pnpm = spawn('pnpm', ['install', '--ignore-workspace', `--no-frozen-lockfile`], {
       cwd: folderPath,
       stdio: 'inherit',
     });
