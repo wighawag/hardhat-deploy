@@ -25,7 +25,7 @@
     "dev": "pnpm -r dev",
     "sync-deps": "syncpack fix-mismatches",
     "test": "pnpm -r test",
-    "test:installation": "pnpm ezx --verbose documentation/installation.md",
+    "test:installation": "pnpm ezx --verbose --standalone documentation/installation.md",
     "start": "pnpm zellij-launcher --layout zellij.kdl a $npm_package_name || zellij --layout zellij.kdl -s $npm_package_name"
   }
 }
