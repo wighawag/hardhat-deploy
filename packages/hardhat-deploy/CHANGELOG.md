@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.64
+
+### Patch Changes
+
+- update deps
+
 ## 2.0.0-next.63
 
 ### Patch Changes

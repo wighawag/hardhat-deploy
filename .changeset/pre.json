@@ -2,7 +2,10 @@
   "mode": "pre",
   "tag": "next",
   "initialVersions": {
-    "hardhat-deploy": "1.0.0"
+    "hardhat-deploy": "1.0.0",
+    "hardhat-deploy-demoes-basic": "0.0.1-next.0",
+    "hardhat-deploy-demoes-diamond": "0.0.1-next.0",
+    "hardhat-deploy-demoes-proxies": "0.0.1-next.0"
   },
   "changesets": [
     "all-dingos-bathe",
@@ -29,6 +32,7 @@
     "hip-towns-cheat",
     "huge-planets-happen",
     "icy-teams-think",
+    "itchy-parents-behave",
     "khaki-apples-make",
     "khaki-rockets-try",
     "late-humans-dig",
