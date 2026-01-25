@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.62
+
+### Patch Changes
+
+- template init
+
 ## 2.0.0-next.61
 
 ### Patch Changes
