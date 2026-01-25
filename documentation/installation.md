@@ -10,20 +10,21 @@ The quickest way to get started with hardhat-deploy is to either
 ::: code-group
 
 ```bash skip [npm]
-npx hardhat-deploy@next init --install my-project
+npx hardhat-deploy@next init my-project
 ```
 
 ```bash [pnpm]
-pnpm dlx hardhat-deploy@next init --install my-project
+pnpm dlx hardhat-deploy@next init my-project
 ```
 
 :::
 
-Then just cd into the project directory
+Then just cd into the project directory and install dependencies
 
 ```bash
 # set the current directory
 cd my-project
+pnpm i
 ```
 
 And with that you are ready to go!
