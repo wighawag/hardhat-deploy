@@ -39,6 +39,5 @@ jobs:
       - name: Run tests
         run: pnpm test
 
-      # REMOVE this for now as for some reason, it fails in the github action environment
-      # - name: Run Getting Started
-      #   run: pnpm test:installation
+      - name: Run Getting Started
+        run: pnpm test:installation
