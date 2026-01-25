@@ -25,6 +25,21 @@ const askFolder = async (): Promise<string> => {
   });
 };
 
+const askAutoInstall = async (): Promise<boolean> => {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question('Auto-install dependencies with pnpm? (Y/n): ', (answer) => {
+      rl.close();
+      const trimmed = answer.trim().toLowerCase();
+      resolve(trimmed === '' || trimmed === 'y' || trimmed === 'yes');
+    });
+  });
+};
+
 const isFolderEmpty = (folderPath: string): boolean => {
   if (!existsSync(folderPath)) {
     return true;
@@ -92,10 +107,31 @@ const generateProject = (targetFolder: string, projectName?: string): void => {
   console.log(`Generating project in: ${targetFolder}`);
   copyFolder(templatePath, targetFolder, replacements);
   console.log('✓ Project initialized successfully!');
-  console.log(`\nNext steps:`);
-  console.log(`  cd ${targetFolder === './' ? '.' : targetFolder}`);
-  console.log(`  pnpm install`);
-  console.log(`  pnpm hardhat test`);
+};
+
+const runPnpmInstall = async (folderPath: string): Promise<void> => {
+  console.log(`Installing dependencies...`);
+  const { spawn } = await import('child_process');
+  
+  return new Promise((resolve, reject) => {
+    const pnpm = spawn('pnpm', ['install'], {
+      cwd: folderPath,
+      stdio: 'inherit',
+    });
+
+    pnpm.on('close', (code) => {
+      if (code === 0) {
+        console.log('✓ Dependencies installed successfully!');
+        resolve();
+      } else {
+        reject(new Error(`pnpm install failed with exit code ${code}`));
+      }
+    });
+
+    pnpm.on('error', (error) => {
+      reject(error);
+    });
+  });
 };
 
 program
@@ -106,13 +142,17 @@ program
 program
   .command('init')
   .argument('[folder]', 'folder to initialize the project in')
+  .option('--install', 'auto-install dependencies with pnpm')
   .description('Initialize a new hardhat-deploy project')
-  .action(async (folder?: string) => {
+  .action(async (folder?: string, options?: { install?: boolean }) => {
     let targetFolder = folder;
+    let autoInstall = options?.install ?? false;
     
     // If no folder specified, ask user
     if (!targetFolder) {
       targetFolder = await askFolder();
+      // If we prompted for folder, also prompt for auto-install
+      autoInstall = await askAutoInstall();
     }
     
     // Normalize path
@@ -126,6 +166,27 @@ program
     
     // Generate project
     generateProject(targetFolder);
+    
+    // Auto-install if requested
+    if (autoInstall) {
+      try {
+        await runPnpmInstall(targetFolder);
+      } catch (error) {
+        console.error('Failed to install dependencies:', error);
+        console.log('\nYou can install dependencies manually:');
+        console.log(`  cd ${targetFolder === './' ? '.' : targetFolder}`);
+        console.log('  pnpm install');
+        process.exit(1);
+      }
+    }
+    
+    // Show next steps
+    console.log(`\nNext steps:`);
+    console.log(`  cd ${targetFolder === './' ? '.' : targetFolder}`);
+    if (!autoInstall) {
+      console.log(`  pnpm install`);
+    }
+    console.log(`  pnpm hardhat test`);
   });
 
 program.parse();
