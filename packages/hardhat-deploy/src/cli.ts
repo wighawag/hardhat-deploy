@@ -138,11 +138,8 @@ const copyFolder = (
 };
 
 const generateProject = (targetFolder: string, projectName?: string): void => {
-  // Try to find template in published package first, then fall back to repository root
-  let templatePath = join(__dirname, '../templates/basic');
-  if (!existsSync(templatePath)) {
-    templatePath = join(__dirname, '../../../templates/basic');
-  }
+  // find template in published package
+  const templatePath = join(__dirname, '../templates/basic');
   const gitignorePath = join(templatePath, '.gitignore');
   
   // Parse gitignore patterns
