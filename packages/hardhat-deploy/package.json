@@ -25,8 +25,13 @@
 	},
 	"files": [
 		"dist",
-		"src"
+		"src",
+		"bin",
+		"templates"
 	],
+	"bin": {
+		"hardhat-deploy": "./dist/esm/cli.js"
+	},
 	"devDependencies": {
 		"@changesets/cli": "^2.29.8",
 		"@rocketh/node": "0.17.15",
@@ -45,6 +50,7 @@
 	"dependencies": {
 		"@nomicfoundation/hardhat-zod-utils": "3.0.1",
 		"@types/debug": "^4.1.12",
+		"commander": "^12.1.0",
 		"debug": "^4.4.3",
 		"named-logs-console": "^0.5.1",
 		"slash": "^5.1.0",
