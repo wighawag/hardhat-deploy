@@ -138,8 +138,11 @@ const copyFolder = (
 };
 
 const generateProject = (targetFolder: string, projectName?: string): void => {
-  // Template path is at repository root, not in packages/hardhat-deploy
-  const templatePath = join(__dirname, '../../../templates/basic');
+  // Try to find template in published package first, then fall back to repository root
+  let templatePath = join(__dirname, '../templates/basic');
+  if (!existsSync(templatePath)) {
+    templatePath = join(__dirname, '../../../templates/basic');
+  }
   const gitignorePath = join(templatePath, '.gitignore');
   
   // Parse gitignore patterns

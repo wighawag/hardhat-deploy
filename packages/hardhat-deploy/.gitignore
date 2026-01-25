@@ -1,5 +1,6 @@
 dist/
 node_modules/
+templates/
 
 # the readme is copied from the monorepo root readme.md
 README.md
