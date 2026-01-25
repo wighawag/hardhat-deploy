@@ -2,12 +2,7 @@
   "mode": "pre",
   "tag": "next",
   "initialVersions": {
-    "hardhat-deploy": "1.0.0",
-    "hardhat-deploy-demoes-basic": "0.0.0",
-    "hardhat-deploy-demoes-hot-contract-replacement": "0.0.0",
-    "hardhat-deploy-demoes-diamond": "0.0.0",
-    "hardhat-deploy-demoes-proxies": "0.0.0",
-    "hardhat-deploy-for-hardhat-v2": "0.0.0"
+    "hardhat-deploy": "1.0.0"
   },
   "changesets": [
     "all-dingos-bathe",
@@ -30,6 +25,7 @@
     "floppy-cows-remain",
     "floppy-jars-rescue",
     "forty-moments-read",
+    "goofy-cougars-play",
     "hip-towns-cheat",
     "huge-planets-happen",
     "icy-teams-think",

@@ -2,4 +2,4 @@
 "hardhat-deploy": patch
 ---
 
-latest deps
+update README
