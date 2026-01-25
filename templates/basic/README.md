@@ -2,7 +2,7 @@
 
 This project showcases a Hardhat 3 project using the [hardhat-deploy](https://github.com/wighawag/hardhat-deploy) plugin (along with the [rocketh](https://github.com/wighawag/rocketh) deployment system) and the native Node.js test runner (`node:test`) .
 
-To learn more about the hardhat-deploy and rocketh, please visit the [Documentation](https://rocketh.dev).
+To learn more about hardhat-deploy and rocketh, please visit the [documentation](https://rocketh.dev).
 
 ## Project Overview
 

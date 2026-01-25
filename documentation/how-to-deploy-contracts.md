@@ -21,9 +21,9 @@ To specify the environment, you can use the builtin hardhat argument `--network 
 
 ### Deploy Scripts
 
-The deploy scripts need to call the execute function exported by `rocketh`
+deploy scripts are simple javascript/typescript modules that export a function that will be executed with the environment as argument.
 
-The execute expect as first argument a function
+and to get the most of hardhat-deploy, the way to define them is to call the `deployScript` function exported by `rocketh/deploy.js`
 
 For example this script will deploy the `GreetingsRegistry` contract
 
@@ -40,7 +40,7 @@ export default deployScript(
     });
   },
 
-  { tags: ["GreetingsRegistry", "GreetingsRegistry_deploy"] }
+  { tags: ["GreetingsRegistry", "GreetingsRegistry_deploy"] },
 );
 ```
 
@@ -102,7 +102,7 @@ const example = await deploy(
     libraries: {
       ExampleLibrary: exampleLibrary.address,
     },
-  }
+  },
 );
 ```
 

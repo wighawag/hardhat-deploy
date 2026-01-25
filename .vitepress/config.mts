@@ -49,7 +49,7 @@ export default defineConfig({
         collapsed: false,
         items: [
           {
-            text: "Overview",
+            text: "Guides",
             link: "/documentation/how-to/index",
           },
           {
@@ -109,10 +109,6 @@ export default defineConfig({
               {
                 text: "Use Viem Integration",
                 link: "/documentation/how-to/use-viem-integration",
-              },
-              {
-                text: "Configure Private Key Signing",
-                link: "/documentation/how-to/configure-private-key-signing",
               },
               {
                 text: "Verify Contracts",
