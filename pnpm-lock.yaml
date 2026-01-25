@@ -12,8 +12,8 @@ importers:
         specifier: ^2.29.8
         version: 2.29.8(@types/node@25.0.10)
       ezx:
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.0.13
+        version: 0.0.13
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -1764,8 +1764,8 @@ packages:
   extendable-error@0.1.7:
     resolution: {integrity: sha512-UOiS2in6/Q0FK0R0q6UY9vYpQ21mr/Qn1KOnte7vsACuNJf514WvCCUHSRCPcgjPT2bAhNIJdlE6bVap1GKmeg==}
 
-  ezx@0.0.12:
-    resolution: {integrity: sha512-50AJ2tdiUPekThr1H58W1jB/WGloGeTGOSmnrq1cIcVjWNHosJZTRUElHzZHVp5W4z/IUDa8SZUzvTeZmF61vQ==}
+  ezx@0.0.13:
+    resolution: {integrity: sha512-LHfQ5UXz3z357T66kq44h5XCJjQbicDbNPV8GVbS/78yOJOIuokGpGO2rIc+W+ukzyb9X60agPwp5mJKG7o5Mg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -4327,7 +4327,7 @@ snapshots:
 
   extendable-error@0.1.7: {}
 
-  ezx@0.0.12:
+  ezx@0.0.13:
     dependencies:
       commander: 14.0.2
       marked: 17.0.1
