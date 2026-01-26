@@ -5,29 +5,53 @@
 
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
-const MIGRATION_URL = 'https://rocketh.dev/hardhat-deploy/documentation/how-to/migration-from-v1';
+const MIGRATION_URL = 'https://rocketh.dev/hardhat-deploy/documentation/how-to/migration-from-v1.html';
 const V1_INSTALL_CMD = 'npm install hardhat-deploy@1';
 const MARKER_FILE = '.hardhat-deploy-v2-notice';
 
+// Find the project root by navigating up from node_modules
+function findProjectRoot(currentPath: string): string {
+	let path = currentPath;
+	
+	while (path !== '/' && path !== '') {
+		// Check if we're inside node_modules
+		if (path.includes('node_modules')) {
+			path = dirname(path);
+			continue;
+		}
+		
+		// Check if this directory has a package.json (likely project root)
+		if (existsSync(join(path, 'package.json'))) {
+			return path;
+		}
+		
+		path = dirname(path);
+	}
+	
+	// Fallback to current directory
+	return currentPath;
+}
+
 async function checkEnvironment() {
-  const projectRoot = process.cwd();
+  // Postinstall runs in the package directory, need to find the actual project root
+  const projectRoot = findProjectRoot(process.cwd());
   let v1Detected = false;
   let reasons: string[] = [];
 
   // Check for hardhat version via command line
   try {
-    const output = execSync('hardhat --version', { encoding: 'utf-8', stdio: 'pipe' });
+    const output = execSync('hardhat --version', { encoding: 'utf-8', stdio: 'pipe', cwd: projectRoot });
     // Output format is like "hardhat, version 2.x.x" or "hardhat, version 3.x.x"
-    const hardhatVersion = output.trim();
-    if (hardhatVersion.startsWith('2.')) {
-      v1Detected = true;
-      reasons.push(`hardhat ${hardhatVersion} detected (v2 requires hardhat 3.x)`);
+    const match = output.match(/hardhat, version (\d+\.\d+\.\d+)/);
+    if (match) {
+      const hardhatVersion = match[1];
+      if (hardhatVersion.startsWith('2.')) {
+        v1Detected = true;
+        reasons.push(`hardhat ${hardhatVersion} detected (v2 requires hardhat 3.x)`);
+      }
     }
   } catch (e) {
     // Hardhat not installed yet - that's fine
