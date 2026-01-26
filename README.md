@@ -3,18 +3,21 @@
   <a href="https://rocketh.dev/hardhat-deploy/">hardhat-deploy</a>
 <hr/>
 
-<!-- <img alt="Version" src="https://img.shields.io/npm/v/hardhat-deploy" /> -->
-<img alt="License" src="https://img.shields.io/github/license/wighawag/hardhat-deploy" />
-<img src="https://img.shields.io/npm/dw/hardhat-deploy" alt="weekly downloads" />
-<img alt="Dependents" src="https://img.shields.io/librariesio/dependents/npm/hardhat-deploy" />
-<img alt="Github Stars" src="https://img.shields.io/github/stars/wighawag/hardhat-deploy" />
-<!-- <img alt="Hardhat Version" src="https://img.shields.io/npm/dependency-version/hardhat-deploy/dev/hardhat"> -->
-<!-- <img alt="Node Version" src="https://img.shields.io/node/v/hardhat-deploy"> -->
-<img alt="Issues and PRs" src="https://img.shields.io/github/issues-pr/wighawag/hardhat-deploy" />
-<img alt="Tests Status" src="https://img.shields.io/github/actions/workflow/status/wighawag/hardhat-deploy/test.yml?label=test">
-<img alt="Commit activity" src="https://img.shields.io/github/commit-activity/w/wighawag/hardhat-deploy">
-<img alt="Last commit" src="https://img.shields.io/github/last-commit/wighawag/hardhat-deploy">
-<!-- <img alt="dependencies status" src="https://img.shields.io/librariesio/release/npm/hardhat-deploy" /> -->
+<!-- <a href="https://npmjs.com/package/hardhat-deploy"><img alt="Version" src="https://img.shields.io/npm/v/hardhat-deploy" /></a> -->
+
+<a href="https://github.com/wighawag/hardhat-deploy/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/wighawag/hardhat-deploy" /></a>
+<a href="https://npmjs.com/package/hardhat-deploy"><img src="https://img.shields.io/npm/dw/hardhat-deploy" alt="weekly downloads" /></a>
+<a href="https://npmjs.com/package/hardhat-deploy"><img alt="Dependents" src="https://img.shields.io/librariesio/dependents/npm/hardhat-deploy" /></a>
+
+<!-- <a href="https://github.com/wighawag/hardhat-deploy/stargazers"><img alt="Github Stars" src="https://img.shields.io/github/stars/wighawag/hardhat-deploy" /></a> -->
+<!-- <a href="https://npmjs.com/package/hardhat-deploy"><img alt="Node Version" src="https://img.shields.io/node/v/hardhat-deploy"></a> -->
+
+<a href="https://github.com/wighawag/hardhat-deploy/issues"><img alt="Issues and PRs" src="https://img.shields.io/github/issues-pr/wighawag/hardhat-deploy" /></a>
+<a href="https://github.com/wighawag/hardhat-deploy/actions"><img alt="Tests Status" src="https://img.shields.io/github/actions/workflow/status/wighawag/hardhat-deploy/test.yml?label=test" /></a>
+<a href="https://github.com/wighawag/hardhat-deploy/commits/main/"><img alt="Commit activity" src="https://img.shields.io/github/commit-activity/w/wighawag/hardhat-deploy" /></a>
+<a href="https://github.com/wighawag/hardhat-deploy/commits/main/"><img alt="Last commit" src="https://img.shields.io/github/last-commit/wighawag/hardhat-deploy" /></a>
+
+<!-- <a href="https://npmjs.com/package/hardhat-deploy"><img alt="dependencies status" src="https://img.shields.io/librariesio/release/npm/hardhat-deploy" /></a>-->
 
 </div>
 
