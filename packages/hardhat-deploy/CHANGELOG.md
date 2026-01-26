@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.68
+
+### Patch Changes
+
+- hardhat v2 detector
+
 ## 2.0.0-next.67
 
 ### Patch Changes
