@@ -110,3 +110,11 @@ Get started quickly with the [template-ethereum-contracts](https://github.com/wi
 ## License
 
 MIT
+
+## Sponsor
+
+If you find this project useful, please consider sponsoring it! Your support helps me continue developing and maintaining this tool.
+
+<a href="https://github.com/sponsors/wighawag">
+  <img src="https://img.shields.io/badge/Sponsor-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" />
+</a>
