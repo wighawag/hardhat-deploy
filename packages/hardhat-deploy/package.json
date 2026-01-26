@@ -2,6 +2,24 @@
 	"name": "hardhat-deploy",
 	"version": "2.0.0-next.66",
 	"description": "deployment plugin for hardhat",
+	"keywords": [
+		"hardhat",
+		"ethereum",
+		"solidity",
+		"deployment",
+		"test",
+		"cli"
+	],
+	"author": "Ronan Sandford",
+	"license": "MIT",
+	"homepage": "https://github.com/wighawag/hardhat-deploy#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/wighawag/hardhat-deploy.git"
+	},
+	"bugs": {
+		"url": "https://github.com/wighawag/hardhat-deploy/issues"
+	},
 	"publishConfig": {
 		"access": "public"
 	},
