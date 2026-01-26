@@ -2,7 +2,8 @@ dist/
 node_modules/
 templates/
 
-# the readme is copied from the monorepo root readme.md
+# the readme and license are copied from the monorepo root
 README.md
+LICENSE
 
 test-project
