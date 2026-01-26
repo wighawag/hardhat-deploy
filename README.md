@@ -1,3 +1,13 @@
+<div align="center">
+<img alt="Rocketh Logo" src="./public/logo.svg" width="100"><br/>
+  <a href="https://rocketh.dev/hardhat-deploy/">hardhat-deploy</a>
+<hr/>
+
+<img src="https://img.shields.io/npm/v/hardhat-deploy" alt="npm version">
+<img src="https://img.shields.io/github/license/wighawag/hardhat-deploy" alt="License">
+
+</div>
+
 <h1>hardhat-deploy</h1>
 
 _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Testing_
