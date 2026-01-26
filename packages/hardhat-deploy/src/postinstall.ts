@@ -6,7 +6,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,13 +20,11 @@ async function checkEnvironment() {
   let v1Detected = false;
   let reasons: string[] = [];
 
-  // Check for hardhat version in node_modules
+  // Check for hardhat version via command line
   try {
-    const require = createRequire(import.meta.url);
-    const hardhatPkgPath = require.resolve('hardhat/package.json', { paths: [projectRoot] });
-    const hardhatPkg = JSON.parse(readFileSync(hardhatPkgPath, 'utf-8'));
-    const hardhatVersion = hardhatPkg.version;
-
+    const output = execSync('hardhat --version', { encoding: 'utf-8', stdio: 'pipe' });
+    // Output format is like "hardhat, version 2.x.x" or "hardhat, version 3.x.x"
+    const hardhatVersion = output.trim();
     if (hardhatVersion.startsWith('2.')) {
       v1Detected = true;
       reasons.push(`hardhat ${hardhatVersion} detected (v2 requires hardhat 3.x)`);
