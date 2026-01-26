@@ -1,11 +1,20 @@
 <div align="center">
-<img alt="Rocketh Logo" src="./public/logo.svg" width="100"><br/>
+<img alt="Rocketh Logo" src="./public/logo.svg" width="100"/><br/>
   <a href="https://rocketh.dev/hardhat-deploy/">hardhat-deploy</a>
 <hr/>
 
-<img src="https://img.shields.io/npm/v/hardhat-deploy" alt="npm version">
-<img src="https://img.shields.io/github/license/wighawag/hardhat-deploy" alt="License">
-<img src="https://img.shields.io/npm/dw/hardhat-deploy" alt="weekly downloads">
+<!-- <img alt="Version" src="https://img.shields.io/npm/v/hardhat-deploy" /> -->
+<img alt="License" src="https://img.shields.io/github/license/wighawag/hardhat-deploy" />
+<img src="https://img.shields.io/npm/dw/hardhat-deploy" alt="weekly downloads" />
+<img alt="Dependents" src="https://img.shields.io/librariesio/dependents/npm/hardhat-deploy" />
+<img alt="Github Stars" src="https://img.shields.io/github/stars/wighawag/hardhat-deploy" />
+<!-- <img alt="Hardhat Version" src="https://img.shields.io/npm/dependency-version/hardhat-deploy/dev/hardhat"> -->
+<!-- <img alt="Node Version" src="https://img.shields.io/node/v/hardhat-deploy"> -->
+<img alt="Issues and PRs" src="https://img.shields.io/github/issues-pr/wighawag/hardhat-deploy" />
+<img alt="Tests Status" src="https://img.shields.io/github/actions/workflow/status/wighawag/hardhat-deploy/test.yml?label=test">
+<img alt="Commit activity" src="https://img.shields.io/github/commit-activity/w/wighawag/hardhat-deploy">
+<img alt="Last commit" src="https://img.shields.io/github/last-commit/wighawag/hardhat-deploy">
+<!-- <img alt="dependencies status" src="https://img.shields.io/librariesio/release/npm/hardhat-deploy" /> -->
 
 </div>
 
