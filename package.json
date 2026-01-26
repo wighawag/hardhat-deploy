@@ -5,7 +5,7 @@
   "type": "module",
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
-    "ezx": "^0.0.13",
+    "ezx": "^0.0.18",
     "set-defaults": "^0.0.5",
     "syncpack": "^13.0.4",
     "vitepress": "^1.6.4",
