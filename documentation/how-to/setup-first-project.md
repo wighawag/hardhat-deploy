@@ -309,6 +309,21 @@ See a template that uses them here: https://github.com/wighawag/template-ethereu
 
 ## Migrating from hardhat-deploy v1
 
+> **For a complete migration guide**, see [Migration from v1](./migration-from-v1.md)
+
+Below is a quick overview of the key differences:
+
+**Quick Reference**
+
+| Aspect         | v1 Pattern                        | v2 Pattern                                    |
+| -------------- | --------------------------------- | --------------------------------------------- |
+| Import         | `require('hardhat-deploy')`       | `import HardhatDeploy from 'hardhat-deploy'`  |
+| Config         | `module.exports`                  | `export default defineConfig({...})`          |
+| Named accounts | `namedAccounts` in hardhat.config | `rocketh/config.ts`                           |
+| Deploy         | `deployments.deploy(name, {...})` | `deploy(name, {account: ..., artifact: ...})` |
+
+### Example Comparison
+
 in v1 you would create a deploy file like this:
 
 ```typescript skip

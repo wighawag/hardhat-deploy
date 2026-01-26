@@ -60,6 +60,10 @@ export default defineConfig({
                 text: "Set Up Your First Project",
                 link: "/documentation/how-to/setup-first-project",
               },
+                {
+                text: "Set Up Your First Project",
+                link: "/documentation/how-to/migration-from-v1",
+              },
               {
                 text: "Configure Network Helpers",
                 link: "/documentation/how-to/configure-network-helpers",
