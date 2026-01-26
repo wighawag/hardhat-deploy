@@ -32,7 +32,8 @@
 			"import": {
 				"types": "./dist/index.d.ts",
 				"default": "./dist/index.js"
-			}
+			},
+			"require": "./dist/v1-entry.cjs"
 		},
 		"./helpers": {
 			"import": {
@@ -80,7 +81,8 @@
 	"scripts": {
 		"prepublishOnly": "node scripts/copy-cleaned-template.js && cp ../../README.md ./ && cp ../../LICENSE ./",
 		"prepare": "pnpm build",
-		"build": "tsc --project tsconfig.json",
-		"dev": "as-soon -w src pnpm build"
+		"build": "tsc --project tsconfig.json && cp src/v1-entry.cjs dist/",
+		"dev": "as-soon -w src pnpm build",
+		"postinstall": "node ./dist/postinstall.js"
 	}
 }
