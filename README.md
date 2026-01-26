@@ -3,8 +3,9 @@
   <a href="https://rocketh.dev/hardhat-deploy/">hardhat-deploy</a>
 <hr/>
 
-<img src="https://img.shields.io/npm/v/hardhat-deploy@next" alt="npm version">
-<img src="https://img.shields.io/github/license/wighawag/hardhat-deploy@next" alt="License">
+<img src="https://img.shields.io/npm/v/hardhat-deploy" alt="npm version">
+<img src="https://img.shields.io/github/license/wighawag/hardhat-deploy" alt="License">
+<img src="https://img.shields.io/npm/dw/hardhat-deploy" alt="weekly downloads">
 
 </div>
 
