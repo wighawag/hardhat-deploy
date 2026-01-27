@@ -71,11 +71,9 @@
 	},
 	"dependencies": {
 		"@nomicfoundation/hardhat-zod-utils": "3.0.1",
-		"@types/debug": "^4.1.12",
 		"commander": "^14.0.2",
-		"debug": "^4.4.3",
+		"named-logs": "^0.4.1",
 		"named-logs-console": "^0.5.1",
-		"slash": "^5.1.0",
 		"zod": "^4.3.6"
 	},
 	"scripts": {

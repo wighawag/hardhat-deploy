@@ -1,11 +1,8 @@
 import type {ArtifactGenerationConfig} from './types.js';
-import debug from 'debug';
 import fs from 'node:fs';
-import path, {basename, dirname} from 'node:path';
-import slash from 'slash';
-import {FileTraversed, traverse} from './utils/files.js';
+import path from 'node:path';
+import {FileTraversed, slash, traverse} from './utils/files.js';
 
-const log = debug('hardhat-deploy:generate-types');
 
 function writeIfDifferent(filePath: string, newTextContent: string) {
 	// Ensure we're working with a string
