@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.71
+
+### Patch Changes
+
+- ac6ab32: dependencies cleanup
+
 ## 2.0.0-next.70
 
 ### Patch Changes
