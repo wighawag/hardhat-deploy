@@ -61,7 +61,7 @@ export default defineConfig({
                 link: "/documentation/how-to/setup-first-project",
               },
                 {
-                text: "Set Up Your First Project",
+                text: "Migrate from v1",
                 link: "/documentation/how-to/migration-from-v1",
               },
               {
