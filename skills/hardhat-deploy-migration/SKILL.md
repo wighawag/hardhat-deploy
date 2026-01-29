@@ -1991,17 +1991,17 @@ pnpm hardhat deploy --network <network> --reset
 ### Official Documentation
 
 - [hardhat-deploy v2 Documentation](https://rocketh.dev/hardhat-deploy/)
-- [Setup First Project Guide](../documentation/how-to/setup-first-project.md)
-- [Migration from v1 Guide](../documentation/how-to/migration-from-v1.md)
+- [Setup First Project Guide](https://rocketh.dev/hardhat-deploy/documentation/how-to/setup-first-project.md)
+- [Migration from v1 Guide](https://rocketh.dev/hardhat-deploy/documentation/how-to/migration-from-v1.md)
 - [Hardhat 3.x Documentation](https://hardhat.org/docs/upgrades)
 - [Rocketh Documentation](https://github.com/wighawag/rocketh)
 
 ### Example Projects
 
 - [template-ethereum-contracts](https://github.com/wighawag/template-ethereum-contracts) - Complete working example using v2
-- [Basic Demo](../../demoes/basic/)
-- [Diamond Demo](../../demoes/diamond/)
-- [Proxies Demo](../../demoes/proxies/)
+- [Basic Demo](https://github.com/wighawag/hardhat-deploy/tree/main/demoes/basic)
+- [Diamond Demo](https://github.com/wighawag/hardhat-deploy/tree/main/demoes/diamond)
+- [Proxies Demo](https://github.com/wighawag/hardhat-deploy/tree/main/demoes/proxies)
 
 ### Community
 

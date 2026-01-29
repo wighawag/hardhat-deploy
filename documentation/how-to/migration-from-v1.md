@@ -1366,9 +1366,9 @@ Use this checklist to verify your migration is complete and working correctly.
 ### Example Projects
 
 - [template-ethereum-contracts](https://github.com/wighawag/template-ethereum-contracts) - Complete working example using v2
-- [Basic Demo](../../demoes/basic/)
-- [Diamond Demo](../../demoes/diamond/)
-- [Proxies Demo](../../demoes/proxies/)
+- [Basic Demo](https://github.com/wighawag/hardhat-deploy/tree/main/demoes/basic)
+- [Diamond Demo](https://github.com/wighawag/hardhat-deploy/tree/main/demoes/diamond)
+- [Proxies Demo](https://github.com/wighawag/hardhat-deploy/tree/main/demoes/proxies)
 
 ### Community
 
