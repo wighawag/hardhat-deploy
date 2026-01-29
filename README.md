@@ -103,6 +103,10 @@ export default deployScript(
 
 Please find the [full documentation here](https://rocketh.dev/hardhat-deploy/)
 
+### AI-Assisted Migration
+
+If you're migrating from hardhat-deploy v1 to v2 and want to use AI to help with the process, check out our [SKILL.md](https://github.com/wighawag/hardhat-deploy/blob/main/skills/hardhat-deploy-migration/SKILL.md) file. This comprehensive guide is designed for AI assistants and includes detailed instructions for systematic migration, code transformation rules, and troubleshooting guidance.
+
 ## Template
 
 Get started quickly with the [template-ethereum-contracts](https://github.com/wighawag/template-ethereum-contracts) template that provides a production-ready setup with hardhat-deploy and rocketh.
