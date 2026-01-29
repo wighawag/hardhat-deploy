@@ -203,7 +203,9 @@ Update your `package.json` to use Hardhat 3.x and hardhat-deploy v2:
     "@rocketh/read-execute": "^0.17.9",
     "@rocketh/node": "^0.17.18",
     "@rocketh/proxy": "^0.17.13",
+    "@rocketh/signer": "^0.17.9",
     "viem": "^2.45.0",
+    "earl": "^2.0.0",
     "@nomicfoundation/hardhat-viem": "^3.0.1",
     "@nomicfoundation/hardhat-node-test-runner": "^3.0.8",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.3",
@@ -218,10 +220,11 @@ Update your `package.json` to use Hardhat 3.x and hardhat-deploy v2:
 2. Update `hardhat` to `^3.1.4` or higher
 3. Update `hardhat-deploy` to `^2.0.0-next.66` or higher
 4. Remove `hardhat-deploy-ethers` and `hardhat-deploy-tenderly`
-5. Add rocketh packages: `rocketh`, `@rocketh/deploy`, `@rocketh/read-execute`, `@rocketh/node`
+5. Add rocketh packages: `rocketh`, `@rocketh/deploy`, `@rocketh/read-execute`, `@rocketh/node`, `@rocketh/signer`
 6. Add optional packages: `@rocketh/proxy`, `@rocketh/export`, `@rocketh/verifier`, `@rocketh/doc`
 7. Add `viem` for contract interactions
-8. Add Hardhat 3.x plugins
+8. Add `earl` for assertions (for node:test)
+9. Add Hardhat 3.x plugins
 
 **Install dependencies**:
 
@@ -399,6 +402,98 @@ export default config;
 7. Remove `mocha` timeout configuration (not needed in v2)
 8. Remove `external.deployments` configuration (handled differently)
 9. Delete `utils/network.ts` file (no longer needed)
+
+#### 2.5 Update tsconfig.json for ESM
+
+**v1 tsconfig.json example:**
+
+```json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist"
+  },
+  "include": [
+    "hardhat.config.ts",
+    "./scripts",
+    "./deploy",
+    "./test",
+    "typechain/**/*"
+  ]
+}
+```
+
+**v2 tsconfig.json example:**
+
+```json
+{
+  "compilerOptions": {
+    "lib": ["es2023"],
+    "module": "node16",
+    "target": "es2022",
+    "moduleResolution": "node16",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "dist",
+    "rootDir": "."
+  },
+  "include": ["deploy", "generated"]
+}
+```
+
+**Create scripts/tsconfig.json:**
+
+```json
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".."
+  },
+  "include": ["**/*", "../generated/**/*", "../rocketh/**/*"],
+  "exclude": []
+}
+```
+
+**Create test/tsconfig.json:**
+
+```json
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".."
+  },
+  "include": [
+    "**/*",
+    "../generated/**/*",
+    "../rocketh/**/*",
+    "../hardhat.config.ts"
+  ],
+  "exclude": []
+}
+```
+
+**Transformation Rules for tsconfig.json**:
+
+1. Update `module` from `commonjs` to `node16`
+2. Update `target` from `es5` to `es2022`
+3. Update `moduleResolution` from `node` to `node16`
+4. Add `lib: ["es2023"]`
+5. Add `skipLibCheck: true`
+6. Add `sourceMap: true`, `declaration: true`, `declarationMap: true`
+7. Change `include` to only `["deploy", "generated"]`
+8. Create `scripts/tsconfig.json` extending the main config
+9. Create `test/tsconfig.json` extending the main config
 
 #### 2.2 Create rocketh/config.ts
 
@@ -1571,6 +1666,9 @@ Use this checklist to verify your migration is complete and working correctly.
 - [ ] Added optional packages: `@rocketh/export`, `@rocketh/verifier`, `@rocketh/doc`
 - [ ] Added `viem` package
 - [ ] Added Hardhat 3.x plugins
+- [ ] Updated `tsconfig.json` for ESM (module: "node16", moduleResolution: "node16")
+- [ ] Created `scripts/tsconfig.json` with extended configuration
+- [ ] Created `test/tsconfig.json` with extended configuration
 - [ ] Ran `pnpm install` successfully
 
 ### Phase 2: Configuration
