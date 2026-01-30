@@ -48,4 +48,10 @@ export interface Environment<
 }
 ```
 
-The environment is expanded by each rocketh module you import. For example, `@rocketh/deploy` adds a `deploy` function, and `@rocketh/read-execute` adds `read` and `execute` functions.
+The environment is expanded by each rocketh module you import. For example:
+
+- **`@rocketh/deploy`** adds the `deploy` function
+- **`@rocketh/read-execute`** adds `read`, `execute`, `readByName`, `executeByName`, and `tx` functions
+- **`@rocketh/proxy`** adds the `deployViaProxy` function
+- **`@rocketh/diamond`** adds the `diamond` function
+- **`@rocketh/viem`** adds the `viem` property with `getContract`, `getWritableContract`, `publicClient`, and `walletClient`

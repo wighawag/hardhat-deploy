@@ -13,6 +13,7 @@ For example:
 
 ```js
 import type {UserConfig} from 'rocketh/types';
+
 export const config = {
 	accounts: {
 		deployer: {
@@ -23,13 +24,27 @@ export const config = {
 			default: 1,
 		},
 	},
+  data: {},
 } as const satisfies UserConfig;
 
-import * as artifacts from './generated/artifacts.js';
-export {artifacts};
+// Import extensions you want to use in your deploy scripts
+import * as deployExtension from '@rocketh/deploy';
+import * as readExecuteExtension from '@rocketh/read-execute';
+
+const extensions = {
+  ...deployExtension,
+  ...readExecuteExtension,
+};
+export {extensions};
+
+// Export types for use in other files
+type Extensions = typeof extensions;
+type Accounts = typeof config.accounts;
+type Data = typeof config.data;
+export type {Extensions, Accounts, Data};
 ```
 
-This config file imports modules too so that deploy scripts can simply import `rocketh/config.ts` to have access to artifacts and specific functions.
+This config file imports extensions so that deploy scripts can access specific functions like `deploy`, `read`, and `execute`. Artifacts are imported in `rocketh/deploy.ts`, not in config.ts.
 
 The named account feature allows you to define accounts by name and have them configurable by environment.
 

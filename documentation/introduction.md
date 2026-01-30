@@ -29,13 +29,15 @@ Version 2 is a full rewrite that has been used in production for several years. 
 
 Under the hood, hardhat-deploy uses [rocketh](https://github.com/wighawag/rocketh), a framework-agnostic system that provides a minimal API to save and load deployments. Everything else is handled by external modules:
 
-| Module                  | Description                                            |
-| ----------------------- | ------------------------------------------------------ |
-| `@rocketh/deploy`       | Provides a `deploy` function to deploy contracts       |
-| `@rocketh/proxy`        | Deploy proxies declaratively like in hardhat-deploy v1 |
-| `@rocketh/diamond`      | Deploy diamonds declaratively                          |
-| `@rocketh/read-execute` | Helpers for reading and executing transactions         |
-| `@rocketh/viem`         | viem client integration                                |
+| Module                  | Description                                                        |
+| ----------------------- | ------------------------------------------------------------------ |
+| `@rocketh/deploy`       | Provides a `deploy()` function to deploy contracts                 |
+| `@rocketh/proxy`        | `deployViaProxy()` for upgradeable contracts                       |
+| `@rocketh/diamond`      | `diamond()` for EIP-2535 Diamond deployments                       |
+| `@rocketh/read-execute` | `read()`, `execute()`, `readByName()`, `executeByName()`, `tx()`   |
+| `@rocketh/viem`         | Viem client integration with `getContract()`, `getWritableContract()` |
+| `@rocketh/export`       | Export deployments to JS/TS/JSON formats                           |
+| `@rocketh/verifier`     | Verify contracts on Etherscan, Sourcify, or Blockscout             |
 
 You can also provide your own modules for advanced use cases.
 
