@@ -29,13 +29,13 @@ Version 2 is a full rewrite that has been used in production for several years. 
 
 Under the hood, hardhat-deploy uses [rocketh](https://github.com/wighawag/rocketh), a framework-agnostic system that provides a minimal API to save and load deployments. Everything else is handled by external modules:
 
-| Module | Description |
-|--------|-------------|
-| `@rocketh/deploy` | Provides a `deploy` function to deploy contracts |
-| `@rocketh/proxy` | Deploy proxies declaratively like in hardhat-deploy v1 |
-| `@rocketh/diamond` | Deploy diamonds declaratively |
-| `@rocketh/read-execute` | Helpers for reading and executing transactions |
-| `@rocketh/viem` | viem client integration |
+| Module                  | Description                                            |
+| ----------------------- | ------------------------------------------------------ |
+| `@rocketh/deploy`       | Provides a `deploy` function to deploy contracts       |
+| `@rocketh/proxy`        | Deploy proxies declaratively like in hardhat-deploy v1 |
+| `@rocketh/diamond`      | Deploy diamonds declaratively                          |
+| `@rocketh/read-execute` | Helpers for reading and executing transactions         |
+| `@rocketh/viem`         | viem client integration                                |
 
 You can also provide your own modules for advanced use cases.
 
@@ -44,7 +44,3 @@ You can also provide your own modules for advanced use cases.
 To get started with hardhat-deploy, see the [Installation Guide](./installation.md), or jump straight into learning [How to Deploy Contracts](./how-to-deploy-contracts.md).
 
 For a production-ready setup, check out the [template-ethereum-contracts](https://github.com/wighawag/template-ethereum-contracts) template.
-
-### AI-Assisted Development
-
-For users interested in using AI to help with development tasks, we provide a comprehensive [SKILL.md](https://github.com/wighawag/hardhat-deploy/blob/main/skills/hardhat-deploy-migration/SKILL.md) file designed specifically for AI assistants. This guide contains detailed instructions and patterns that AI tools can use to understand and work with hardhat-deploy effectively, including migration from v1 to v2, configuration setup, and troubleshooting.
