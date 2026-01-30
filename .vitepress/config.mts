@@ -142,7 +142,7 @@ export default defineConfig({
 
   base: process.env.VITEPRESS_BASE || undefined,
 
-  srcExclude: ["packages/*", "demoes/*"],
+  srcExclude: ["packages/*", "demoes/*", "./AGENTS.md"],
 
   // rewrites(id) {
   //   // console.log({ id });
