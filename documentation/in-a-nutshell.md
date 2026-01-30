@@ -2,8 +2,7 @@
 
 Before going into the details, here is a very simple summary of the basic feature of **hardhat-deploy**.
 
-**hardhat-deploy** allows you to write [`deploy scripts`](#deploy-scripts) in the `deploy` folder. Each of these files that look as follows will be executed in turn when you execute the following task: `hardhat --network <environmentName> deploy`
-
+**hardhat-deploy** allows you to write `deploy scripts` in the `deploy` folder. Each of these files that look as follows will be executed in turn when you execute the following task: `hardhat --network <environmentName> deploy`
 
 Note that while hardhat call "network "the environment on which the contract will be deployed, multiple network can point to the same chain. We thus prefers to call them "environment"
 
@@ -31,11 +30,11 @@ export default deployScript(
           prefix,
           admin,
         },
-      }
+      },
     );
   },
   // execute takes as a second argument an options object where you can specify tags and dependencies
-  { tags: ["GreetingsRegistry", "GreetingsRegistry_deploy"] }
+  { tags: ["GreetingsRegistry", "GreetingsRegistry_deploy"] },
 );
 ```
 

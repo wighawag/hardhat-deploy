@@ -371,7 +371,7 @@ export default deployScript(
 );
 ```
 
-and you would have a `rocketh/config.ts` file as described in the [Setup](#setup)
+and you would have a `rocketh/config.ts` file as described above.
 
 ### Migrating existing deployment to hardhat-deploy
 
@@ -381,7 +381,7 @@ and you would have a `rocketh/config.ts` file as described in the [Setup](#setup
 
 You might want to switch your current deployment process to use **hardhat-deploy**. In that case you probably have some deployments saved elsewhere.
 
-In order to port them to **hardhat-deploy**, you'll need to create one `.json` file per contract in the `deployments/<environment>` folder (configurable via [paths config](#extra-paths-config)).
+In order to port them to **hardhat-deploy**, you'll need to create one `.json` file per contract in the `deployments/<environment>` folder.
 
 The environment folder is simply the hardhat network name (as configured in hardhat.config.js).
 Such folder need to have a file named `.chain` containing both the chainId as decimal and the genesisHash.
