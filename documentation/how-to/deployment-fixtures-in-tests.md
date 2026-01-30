@@ -19,6 +19,8 @@ Create a test utilities file to set up fixtures:
 ```typescript
 // test/utils/index.ts
 import { EthereumProvider } from "hardhat/types/providers";
+import { loadAndExecuteDeploymentsFromFiles } from "../../rocketh/environment.js";
+import * as artifacts from "../../generated/artifacts/index.js";
 
 export function setupFixtures(provider: EthereumProvider) {
   return {
@@ -39,7 +41,6 @@ export function setupFixtures(provider: EthereumProvider) {
     },
   };
 }
-
 ```
 
 ### Basic Test Structure

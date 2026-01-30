@@ -56,19 +56,33 @@ In any case, as a general advice every deploy function should be idempotent. Thi
 
 This is why the `deploy` function provided by `@rocketh/deploy` will by default only deploy if the contract code has changed, making it easier to write idempotent script.
 
-### Environment and function provided by rocketh modules
+### Environment and functions provided by rocketh modules
 
-By default rocketh environment only provide function to read and write deployments. It has no `deploy` function on its own.
+By default the rocketh environment only provides functions to read and write deployments. It has no `deploy` function on its own.
 
-These are provided by external modules but few are already available like `@rocketh/deploy`, `@rocketh/proxy` and `@rocketh/diamond` each with its own specific use case.
+These are provided by external modules. Several are already available:
 
 #### `@rocketh/deploy`
 
+Provides the basic `deploy()` function for deploying contracts. This is the most commonly used extension.
+
+```typescript
+await deploy("MyContract", {
+  account: deployer,
+  artifact: artifacts.MyContract,
+  args: ["arg1", "arg2"],
+});
+```
+
 #### `@rocketh/proxy`
+
+Provides `deployViaProxy()` for deploying upgradeable contracts using proxy patterns. See [Deploy with Proxies](./how-to/deploy-with-proxies.md) for detailed usage.
 
 #### `@rocketh/diamond`
 
-## Handling contract using libraries
+Provides `diamond()` for deploying EIP-2535 Diamond contracts with facets. See [Deploy Diamond Contracts](./how-to/deploy-diamond-contracts.md) for detailed usage.
+
+## Handling contracts using libraries
 
 In the deploy function, one of the `DeployOptions` field is the `libraries` field. It allows you to associate external contract as libraries at the time of deployment.
 
@@ -77,11 +91,10 @@ First, you have deploy the library using the `deploy` function, then when we dep
 First step: deploy the library:
 
 ```js
-const exampleLibrary = await deploy("ExampleLibary", {
-  artifact: artifacts.ExampleLibary,
-    from: <deployer>
+const exampleLibrary = await deploy("ExampleLibrary", {
+  artifact: artifacts.ExampleLibrary,
+  account: deployer,
 });
-
 ```
 
 ExampleLibrary is now deployed to whatever environment was chosen (`hardhat deploy --network <environment-name>`)
