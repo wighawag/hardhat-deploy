@@ -115,6 +115,8 @@ export default deployScript(
 Access the viem public client for network operations:
 
 ```typescript
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async (env) => {
     const { deployer } = env.namedAccounts;
@@ -151,6 +153,8 @@ export default deployScript(
 Use the type-safe contract instance for reading:
 
 ```typescript
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async (env) => {
     const { deployer } = env.namedAccounts;
@@ -183,6 +187,8 @@ export default deployScript(
 **Important**: For transaction execution, use `env.execute()` instead of direct viem calls. The `@rocketh/read-execute` extension keeps track of pending transactions, while viem client will not.
 
 ```typescript
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async (env) => {
     const { deployer, admin } = env.namedAccounts;

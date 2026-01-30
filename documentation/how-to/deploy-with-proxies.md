@@ -51,6 +51,8 @@ hardhat-deploy supports several proxy patterns:
 ### Transparent Proxy
 
 ```typescript
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deployViaProxy, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;
@@ -75,6 +77,8 @@ export default deployScript(
 ### UUPS Proxy
 
 ```typescript
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deployViaProxy, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;
@@ -120,8 +124,10 @@ When you modify your contract and redeploy, hardhat-deploy automatically detects
 You can also check if an upgrade is needed before deploying:
 
 ```typescript
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
-  async ({ deployViaProxy, namedAccounts, get }) => {
+  async ({ deployViaProxy, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;
 
     const result = await deployViaProxy(
@@ -154,6 +160,8 @@ export default deployScript(
 For contracts that need initialization after deployment:
 
 ```typescript
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deployViaProxy, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;

@@ -59,6 +59,8 @@ Ensure scripts run in the correct order:
 
 ```typescript
 // deploy/001_deploy_token.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
     // Deploy token first
@@ -68,12 +70,14 @@ export default deployScript(
 );
 
 // deploy/002_deploy_governance.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
     // This runs after token deployment
     await deploy("Governance", { /* ... */ });
   },
-  { 
+  {
     tags: ["Governance", "governance"],
     dependencies: ["MyToken"] // Wait for MyToken tag to complete
   }
@@ -86,11 +90,13 @@ Handle multiple dependencies:
 
 ```typescript
 // deploy/003_deploy_staking.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
     await deploy("Staking", { /* ... */ });
   },
-  { 
+  {
     tags: ["Staking"],
     dependencies: ["MyToken", "Governance"] // Wait for both
   }
@@ -103,6 +109,8 @@ export default deployScript(
 
 ```typescript
 // deploy/001_deploy_token.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;
@@ -115,8 +123,12 @@ export default deployScript(
   },
   { tags: ["ProtocolToken", "tokens", "core"] }
 );
+```
 
+```typescript
 // deploy/002_deploy_treasury.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer, treasury } = namedAccounts;
@@ -129,8 +141,12 @@ export default deployScript(
   },
   { tags: ["Treasury", "core"] }
 );
+```
 
+```typescript
 // deploy/003_deploy_staking.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts, get }) => {
     const { deployer } = namedAccounts;
@@ -143,13 +159,17 @@ export default deployScript(
       args: [token.address, treasury.address],
     });
   },
-  { 
+  {
     tags: ["Staking", "defi"],
     dependencies: ["ProtocolToken", "Treasury"]
   }
 );
+```
 
+```typescript
 // deploy/004_deploy_governance.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts, get }) => {
     const { deployer } = namedAccounts;
@@ -161,7 +181,7 @@ export default deployScript(
       args: [token.address],
     });
   },
-  { 
+  {
     tags: ["Governance", "dao"],
     dependencies: ["ProtocolToken"]
   }
@@ -188,14 +208,20 @@ npx hardhat deploy
 
 ```typescript
 // deploy/001_deploy_nft.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
     await deploy("MyNFT", { /* ... */ });
   },
   { tags: ["MyNFT", "nft", "core"] }
 );
+```
 
+```typescript
 // deploy/002_deploy_marketplace.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts, get }) => {
     const nft = get("MyNFT");
@@ -205,13 +231,17 @@ export default deployScript(
       args: [nft.address],
     });
   },
-  { 
+  {
     tags: ["Marketplace", "trading"],
     dependencies: ["MyNFT"]
   }
 );
+```
 
+```typescript
 // deploy/003_deploy_auction.ts
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ deploy, namedAccounts, get }) => {
     const nft = get("MyNFT");
@@ -222,7 +252,7 @@ export default deployScript(
       args: [nft.address, marketplace.address],
     });
   },
-  { 
+  {
     tags: ["Auction", "trading"],
     dependencies: ["MyNFT", "Marketplace"]
   }

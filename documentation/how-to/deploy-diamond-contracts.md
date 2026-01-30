@@ -40,6 +40,8 @@ Diamond contracts consist of:
 ### Simple Diamond with Facets
 
 ```typescript
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ diamond, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;
@@ -73,6 +75,8 @@ export default deployScript(
 When you modify a facet or add new ones, hardhat-deploy generates the appropriate `diamondCut` automatically:
 
 ```typescript
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+
 export default deployScript(
   async ({ diamond, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;
