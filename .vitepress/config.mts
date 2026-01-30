@@ -3,7 +3,31 @@ import { defineConfig } from "vitepress";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "hardhat-deploy",
-  description: "A deployment system for EVM Smart Contracts",
+  description: "A Hardhat Plugin For Replicable Deployments And Easy Testing",
+  head: [
+		['link', {rel: 'icon', href: 'https://rocketh.dev/hardha-deploy/icon.png'}],
+		['meta', {name: 'theme-color', content: '#000000'}],
+
+		['meta', {name: 'og:url', content: 'https://rocketh.dev/hardha-deploy'}],
+		['meta', {name: 'og:title', content: 'hardhat-deploy'}],
+		['meta', {name: 'og:description', content: 'A Hardhat Plugin For Replicable Deployments And Easy Testing'}],
+		['meta', {name: 'og:type', content: 'website'}],
+		['meta', {name: 'og:locale', content: 'en'}],
+		['meta', {name: 'og:site_name', content: 'hardhat-deploy'}],
+		['meta', {name: 'og:image', content: 'https://rocketh.dev/hardha-deploy/preview.png'}],
+
+		['meta', {name: 'twitter:url', content: 'https://rocketh.dev/hardha-deploy'}],
+		['meta', {name: 'twitter:title', content: 'hardhat-deploy'}],
+		['meta', {name: 'twitter:description', content: 'A Hardhat Plugin For Replicable Deployments And Easy Testing'}],
+		['meta', {name: 'twitter:card', content: 'summary_large_image'}],
+		[
+			'meta',
+			{
+				name: 'twitter:image',
+				content: 'https://rocketh.dev/hardha-deploy/preview.png',
+			},
+		],
+	],
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
