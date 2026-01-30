@@ -11,6 +11,23 @@ hardhat-deploy v2 is a complete rewrite that requires Hardhat 3.x and introduces
 
 > **Note**: For complete working examples, see the [template-ethereum-contracts](https://github.com/wighawag/template-ethereum-contracts) repository which demonstrates a full hardhat-deploy v2 setup.
 
+## AI-Assisted Migration
+
+For users interested in using AI to help with the migration process, we provide a comprehensive [SKILL.md](https://github.com/wighawag/hardhat-deploy/blob/main/skills/hardhat-deploy-migration/SKILL.md) file designed specifically for AI assistants. This guide contains detailed instructions and patterns that AI tools can use to understand and execute the migration systematically.
+
+The SKILL file includes:
+- Step-by-step migration procedures with code examples
+- Common patterns and transformation rules
+- Troubleshooting guidance
+- Architecture comparisons between v1 and v2
+- Best practices for AI-assisted development
+
+You can share this file with your AI assistant to get help with:
+- Converting configuration files
+- Updating deploy scripts
+- Migrating test fixtures
+- Troubleshooting migration issues
+
 ## Quick Reference
 
 | Aspect | v1 Pattern | v2 Pattern |
