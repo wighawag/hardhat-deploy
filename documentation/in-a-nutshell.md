@@ -12,7 +12,7 @@ import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
   // this allow us to define our deploy function which takes as first argument an environment object
-  // This contains the function provided by the modules imported in 'rocketh.ts'
+  // This contains the function provided by the modules imported in 'rocketh/config.ts'
   // along with other built-in functions and the named accounts
   async ({ deployViaProxy, namedAccounts }) => {
     const { deployer, admin } = namedAccounts;
@@ -41,8 +41,8 @@ export default deployScript(
 
 Furthermore you can also ensure these scripts are executed in test too by calling `await loadAndExecuteDeployments({provider: provider,});` in your tests.
 
-Amd you can call these in hardhat test fixture to benefit from caching optimization.
+And you can call these in hardhat test fixture to benefit from caching optimization.
 
-This is a huge benefit for testing since you are not required to replicate the deployment procedure in your tests. 
+This is a huge benefit for testing since you are not required to replicate the deployment procedure in your tests.
 
 You can even group deploy scripts in different sub-folders and ensure they are executed in their logical order.

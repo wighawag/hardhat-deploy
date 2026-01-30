@@ -8,7 +8,7 @@ Instead of using `accounts[0]`, `accounts[1]`, etc., you can use meaningful name
 
 ## Basic Configuration
 
-Configure named accounts in your `rocketh.ts` file:
+Configure named accounts in your `rocketh/config.ts` file:
 
 ```typescript
 import type {UserConfig} from 'rocketh/types';
@@ -62,7 +62,7 @@ Access named accounts in your deploy scripts:
 import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
-  async ({ deploy, namedAccounts }) => {
+  async ({ deploy, execute, namedAccounts }) => {
     const { deployer, admin, treasury } = namedAccounts;
 
     // Deploy contract with deployer account

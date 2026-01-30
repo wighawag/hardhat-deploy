@@ -60,7 +60,7 @@ export default defineConfig({
                 text: "Set Up Your First Project",
                 link: "/documentation/how-to/setup-first-project",
               },
-                {
+              {
                 text: "Migrate from v1",
                 link: "/documentation/how-to/migration-from-v1",
               },

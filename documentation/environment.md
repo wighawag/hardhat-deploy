@@ -48,4 +48,4 @@ export interface Environment<
 }
 ```
 
-And it is expanded by each module you import like `@rocketh/deploy` which adds a deploy function
+The environment is expanded by each rocketh module you import. For example, `@rocketh/deploy` adds a `deploy` function, and `@rocketh/read-execute` adds `read` and `execute` functions.

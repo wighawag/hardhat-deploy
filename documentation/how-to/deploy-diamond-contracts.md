@@ -68,7 +68,68 @@ export default deployScript(
 );
 ```
 
+## Upgrading Diamonds
 
+When you modify a facet or add new ones, hardhat-deploy generates the appropriate `diamondCut` automatically:
+
+```typescript
+export default deployScript(
+  async ({ diamond, namedAccounts }) => {
+    const { deployer, admin } = namedAccounts;
+
+    // When you add/modify facets, hardhat-deploy will:
+    // - Detect new facets and add them
+    // - Detect modified facets and replace them
+    // - Detect removed facets and remove them
+    await diamond(
+      "GreetingsRegistry",
+      {
+        account: deployer,
+      },
+      {
+        facets: [
+          { artifact: artifacts.GetMessageFacet },
+          { artifact: artifacts.SetMessageFacet },
+          { artifact: artifacts.NewFeatureFacet }, // New facet added
+        ],
+        facetsArgs: [
+          {
+            prefix: "Hello, ",
+            num: 2, // Updated argument
+          },
+        ],
+        owner: admin,
+      }
+    );
+  },
+  { tags: ["GreetingsRegistry", "diamond"] }
+);
+```
+
+## Diamond Storage Pattern
+
+When writing facets, use the diamond storage pattern to avoid storage collisions:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+library GreetingsStorage {
+    bytes32 constant STORAGE_POSITION = keccak256("greetings.storage");
+
+    struct Storage {
+        string prefix;
+        mapping(address => string) messages;
+    }
+
+    function get() internal pure returns (Storage storage s) {
+        bytes32 position = STORAGE_POSITION;
+        assembly {
+            s.slot := position
+        }
+    }
+}
+```
 
 ## Next Steps
 

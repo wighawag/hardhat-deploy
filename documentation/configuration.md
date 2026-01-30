@@ -3,13 +3,13 @@
 
 Configuration of hardhat's network or other hardhat specific config is done via hardhat.config.ts
 
-Else rocketh.ts/js is where you can configure hardhat-deploy/rocketh specific configs.
+The `rocketh/config.ts` file is where you configure hardhat-deploy/rocketh specific configs.
 
 ### **1. namedAccounts (ability to name addresses)**
 
-The rocketh.js file need to export a config object
+The `rocketh/config.ts` file needs to export a config object.
 
-For example
+For example:
 
 ```js
 import type {UserConfig} from 'rocketh/types';
@@ -29,13 +29,13 @@ import * as artifacts from './generated/artifacts.js';
 export {artifacts};
 ```
 
-This config file import modules too so that deploy script can simply import rocketh.js to have access to artifacts and specific  functions
+This config file imports modules too so that deploy scripts can simply import `rocketh/config.ts` to have access to artifacts and specific functions.
 
-The named account feature allow you to define accounts by name and have them configurable by environment
+The named account feature allows you to define accounts by name and have them configurable by environment.
 
-In the above file, the deployer is set to be the first account on all environment, except for sepolia where it is the second
+In the above file, the deployer is set to be the first account on all environments, except for sepolia where it is the second.
 
-### **4. deterministicDeployment (ability to specify a deployment factory)**
+### **2. deterministicDeployment (ability to specify a deployment factory)**
 
 ---
 

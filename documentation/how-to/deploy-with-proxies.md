@@ -18,13 +18,14 @@ pnpm add -D @rocketh/proxy
 
 :::
 
-Add it to your `rocketh.ts`:
+Add it to your `rocketh/config.ts`:
 
 ```typescript
 import * as proxyExtensions from '@rocketh/proxy';
 import * as deployExtensions from '@rocketh/deploy';
 
 const extensions = {...deployExtensions, ...proxyExtensions};
+export {extensions};
 ```
 
 ## Proxy Types
@@ -100,8 +101,51 @@ export default deployScript(
 
 ### Upgrading Implementation
 
-When you modify your contract and redeploy, hardhat-deploy automatically detects changes and upgrades:
+When you modify your contract and redeploy, hardhat-deploy automatically detects changes and upgrades the implementation:
 
+```typescript
+// After modifying your contract source code:
+// 1. Recompile: npx hardhat compile
+// 2. Redeploy: npx hardhat deploy
+
+// hardhat-deploy will:
+// - Detect that the implementation bytecode has changed
+// - Deploy a new implementation contract
+// - Call upgradeToAndCall (or upgrade) on the proxy
+// - Keep the same proxy address and storage
+```
+
+### Checking for Upgrades
+
+You can also check if an upgrade is needed before deploying:
+
+```typescript
+export default deployScript(
+  async ({ deployViaProxy, namedAccounts, get }) => {
+    const { deployer, admin } = namedAccounts;
+
+    const result = await deployViaProxy(
+      "MyContract",
+      {
+        account: deployer,
+        artifact: artifacts.MyContract,
+        args: ["initialValue"],
+      },
+      {
+        owner: admin,
+        proxyContract: "SharedAdminOptimizedTransparentProxy",
+      }
+    );
+
+    if (result.newlyDeployed) {
+      console.log("Contract was upgraded or newly deployed");
+    } else {
+      console.log("Contract unchanged, no upgrade needed");
+    }
+  },
+  { tags: ["MyContract"] }
+);
+```
 
 ## Advanced Proxy Patterns
 

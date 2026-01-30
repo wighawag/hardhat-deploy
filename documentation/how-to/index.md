@@ -7,6 +7,7 @@ This section contains comprehensive step-by-step guides for using hardhat-deploy
 - [Migrate from v1](./migration-from-v1.md)
 - [Configure Network Helpers](./configure-network-helpers.md)
 - [Configure Named Accounts](./configure-named-accounts.md)
+- [Use Tags and Dependencies](./use-tags-and-dependencies.md)
 
 ## Contract Patterns
 - [Deploy with Proxies](./deploy-with-proxies.md)
@@ -17,4 +18,6 @@ This section contains comprehensive step-by-step guides for using hardhat-deploy
 - [Use Fork Testing](./use-fork-testing.md)
 
 ## Development Workflow
+- [Use Viem Integration](./use-viem-integration.md)
+- [Verify Contracts](./verify-contracts.md)
 - [Export Deployments for Frontend](./export-deployments.md)

@@ -91,7 +91,7 @@ export default deployScript(
 );
 ```
 
-and you would have a `rocketh.ts/js` file as described in the [Setup](#setup)
+and you would have a `rocketh/config.ts` file as described in the [Setup](#setup)
 
 ### Migrating existing deployment to hardhat-deploy
 
@@ -159,9 +159,9 @@ Here is an example:
 
 Let's say you have:
 
-- 2 Contract named Greeter and Registry deployed on rinkeby
+- 2 Contract named Greeter and Registry deployed on sepolia
 - 1 contract named Greeter on mainnet
-- 2 Contract named Greeter and Registry deployed on a environment named rinkeby2
+- 2 Contract named Greeter and Registry deployed on an environment named sepolia2
 
 You would get the following folder structure:
 
@@ -170,11 +170,11 @@ deployments/
   mainnet/
     .chain
     Greeter.json
-  rinkeby/
+  sepolia/
     .chain
     Greeter.json
     Registry.json
-  rinkeby2/
+  sepolia2/
     .chain
     Greeter.json
     Registry.json
