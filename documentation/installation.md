@@ -44,6 +44,8 @@ hardhat-deploy and rocketh provides many features to help you deploy your contra
 
 ## Migrating from hardhat-deploy v1
 
+> **Note**: We provide a detailed [Migrating from hardhat-deploy v1 guide](./how-to/migration-from-v1.md).
+
 in v1 you would create a deploy file like this:
 
 ```typescript skip

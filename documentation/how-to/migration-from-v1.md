@@ -16,6 +16,7 @@ hardhat-deploy v2 is a complete rewrite that requires Hardhat 3.x and introduces
 For users interested in using AI to help with the migration process, we provide a comprehensive [SKILL.md](https://github.com/wighawag/hardhat-deploy/blob/main/skills/hardhat-deploy-migration/SKILL.md) file designed specifically for AI assistants. This guide contains detailed instructions and patterns that AI tools can use to understand and execute the migration systematically.
 
 The SKILL file includes:
+
 - Step-by-step migration procedures with code examples
 - Common patterns and transformation rules
 - Troubleshooting guidance
@@ -23,6 +24,7 @@ The SKILL file includes:
 - Best practices for AI-assisted development
 
 You can share this file with your AI assistant to get help with:
+
 - Converting configuration files
 - Updating deploy scripts
 - Migrating test fixtures
@@ -30,16 +32,16 @@ You can share this file with your AI assistant to get help with:
 
 ## Quick Reference
 
-| Aspect | v1 Pattern | v2 Pattern |
-|--------|-----------|-----------|
-| **Hardhat version** | 2.x | 3.x (specifically `^3.1.5`) |
-| **Module system** | CommonJS (`require`/`module.exports`) | ESM (`import`/`export`) |
-| **Named accounts** | `namedAccounts` in hardhat.config.ts | `rocketh/config.ts` |
-| **Deploy function** | `deployments.deploy(name, {...})` | `deploy(name, {account: ..., artifact: ...})` |
-| **Deployer param** | `from: address` | `account: address` |
-| **Solidity config** | `solidity: "0.8.x"` or `solidity: {version: "..."}` | `solidity: {profiles: {default: {version: "..."}}}` |
-| **Test fixtures** | `deployments.createFixture()` | Custom fixture with `loadAndExecuteDeploymentsFromFiles()` |
-| **Contract interaction** | `ethers.getContract()` | `env.get()` + `env.execute()` |
+| Aspect                   | v1 Pattern                                          | v2 Pattern                                                 |
+| ------------------------ | --------------------------------------------------- | ---------------------------------------------------------- |
+| **Hardhat version**      | 2.x                                                 | 3.x (specifically `^3.1.5`)                                |
+| **Module system**        | CommonJS (`require`/`module.exports`)               | ESM (`import`/`export`)                                    |
+| **Named accounts**       | `namedAccounts` in hardhat.config.ts                | `rocketh/config.ts`                                        |
+| **Deploy function**      | `deployments.deploy(name, {...})`                   | `deploy(name, {account: ..., artifact: ...})`              |
+| **Deployer param**       | `from: address`                                     | `account: address`                                         |
+| **Solidity config**      | `solidity: "0.8.x"` or `solidity: {version: "..."}` | `solidity: {profiles: {default: {version: "..."}}}`        |
+| **Test fixtures**        | `deployments.createFixture()`                       | Custom fixture with `loadAndExecuteDeploymentsFromFiles()` |
+| **Contract interaction** | `ethers.getContract()`                              | `env.get()` + `env.execute()`                              |
 
 ## When to Stay on v1
 
@@ -106,6 +108,7 @@ Check for these v1 patterns in your project:
 Update your [`package.json`](https://github.com/wighawag/template-ethereum-contracts/blob/main/contracts/package.json) to use hardhat 3.x and hardhat-deploy v2:
 
 **v1 package.json example:**
+
 ```json
 {
   "devDependencies": {
@@ -119,6 +122,7 @@ Update your [`package.json`](https://github.com/wighawag/template-ethereum-contr
 ```
 
 **v2 package.json example:**
+
 ```json
 {
   "type": "module",
@@ -162,25 +166,26 @@ pnpm install
 v1 used CommonJS (`require`/`module.exports`), while v2 uses ESM (`import`/`export`).
 
 **v1 hardhat.config.ts example:**
+
 ```typescript
-import 'dotenv/config';
-import {HardhatUserConfig} from 'hardhat/types';
+import "dotenv/config";
+import { HardhatUserConfig } from "hardhat/types";
 
-import '@nomicfoundation/hardhat-chai-matchers';
-import '@nomicfoundation/hardhat-ethers';
-import '@typechain/hardhat';
+import "@nomicfoundation/hardhat-chai-matchers";
+import "@nomicfoundation/hardhat-ethers";
+import "@typechain/hardhat";
 
-import 'hardhat-deploy';
-import 'hardhat-deploy-ethers';
-import 'hardhat-deploy-tenderly';
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+import "hardhat-deploy-tenderly";
 
-import {node_url, accounts, addForkConfiguration} from './utils/network';
+import { node_url, accounts, addForkConfiguration } from "./utils/network";
 
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: '0.8.17',
+        version: "0.8.17",
         settings: {
           optimizer: {
             enabled: true,
@@ -199,20 +204,20 @@ const config: HardhatUserConfig = {
       initialBaseFeePerGas: 0,
     },
     localhost: {
-      url: node_url('localhost'),
+      url: node_url("localhost"),
       accounts: accounts(),
     },
     mainnet: {
-      url: node_url('mainnet'),
-      accounts: accounts('mainnet'),
+      url: node_url("mainnet"),
+      accounts: accounts("mainnet"),
     },
     sepolia: {
-      url: node_url('sepolia'),
-      accounts: accounts('sepolia'),
+      url: node_url("sepolia"),
+      accounts: accounts("sepolia"),
     },
   }),
   paths: {
-    sources: 'src',
+    sources: "src",
   },
   mocha: {
     timeout: 0,
@@ -220,8 +225,8 @@ const config: HardhatUserConfig = {
   external: process.env.HARDHAT_FORK
     ? {
         deployments: {
-          hardhat: ['deployments/' + process.env.HARDHAT_FORK],
-          localhost: ['deployments/' + process.env.HARDHAT_FORK],
+          hardhat: ["deployments/" + process.env.HARDHAT_FORK],
+          localhost: ["deployments/" + process.env.HARDHAT_FORK],
         },
       }
     : undefined,
@@ -231,20 +236,21 @@ export default config;
 ```
 
 **v2 hardhat.config.ts example:** (see [template-ethereum-contracts/hardhat.config.ts](https://github.com/wighawag/template-ethereum-contracts/blob/main/contracts/hardhat.config.ts))
+
 ```typescript
-import type {HardhatUserConfig} from 'hardhat/config';
+import type { HardhatUserConfig } from "hardhat/config";
 
-import HardhatNodeTestRunner from '@nomicfoundation/hardhat-node-test-runner';
-import HardhatViem from '@nomicfoundation/hardhat-viem';
-import HardhatNetworkHelpers from '@nomicfoundation/hardhat-network-helpers';
-import HardhatKeystore from '@nomicfoundation/hardhat-keystore';
+import HardhatNodeTestRunner from "@nomicfoundation/hardhat-node-test-runner";
+import HardhatViem from "@nomicfoundation/hardhat-viem";
+import HardhatNetworkHelpers from "@nomicfoundation/hardhat-network-helpers";
+import HardhatKeystore from "@nomicfoundation/hardhat-keystore";
 
-import HardhatDeploy from 'hardhat-deploy';
+import HardhatDeploy from "hardhat-deploy";
 import {
   addForkConfiguration,
   addNetworksFromEnv,
   addNetworksFromKnownList,
-} from 'hardhat-deploy/helpers';
+} from "hardhat-deploy/helpers";
 
 const config: HardhatUserConfig = {
   plugins: [
@@ -257,10 +263,10 @@ const config: HardhatUserConfig = {
   solidity: {
     profiles: {
       default: {
-        version: '0.8.17',
+        version: "0.8.17",
       },
       production: {
-        version: '0.8.17',
+        version: "0.8.17",
         settings: {
           optimizer: {
             enabled: true,
@@ -270,30 +276,27 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  networks:
-    addForkConfiguration(
-      addNetworksFromKnownList(
-        addNetworksFromEnv(
-          {
-            default: {
-              type: 'edr-simulated',
-              chainType: 'l1',
-              accounts: {
-                mnemonic: process.env.MNEMONIC || undefined,
-              },
-            },
+  networks: addForkConfiguration(
+    addNetworksFromKnownList(
+      addNetworksFromEnv({
+        default: {
+          type: "edr-simulated",
+          chainType: "l1",
+          accounts: {
+            mnemonic: process.env.MNEMONIC || undefined,
           },
-        ),
-      ),
+        },
+      }),
     ),
+  ),
   paths: {
-    sources: ['src'],
+    sources: ["src"],
   },
   generateTypedArtifacts: {
     destinations: [
       {
-        folder: './generated',
-        mode: 'typescript',
+        folder: "./generated",
+        mode: "typescript",
       },
     ],
   },
@@ -417,6 +420,7 @@ mkdir -p rocketh
 ```
 
 **rocketh/config.ts example:** (see [template-ethereum-contracts/rocketh/config.ts](https://github.com/wighawag/template-ethereum-contracts/blob/main/contracts/rocketh/config.ts))
+
 ```typescript
 // ----------------------------------------------------------------------------
 // Typed Config
@@ -425,10 +429,10 @@ import type {
   EnhancedEnvironment,
   UnknownDeployments,
   UserConfig,
-} from 'rocketh/types';
+} from "rocketh/types";
 
 // this one provide a protocol supporting private key as account
-import {privateKey} from '@rocketh/signer';
+import { privateKey } from "@rocketh/signer";
 
 // we define our config and export it as "config"
 export const config = {
@@ -449,14 +453,14 @@ export const config = {
 // then we import each extensions we are interested in using in our deploy script or elsewhere
 
 // this one provide a deploy function
-import * as deployExtension from '@rocketh/deploy';
+import * as deployExtension from "@rocketh/deploy";
 // this one provide read,execute functions
-import * as readExecuteExtension from '@rocketh/read-execute';
+import * as readExecuteExtension from "@rocketh/read-execute";
 // this one provide a deployViaProxy function that let you declaratively
 //  deploy proxy based contracts
-import * as deployProxyExtension from '@rocketh/proxy';
+import * as deployProxyExtension from "@rocketh/proxy";
 // this one provide a viem handle to clients and contracts
-import * as viemExtension from '@rocketh/viem';
+import * as viemExtension from "@rocketh/viem";
 
 // and export them as a unified object
 const extensions = {
@@ -465,7 +469,7 @@ const extensions = {
   ...deployProxyExtension,
   ...viemExtension,
 };
-export {extensions};
+export { extensions };
 
 // then we also export the types that our config ehibit so other can use it
 
@@ -479,57 +483,59 @@ type Environment = EnhancedEnvironment<
   Extensions
 >;
 
-export type {Extensions, Accounts, Data, Environment};
+export type { Extensions, Accounts, Data, Environment };
 ```
 
 **rocketh/deploy.ts example:** (see [template-ethereum-contracts/rocketh/deploy.ts](https://github.com/wighawag/template-ethereum-contracts/blob/main/contracts/rocketh/deploy.ts))
+
 ```typescript
 import {
   type Accounts,
   type Data,
   type Extensions,
   extensions,
-} from './config.js';
+} from "./config.js";
 
 // ----------------------------------------------------------------------------
 // we re-export the artifacts, so they are easily available from the alias
-import * as artifacts from '../generated/artifacts/index.js';
-export {artifacts};
+import * as artifacts from "../generated/artifacts/index.js";
+export { artifacts };
 // ----------------------------------------------------------------------------
 // we create the rocketh functions we need by passing the extensions to the
 //  setup function
-import {setupDeployScripts} from 'rocketh';
-const {deployScript} = setupDeployScripts<Extensions, Accounts, Data>(
+import { setupDeployScripts } from "rocketh";
+const { deployScript } = setupDeployScripts<Extensions, Accounts, Data>(
   extensions,
 );
 
-export {deployScript};
+export { deployScript };
 ```
 
 **rocketh/environment.ts example:** (see [template-ethereum-contracts/rocketh/environment.ts](https://github.com/wighawag/template-ethereum-contracts/blob/main/contracts/rocketh/environment.ts))
+
 ```typescript
 import {
   type Accounts,
   type Data,
   type Extensions,
   extensions,
-} from './config.js';
-import {setupEnvironmentFromFiles} from '@rocketh/node';
-import {setupHardhatDeploy} from 'hardhat-deploy/helpers';
+} from "./config.js";
+import { setupEnvironmentFromFiles } from "@rocketh/node";
+import { setupHardhatDeploy } from "hardhat-deploy/helpers";
 
 // useful for test and scripts, uses file-system
-const {loadAndExecuteDeploymentsFromFiles} = setupEnvironmentFromFiles<
+const { loadAndExecuteDeploymentsFromFiles } = setupEnvironmentFromFiles<
   Extensions,
   Accounts,
   Data
 >(extensions);
-const {loadEnvironmentFromHardhat} = setupHardhatDeploy<
+const { loadEnvironmentFromHardhat } = setupHardhatDeploy<
   Extensions,
   Accounts,
   Data
 >(extensions);
 
-export {loadEnvironmentFromHardhat, loadAndExecuteDeploymentsFromFiles};
+export { loadEnvironmentFromHardhat, loadAndExecuteDeploymentsFromFiles };
 ```
 
 ### Step 4: Convert Deploy Scripts
@@ -537,50 +543,53 @@ export {loadEnvironmentFromHardhat, loadAndExecuteDeploymentsFromFiles};
 v1 deploy scripts used a different pattern than v2.
 
 **v1 deploy script example:**
+
 ```typescript
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
-import {parseEther} from 'ethers';
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { DeployFunction } from "hardhat-deploy/types";
+import { parseEther } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const {deployments, getNamedAccounts} = hre;
-  const {deploy} = deployments;
+  const { deployments, getNamedAccounts } = hre;
+  const { deploy } = deployments;
 
-  const {deployer, simpleERC20Beneficiary} = await getNamedAccounts();
+  const { deployer, simpleERC20Beneficiary } = await getNamedAccounts();
 
-  await deploy('SimpleERC20', {
+  await deploy("SimpleERC20", {
     from: deployer,
-    args: [simpleERC20Beneficiary, parseEther('1000000000')],
+    args: [simpleERC20Beneficiary, parseEther("1000000000")],
     log: true,
     autoMine: true,
   });
 };
 export default func;
-func.tags = ['SimpleERC20'];
+func.tags = ["SimpleERC20"];
 ```
 
 **v2 deploy script example:** (see [template-ethereum-contracts/deploy/001_deploy_greetings_registry.ts](https://github.com/wighawag/template-ethereum-contracts/blob/main/contracts/deploy/001_deploy_greetings_registry.ts))
+
 ```typescript
-import {deployScript, artifacts} from '../rocketh/deploy.js';
-import {parseEther} from 'viem';
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+import { parseEther } from "viem";
 
 export default deployScript(
   async (env) => {
-    const {deployer, simpleERC20Beneficiary} = env.namedAccounts;
+    const { deployer, simpleERC20Beneficiary } = env.namedAccounts;
 
-    await env.deploy('SimpleERC20', {
+    await env.deploy("SimpleERC20", {
       artifact: artifacts.SimpleERC20,
       account: deployer,
-      args: [simpleERC20Beneficiary, parseEther('1000000000')],
+      args: [simpleERC20Beneficiary, parseEther("1000000000")],
     });
   },
   {
-    tags: ['SimpleERC20'],
+    tags: ["SimpleERC20"],
   },
 );
 ```
 
 **Key changes:**
+
 - Remove `HardhatRuntimeEnvironment` and `DeployFunction` imports
 - Import `deployScript` and `artifacts` from `../rocketh/deploy.js`
 - Change `parseEther` from `ethers` to `viem`
@@ -596,15 +605,16 @@ export default deployScript(
 #### Proxy Deployment Example
 
 **v1 proxy deploy script example:**
+
 ```typescript
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const {deployer} = await hre.getNamedAccounts();
-  const {deploy} = hre.deployments;
+  const { deployer } = await hre.getNamedAccounts();
+  const { deploy } = hre.deployments;
   const useProxy = !hre.network.live;
 
-  await deploy('GreetingsRegistry', {
+  await deploy("GreetingsRegistry", {
     from: deployer,
-    proxy: useProxy && 'postUpgrade',
+    proxy: useProxy && "postUpgrade",
     args: [2],
     log: true,
     autoMine: true,
@@ -613,37 +623,38 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return !useProxy;
 };
 export default func;
-func.id = 'deploy_greetings_registry';
-func.tags = ['GreetingsRegistry'];
+func.id = "deploy_greetings_registry";
+func.tags = ["GreetingsRegistry"];
 ```
 
 **v2 proxy deploy script example:** (see [template-ethereum-contracts/deploy/002_deploy_greetings_registry.ts](https://github.com/wighawag/template-ethereum-contracts/blob/main/contracts/deploy/002_deploy_greetings_registry.ts))
+
 ```typescript
-import {deployScript, artifacts} from '../rocketh/deploy.js';
+import { deployScript, artifacts } from "../rocketh/deploy.js";
 
 export default deployScript(
   async (env) => {
-    const {deployer} = env.namedAccounts;
+    const { deployer } = env.namedAccounts;
     const useProxy = !env.tags.live;
 
     await env.deployViaProxy(
-      'GreetingsRegistry',
+      "GreetingsRegistry",
       {
         account: deployer,
         artifact: artifacts.GreetingsRegistry,
-        args: ['2'],
+        args: ["2"],
       },
       {
         proxyDisabled: !useProxy,
-        execute: 'postUpgrade',
+        execute: "postUpgrade",
       },
     );
 
     return !useProxy;
   },
   {
-    tags: ['GreetingsRegistry'],
-    id: 'deploy_greetings_registry',
+    tags: ["GreetingsRegistry"],
+    id: "deploy_greetings_registry",
   },
 );
 ```
@@ -653,17 +664,23 @@ export default deployScript(
 v2 uses a different pattern for test fixtures.
 
 **v1 test example:**
+
 ```typescript
-import {expect} from 'chai';
-import {ethers, deployments, getUnnamedAccounts, getNamedAccounts} from 'hardhat';
-import {IERC20} from '../typechain-types';
-import {setupUser, setupUsers} from './utils';
+import { expect } from "chai";
+import {
+  ethers,
+  deployments,
+  getUnnamedAccounts,
+  getNamedAccounts,
+} from "hardhat";
+import { IERC20 } from "../typechain-types";
+import { setupUser, setupUsers } from "./utils";
 
 const setup = deployments.createFixture(async () => {
-  await deployments.fixture('SimpleERC20');
-  const {simpleERC20Beneficiary} = await getNamedAccounts();
+  await deployments.fixture("SimpleERC20");
+  const { simpleERC20Beneficiary } = await getNamedAccounts();
   const contracts = {
-    SimpleERC20: await ethers.getContract<IERC20>('SimpleERC20'),
+    SimpleERC20: await ethers.getContract<IERC20>("SimpleERC20"),
   };
   const users = await setupUsers(await getUnnamedAccounts(), contracts);
   return {
@@ -673,31 +690,36 @@ const setup = deployments.createFixture(async () => {
   };
 });
 
-describe('SimpleERC20', function () {
-  it('transfer fails', async function () {
-    const {users} = await setup();
-    await expect(users[0].SimpleERC20.transfer(users[1].address, 1)).to.be.revertedWith('NOT_ENOUGH_TOKENS');
+describe("SimpleERC20", function () {
+  it("transfer fails", async function () {
+    const { users } = await setup();
+    await expect(
+      users[0].SimpleERC20.transfer(users[1].address, 1),
+    ).to.be.revertedWith("NOT_ENOUGH_TOKENS");
   });
 
-  it('transfer succeed', async function () {
-    const {users, simpleERC20Beneficiary, SimpleERC20} = await setup();
+  it("transfer succeed", async function () {
+    const { users, simpleERC20Beneficiary, SimpleERC20 } = await setup();
     await simpleERC20Beneficiary.SimpleERC20.transfer(users[1].address, 1);
 
-    await expect(simpleERC20Beneficiary.SimpleERC20.transfer(users[1].address, 1))
-      .to.emit(SimpleERC20, 'Transfer')
+    await expect(
+      simpleERC20Beneficiary.SimpleERC20.transfer(users[1].address, 1),
+    )
+      .to.emit(SimpleERC20, "Transfer")
       .withArgs(simpleERC20Beneficiary.address, users[1].address, 1);
   });
 });
 ```
 
 **v2 test example:** (see [template-ethereum-contracts/test/GreetingsRegistry.test.ts](https://github.com/wighawag/template-ethereum-contracts/blob/main/contracts/test/GreetingsRegistry.test.ts))
+
 ```typescript
-import {expect} from 'earl';
-import {describe, it} from 'node:test';
-import {network} from 'hardhat';
-import {EthereumProvider} from 'hardhat/types/providers';
-import {loadAndExecuteDeploymentsFromFiles} from '../rocketh/environment.js';
-import {Abi_SimpleERC20} from '../generated/abis/SimpleERC20.js';
+import { expect } from "earl";
+import { describe, it } from "node:test";
+import { network } from "hardhat";
+import { EthereumProvider } from "hardhat/types/providers";
+import { loadAndExecuteDeploymentsFromFiles } from "../rocketh/environment.js";
+import { Abi_SimpleERC20 } from "../generated/abis/SimpleERC20.js";
 
 function setupFixtures(provider: EthereumProvider) {
   return {
@@ -706,7 +728,7 @@ function setupFixtures(provider: EthereumProvider) {
         provider: provider,
       });
 
-      const SimpleERC20 = env.get<Abi_SimpleERC20>('SimpleERC20');
+      const SimpleERC20 = env.get<Abi_SimpleERC20>("SimpleERC20");
 
       return {
         env,
@@ -718,30 +740,30 @@ function setupFixtures(provider: EthereumProvider) {
   };
 }
 
-const {provider, networkHelpers} = await network.connect();
-const {deployAll} = setupFixtures(provider);
+const { provider, networkHelpers } = await network.connect();
+const { deployAll } = setupFixtures(provider);
 
-describe('SimpleERC20', function () {
-  it('transfer fails', async function () {
-    const {env, SimpleERC20, unnamedAccounts} =
+describe("SimpleERC20", function () {
+  it("transfer fails", async function () {
+    const { env, SimpleERC20, unnamedAccounts } =
       await networkHelpers.loadFixture(deployAll);
 
     await expect(
       env.execute(SimpleERC20, {
         account: unnamedAccounts[0],
-        functionName: 'transfer',
+        functionName: "transfer",
         args: [unnamedAccounts[1], 1n],
       }),
-    ).toBeRejectedWith('NOT_ENOUGH_TOKENS');
+    ).toBeRejectedWith("NOT_ENOUGH_TOKENS");
   });
 
-  it('transfer succeed', async function () {
-    const {env, SimpleERC20, unnamedAccounts, namedAccounts} =
+  it("transfer succeed", async function () {
+    const { env, SimpleERC20, unnamedAccounts, namedAccounts } =
       await networkHelpers.loadFixture(deployAll);
 
     await env.execute(SimpleERC20, {
       account: namedAccounts.simpleERC20Beneficiary,
-      functionName: 'transfer',
+      functionName: "transfer",
       args: [unnamedAccounts[1], 1n],
     });
   });
@@ -749,6 +771,7 @@ describe('SimpleERC20', function () {
 ```
 
 **Key changes:**
+
 - Change test runner from `mocha` to `node:test` (or keep mocha if preferred)
 - Change assertion library from `chai` to `earl` (or keep chai if preferred)
 - Import `network` from 'hardhat'
@@ -764,16 +787,17 @@ describe('SimpleERC20', function () {
 ### Step 6: Update Scripts
 
 **v1 script pattern:**
+
 ```typescript
-import hre from 'hardhat';
+import hre from "hardhat";
 
 async function main() {
-  const {deployments, getNamedAccounts} = hre;
-  const {deployer} = await getNamedAccounts();
-  
-  const MyContract = await deployments.get('MyContract');
-  const contract = await ethers.getContractAt('MyContract', MyContract.address);
-  
+  const { deployments, getNamedAccounts } = hre;
+  const { deployer } = await getNamedAccounts();
+
+  const MyContract = await deployments.get("MyContract");
+  const contract = await ethers.getContractAt("MyContract", MyContract.address);
+
   await contract.someFunction();
 }
 
@@ -784,19 +808,20 @@ main().catch((error) => {
 ```
 
 **v2 script pattern:**
+
 ```typescript
-import hre from 'hardhat';
-import {loadEnvironmentFromHardhat} from './rocketh/environment.js';
-import {Abi_MyContract} from './generated/abis/MyContract.js';
+import hre from "hardhat";
+import { loadEnvironmentFromHardhat } from "./rocketh/environment.js";
+import { Abi_MyContract } from "./generated/abis/MyContract.js";
 
 async function main() {
-  const env = await loadEnvironmentFromHardhat({hre});
-  
-  const MyContract = env.get<Abi_MyContract>('MyContract');
-  
+  const env = await loadEnvironmentFromHardhat({ hre });
+
+  const MyContract = env.get<Abi_MyContract>("MyContract");
+
   await env.execute(MyContract, {
     account: env.namedAccounts.deployer,
-    functionName: 'someFunction',
+    functionName: "someFunction",
     args: [],
   });
 }
@@ -810,6 +835,7 @@ main().catch((error) => {
 ### Step 7: Update package.json Scripts
 
 **v1 package.json scripts example:**
+
 ```json
 {
   "scripts": {
@@ -831,6 +857,7 @@ main().catch((error) => {
 ```
 
 **v2 package.json scripts example:** (see [template-ethereum-contracts/package.json](https://github.com/wighawag/template-ethereum-contracts/blob/main/contracts/package.json))
+
 ```json
 {
   "scripts": {
@@ -875,6 +902,7 @@ main().catch((error) => {
 ### Pattern 1: Converting Named Accounts
 
 **v1:**
+
 ```typescript
 namedAccounts: {
   deployer: 0,
@@ -883,6 +911,7 @@ namedAccounts: {
 ```
 
 **v2:**
+
 ```typescript
 // rocketh/config.ts
 export const config = {
@@ -891,7 +920,7 @@ export const config = {
       default: 0,
     },
     tokenOwner: {
-      default: '0x1234...',
+      default: "0x1234...",
     },
   },
 } as const satisfies UserConfig;
@@ -900,6 +929,7 @@ export const config = {
 ### Pattern 2: Converting Deploy Options
 
 **v1:**
+
 ```typescript
 await deploy("Contract", {
   from: deployer,
@@ -910,6 +940,7 @@ await deploy("Contract", {
 ```
 
 **v2:**
+
 ```typescript
 await deploy("Contract", {
   account: deployer,
@@ -921,15 +952,17 @@ await deploy("Contract", {
 ### Pattern 3: Converting Proxy Deployment
 
 **v1:**
+
 ```typescript
 await deploy("MyContract", {
   from: deployer,
-  proxy: useProxy && 'postUpgrade',
+  proxy: useProxy && "postUpgrade",
   args: [initArg],
 });
 ```
 
 **v2:**
+
 ```typescript
 await env.deployViaProxy(
   "MyContract",
@@ -948,6 +981,7 @@ await env.deployViaProxy(
 ### Pattern 4: Contract Interaction in Tests
 
 **v1:**
+
 ```typescript
 const MyContract = await ethers.getContract("MyContract");
 await MyContract.setValue(42);
@@ -956,17 +990,18 @@ expect(value).to.equal(42);
 ```
 
 **v2:**
+
 ```typescript
-import {Abi_MyContract} from '../generated/abis/MyContract.js';
+import { Abi_MyContract } from "../generated/abis/MyContract.js";
 
 const MyContract = env.get<Abi_MyContract>("MyContract");
 await env.execute(MyContract, {
   account: env.namedAccounts.deployer,
-  functionName: 'setValue',
+  functionName: "setValue",
   args: [42n],
 });
 const value = await env.read(MyContract, {
-  functionName: 'getValue',
+  functionName: "getValue",
   args: [],
 });
 expect(value).toEqual(42n);
@@ -1018,16 +1053,13 @@ await deploy("Contract", {...});
 ```typescript
 import { deployScript, artifacts } from "../rocketh/deploy.js";
 
-export default deployScript(
-  async ({ deploy }) => {
-    await deploy("Contract", {
-      artifact: artifacts.Contract,
-      account: deployer,
-      args: [],
-    });
-  },
-  {},
-);
+export default deployScript(async ({ deploy }) => {
+  await deploy("Contract", {
+    artifact: artifacts.Contract,
+    account: deployer,
+    args: [],
+  });
+}, {});
 ```
 
 ### Error: "from is not a valid parameter"
@@ -1063,15 +1095,15 @@ await deploy("Contract", {
 **Before**:
 
 ```typescript
-import { deployScript, artifacts } from '../rocketh/deploy';
-import { loadEnvironmentFromHardhat } from './rocketh/environment';
+import { deployScript, artifacts } from "../rocketh/deploy";
+import { loadEnvironmentFromHardhat } from "./rocketh/environment";
 ```
 
 **After**:
 
 ```typescript
-import { deployScript, artifacts } from '../rocketh/deploy.js';
-import { loadEnvironmentFromHardhat } from './rocketh/environment.js';
+import { deployScript, artifacts } from "../rocketh/deploy.js";
+import { loadEnvironmentFromHardhat } from "./rocketh/environment.js";
 ```
 
 ### Error: Type errors with artifacts
@@ -1089,7 +1121,7 @@ const MyContract = await ethers.getContract("MyContract");
 **After**:
 
 ```typescript
-import { Abi_MyContract } from '../generated/abis/MyContract.js';
+import { Abi_MyContract } from "../generated/abis/MyContract.js";
 const MyContract = env.get<Abi_MyContract>("MyContract");
 ```
 
@@ -1102,13 +1134,13 @@ const MyContract = env.get<Abi_MyContract>("MyContract");
 **Before**:
 
 ```typescript
-import { HardhatDeploy } from 'hardhat-deploy';
+import { HardhatDeploy } from "hardhat-deploy";
 ```
 
 **After**:
 
 ```typescript
-import HardhatDeploy from 'hardhat-deploy';
+import HardhatDeploy from "hardhat-deploy";
 ```
 
 ### Error: Test fixtures not working
@@ -1397,7 +1429,7 @@ Use this checklist to verify your migration is complete and working correctly.
 Migrating from hardhat-deploy v1 to v2 involves:
 
 1. **Updating dependencies** to Hardhat 3.x and v2 packages
-2. **Restructuring configuration** into multiple files (hardhat.config.ts, rocketh/*.ts)
+2. **Restructuring configuration** into multiple files (hardhat.config.ts, rocketh/\*.ts)
 3. **Converting deploy scripts** to use the new pattern with `deployScript`
 4. **Updating tests** to use the new fixture pattern
 5. **Modernizing scripts** to use `loadEnvironmentFromHardhat`

@@ -38,7 +38,7 @@ export default deployScript(
 );
 ```
 
-Furthermore you can also ensure these scripts are executed in test too by calling `await loadAndExecuteDeployments({provider: provider,});` in your tests.
+Furthermore you can also ensure these scripts are executed in test too by calling `await loadAndExecuteDeploymentsFromFiles({provider: provider,});` in your tests.
 
 And you can call these in hardhat test fixture to benefit from caching optimization.
 
