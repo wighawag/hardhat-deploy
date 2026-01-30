@@ -95,10 +95,12 @@ hardhat-deploy v2 uses rocketh's extension system. Extensions are imported and c
 |-----------|---------|
 | `@rocketh/deploy` | Basic `deploy()` function |
 | `@rocketh/proxy` | `deployViaProxy()` for upgradeable contracts |
-| `@rocketh/diamond` | `deployViaDiamond()` for EIP-2535 |
-| `@rocketh/read-execute` | `read()` and `execute()` for contract interactions |
-| `@rocketh/viem` | Viem client integration |
-| `@rocketh/signer` | Signer protocols (privateKey, etc.) |
+| `@rocketh/diamond` | `diamond()` for EIP-2535 Diamond deployments |
+| `@rocketh/read-execute` | `read()`, `execute()`, `readByName()`, `executeByName()`, and `tx()` for contract interactions |
+| `@rocketh/viem` | Viem client integration via `viem()` returning `getContract()`, `getWritableContract()`, `walletClient`, `publicClient` |
+| `@rocketh/signer` | Signer protocols (e.g., `privateKey`) |
+| `@rocketh/export` | Export deployments to JS/TS/JSON formats |
+| `@rocketh/verifier` | Verify contracts on Etherscan, Sourcify, or Blockscout |
 
 ## Project Configuration Pattern
 
