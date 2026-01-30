@@ -91,7 +91,7 @@ export default deployScript(
 );
 ```
 
-and you would have a `rocketh/config.ts` file as described in the [Setup](#setup)
+and you would have a `rocketh/config.ts` file as described in the [Setup First Project section](./how-to/setup-first-project.md)
 
 ### Migrating existing deployment to hardhat-deploy
 
