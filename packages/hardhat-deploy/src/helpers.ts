@@ -48,11 +48,7 @@ export async function generateForkConfig(
 	let provider: any = connection.provider;
 	let environment: string | {fork: string} = connection.networkName;
 	let forkChainId: number | undefined;
-
-	// detecting if we are dealing with an EDR node, 
-	//   where specific method are available like `hardhat_impersonateAccount`
-	const isHardhatNode = connection.networkConfig.type === 'edr-simulated';
-
+	
 	if (fork) {
 		// if (options?.useChainIdOfForkedNetwork) {
 		// 	const forkNetworkConfig = params.hre.config.networks[fork];
@@ -132,6 +128,7 @@ export async function loadEnvironmentFromHardhat<
 			connection,
 		},
 		saveDeployments: isFork ? false : undefined,
+		autoImpersonate:  connection.networkConfig.type === 'edr-simulated' ? true : undefined,
 	});
 }
 

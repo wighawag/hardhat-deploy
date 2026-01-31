@@ -1,6 +1,6 @@
 {
 	"name": "hardhat-deploy",
-	"version": "2.0.0-next.71",
+	"version": "2.0.0-next.72",
 	"description": "Hardhat plugin for replicable smart contract deployments and easy testing across multiple EVM chains, with support for proxies, diamonds, named accounts, and deployment fixtures",
 	"keywords": [
 		"hardhat",
@@ -56,12 +56,12 @@
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.29.8",
-		"@rocketh/node": "0.17.21",
-		"@types/node": "^25.0.10",
+		"@rocketh/node": "0.17.22",
+		"@types/node": "^25.1.0",
 		"as-soon": "^0.1.5",
 		"hardhat": "3.1.5",
 		"rimraf": "^6.1.2",
-		"rocketh": "0.17.18",
+		"rocketh": "0.17.19",
 		"set-defaults": "^0.0.5",
 		"typescript": "^5.9.3"
 	},
@@ -71,7 +71,7 @@
 	},
 	"dependencies": {
 		"@nomicfoundation/hardhat-zod-utils": "3.0.1",
-		"commander": "^14.0.2",
+		"commander": "^14.0.3",
 		"named-logs": "^0.4.1",
 		"named-logs-console": "^0.5.1",
 		"zod": "^4.3.6"

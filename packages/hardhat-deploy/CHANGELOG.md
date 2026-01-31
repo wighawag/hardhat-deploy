@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.72
+
+### Patch Changes
+
+- auto impersonate on edr node
+
 ## 2.0.0-next.71
 
 ### Patch Changes
