@@ -14,10 +14,12 @@ This plugin contains a lot more features too, all geared toward a better develop
 - deployment dependency system (allowing you to only deploy what is needed).
 - deployment retrying (by saving pending tx): so you can feel confident when making a deployment that you can always recover.
 - deployments as test fixture via hardhat helpers
+- ability to export the deployment scripts themselves to be used in other projects
 - contains helpers to read and execute transaction on deployed contract referring to them by name.
 - save metadata of deployed contract so they can always be fully verified, via sourcify or etherscan.
 - ability to submit contract source to etherscan and sourcify for verification at any time. (Because hardhat-deploy will save all the necessary info, it can be executed at any time.)
 - support hardhat's fork feature so deployment can be accessed even when run through fork.
+- named accounts are automatically impersonnated too, so you can perform tx as if you had their private key.
 - declarative proxy deployment with ability to upgrade them transparently, only if code changes.
 - this include support for [openzeppelin](https://openzeppelin.com) transparent proxies
 - diamond deployment with facets, allowing you to focus on what the new version will be. It will generate the diamondCut necessary to reach the new state.
