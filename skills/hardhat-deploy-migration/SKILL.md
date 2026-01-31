@@ -197,7 +197,7 @@ Update your `package.json` to use Hardhat 3.x and hardhat-deploy v2:
   "type": "module",
   "devDependencies": {
     "hardhat": "^3.1.4",
-    "hardhat-deploy": "^2.0.0-next.66",
+    "hardhat-deploy": "^2.0.0",
     "rocketh": "^0.17.15",
     "@rocketh/deploy": "^0.17.9",
     "@rocketh/read-execute": "^0.17.9",
@@ -218,7 +218,7 @@ Update your `package.json` to use Hardhat 3.x and hardhat-deploy v2:
 
 1. Add `"type": "module"` at the top level
 2. Update `hardhat` to `^3.1.4` or higher
-3. Update `hardhat-deploy` to `^2.0.0-next.66` or higher
+3. Update `hardhat-deploy` to `^2.0.0` or higher
 4. Remove `hardhat-deploy-ethers` and `hardhat-deploy-tenderly`
 5. Add rocketh packages: `rocketh`, `@rocketh/deploy`, `@rocketh/read-execute`, `@rocketh/node`, `@rocketh/signer`
 6. Add optional packages: `@rocketh/proxy`, `@rocketh/export`, `@rocketh/verifier`, `@rocketh/doc`

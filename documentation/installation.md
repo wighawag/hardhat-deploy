@@ -10,11 +10,11 @@ The quickest way to get started with hardhat-deploy is to either
 ::: code-group
 
 ```bash skip [npm]
-npx hardhat-deploy@next init --install my-project
+npx hardhat-deploy init --install my-project
 ```
 
 ```bash [pnpm]
-pnpm dlx hardhat-deploy@next init --install my-project
+pnpm dlx hardhat-deploy init --install my-project
 ```
 
 :::
