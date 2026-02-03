@@ -120,13 +120,16 @@ function writeABIDefinitionToFile(
 	ensureDirExistsSync(folderPath);
 	if (mode === 'typescript') {
 		const newContent = `import {${artifactName}} from '${relativePath}artifacts/${canonicalName}.js';
-export type ${abiName} = (typeof ${artifactName})['abi'];\n`;
+export type ${abiName} = (typeof ${artifactName})['abi'];\n
+export const ${abiName}: ${abiName} = ${artifactName}['abi'];\n`;
 		writeIfDifferent(tsFilepath, newContent);
 	} else if (mode === 'javascript') {
 		const jsFilepath = path.join(folder, 'abis', canonicalName) + '.js';
 		const newContent = `export {};\n`;
 		const dtsContent = `import {${artifactName}} from '${relativePath}artifacts/${canonicalName}.js';
-export type ${abiName} = (typeof ${artifactName})['abi'];\n`;
+export type ${abiName} = (typeof ${artifactName})['abi'];\n
+export const ${abiName} = ${artifactName}['abi'];\n`;
+
 		writeIfDifferent(jsFilepath, newContent);
 		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
 	}

@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.74
+
+### Patch Changes
+
+- generate abi value too
+
 ## 2.0.0-next.73
 
 ### Patch Changes

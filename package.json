@@ -17,6 +17,8 @@
   "packageManager": "pnpm@10.28.1",
   "scripts": {
     "prepare": "set-defaults .vscode",
+    "prepublishOnly": "pnpm format:check && pnpm build",
+    "release": "pnpm prepublishOnly && git push --all && pnpm changeset publish && git push --tags",
     "docs:dev": "vitepress dev",
     "docs:build": "pnpm prepare && vitepress build",
     "docs:preview": "vitepress preview",
