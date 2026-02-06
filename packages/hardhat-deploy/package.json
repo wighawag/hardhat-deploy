@@ -56,21 +56,21 @@
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.29.8",
-		"@rocketh/node": "0.17.23",
-		"@types/node": "^25.1.0",
+		"@rocketh/node": "^0.18.0",
+		"@types/node": "^25.2.1",
 		"as-soon": "^0.1.5",
-		"hardhat": "3.1.5",
+		"hardhat": "3.1.7",
 		"rimraf": "^6.1.2",
-		"rocketh": "0.17.20",
+		"rocketh": "^0.18.0",
 		"set-defaults": "^0.0.5",
 		"typescript": "^5.9.3"
 	},
 	"peerDependencies": {
-		"@rocketh/node": "^0.17.23",
-		"hardhat": "^3.1.5"
+		"@rocketh/node": "^0.18.0",
+		"hardhat": "^3.1.7"
 	},
 	"dependencies": {
-		"@nomicfoundation/hardhat-zod-utils": "3.0.1",
+		"@nomicfoundation/hardhat-zod-utils": "^3.0.1",
 		"commander": "^14.0.3",
 		"named-logs": "^0.4.1",
 		"named-logs-console": "^0.5.1",

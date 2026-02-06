@@ -9,8 +9,8 @@ import {
 import {HardhatRuntimeEnvironment} from 'hardhat/types/hre';
 import {NetworkConnection} from 'hardhat/types/network';
 import type {Environment, UnresolvedUnknownNamedAccounts, UnresolvedNetworkSpecificData} from 'rocketh/types';
-import {enhanceEnvIfNeeded, chainByCanonicalName} from 'rocketh';
-import {loadEnvironmentFromFiles} from '@rocketh/node';
+import {enhanceEnvIfNeeded} from 'rocketh';
+import {loadEnvironmentFromFiles, chainByCanonicalName} from '@rocketh/node';
 
 export function setupHardhatDeploy<
 	Extensions extends Record<string, (env: Environment<any, any, any>) => any> = {},
