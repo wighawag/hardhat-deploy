@@ -45,8 +45,8 @@ importers:
         specifier: ^0.18.0
         version: 0.18.0(typescript@5.9.3)(zod@3.25.76)
       '@rocketh/node':
-        specifier: ^0.18.0
-        version: 0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)
+        specifier: ^0.18.2
+        version: 0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)
       '@rocketh/read-execute':
         specifier: ^0.18.0
         version: 0.18.0(typescript@5.9.3)(zod@3.25.76)
@@ -78,8 +78,8 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1(prettier@3.8.1)
       rocketh:
-        specifier: ^0.18.0
-        version: 0.18.0(typescript@5.9.3)(zod@3.25.76)
+        specifier: ^0.18.1
+        version: 0.18.1(typescript@5.9.3)(zod@3.25.76)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -120,8 +120,8 @@ importers:
         specifier: ^0.18.0
         version: 0.18.0(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/node':
-        specifier: ^0.18.0
-        version: 0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.18.2
+        version: 0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/read-execute':
         specifier: ^0.18.0
         version: 0.18.0(typescript@5.9.3)(zod@4.3.6)
@@ -153,8 +153,8 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1(prettier@3.8.1)
       rocketh:
-        specifier: ^0.18.0
-        version: 0.18.0(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.18.1
+        version: 0.18.1(typescript@5.9.3)(zod@4.3.6)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -195,14 +195,14 @@ importers:
         specifier: ^0.18.0
         version: 0.18.0(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/doc':
-        specifier: ^0.18.0
-        version: 0.18.0(@rocketh/node@0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.18.2
+        version: 0.18.2(@rocketh/node@0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/export':
-        specifier: ^0.18.0
-        version: 0.18.0(@rocketh/node@0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.18.2
+        version: 0.18.2(@rocketh/node@0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/node':
-        specifier: ^0.18.0
-        version: 0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.18.2
+        version: 0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/proxy':
         specifier: ^0.18.0
         version: 0.18.0(typescript@5.9.3)(zod@4.3.6)
@@ -210,8 +210,8 @@ importers:
         specifier: ^0.18.0
         version: 0.18.0(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/verifier':
-        specifier: ^0.18.0
-        version: 0.18.0(@rocketh/node@0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.18.2
+        version: 0.18.2(@rocketh/node@0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@types/node':
         specifier: ^25.2.1
         version: 25.2.1
@@ -240,8 +240,8 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1(prettier@3.8.1)
       rocketh:
-        specifier: ^0.18.0
-        version: 0.18.0(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.18.1
+        version: 0.18.1(typescript@5.9.3)(zod@4.3.6)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -283,8 +283,8 @@ importers:
         specifier: ^2.29.8
         version: 2.29.8(@types/node@25.2.1)
       '@rocketh/node':
-        specifier: ^0.18.0
-        version: 0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.18.2
+        version: 0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@types/node':
         specifier: ^25.2.1
         version: 25.2.1
@@ -298,8 +298,8 @@ importers:
         specifier: ^6.1.2
         version: 6.1.2
       rocketh:
-        specifier: ^0.18.0
-        version: 0.18.0(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.18.1
+        version: 0.18.1(typescript@5.9.3)(zod@4.3.6)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -1112,24 +1112,24 @@ packages:
   '@rocketh/diamond@0.18.0':
     resolution: {integrity: sha512-j4QyyM1mOGoMLHSPlyuUHHRmCB2TOED/RIsT7YXpRVYm5AYxfYvLVWNs+HNdczqQlS96JFUrtJtCTmXk/WQijw==}
 
-  '@rocketh/doc@0.18.0':
-    resolution: {integrity: sha512-pVRsIzwRjZQUfS0FJ7HoDFHl/ydblQU2VrCnB+bpUzoSjgz26MX3eKf6ktfjwrA8n9V/eeg5tQYjuWCp2FM+TQ==}
+  '@rocketh/doc@0.18.2':
+    resolution: {integrity: sha512-bkWCP/3bmLuDBBzDndfhGZI43f+EyJoI4VaZz/Ep2CxqIq56b8pkf9/zoScbuKncv+kYDoWzRg82XYd7ZU9HQA==}
     hasBin: true
     peerDependencies:
-      '@rocketh/node': 0.18.0
+      '@rocketh/node': 0.18.2
 
-  '@rocketh/export@0.18.0':
-    resolution: {integrity: sha512-4hyInunpWTajaM7hOp9ciSu2S6Nafwfg/YSabEzBeyoK0EMvsGi5bDfwHIRu64rZ3YU8yQ+I/2MN+vvpoHW3zA==}
+  '@rocketh/export@0.18.2':
+    resolution: {integrity: sha512-ddb2DQ5GQom57QA3gikklyCmmOtWQcwZ8JlIkBp7za4a5pkmUIbfmDVmij6uuqJNbDj7GKNP2Pii79MlnG6L6A==}
     hasBin: true
     peerDependencies:
-      '@rocketh/node': 0.18.0
-      rocketh: 0.18.0
+      '@rocketh/node': 0.18.2
+      rocketh: 0.18.1
 
-  '@rocketh/node@0.18.0':
-    resolution: {integrity: sha512-uwLWBgZO7k8UkDRSB7N+CBmIPOEotD6nydlbjAM3u7Or4+1gx4zMKjF5/YH2sB83lEN3XDtncm2cEmdBIw4wWw==}
+  '@rocketh/node@0.18.2':
+    resolution: {integrity: sha512-oqV+1BlZSrdZbQTRnXb6P8wTJMcSpSW9dnyKxIYBrjGYqENrs530pEoHDgTG7ZZln65bx5uCsn3Y+KCSAaFVng==}
     hasBin: true
     peerDependencies:
-      rocketh: 0.18.0
+      rocketh: 0.18.1
 
   '@rocketh/proxy@0.18.0':
     resolution: {integrity: sha512-dBSVpOtKqKTSvPSH/+XkUJcgjKZP7Y+dvXF8KBXmERINd6lZAm4y12QD2vpaYXcUme9KVwk5ZvhKh9bQl1NL6Q==}
@@ -1137,11 +1137,11 @@ packages:
   '@rocketh/read-execute@0.18.0':
     resolution: {integrity: sha512-jOP5owuhEyYlJV9bas+RclCz18l9wWRCsd9yilk1tZE4CcO4GT2Q8ieBPzuvyzeq86twA9CEtL7/B1HCSnIPBg==}
 
-  '@rocketh/verifier@0.18.0':
-    resolution: {integrity: sha512-6+McB1d/Cqu8l/r9Tu+I2j1DS2SMINxDozXh9lnBJNEvtd+MHuU878OTymLGU0SB1H9ZBP9tB6Btte96f3YHDA==}
+  '@rocketh/verifier@0.18.2':
+    resolution: {integrity: sha512-NTVkFbXlcWOS60jifQ3Y+Z3Z2nqHlVzWpQ3dDUg1TO0AkJ688iHikvCOHsbxPAjKD8Shv3JH/ZmbMgcWFS3Zxg==}
     hasBin: true
     peerDependencies:
-      '@rocketh/node': 0.18.0
+      '@rocketh/node': 0.18.2
 
   '@rollup/rollup-android-arm-eabi@4.46.3':
     resolution: {integrity: sha512-UmTdvXnLlqQNOCJnyksjPs1G4GqXNGW1LrzCe8+8QoaLhhDeTXYBgJ3k6x61WIhlHX2U+VzEJ55TtIjR/HTySA==}
@@ -2372,8 +2372,8 @@ packages:
     engines: {node: 20 || >=22}
     hasBin: true
 
-  rocketh@0.18.0:
-    resolution: {integrity: sha512-y0MfDwrasBaKWQj+mPfgKL7G/B1iHb8yO1iOM/CT4rOpz4Qbs7Ej7PAYQBvNFX4nscTWp9/FLTrcVVc2Czj6Cg==}
+  rocketh@0.18.1:
+    resolution: {integrity: sha512-nJ/Wouvz2cFmAiF5g52gc06WFipylYvgZ0BhwrvMdAgLxShY4h/uxT14eWbb+NlJCTZuz9bXHGFWil+C9jWg3A==}
     engines: {node: '>=22.0.0'}
 
   rollup@4.46.3:
@@ -3576,10 +3576,10 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rocketh/doc@0.18.0(@rocketh/node@0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
+  '@rocketh/doc@0.18.2(@rocketh/node@0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
       '@rocketh/core': 0.18.0(typescript@5.9.3)(zod@4.3.6)
-      '@rocketh/node': 0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+      '@rocketh/node': 0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@types/fs-extra': 11.0.4
       abitype: 1.2.3(typescript@5.9.3)(zod@4.3.6)
       commander: 14.0.3
@@ -3592,10 +3592,10 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rocketh/export@0.18.0(@rocketh/node@0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
+  '@rocketh/export@0.18.2(@rocketh/node@0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
       '@rocketh/core': 0.18.0(typescript@5.9.3)(zod@4.3.6)
-      '@rocketh/node': 0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+      '@rocketh/node': 0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@types/fs-extra': 11.0.4
       abitype: 1.2.3(typescript@5.9.3)(zod@4.3.6)
       chalk: 5.6.2
@@ -3603,14 +3603,14 @@ snapshots:
       eip-1193: 0.6.5
       fs-extra: 11.3.3
       named-logs: 0.4.1
-      rocketh: 0.18.0(typescript@5.9.3)(zod@4.3.6)
+      rocketh: 0.18.1(typescript@5.9.3)(zod@4.3.6)
     transitivePeerDependencies:
       - bufferutil
       - typescript
       - utf-8-validate
       - zod
 
-  '@rocketh/node@0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)':
+  '@rocketh/node@0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)':
     dependencies:
       '@rocketh/core': 0.18.0(typescript@5.9.3)(zod@3.25.76)
       '@types/prompts': 2.4.9
@@ -3621,7 +3621,7 @@ snapshots:
       named-logs: 0.4.1
       named-logs-console: 0.5.1
       prompts: 2.4.2
-      rocketh: 0.18.0(typescript@5.9.3)(zod@3.25.76)
+      rocketh: 0.18.1(typescript@5.9.3)(zod@3.25.76)
       tsx: 4.21.0
       viem: 2.45.1(typescript@5.9.3)(zod@3.25.76)
     transitivePeerDependencies:
@@ -3630,7 +3630,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rocketh/node@0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
+  '@rocketh/node@0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
       '@rocketh/core': 0.18.0(typescript@5.9.3)(zod@4.3.6)
       '@types/prompts': 2.4.9
@@ -3641,7 +3641,7 @@ snapshots:
       named-logs: 0.4.1
       named-logs-console: 0.5.1
       prompts: 2.4.2
-      rocketh: 0.18.0(typescript@5.9.3)(zod@4.3.6)
+      rocketh: 0.18.1(typescript@5.9.3)(zod@4.3.6)
       tsx: 4.21.0
       viem: 2.45.1(typescript@5.9.3)(zod@4.3.6)
     transitivePeerDependencies:
@@ -3691,10 +3691,10 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rocketh/verifier@0.18.0(@rocketh/node@0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
+  '@rocketh/verifier@0.18.2(@rocketh/node@0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
       '@rocketh/core': 0.18.0(typescript@5.9.3)(zod@4.3.6)
-      '@rocketh/node': 0.18.0(rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+      '@rocketh/node': 0.18.2(rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@types/fs-extra': 11.0.4
       '@types/qs': 6.14.0
       chalk: 5.6.2
@@ -4959,7 +4959,7 @@ snapshots:
       glob: 13.0.0
       package-json-from-dist: 1.0.1
 
-  rocketh@0.18.0(typescript@5.9.3)(zod@3.25.76):
+  rocketh@0.18.1(typescript@5.9.3)(zod@3.25.76):
     dependencies:
       '@rocketh/core': 0.18.0(typescript@5.9.3)(zod@3.25.76)
       abitype: 1.2.3(typescript@5.9.3)(zod@3.25.76)
@@ -4975,7 +4975,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  rocketh@0.18.0(typescript@5.9.3)(zod@4.3.6):
+  rocketh@0.18.1(typescript@5.9.3)(zod@4.3.6):
     dependencies:
       '@rocketh/core': 0.18.0(typescript@5.9.3)(zod@4.3.6)
       abitype: 1.2.3(typescript@5.9.3)(zod@4.3.6)
