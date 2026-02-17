@@ -1,5 +1,12 @@
 # hardhat-deploy
 
+## 2.0.0-next.77
+
+### Patch Changes
+
+- 0cdaca5: do not generate artifacts with empty bytecode
+- b811936: fix typing
+
 ## 2.0.0-next.76
 
 ### Patch Changes
