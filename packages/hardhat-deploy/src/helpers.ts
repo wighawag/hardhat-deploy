@@ -24,7 +24,7 @@ export function setupHardhatDeploy<
 		// }
 	) {
 		const env = await loadEnvironmentFromHardhat<NamedAccounts, Data>(required);
-		return enhanceEnvIfNeeded(env, extensions);
+		return enhanceEnvIfNeeded<Extensions, NamedAccounts, Data>(env, extensions);
 	}
 
 	return {
@@ -48,7 +48,7 @@ export async function generateForkConfig(
 	let provider: any = connection.provider;
 	let environment: string | {fork: string} = connection.networkName;
 	let forkChainId: number | undefined;
-	
+
 	if (fork) {
 		// if (options?.useChainIdOfForkedNetwork) {
 		// 	const forkNetworkConfig = params.hre.config.networks[fork];
@@ -128,7 +128,7 @@ export async function loadEnvironmentFromHardhat<
 			connection,
 		},
 		saveDeployments: isFork ? false : undefined,
-		autoImpersonate:  connection.networkConfig.type === 'edr-simulated' ? true : undefined,
+		autoImpersonate: connection.networkConfig.type === 'edr-simulated' ? true : undefined,
 	});
 }
 
@@ -218,7 +218,8 @@ export function addNetworksFromEnv(networks?: Record<string, NetworkUserConfig>)
 						accounts: getAccounts(networkName),
 					};
 				} else {
-					console.error(`no url for network ${networkName}`);
+					// TODO ?
+					// console.error(`no url for network ${networkName}`);
 				}
 			} else {
 				console.error(`duplicated network ${networkName}`);
