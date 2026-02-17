@@ -3,6 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {FileTraversed, slash, traverse} from './utils/files.js';
 
+// TODO option
+const GENERATE_EMPTY_ARTIFACTS: boolean = false;
+const REF_ARTIFACT_ABI = GENERATE_EMPTY_ARTIFACTS ? true : false;
 
 function writeIfDifferent(filePath: string, newTextContent: string) {
 	// Ensure we're working with a string
@@ -118,20 +121,36 @@ function writeABIDefinitionToFile(
 	const tsFilepath = path.join(folder, 'abis', canonicalName) + '.ts';
 	const folderPath = path.dirname(tsFilepath);
 	ensureDirExistsSync(folderPath);
-	if (mode === 'typescript') {
-		const newContent = `import {${artifactName}} from '${relativePath}artifacts/${canonicalName}.js';
+
+	if (REF_ARTIFACT_ABI) {
+		if (mode === 'typescript') {
+			const newContent = `import {${artifactName}} from '${relativePath}artifacts/${canonicalName}.js';
 export type ${abiName} = (typeof ${artifactName})['abi'];\n
 export const ${abiName}: ${abiName} = ${artifactName}['abi'];\n`;
-		writeIfDifferent(tsFilepath, newContent);
-	} else if (mode === 'javascript') {
-		const jsFilepath = path.join(folder, 'abis', canonicalName) + '.js';
-		const newContent = `export {};\n`;
-		const dtsContent = `import {${artifactName}} from '${relativePath}artifacts/${canonicalName}.js';
+			writeIfDifferent(tsFilepath, newContent);
+		} else if (mode === 'javascript') {
+			const jsFilepath = path.join(folder, 'abis', canonicalName) + '.js';
+			const newContent = `export {};\n`;
+			const dtsContent = `import {${artifactName}} from '${relativePath}artifacts/${canonicalName}.js';
 export type ${abiName} = (typeof ${artifactName})['abi'];\n
 export const ${abiName} = ${artifactName}['abi'];\n`;
 
-		writeIfDifferent(jsFilepath, newContent);
-		writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
+			writeIfDifferent(jsFilepath, newContent);
+			writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
+		}
+	} else {
+		if (mode === 'typescript') {
+			const newContent = `export type ${abiName} = ${JSON.stringify(data.abi, null, 2)};
+export const ${abiName}: ${abiName} = ${JSON.stringify(data.abi, null, 2)};\n`;
+			writeIfDifferent(tsFilepath, newContent);
+		} else if (mode === 'javascript') {
+			const jsFilepath = path.join(folder, 'abis', canonicalName) + '.js';
+			const newContent = `export const ${abiName} = /** @type {const} **/ (${JSON.stringify(data.abi, null, 2)});`;
+			const dtsContent = `export type ${abiName} = ${JSON.stringify(data.abi, null, 2)};
+export declare const ${abiName}: ${abiName};\n`;
+			writeIfDifferent(jsFilepath, newContent);
+			writeIfDifferent(jsFilepath.replace(/\.js$/, '.d.ts'), dtsContent);
+		}
 	}
 }
 function writeABIDefinitionIndexToFile(folder: string, data: Artifacts, mode: 'typescript' | 'javascript') {
@@ -166,6 +185,7 @@ function writeABIDefinitionIndexToFile(folder: string, data: Artifacts, mode: 't
 export async function generateTypes(paths: {artifacts: string[]}, config: ArtifactGenerationConfig): Promise<void> {
 	const buildInfoCache = new Map<string, any>();
 	const allArtifacts: {[name: string]: any} = {};
+	const artifactsWithBytecode: {[name: string]: any} = {};
 	const shortNameDict: {[shortName: string]: boolean} = {};
 
 	for (const artifactsPath of paths.artifacts) {
@@ -234,12 +254,23 @@ export async function generateTypes(paths: {artifacts: string[]}, config: Artifa
 			const solidityOutput = parsedBuildInfo.output.contracts[parsed.inputSourceName][contractName];
 			const hardhatArtifactObject = {...parsed, ...solidityOutput};
 			const {buildInfoId, _format, ...artifactObject} = hardhatArtifactObject;
+
+			const hasBytecode = artifactObject.bytecode && artifactObject.bytecode !== '0x';
+
 			const fullName = `${dirname}/${contractName}`;
 			allArtifacts[fullName] = artifactObject;
+
+			if (hasBytecode) {
+				artifactsWithBytecode[fullName] = artifactObject;
+			}
 			if (shortNameDict[contractName]) {
 				delete allArtifacts[contractName];
+				delete artifactsWithBytecode[contractName];
 			} else {
 				allArtifacts[contractName] = artifactObject;
+				if (hasBytecode) {
+					artifactsWithBytecode[contractName] = artifactObject;
+				}
 				shortNameDict[contractName] = true;
 			}
 		}
@@ -252,6 +283,7 @@ export async function generateTypes(paths: {artifacts: string[]}, config: Artifa
 				const shortName = split[split.length - 1];
 				if (allArtifacts[shortName]) {
 					delete allArtifacts[key];
+					delete artifactsWithBytecode[key];
 				}
 			}
 		}
@@ -272,10 +304,13 @@ export async function generateTypes(paths: {artifacts: string[]}, config: Artifa
 		const mode = destination.mode;
 		for (const key of Object.keys(allArtifacts)) {
 			writeABIDefinitionToFile(generatedFolder, key, allArtifacts[key], mode);
-			writeArtifactToFile(generatedFolder, key, allArtifacts[key], mode);
+			const artifactWithBytecode = artifactsWithBytecode[key];
+			if (artifactWithBytecode || GENERATE_EMPTY_ARTIFACTS) {
+				writeArtifactToFile(generatedFolder, key, allArtifacts[key], mode);
+			}
 		}
 
-		writeArtifactIndexToFile(generatedFolder, allArtifacts, mode);
+		writeArtifactIndexToFile(generatedFolder, GENERATE_EMPTY_ARTIFACTS ? allArtifacts : artifactsWithBytecode, mode);
 		writeABIDefinitionIndexToFile(generatedFolder, allArtifacts, mode);
 	}
 }
