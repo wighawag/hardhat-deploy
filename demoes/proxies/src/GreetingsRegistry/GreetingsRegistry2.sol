@@ -21,11 +21,12 @@ contract GreetingsRegistry2 {
     /// @notice called to set your own greeting
     /// @param message the new greeting
     function setMessage(string calldata message) external {
-        string memory actualMessage = string(abi.encodePacked(_prefix, message));
+        string memory actualMessage = string(
+            abi.encodePacked(_prefix, message)
+        );
         messages[msg.sender] = actualMessage;
         emit MessageChanged(msg.sender, actualMessage);
     }
-
 
     function getMessage(address user) external view returns (string memory) {
         return messages[user];

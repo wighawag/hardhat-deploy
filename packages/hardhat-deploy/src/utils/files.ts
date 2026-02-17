@@ -13,7 +13,7 @@ export function traverse(
 	dir: string,
 	result: any[] = [],
 	topDir?: string,
-	filter?: (name: string, stats: any) => boolean // TODO any is Stats
+	filter?: (name: string, stats: any) => boolean, // TODO any is Stats
 ): Array<FileTraversed> {
 	fs.readdirSync(dir).forEach((name) => {
 		const fPath = path.resolve(dir, name);

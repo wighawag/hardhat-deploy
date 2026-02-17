@@ -14,6 +14,12 @@ importers:
       ezx:
         specifier: ^0.0.18
         version: 0.0.18
+      prettier:
+        specifier: ^3.8.1
+        version: 3.8.1
+      prettier-plugin-solidity:
+        specifier: ^2.2.1
+        version: 2.2.1(prettier@3.8.1)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5

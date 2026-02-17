@@ -12,14 +12,14 @@ const artifactGenerationUserConfigSchema = z
 				z.object({
 					mode: z.union([z.literal('javascript'), z.literal('typescript')]).optional(),
 					folder: z.string().optional(),
-				})
+				}),
 			)
 			.optional(),
 	})
 	.optional();
 
 export async function validateTypechainUserConfig(
-	userConfig: HardhatUserConfig
+	userConfig: HardhatUserConfig,
 ): Promise<HardhatUserConfigValidationError[]> {
 	return validateUserConfigZodType(userConfig.generateTypedArtifacts, artifactGenerationUserConfigSchema);
 }

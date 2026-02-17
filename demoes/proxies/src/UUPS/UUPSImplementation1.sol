@@ -22,7 +22,10 @@ contract UUPSImplementation1 is UUPSUpgradeable {
         _prefix = prefix;
     }
 
-    function init(address initialOwner, string memory prefix) external onlyProxy {
+    function init(
+        address initialOwner,
+        string memory prefix
+    ) external onlyProxy {
         _owner = initialOwner;
         _prefix = prefix;
     }
@@ -30,7 +33,9 @@ contract UUPSImplementation1 is UUPSUpgradeable {
     /// @notice called to set your own greeting
     /// @param message the new greeting
     function setMessage(string calldata message) external {
-        string memory actualMessage = string(abi.encodePacked(_prefix, message));
+        string memory actualMessage = string(
+            abi.encodePacked(_prefix, message)
+        );
         messages[msg.sender] = actualMessage;
         emit MessageChanged(msg.sender, actualMessage);
     }

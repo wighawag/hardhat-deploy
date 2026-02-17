@@ -7,7 +7,7 @@ export default async (): Promise<Partial<SolidityHooks>> => {
 		async onCleanUpArtifacts(
 			context: HookContext,
 			artifactPaths: string[],
-			next: (nextContext: HookContext, artifactPaths: string[]) => Promise<void>
+			next: (nextContext: HookContext, artifactPaths: string[]) => Promise<void>,
 		) {
 			let artifactPathsToProcess = [context.config.paths.artifacts];
 			// if (context.config.generateTypedArtifacts.externalArtifacts) {
@@ -21,7 +21,7 @@ export default async (): Promise<Partial<SolidityHooks>> => {
 					{
 						artifacts: artifactPathsToProcess,
 					},
-					context.config.generateTypedArtifacts
+					context.config.generateTypedArtifacts,
 				);
 			}
 

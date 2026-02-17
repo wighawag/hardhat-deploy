@@ -9,7 +9,8 @@ type ShortString is bytes32;
 
 library ShortStrings {
     // Used as an identifier for strings longer than 31 bytes.
-    bytes32 private constant FALLBACK_SENTINEL = 0x00000000000000000000000000000000000000000000000000000000000000FF;
+    bytes32 private constant FALLBACK_SENTINEL =
+        0x00000000000000000000000000000000000000000000000000000000000000FF;
 
     error StringTooLong(string str);
     error InvalidShortString();
@@ -19,7 +20,9 @@ library ShortStrings {
      *
      * This will trigger a `StringTooLong` error is the input string is too long.
      */
-    function toShortString(string memory str) internal pure returns (ShortString) {
+    function toShortString(
+        string memory str
+    ) internal pure returns (ShortString) {
         bytes memory bstr = bytes(str);
         if (bstr.length > 31) {
             revert StringTooLong(str);
