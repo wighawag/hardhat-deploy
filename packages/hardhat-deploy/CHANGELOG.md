@@ -1,5 +1,87 @@
 # hardhat-deploy
 
+## 2.0.0
+
+### Patch Changes
+
+- 5fa4f8c: template init
+- f7879a5: latest deps
+- 5640f60: force the type for artifact so typescript does not need to infer (which cause issue on large artifact files)
+- 87d94b0: update deps
+- 2f1b2dd: option to not default on test mnemonic
+- 03ce716: ensure metadata source is inlined
+- ca222c5: use latest rocketh breaking changes
+- 11753ee: rocketh v 0.15.0
+- ad30f52: fix
+- 290af75: latest rocketh
+- cdd83db: fix windows
+- 806d571: fix
+- 333a5b2: auto impersonate on edr node
+- 0ad6026: We transform dash into underscore as dash are not supported everywhwre in env var names
+- ac6ab32: dependencies cleanup
+- 56722fc: use latest deps
+- cd2723b: latest rocketh
+- d93b262: latest deps
+- 9726486: latest rocketh
+- 3de1c5f: use rocketh 0.11.x
+- 342e21a: use RPC set via env variable or secret
+- 9b19170: change config + upgrade to latest hardhat
+- 22cd6a9: use latest rocketh
+- 6e3c40d: update README
+- adbe641: generate types too if ts output is chosen
+- cda6a68: use log level 3 by default
+- 1836c0f: latest deps
+- 92c058b: fix
+- ca30ae5: update deps
+- 0ec29c9: update to latest hardhat
+- 347c4e0: hardhat@3.0.0-next.2
+- 63e0d5b: latest rocketh
+- 9a2286b: fix postinstall
+- 2e59725: generate abi value too
+- 07ceeb7: latest rocketh
+- 0805d80: add --tags
+- 415ea5f: latest rocketh
+- b0988a4: update rocketh + fix peer deps
+- 45f5339: allow to add non edr network
+- af4e6b7: fix
+- 51ba855: update latest hardhat v3
+- 875a4ba: latest rocketh
+- 5a2265d: latest deps
+- 099ca58: latets rocketh
+- 77fdd83: hardhat v2 detector
+- fd69fb1: latest deps
+- d787f74: better org for generated artifacts
+- 7defe0a: ci fix
+- 661de7c: fixes + docs
+- 3a06352: fix
+- 62c56e2: fix logger
+- 36e44b4: update latest rocketh
+- 3b81c82: use latest rocketh
+- 874b01d: use hardhat 3.0.0
+- d93918d: use latest rocketh
+- 147005d: latest rocketh + hardhat
+- 7ddad15: better type generator for artifact and Abi + allow to provide hre connection manually when using loadEnvironmentFromHardhat
+- ad2ecb6: fix: update type gen
+- 1dfe4a4: update deps
+- 23186a8: fix + add polling-interval and report-gas-used option
+- 617337e: detect op chains
+- 50bbc8c: u[pdate rocketh
+- 771fb4c: latest rocketh with network specific data
+- 0cdaca5: do not generate artifacts with empty bytecode
+- 64188cd: forgot to build?
+- 3cfb3b8: fix postinstall
+- 13e536b: update rocketh latest
+- 8a8254d: latest hardhat
+- 6eeaa97: fix
+- e1b2f6d: update rocketh
+- b811936: fix typing
+- c0cb4a3: fix : was not reading generateTypedArtifacts config
+- 0d13e39: fix
+- d130dea: fix
+- 6f2d245: use latest rocketh
+- 099f263: use latest rocketh
+- 6f10af7: hardhat-deploy-for-hardhat-v2
+
 ## 2.0.0-next.80
 
 ### Patch Changes
