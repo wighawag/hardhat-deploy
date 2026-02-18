@@ -120,6 +120,7 @@ export async function loadEnvironmentFromHardhat<
 	// }
 ): Promise<Environment<NamedAccounts, Data>> {
 	const {connection, environment, provider, isFork} = await generateForkConfig(params);
+	const isEDR = connection.networkConfig.type === 'edr-simulated' ? true : undefined;
 	// console.log(`loading environments...`);
 	return loadEnvironmentFromFiles<NamedAccounts, Data>({
 		provider,
@@ -128,7 +129,7 @@ export async function loadEnvironmentFromHardhat<
 			connection,
 		},
 		saveDeployments: isFork ? false : undefined,
-		autoImpersonate: connection.networkConfig.type === 'edr-simulated' ? true : undefined,
+		autoImpersonate: isEDR,
 	});
 }
 

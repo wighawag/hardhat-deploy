@@ -9,7 +9,6 @@
     "prettier": "^3.8.1",
     "prettier-plugin-solidity": "^2.2.1",
     "set-defaults": "^0.0.5",
-    "syncpack": "^13.0.4",
     "vitepress": "^1.6.4",
     "zellij-launcher": "^0.0.1"
   },
@@ -27,7 +26,6 @@
     "prepublish": "pnpm build",
     "build": "pnpm -r build && cp ./README.md ./packages/hardhat-deploy/",
     "dev": "pnpm -r dev",
-    "sync-deps": "syncpack fix-mismatches",
     "test": "pnpm -r test",
     "test:installation": "ezx --verbose --cwd /tmp documentation/installation.md",
     "format": "prettier --write \"packages/*/src/**/*.ts\" \"demoes/*/src/**\"",
