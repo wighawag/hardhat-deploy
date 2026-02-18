@@ -25,17 +25,24 @@ const hardhatPlugin: HardhatPlugin = {
 		task('deploy', 'Deploy contracts')
 			// .addFlag('skipGasReport', 'if set, skip gas report')
 			.addFlag({name: 'skipPrompts', description: 'if set, skip any prompts'})
+			.addFlag({name: 'reportGasUsed', description: 'if set, report gas used'})
 			.addOption({
 				name: 'saveDeployments',
-				description: 'if set, save deployments',
-				defaultValue: '',
-				type: ArgumentType.STRING,
+				description: 'if set to false, do not save deployments',
+				defaultValue: undefined,
+				type: ArgumentType.STRING_WITHOUT_DEFAULT,
 			})
 			.addOption({
 				name: 'tags',
-				description: 'specify which tags to deploy',
-				defaultValue: '',
-				type: ArgumentType.STRING,
+				description: 'specify which tags to deploy, separated by commas',
+				defaultValue: undefined,
+				type: ArgumentType.STRING_WITHOUT_DEFAULT,
+			})
+			.addOption({
+				name: 'pollingInterval',
+				description: 'specify the polling interval used to check transactions',
+				defaultValue: undefined,
+				type: ArgumentType.STRING_WITHOUT_DEFAULT,
 			})
 			.setAction(() => import('./tasks/deploy.js'))
 			.build(),

@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.80
+
+### Patch Changes
+
+- fix + add polling-interval and report-gas-used option
+
 ## 2.0.0-next.79
 
 ### Patch Changes

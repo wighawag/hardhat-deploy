@@ -290,14 +290,19 @@ export function addForkConfiguration(networks: Record<string, NetworkUserConfig>
 				// }
 			}
 		}
-	}
 
-	const existingForkConfiguration: EdrNetworkUserConfig =
-		networks.fork && networks.fork.type === 'edr-simulated' ? networks.fork : {type: 'edr-simulated', chainType: 'l1'};
+		if (!forkURL) {
+			const errorMessage = `no rpc URL found for ${currentNetworkName}, cannot fork`;
+			throw new Error(errorMessage);
+			// console.error(errorMessage);
+		}
 
-	const newNetworks: Record<string, NetworkUserConfig> = {
-		...networks,
-		fork: {
+		const existingForkConfiguration: EdrNetworkUserConfig =
+			networks.fork && networks.fork.type === 'edr-simulated'
+				? networks.fork
+				: {type: 'edr-simulated', chainType: 'l1'};
+
+		const forkNetwork = {
 			...existingForkConfiguration,
 			...{
 				accounts: hardhatAccounts || existingForkConfiguration?.accounts,
@@ -308,7 +313,12 @@ export function addForkConfiguration(networks: Record<string, NetworkUserConfig>
 						}
 					: undefined,
 			},
-		},
-	};
-	return newNetworks;
+		};
+		const newNetworks: Record<string, NetworkUserConfig> = {
+			...networks,
+			fork: forkNetwork,
+		};
+		return newNetworks;
+	}
+	return networks;
 }
