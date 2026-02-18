@@ -123,10 +123,8 @@ export default defineConfig({
 
 After we got hardhat project setup, it is time to install hardhat-deploy and the other packages required.
 
-Note: hardhat-deploy is alpha, see `@next` to get alpha version, if you do not specify `@next` you'll get v1
-
 ```bash
-pnpm add -D hardhat-deploy@next rocketh @rocketh/node @rocketh/deploy @rocketh/read-execute
+pnpm add -D hardhat-deploy rocketh @rocketh/node @rocketh/deploy @rocketh/read-execute
 ```
 
 Note that both `rocketh` and `@rocketh/node` are necessary
