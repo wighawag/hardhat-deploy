@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.0-next.79
+
+### Patch Changes
+
+- latets rocketh
+
 ## 2.0.0-next.78
 
 ### Patch Changes
