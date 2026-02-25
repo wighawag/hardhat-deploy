@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.1
+
+### Patch Changes
+
+- use zod 3 to ensure compatibility with hardhat
+
 ## 2.0.0
 
 ### Patch Changes

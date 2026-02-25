@@ -1,6 +1,6 @@
 {
 	"name": "hardhat-deploy",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Hardhat plugin for replicable smart contract deployments and easy testing across multiple EVM chains, with support for proxies, diamonds, named accounts, and deployment fixtures",
 	"keywords": [
 		"hardhat",
@@ -75,7 +75,7 @@
 		"commander": "^14.0.3",
 		"named-logs": "^0.4.1",
 		"named-logs-console": "^0.5.1",
-		"zod": "^4.3.6"
+		"zod": "^3.25.76"
 	},
 	"scripts": {
 		"prepublishOnly": "node scripts/copy-cleaned-template.js && cp ../../README.md ./ && cp ../../LICENSE ./",
