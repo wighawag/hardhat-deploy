@@ -61,7 +61,7 @@ const config: HardhatUserConfig = {
 		sources: ['src'],
 	},
 	externalArtifacts: {
-		modules: ['@rocketh/diamond/artifacts'],
+		modules: ['@rocketh/router/artifacts'],
 	},
 };
 

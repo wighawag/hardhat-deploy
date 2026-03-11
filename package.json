@@ -16,6 +16,11 @@
     "node": "22.14.0"
   },
   "packageManager": "pnpm@10.28.1",
+  "pnpm": {
+    "overrides": {
+      "@nomicfoundation/edr": "link:/home/wighawag/dev/github/NomicFoundation/edr/crates/edr_napi"
+    }
+  },
   "scripts": {
     "prepare": "set-defaults .vscode",
     "prepublishOnly": "pnpm format && pnpm build",
@@ -30,6 +35,6 @@
     "test:installation": "ezx --verbose --cwd /tmp documentation/installation.md",
     "format": "prettier --write \"packages/*/src/**/*.ts\" \"demoes/*/src/**\"",
     "format:check": "prettier --check \"packages/*/src/**/*.ts\" \"demoes/*/src/**\"",
-    "start": "pnpm zellij-launcher --layout zellij.kdl a $npm_package_name || zellij --layout zellij.kdl -s $npm_package_name"
+    "start": "zellij-launcher a $npm_package_name || zellij -n zellij.kdl -s $npm_package_name"
   }
 }

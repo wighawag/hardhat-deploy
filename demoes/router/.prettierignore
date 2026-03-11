@@ -1,0 +1,26 @@
+############################################
+# .gitignore
+#############################################
+node_modules
+.vscode/*
+!*.default
+*.local
+
+# rocketh
+generated
+deployments/localhost
+
+# hardhat
+/coverage
+/coverage.json
+/coverage-data.json
+cache
+artifacts
+
+docs
+*.hbs
+
+#############################################
+deployments
+package.json
+pnpm-lock.yaml

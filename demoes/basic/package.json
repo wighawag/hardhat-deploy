@@ -41,7 +41,7 @@
 		"deploy:watch": "wait-on ./generated && ldenv -m localhost as-soon -w generated -w deploy pnpm run deploy:dev @@MODE @@",
 		"test": "hardhat test",
 		"test:watch": "wait-on ./generated && as-soon -w generated -w test hardhat test --no-compile",
-		"start": "zellij-launcher --layout zellij.kdl a $npm_package_name || zellij --layout zellij.kdl -s $npm_package_name",
+		"start": "zellij-launcher a $npm_package_name || zellij -n zellij.kdl -s $npm_package_name",
 		"stop": "zellij kill-session $npm_package_name",
 		"format:check": "prettier --check .",
 		"format": "prettier --write ."
