@@ -16,11 +16,6 @@
     "node": "22.14.0"
   },
   "packageManager": "pnpm@10.28.1",
-  "pnpm": {
-    "overrides": {
-      "@nomicfoundation/edr": "link:/home/wighawag/dev/github/NomicFoundation/edr/crates/edr_napi"
-    }
-  },
   "scripts": {
     "prepare": "set-defaults .vscode",
     "prepublishOnly": "pnpm format && pnpm build",

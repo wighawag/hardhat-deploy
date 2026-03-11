@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@nomicfoundation/edr': link:/home/wighawag/dev/github/NomicFoundation/edr/crates/edr_napi
-
 importers:
 
   .:
@@ -46,16 +43,16 @@ importers:
         version: 3.0.8(hardhat@3.1.8)
       '@nomicfoundation/hardhat-viem':
         specifier: ^3.0.2
-        version: 3.0.2(hardhat@3.1.8)(viem@2.46.2(typescript@5.9.3)(zod@4.3.6))
+        version: 3.0.2(hardhat@3.1.8)(viem@2.46.2(typescript@5.9.3)(zod@3.25.76))
       '@rocketh/deploy':
         specifier: ^0.19.1
-        version: 0.19.1(typescript@5.9.3)(zod@4.3.6)
+        version: 0.19.1(typescript@5.9.3)(zod@3.25.76)
       '@rocketh/node':
         specifier: ^0.19.3
-        version: 0.19.3(rocketh@0.19.3(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
+        version: 0.19.3(rocketh@0.19.3(typescript@5.9.3)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)
       '@rocketh/read-execute':
         specifier: ^0.19.0
-        version: 0.19.0(typescript@5.9.3)(zod@4.3.6)
+        version: 0.19.0(typescript@5.9.3)(zod@3.25.76)
       '@types/node':
         specifier: ^25.2.3
         version: 25.2.3
@@ -85,7 +82,7 @@ importers:
         version: 2.2.1(prettier@3.8.1)
       rocketh:
         specifier: ^0.19.3
-        version: 0.19.3(typescript@5.9.3)(zod@4.3.6)
+        version: 0.19.3(typescript@5.9.3)(zod@3.25.76)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -97,7 +94,7 @@ importers:
         version: 5.9.3
       viem:
         specifier: ^2.46.2
-        version: 2.46.2(typescript@5.9.3)(zod@4.3.6)
+        version: 2.46.2(typescript@5.9.3)(zod@3.25.76)
       wait-on:
         specifier: ^9.0.4
         version: 9.0.4
@@ -150,8 +147,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/hardhat-deploy
       hardhat-external-artifacts:
-        specifier: ^0.0.3
-        version: 0.0.3(hardhat@3.1.8)(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.0.4
+        version: 0.0.4(hardhat@3.1.8)(typescript@5.9.3)(zod@4.3.6)
       ldenv:
         specifier: ^0.3.16
         version: 0.3.16
@@ -283,22 +280,22 @@ importers:
         version: 3.0.8(hardhat@3.1.8)
       '@nomicfoundation/hardhat-viem':
         specifier: ^3.0.2
-        version: 3.0.2(hardhat@3.1.8)(viem@2.46.2(typescript@5.9.3)(zod@3.25.76))
+        version: 3.0.2(hardhat@3.1.8)(viem@2.46.2(typescript@5.9.3)(zod@4.3.6))
       '@rocketh/deploy':
         specifier: ^0.19.1
-        version: 0.19.1(typescript@5.9.3)(zod@3.25.76)
+        version: 0.19.1(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/node':
         specifier: ^0.19.3
-        version: 0.19.3(rocketh@0.19.3(typescript@5.9.3)(zod@3.25.76))(typescript@5.9.3)(zod@3.25.76)
+        version: 0.19.3(rocketh@0.19.3(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/proxy':
         specifier: ^0.19.5
-        version: 0.19.5(typescript@5.9.3)(zod@3.25.76)
+        version: 0.19.5(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/read-execute':
         specifier: ^0.19.0
-        version: 0.19.0(typescript@5.9.3)(zod@3.25.76)
+        version: 0.19.0(typescript@5.9.3)(zod@4.3.6)
       '@rocketh/router':
         specifier: ^0.19.2
-        version: 0.19.2(typescript@5.9.3)(zod@3.25.76)
+        version: 0.19.2(typescript@5.9.3)(zod@4.3.6)
       '@types/node':
         specifier: ^25.2.3
         version: 25.2.3
@@ -318,8 +315,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/hardhat-deploy
       hardhat-external-artifacts:
-        specifier: ^0.0.3
-        version: 0.0.3(hardhat@3.1.8)(typescript@5.9.3)(zod@3.25.76)
+        specifier: ^0.0.6
+        version: 0.0.6(hardhat@3.1.8)(typescript@5.9.3)(zod@4.3.6)
       ldenv:
         specifier: ^0.3.16
         version: 0.3.16
@@ -331,7 +328,7 @@ importers:
         version: 2.2.1(prettier@3.8.1)
       rocketh:
         specifier: ^0.19.3
-        version: 0.19.3(typescript@5.9.3)(zod@3.25.76)
+        version: 0.19.3(typescript@5.9.3)(zod@4.3.6)
       set-defaults:
         specifier: ^0.0.5
         version: 0.0.5
@@ -343,7 +340,7 @@ importers:
         version: 5.9.3
       viem:
         specifier: ^2.46.2
-        version: 2.46.2(typescript@5.9.3)(zod@3.25.76)
+        version: 2.46.2(typescript@5.9.3)(zod@4.3.6)
       wait-on:
         specifier: ^9.0.4
         version: 9.0.4
@@ -988,6 +985,38 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@nomicfoundation/edr-darwin-arm64@0.12.0-next.24':
+    resolution: {integrity: sha512-lYcD9IM52G0hk/3Sso2Rpdpyfafy3aHH0GsSy/FVog9UrEkmmU14AmccE18/zTL+UyV0yzYMDOmh6y83SD/lbg==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr-darwin-x64@0.12.0-next.24':
+    resolution: {integrity: sha512-cHDJZlPDpDXJXxQDVM0TGzEuNvV3wW94gipEdjNxZHeC9T2/NU/5GUoQajMJgvCZ6PWDlRMwIBRtM1jC/ny5DA==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.24':
+    resolution: {integrity: sha512-G/iln4W79CR9f68+crBZM1kBdmmK3IbQCD4b5u+iqby+H5BOLSPQmjeW9UREK5WSecnv7Oxr/ZTHHRq/w9pUPA==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.24':
+    resolution: {integrity: sha512-wt6UuOutufL3UTSyMiwPOyfRly3uQEFHASXqLsNjgp4qBrm0s+kkyaYpAe8h53lGzZmXIDOAbO0P/fwxnLCnWw==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.24':
+    resolution: {integrity: sha512-mHgkUSynINTnnIvZuZymJ4dMqjemGjdrzQ87rP5/SQQGRQVV82uDomSEglp9btSmbBWfPj4r4tWsV+a3844W0w==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.24':
+    resolution: {integrity: sha512-E0XNSlPc8Hx5Nhowe5VIvAqVeT+1VUWSRqG0cZtYcpUgJZxTp8p03ojPtbyfjL4T+78GfnpmzkkLhB6S2jZ1FQ==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.24':
+    resolution: {integrity: sha512-PbtY2zWc4k8HK4gVnVbPohJnfrICboo6J91vxTlhnPKCWGvfGbsqLfDUAp91ExHHY+80qRfQnwaLbhJiIqLFGw==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr@0.12.0-next.24':
+    resolution: {integrity: sha512-/NwB9yX7uBs/FIJKHBZo2hVhP7g3v6LbE21JvTLvshgb+XscyaRRUmzB//ankxLGJ1TehtXAf/Qh/a19vgpiig==}
+    engines: {node: '>= 20'}
 
   '@nomicfoundation/hardhat-errors@3.0.5':
     resolution: {integrity: sha512-8Ayqf6hFM1glmrSxrXgX6n2pn5uTlHNxEB8N5Me0DOeOGB67PRIrQdiO+RzUhrNW5YgWUNWBevOLQbW06uQ79g==}
@@ -1871,8 +1900,14 @@ packages:
     engines: {node: '>=0.4.7'}
     hasBin: true
 
-  hardhat-external-artifacts@0.0.3:
-    resolution: {integrity: sha512-EtlbSy/tFSNU6ZYFstupZ+0O8NQj+bYoIclH8FlQGaG1NUcsST8a/NagMvbbiQqvRHZKf0eg8zDfZ0GMQDBcFw==}
+  hardhat-external-artifacts@0.0.4:
+    resolution: {integrity: sha512-FFkAAUrvzyEt0qO/M6r/lDtERhn/wwMnFdIHHiTdtGPslUFXYNJIGipzx20oV7aj/ERnLLUMTaDI4wKTYJBIjw==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      hardhat: ^3.1.8
+
+  hardhat-external-artifacts@0.0.6:
+    resolution: {integrity: sha512-Xj6Mn/K19bMG8m2dIYxO5LiQH/qRm7GeKTI6nqliGRfXbo8Arxnql9oSl9OexAHd4JeM59giMQt2a7gR2HLdfg==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       hardhat: ^3.1.8
@@ -3133,6 +3168,30 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
 
+  '@nomicfoundation/edr-darwin-arm64@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr-darwin-x64@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr@0.12.0-next.24':
+    dependencies:
+      '@nomicfoundation/edr-darwin-arm64': 0.12.0-next.24
+      '@nomicfoundation/edr-darwin-x64': 0.12.0-next.24
+      '@nomicfoundation/edr-linux-arm64-gnu': 0.12.0-next.24
+      '@nomicfoundation/edr-linux-arm64-musl': 0.12.0-next.24
+      '@nomicfoundation/edr-linux-x64-gnu': 0.12.0-next.24
+      '@nomicfoundation/edr-linux-x64-musl': 0.12.0-next.24
+      '@nomicfoundation/edr-win32-x64-msvc': 0.12.0-next.24
+
   '@nomicfoundation/hardhat-errors@3.0.5':
     dependencies:
       '@nomicfoundation/hardhat-utils': 3.0.5
@@ -3488,21 +3547,6 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rocketh/proxy@0.19.5(typescript@5.9.3)(zod@3.25.76)':
-    dependencies:
-      '@rocketh/core': 0.19.0(typescript@5.9.3)(zod@3.25.76)
-      '@rocketh/deploy': 0.19.1(typescript@5.9.3)(zod@3.25.76)
-      '@rocketh/read-execute': 0.19.0(typescript@5.9.3)(zod@3.25.76)
-      abitype: 1.2.3(typescript@5.9.3)(zod@3.25.76)
-      eip-1193: 0.6.5
-      named-logs: 0.4.1
-      viem: 2.46.2(typescript@5.9.3)(zod@3.25.76)
-    transitivePeerDependencies:
-      - bufferutil
-      - typescript
-      - utf-8-validate
-      - zod
-
   '@rocketh/proxy@0.19.5(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
       '@rocketh/core': 0.19.0(typescript@5.9.3)(zod@4.3.6)
@@ -3544,15 +3588,15 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rocketh/router@0.19.2(typescript@5.9.3)(zod@3.25.76)':
+  '@rocketh/router@0.19.2(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
-      '@rocketh/core': 0.19.0(typescript@5.9.3)(zod@3.25.76)
-      '@rocketh/deploy': 0.19.1(typescript@5.9.3)(zod@3.25.76)
-      abitype: 1.2.3(typescript@5.9.3)(zod@3.25.76)
+      '@rocketh/core': 0.19.0(typescript@5.9.3)(zod@4.3.6)
+      '@rocketh/deploy': 0.19.1(typescript@5.9.3)(zod@4.3.6)
+      abitype: 1.2.3(typescript@5.9.3)(zod@4.3.6)
       eip-1193: 0.6.5
       named-logs: 0.4.1
       solidity-proxy: 0.4.2
-      viem: 2.46.2(typescript@5.9.3)(zod@3.25.76)
+      viem: 2.46.2(typescript@5.9.3)(zod@4.3.6)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -4281,12 +4325,12 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
-  hardhat-external-artifacts@0.0.3(hardhat@3.1.8)(typescript@5.9.3)(zod@3.25.76):
+  hardhat-external-artifacts@0.0.4(hardhat@3.1.8)(typescript@5.9.3)(zod@4.3.6):
     dependencies:
       '@nomicfoundation/hardhat-utils': 4.0.0
       hardhat: 3.1.8
       named-logs: 0.4.1
-      viem: 2.46.2(typescript@5.9.3)(zod@3.25.76)
+      viem: 2.46.2(typescript@5.9.3)(zod@4.3.6)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -4294,7 +4338,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  hardhat-external-artifacts@0.0.3(hardhat@3.1.8)(typescript@5.9.3)(zod@4.3.6):
+  hardhat-external-artifacts@0.0.6(hardhat@3.1.8)(typescript@5.9.3)(zod@4.3.6):
     dependencies:
       '@nomicfoundation/hardhat-utils': 4.0.0
       hardhat: 3.1.8
@@ -4309,7 +4353,7 @@ snapshots:
 
   hardhat@3.1.8:
     dependencies:
-      '@nomicfoundation/edr': link:../../NomicFoundation/edr/crates/edr_napi
+      '@nomicfoundation/edr': 0.12.0-next.24
       '@nomicfoundation/hardhat-errors': 3.0.6
       '@nomicfoundation/hardhat-utils': 3.0.6
       '@nomicfoundation/hardhat-vendored': 3.0.1

@@ -61,7 +61,8 @@ const config: HardhatUserConfig = {
 		sources: ['src'],
 	},
 	externalArtifacts: {
-		modules: ['@rocketh/router/artifacts'],
+		modules: ['@rocketh/router/artifacts', '@rocketh/proxy/artifacts'],
+		debug: true,
 	},
 };
 

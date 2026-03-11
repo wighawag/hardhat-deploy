@@ -19,7 +19,7 @@
 		"forge-std": "github:foundry-rs/forge-std#v1.9.4",
 		"hardhat": "3.1.8",
 		"hardhat-deploy": "workspace:*",
-		"hardhat-external-artifacts": "^0.0.3",
+		"hardhat-external-artifacts": "^0.0.6",
 		"ldenv": "^0.3.16",
 		"prettier": "^3.8.1",
 		"prettier-plugin-solidity": "^2.2.1",

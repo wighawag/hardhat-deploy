@@ -31,22 +31,20 @@ export default deployScript(
 			{
 				account: deployer,
 				artifact: (name, params, options) => {
-					return deployViaRouter<Abi_IGreetingsRegistry>(
-						name,
-						params,
-						routes,
-						options,
-					);
+					return deployViaRouter<Abi_IGreetingsRegistry>(name, params, routes, {
+						...options,
+						// routerContract: {type: 'custom', artifact: artifacts.Router10X60},
+					});
 				},
 				args: [config],
 			},
 			{
 				owner: admin,
 				linkedData: config,
-				proxyContract: {
-					type: 'custom',
-					artifact: artifacts.ERC173Proxy,
-				},
+				// proxyContract: {
+				// 	type: 'custom',
+				// 	artifact: artifacts.ERC173Proxy,
+				// },
 			},
 		);
 	},
