@@ -44,6 +44,17 @@ const hardhatPlugin: HardhatPlugin = {
 				defaultValue: undefined,
 				type: ArgumentType.STRING_WITHOUT_DEFAULT,
 			})
+			.addOption({
+				name: 'defaultBuildProfile',
+				description:
+					'specify the default profile to use for ompilation. Note that the global option "--build-profile" will override it',
+				defaultValue: 'production',
+				type: ArgumentType.STRING,
+			})
+			.addFlag({
+				name: 'noCompile',
+				description: 'if set, skip compilation',
+			})
 			.setAction(() => import('./tasks/deploy.js'))
 			.build(),
 	],

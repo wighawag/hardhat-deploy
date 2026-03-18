@@ -1,5 +1,5 @@
 import {NewTaskActionFunction} from 'hardhat/types/tasks';
-import {loadAndExecuteDeploymentsFromFiles} from '@rocketh/node';
+import {loadAndExecuteDeploymentsFromFiles, readAndResolveConfig} from '@rocketh/node';
 import {generateForkConfig} from '../helpers.js';
 import {setupLogger} from 'named-logs-console';
 import {HardhatPluginError} from 'hardhat/plugins';
@@ -10,6 +10,11 @@ interface RunActionArguments {
 	tags?: string;
 	pollingInterval?: string;
 	reportGasUsed: boolean;
+	noCompile?: boolean;
+	defaultBuildProfile?: string;
+	// TODO? reset?: boolean;
+	// TODO? export?: string;
+	// TODO? watch?: boolean;
 }
 
 const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (args, hre) => {
@@ -37,6 +42,14 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 
 	if (defaultPollingInterval !== undefined && isNaN(defaultPollingInterval)) {
 		throw new HardhatPluginError('hardhat-deploy', `invalid pollingInterval value : ${args.pollingInterval}`);
+	}
+
+	if (!args.noCompile) {
+		await hre.tasks.getTask('build').run({
+			quiet: true,
+			noTests: true,
+			defaultBuildProfile: args.defaultBuildProfile || 'production',
+		});
 	}
 
 	await loadAndExecuteDeploymentsFromFiles({
