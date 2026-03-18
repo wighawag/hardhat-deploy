@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.3
+
+### Patch Changes
+
+- e6823ad: compile with build-profile = "production" by default
+
 ## 2.0.2
 
 ### Patch Changes
