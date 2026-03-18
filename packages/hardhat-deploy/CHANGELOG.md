@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.2
+
+### Patch Changes
+
+- fix: dash characters in generated export names
+
 ## 2.0.1
 
 ### Patch Changes
