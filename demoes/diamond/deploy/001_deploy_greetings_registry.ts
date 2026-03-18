@@ -10,7 +10,10 @@ export default deployScript(
 				account: deployer,
 			},
 			{
-				facets: [{artifact: artifacts.GetMessageFacet}, {artifact: artifacts.SetMessageFacet}],
+				facets: [
+					{artifact: artifacts.GetMessageFacet},
+					{artifact: artifacts.SetMessageFacet},
+				],
 				facetsArgs: [
 					{
 						prefix: '',

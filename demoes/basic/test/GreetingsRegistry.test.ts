@@ -8,7 +8,8 @@ const {deployAll} = setupFixtures(provider);
 
 describe('GreetingsRegistry', function () {
 	it('basic test', async function () {
-		const {env, GreetingsRegistry, unnamedAccounts} = await networkHelpers.loadFixture(deployAll);
+		const {env, GreetingsRegistry, unnamedAccounts} =
+			await networkHelpers.loadFixture(deployAll);
 		const greetingToSet = 'hello world';
 		const greeter = unnamedAccounts[0];
 		await expect(
@@ -18,7 +19,11 @@ describe('GreetingsRegistry', function () {
 			}),
 		).toEqual('');
 
-		await env.execute(GreetingsRegistry, {functionName: 'setMessage', args: [greetingToSet], account: greeter});
+		await env.execute(GreetingsRegistry, {
+			functionName: 'setMessage',
+			args: [greetingToSet],
+			account: greeter,
+		});
 
 		await expect(
 			await env.read(GreetingsRegistry, {
@@ -29,7 +34,8 @@ describe('GreetingsRegistry', function () {
 	});
 
 	it('basic test 2', async function () {
-		const {env, GreetingsRegistry, unnamedAccounts} = await networkHelpers.loadFixture(deployAll);
+		const {env, GreetingsRegistry, unnamedAccounts} =
+			await networkHelpers.loadFixture(deployAll);
 		const greetingToSet = 'hello world';
 		const greeter = unnamedAccounts[0];
 		await expect(
@@ -39,7 +45,11 @@ describe('GreetingsRegistry', function () {
 			}),
 		).toEqual('');
 
-		await env.execute(GreetingsRegistry, {functionName: 'setMessage', args: [greetingToSet], account: greeter});
+		await env.execute(GreetingsRegistry, {
+			functionName: 'setMessage',
+			args: [greetingToSet],
+			account: greeter,
+		});
 
 		await expect(
 			await env.read(GreetingsRegistry, {

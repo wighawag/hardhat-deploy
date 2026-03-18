@@ -3,7 +3,8 @@ import hre from 'hardhat';
 
 async function main() {
 	const env = await loadEnvironmentFromHardhat({hre});
-	const GreetingsRegistry = env.get<typeof artifacts.GreetingsRegistry.abi>('GreetingsRegistry');
+	const GreetingsRegistry =
+		env.get<typeof artifacts.GreetingsRegistry.abi>('GreetingsRegistry');
 
 	const before_messages = await env.read(GreetingsRegistry, {
 		functionName: 'messages',

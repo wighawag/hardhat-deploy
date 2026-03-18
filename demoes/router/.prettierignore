@@ -24,3 +24,5 @@ docs
 deployments
 package.json
 pnpm-lock.yaml
+
+src/proxy/*

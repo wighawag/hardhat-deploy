@@ -9,7 +9,13 @@ import HardhatDeploy from 'hardhat-deploy';
 import {addForkConfiguration, addNetworksFromEnv} from 'hardhat-deploy/helpers';
 
 const config: HardhatUserConfig = {
-	plugins: [HardhatNodeTestRunner, HardhatViem, HardhatNetworkHelpers, HardhatKeystore, HardhatDeploy],
+	plugins: [
+		HardhatNodeTestRunner,
+		HardhatViem,
+		HardhatNetworkHelpers,
+		HardhatKeystore,
+		HardhatDeploy,
+	],
 	solidity: {
 		profiles: {
 			default: {

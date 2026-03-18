@@ -12,8 +12,10 @@ export function setupFixtures(provider: EthereumProvider) {
 
 			// Deployment are inherently untyped since they can vary from network or even before different from current artifacts
 			// so here we type them manually assuming the artifact is still matching
-			const GreetingsRegistryRead = env.get<Abi_GetMessageFacet>('GreetingsRegistry');
-			const GreetingsRegistryWrite = env.get<Abi_SetMessageFacet>('GreetingsRegistry');
+			const GreetingsRegistryRead =
+				env.get<Abi_GetMessageFacet>('GreetingsRegistry');
+			const GreetingsRegistryWrite =
+				env.get<Abi_SetMessageFacet>('GreetingsRegistry');
 
 			return {
 				env,
