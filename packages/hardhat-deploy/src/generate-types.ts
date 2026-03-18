@@ -82,7 +82,7 @@ function writeArtifactIndexToFile(folder: string, data: Artifacts, mode: 'typesc
 	if (mode === 'typescript') {
 		let newContent = '';
 		for (const canonicalName of Object.keys(data)) {
-			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
+			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_').replaceAll('-', '_');
 			const name = canonicalName.split('/').pop();
 			const artifactName = `Artifact_${name}`;
 			const importNaming =
@@ -94,7 +94,7 @@ function writeArtifactIndexToFile(folder: string, data: Artifacts, mode: 'typesc
 	} else if (mode === 'javascript') {
 		let newContent = '';
 		for (const canonicalName of Object.keys(data)) {
-			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
+			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_').replaceAll('-', '_');
 			const name = canonicalName.split('/').pop();
 			const artifactName = `Artifact_${name}`;
 			const importNaming =
@@ -160,7 +160,7 @@ function writeABIDefinitionIndexToFile(folder: string, data: Artifacts, mode: 't
 	if (mode === 'typescript') {
 		let newContent = '';
 		for (const canonicalName of Object.keys(data)) {
-			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
+			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_').replaceAll('-', '_');
 			const name = canonicalName.split('/').pop();
 			const abiName = `Abi_${name}`;
 			const importNaming = canonicalName != name ? `${abiName} as ${transformedName}` : `${abiName} as ${name}`;
@@ -171,7 +171,7 @@ function writeABIDefinitionIndexToFile(folder: string, data: Artifacts, mode: 't
 		const jsFilepath = path.join(folder, 'abis', 'index') + '.js';
 		let newContent = '';
 		for (const canonicalName of Object.keys(data)) {
-			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_');
+			const transformedName = canonicalName.replaceAll('/', '_').replaceAll('.', '_').replaceAll('-', '_');
 			const name = canonicalName.split('/').pop();
 			const abiName = `Abi_${name}`;
 			const importNaming = canonicalName != name ? `${abiName} as ${transformedName}` : `${abiName} as ${name}`;
