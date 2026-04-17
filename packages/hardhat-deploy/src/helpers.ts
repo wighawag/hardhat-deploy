@@ -42,8 +42,8 @@ export async function generateForkConfig(
 
 	const connection =
 		params.connection || fork
-			? await params.hre.network.connect({network: 'fork'})
-			: await params.hre.network.connect();
+			? await params.hre.network.create({network: 'fork'})
+			: await params.hre.network.create();
 
 	let provider: any = connection.provider;
 	let environment: string | {fork: string} = connection.networkName;
