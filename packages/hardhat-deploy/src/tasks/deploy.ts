@@ -33,7 +33,7 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 	}
 	const tags = args.tags && args.tags != '' ? args.tags : undefined;
 
-	setupLogger(['rocketh', '@rocketh/node'], {
+	setupLogger(['rocketh', '@rocketh/node', '@rocketh/deploy'], {
 		enabled: true,
 		level: 3,
 	});
