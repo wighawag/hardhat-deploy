@@ -1,0 +1,83 @@
+# Requires: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"
+name: whitesmith-comment
+
+on:
+  issue_comment:
+    types: [created]
+
+env:
+  WHITESMITH_PROVIDER: anthropic
+  WHITESMITH_MODEL: claude-opus-4-6
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+
+concurrency:
+  group: whitesmith-comment-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          if echo "$COMMENT_BODY" | grep -q '/whitesmith'; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -n "${{ github.event.issue.pull_request.url }}" ]; then
+            BRANCH=$(gh pr view ${{ github.event.issue.number }} \
+              --repo ${{ github.repository }} --json headRefName -q .headRefName)
+            if echo "$BRANCH" | grep -qE '^(investigate|issue)/'; then
+              echo "should_run=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
+
+  run:
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions \
+            -f content=eyes
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-whitesmith
+
+      - env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          printf '%s' "$COMMENT_BODY" > .whitesmith-comment-body.txt
+          whitesmith comment . \
+            --number "${{ github.event.issue.number }}" \
+            --body-file .whitesmith-comment-body.txt \
+            --provider "$WHITESMITH_PROVIDER" \
+            --model "$WHITESMITH_MODEL" \
+            --post
+
+      - if: success()
+        run: |
+          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions \
+            -f content="+1"
+
+      - if: failure()
+        run: |
+          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions \
+            -f content="-1"
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} \
+            --body "❌ Agent run failed. See [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})."

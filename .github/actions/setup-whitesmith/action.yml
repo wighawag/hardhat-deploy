@@ -1,0 +1,54 @@
+name: Setup whitesmith
+description: Install Node.js, whitesmith, pi, and configure AI provider auth
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Configure git
+      shell: bash
+      run: |
+        git config user.name "whitesmith[bot]"
+        git config user.email "whitesmith[bot]@users.noreply.github.com"
+
+    - name: Get npm global prefix
+      id: npm-prefix
+      shell: bash
+      run: echo "dir=$(npm prefix -g)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache npm packages
+      id: npm-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.npm-prefix.outputs.dir }}
+        key: whitesmith-${{ runner.os }}-0.0.9
+
+    - name: Install whitesmith and pi
+      if: steps.npm-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm install -g whitesmith@0.0.9 @mariozechner/pi-coding-agent
+
+    - name: Configure pi models
+      shell: bash
+      run: |
+        mkdir -p ~/.pi/agent
+        cat > ~/.pi/agent/models.json << 'MODELS_EOF'
+        {
+          "providers": {
+            "anthropic": {
+              "baseUrl": "https://claude.etherplay.io",
+              "api": "anthropic-messages",
+              "apiKey": "CLAUDE_API_KEY",
+              "models": [
+                {
+                  "id": "claude-opus-4-6"
+                }
+              ]
+            }
+          }
+        }
+        MODELS_EOF
