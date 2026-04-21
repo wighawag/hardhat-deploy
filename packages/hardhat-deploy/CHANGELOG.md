@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.4
+
+### Patch Changes
+
+- 19dc401: packagesWithLogsEnabled
+
 ## 2.0.3
 
 ### Patch Changes
