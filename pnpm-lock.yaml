@@ -379,8 +379,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5
       hardhat:
-        specifier: 3.1.8
-        version: 3.1.8
+        specifier: 3.4.0
+        version: 3.4.0
       rimraf:
         specifier: ^6.1.3
         version: 6.1.3
@@ -990,33 +990,68 @@ packages:
     resolution: {integrity: sha512-lYcD9IM52G0hk/3Sso2Rpdpyfafy3aHH0GsSy/FVog9UrEkmmU14AmccE18/zTL+UyV0yzYMDOmh6y83SD/lbg==}
     engines: {node: '>= 20'}
 
+  '@nomicfoundation/edr-darwin-arm64@0.12.0-next.29':
+    resolution: {integrity: sha512-qzVcAkUsrVT2Za9pLzTYL/eNLS09R+JSG+4LpQ56Wg3mkjbwItn/F6C/XbGqMbNiEGfLi5kVvtYOtT7yu04/Tg==}
+    engines: {node: '>= 20'}
+
   '@nomicfoundation/edr-darwin-x64@0.12.0-next.24':
     resolution: {integrity: sha512-cHDJZlPDpDXJXxQDVM0TGzEuNvV3wW94gipEdjNxZHeC9T2/NU/5GUoQajMJgvCZ6PWDlRMwIBRtM1jC/ny5DA==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr-darwin-x64@0.12.0-next.29':
+    resolution: {integrity: sha512-P2BSYLsDoM1dGi/0NO3ps3l76NbvFDAnmCUS5SLLLdG/b8RUvWKHtfZFrQgy1KCPDFiiG5IlwzcmAwsPjsyOVQ==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.24':
     resolution: {integrity: sha512-G/iln4W79CR9f68+crBZM1kBdmmK3IbQCD4b5u+iqby+H5BOLSPQmjeW9UREK5WSecnv7Oxr/ZTHHRq/w9pUPA==}
     engines: {node: '>= 20'}
 
+  '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.29':
+    resolution: {integrity: sha512-3SKZIaZCCuY6fAHj6GpTYpQPj3S0LFO6YUUZw3aSg1joBmM9FkP9a1IiYQOBZnZqk0Fa+pHy2dHMVWDczQHX7g==}
+    engines: {node: '>= 20'}
+
   '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.24':
     resolution: {integrity: sha512-wt6UuOutufL3UTSyMiwPOyfRly3uQEFHASXqLsNjgp4qBrm0s+kkyaYpAe8h53lGzZmXIDOAbO0P/fwxnLCnWw==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.29':
+    resolution: {integrity: sha512-GGDJX3We8+XQ0L1Yy2i6ulbucQPO7HpQ5IYkxFLKL0H611ErErHLawrGIvfcfaDYfnFrC/3uxWEqMQ4GhrWbBQ==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.24':
     resolution: {integrity: sha512-mHgkUSynINTnnIvZuZymJ4dMqjemGjdrzQ87rP5/SQQGRQVV82uDomSEglp9btSmbBWfPj4r4tWsV+a3844W0w==}
     engines: {node: '>= 20'}
 
+  '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.29':
+    resolution: {integrity: sha512-d92L55iy/EzMlu341RgFG1Pqd6Mpd1MmcYi48Na2VtMs7rqRIcAUGeLgoooScLinM5JqTIb1uYVghehFrx98gA==}
+    engines: {node: '>= 20'}
+
   '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.24':
     resolution: {integrity: sha512-E0XNSlPc8Hx5Nhowe5VIvAqVeT+1VUWSRqG0cZtYcpUgJZxTp8p03ojPtbyfjL4T+78GfnpmzkkLhB6S2jZ1FQ==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.29':
+    resolution: {integrity: sha512-oOupaxyR6KUzvhJ0zsVU0yfeepB3hcTKxvowq2lPPwp6cMFzPY8PFe6uck+7+rXwog0dDkEa4R/RPEE9DtUelw==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.24':
     resolution: {integrity: sha512-PbtY2zWc4k8HK4gVnVbPohJnfrICboo6J91vxTlhnPKCWGvfGbsqLfDUAp91ExHHY+80qRfQnwaLbhJiIqLFGw==}
     engines: {node: '>= 20'}
 
+  '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.29':
+    resolution: {integrity: sha512-QWvz4tTt1Z5JYKXODtqqdxfIQMiWFPGLVIeVJlXl2HSPJAIWTMU+EiBhlGGxP0qoUotUbdJbe7lpG4gw3yKIcA==}
+    engines: {node: '>= 20'}
+
   '@nomicfoundation/edr@0.12.0-next.24':
     resolution: {integrity: sha512-/NwB9yX7uBs/FIJKHBZo2hVhP7g3v6LbE21JvTLvshgb+XscyaRRUmzB//ankxLGJ1TehtXAf/Qh/a19vgpiig==}
     engines: {node: '>= 20'}
+
+  '@nomicfoundation/edr@0.12.0-next.29':
+    resolution: {integrity: sha512-/c1LbBC3EFgOIKRup0lQ2SIqL9MLdqdOHDM9Mta5CyDOk9cQFlBSTpWCGDrh+p1BIsPFpVHqa4yjkBmZyL1aZA==}
+    engines: {node: '>= 20'}
+
+  '@nomicfoundation/hardhat-errors@3.0.11':
+    resolution: {integrity: sha512-XEKplQ+FhZD1PgIGSj62scoqB/y+uG8x+V+U68m1a+4L1I46y4/gZQGIuMLkRZeqhPHsLle6ykDB+vn8qtwqzw==}
 
   '@nomicfoundation/hardhat-errors@3.0.5':
     resolution: {integrity: sha512-8Ayqf6hFM1glmrSxrXgX6n2pn5uTlHNxEB8N5Me0DOeOGB67PRIrQdiO+RzUhrNW5YgWUNWBevOLQbW06uQ79g==}
@@ -1051,8 +1086,14 @@ packages:
   '@nomicfoundation/hardhat-utils@4.0.0':
     resolution: {integrity: sha512-Deu4od7flcM89K+SEAxmOyn7FFWGiEILrGjoxYl/Gus0tctgpLNaK3M4LIjrJ25ci8LBjGVe3i28XZA4+QGQHQ==}
 
+  '@nomicfoundation/hardhat-utils@4.0.3':
+    resolution: {integrity: sha512-JLEexWvugRK6kJioPTeisIcmmWm6yHv9n5GRLboXvhAndJNL1Z/FrQLZYZaDSmkHPE5aRK6t+zK7Rh92Yar6hQ==}
+
   '@nomicfoundation/hardhat-vendored@3.0.1':
     resolution: {integrity: sha512-jBOAqmEAMJ8zdfiQmTLV+c0IaSyySqkDSJ9spTy8Ts/m/mO8w364TClyfn+p4ZpxBjyX4LMa3NfC402hoDtwCg==}
+
+  '@nomicfoundation/hardhat-vendored@3.0.2':
+    resolution: {integrity: sha512-v65aSwA0k15QzMUL4cFXT2CPnrjrxR1BE2V24BjNCPnlhwI/2e1Gfy7TaIGSor5yZGeiQ5ScI+wP/ovKxQBr0g==}
 
   '@nomicfoundation/hardhat-viem@3.0.2':
     resolution: {integrity: sha512-u/2IcKhfpD0toaC/P2Zqu+tMT7lDcs3mgp/RIQk8C+IAG0L3YMaCAjLKGWtMNhJQ/oqCM4rNBfdSe2ltvNCyXQ==}
@@ -1062,6 +1103,11 @@ packages:
 
   '@nomicfoundation/hardhat-zod-utils@3.0.1':
     resolution: {integrity: sha512-I6/pyYiS9p2lLkzQuedr1ScMocH+ew8l233xTi+LP92gjEiviJDxselpkzgU01MUM0t6BPpfP8yMO958LDEJVg==}
+    peerDependencies:
+      zod: ^3.23.8
+
+  '@nomicfoundation/hardhat-zod-utils@3.0.4':
+    resolution: {integrity: sha512-yCiycXDEEjbNgNVQaUoGYOee6+ljYUnIOWMtYc/dYDuwlHutWr9xg/KgkgMkiZZ1R2WrZAEqsSaeZTnH7Oyz9Q==}
     peerDependencies:
       zod: ^3.23.8
 
@@ -1914,6 +1960,10 @@ packages:
 
   hardhat@3.1.8:
     resolution: {integrity: sha512-VB1AQBEWgVQp7hd48zt4lb1bv5ndF9B05LQSaunOfu1RMjF3HErkiWFBbBPt0ZDUDv5ab+rgWnwCYwOeThFeHw==}
+    hasBin: true
+
+  hardhat@3.4.0:
+    resolution: {integrity: sha512-3QDQY4jOK4DXavkUm7itL5O9fY1AKo9CzDly9E6cQV4X1TpknMzbenpluzKjiSjpRsIBXhyV6EuGl0vaXug7Og==}
     hasBin: true
 
   has-flag@4.0.0:
@@ -3170,17 +3220,31 @@ snapshots:
 
   '@nomicfoundation/edr-darwin-arm64@0.12.0-next.24': {}
 
+  '@nomicfoundation/edr-darwin-arm64@0.12.0-next.29': {}
+
   '@nomicfoundation/edr-darwin-x64@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr-darwin-x64@0.12.0-next.29': {}
 
   '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.24': {}
 
+  '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.29': {}
+
   '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.29': {}
 
   '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.24': {}
 
+  '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.29': {}
+
   '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.24': {}
 
+  '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.29': {}
+
   '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.24': {}
+
+  '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.29': {}
 
   '@nomicfoundation/edr@0.12.0-next.24':
     dependencies:
@@ -3192,15 +3256,31 @@ snapshots:
       '@nomicfoundation/edr-linux-x64-musl': 0.12.0-next.24
       '@nomicfoundation/edr-win32-x64-msvc': 0.12.0-next.24
 
+  '@nomicfoundation/edr@0.12.0-next.29':
+    dependencies:
+      '@nomicfoundation/edr-darwin-arm64': 0.12.0-next.29
+      '@nomicfoundation/edr-darwin-x64': 0.12.0-next.29
+      '@nomicfoundation/edr-linux-arm64-gnu': 0.12.0-next.29
+      '@nomicfoundation/edr-linux-arm64-musl': 0.12.0-next.29
+      '@nomicfoundation/edr-linux-x64-gnu': 0.12.0-next.29
+      '@nomicfoundation/edr-linux-x64-musl': 0.12.0-next.29
+      '@nomicfoundation/edr-win32-x64-msvc': 0.12.0-next.29
+
+  '@nomicfoundation/hardhat-errors@3.0.11':
+    dependencies:
+      '@nomicfoundation/hardhat-utils': 4.0.3
+    transitivePeerDependencies:
+      - supports-color
+
   '@nomicfoundation/hardhat-errors@3.0.5':
     dependencies:
-      '@nomicfoundation/hardhat-utils': 3.0.5
+      '@nomicfoundation/hardhat-utils': 3.0.6
     transitivePeerDependencies:
       - supports-color
 
   '@nomicfoundation/hardhat-errors@3.0.6':
     dependencies:
-      '@nomicfoundation/hardhat-utils': 3.0.5
+      '@nomicfoundation/hardhat-utils': 3.0.6
     transitivePeerDependencies:
       - supports-color
 
@@ -3283,7 +3363,22 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@nomicfoundation/hardhat-utils@4.0.3':
+    dependencies:
+      '@streamparser/json-node': 0.0.22
+      debug: 4.4.3
+      env-paths: 2.2.1
+      ethereum-cryptography: 2.2.1
+      fast-equals: 5.4.0
+      json-stream-stringify: 3.1.6
+      rfdc: 1.4.1
+      undici: 6.23.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@nomicfoundation/hardhat-vendored@3.0.1': {}
+
+  '@nomicfoundation/hardhat-vendored@3.0.2': {}
 
   '@nomicfoundation/hardhat-viem@3.0.2(hardhat@3.1.8)(viem@2.46.2(typescript@5.9.3)(zod@3.25.76))':
     dependencies:
@@ -3307,6 +3402,14 @@ snapshots:
     dependencies:
       '@nomicfoundation/hardhat-errors': 3.0.6
       '@nomicfoundation/hardhat-utils': 3.0.6
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - supports-color
+
+  '@nomicfoundation/hardhat-zod-utils@3.0.4(zod@3.25.76)':
+    dependencies:
+      '@nomicfoundation/hardhat-errors': 3.0.11
+      '@nomicfoundation/hardhat-utils': 4.0.3
       zod: 3.25.76
     transitivePeerDependencies:
       - supports-color
@@ -4358,6 +4461,33 @@ snapshots:
       '@nomicfoundation/hardhat-utils': 3.0.6
       '@nomicfoundation/hardhat-vendored': 3.0.1
       '@nomicfoundation/hardhat-zod-utils': 3.0.1(zod@3.25.76)
+      '@nomicfoundation/solidity-analyzer': 0.1.2
+      '@sentry/core': 9.47.1
+      adm-zip: 0.4.16
+      chalk: 5.6.2
+      chokidar: 4.0.3
+      debug: 4.4.3
+      enquirer: 2.4.1
+      ethereum-cryptography: 2.2.1
+      micro-eth-signer: 0.14.0
+      p-map: 7.0.4
+      resolve.exports: 2.0.3
+      semver: 7.7.4
+      tsx: 4.21.0
+      ws: 8.19.0
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  hardhat@3.4.0:
+    dependencies:
+      '@nomicfoundation/edr': 0.12.0-next.29
+      '@nomicfoundation/hardhat-errors': 3.0.11
+      '@nomicfoundation/hardhat-utils': 4.0.3
+      '@nomicfoundation/hardhat-vendored': 3.0.2
+      '@nomicfoundation/hardhat-zod-utils': 3.0.4(zod@3.25.76)
       '@nomicfoundation/solidity-analyzer': 0.1.2
       '@sentry/core': 9.47.1
       adm-zip: 0.4.16
