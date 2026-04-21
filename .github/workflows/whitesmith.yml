@@ -1,0 +1,51 @@
+# Requires: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"
+name: whitesmith
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: 'Issue number to target (leave empty for global scan)'
+      max_iterations:
+        description: 'Maximum iterations'
+        default: '3'
+      provider:
+        description: 'AI provider (overrides WHITESMITH_PROVIDER)'
+      model:
+        description: 'AI model (overrides WHITESMITH_MODEL)'
+
+env:
+  WHITESMITH_PROVIDER: anthropic
+  WHITESMITH_MODEL: claude-opus-4-6
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+
+concurrency:
+  group: ${{ inputs.issue && format('whitesmith-issue-{0}', inputs.issue) || 'whitesmith-global' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-whitesmith
+
+      - run: |
+          ISSUE_FLAG=""
+          if [ -n "${{ inputs.issue }}" ]; then
+            ISSUE_FLAG="--issue ${{ inputs.issue }}"
+          fi
+          whitesmith run . \
+            $ISSUE_FLAG \
+            --provider "${{ inputs.provider || env.WHITESMITH_PROVIDER }}" \
+            --model "${{ inputs.model || env.WHITESMITH_MODEL }}" \
+            --max-iterations ${{ inputs.max_iterations || '3' }}

@@ -1,5 +1,5 @@
 import {NewTaskActionFunction} from 'hardhat/types/tasks';
-import {loadAndExecuteDeploymentsFromFiles, readAndResolveConfig} from '@rocketh/node';
+import {loadAndExecuteDeploymentsFromFiles} from '@rocketh/node';
 import {generateForkConfig} from '../helpers.js';
 import {setupLogger} from 'named-logs-console';
 import {HardhatPluginError} from 'hardhat/plugins';

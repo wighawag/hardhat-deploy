@@ -47,7 +47,7 @@ const hardhatPlugin: HardhatPlugin = {
 			.addOption({
 				name: 'defaultBuildProfile',
 				description:
-					'specify the default profile to use for ompilation. Note that the global option "--build-profile" will override it',
+					'specify the default profile to use for compilation. Note that the global option "--build-profile" will override it',
 				defaultValue: 'production',
 				type: ArgumentType.STRING,
 			})

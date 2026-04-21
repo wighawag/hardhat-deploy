@@ -1,0 +1,41 @@
+name: whitesmith-issue
+
+on:
+  issues:
+    types: [opened, edited]
+
+env:
+  WHITESMITH_PROVIDER: anthropic
+  WHITESMITH_MODEL: claude-opus-4-6
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+
+concurrency:
+  group: whitesmith-issue-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  run:
+    if: >-
+      github.event.action == 'opened' ||
+      (github.event.action == 'edited' &&
+       contains(join(github.event.issue.labels.*.name, ','), 'whitesmith:needs-clarification'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-whitesmith
+
+      - run: |
+          whitesmith run . \
+            --issue "${{ github.event.issue.number }}" \
+            --provider "$WHITESMITH_PROVIDER" \
+            --model "$WHITESMITH_MODEL" \
+            --max-iterations 10

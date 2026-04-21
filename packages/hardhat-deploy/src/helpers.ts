@@ -40,10 +40,8 @@ export async function generateForkConfig(
 ): Promise<{provider: any; environment: string | {fork: string}; connection: NetworkConnection; isFork: boolean}> {
 	const fork = process.env.HARDHAT_FORK as string | undefined;
 
-	const connection =
-		params.connection || fork
-			? await params.hre.network.create({network: 'fork'})
-			: await params.hre.network.create();
+	const connection = params.connection ||
+		(fork ? await params.hre.network.create({network: 'fork'}) : await params.hre.network.create());
 
 	let provider: any = connection.provider;
 	let environment: string | {fork: string} = connection.networkName;
