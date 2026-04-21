@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.5
+
+### Patch Changes
+
+- fix template
+
 ## 2.0.4
 
 ### Patch Changes
