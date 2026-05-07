@@ -12,7 +12,7 @@ interface RunActionArguments {
 	reportGasUsed: boolean;
 	noCompile?: boolean;
 	defaultBuildProfile?: string;
-	// TODO? reset?: boolean;
+	reset?: boolean;
 	// TODO? export?: string;
 	// TODO? watch?: boolean;
 }
@@ -61,6 +61,7 @@ const runScriptWithHardhat: NewTaskActionFunction<RunActionArguments> = async (a
 		defaultPollingInterval,
 		reportGasUse: args.reportGasUsed,
 		extra: {connection},
+		reset: args.reset,
 	});
 };
 export default runScriptWithHardhat;

@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.6
+
+### Patch Changes
+
+- add --reset + latest update
+
 ## 2.0.5
 
 ### Patch Changes

@@ -55,6 +55,10 @@ const hardhatPlugin: HardhatPlugin = {
 				name: 'noCompile',
 				description: 'if set, skip compilation',
 			})
+			.addFlag({
+				name: 'reset',
+				description: 'if set, delete deployments first',
+			})
 			.setAction(() => import('./tasks/deploy.js'))
 			.build(),
 	],
