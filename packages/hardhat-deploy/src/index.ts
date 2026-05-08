@@ -1,4 +1,4 @@
-import {setupLogger} from 'named-logs-console';
+import 'named-logs-console';
 import type {HardhatPlugin} from 'hardhat/types/plugins';
 import {task} from 'hardhat/config';
 
@@ -6,14 +6,6 @@ import './type-extensions.js';
 import {ArgumentType} from 'hardhat/types/arguments';
 import type {Environment} from 'rocketh/types';
 import type {NetworkConnection} from 'hardhat/types/network';
-
-// const deployTask = import.meta.resolve('./tasks/deploy.js').replace('.ts', '.js');
-// console.log({deployTask});
-
-setupLogger(['rocketh', '@rocketh/node'], {
-	enabled: true,
-	level: 3,
-});
 
 const hardhatPlugin: HardhatPlugin = {
 	id: 'hardhat-deploy',
