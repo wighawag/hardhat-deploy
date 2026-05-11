@@ -1,5 +1,11 @@
 # hardhat-deploy
 
+## 2.0.8
+
+### Patch Changes
+
+- latest deps
+
 ## 2.0.7
 
 ### Patch Changes
