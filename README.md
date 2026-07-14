@@ -115,7 +115,9 @@ Please find the [full documentation here](https://rocketh.dev/hardhat-deploy/)
 
 ### AI-Assisted Migration
 
-If you're migrating from hardhat-deploy v1 to v2 and want to use AI to help with the process, check out our [SKILL.md](https://github.com/wighawag/hardhat-deploy/blob/main/skills/hardhat-deploy-migration/SKILL.md) file. This comprehensive guide is designed for AI assistants and includes detailed instructions for systematic migration, code transformation rules, and troubleshooting guidance.
+If you're migrating from hardhat-deploy v1 to v2 and want to use AI to help with the process, check out our [SKILL.md](https://github.com/wighawag/rocketh/blob/main/skills/hardhat-deploy-migration/SKILL.md) file. This comprehensive guide is designed for AI assistants and includes detailed instructions for systematic migration, code transformation rules, and troubleshooting guidance.
+
+> **Note:** This migration skill now lives in the rocketh monorepo at [`skills/hardhat-deploy-migration/`](https://github.com/wighawag/rocketh/tree/main/skills/hardhat-deploy-migration). If you had it bookmarked under `wighawag/hardhat-deploy`, update your link to the rocketh location above.
 
 ## Template
 
