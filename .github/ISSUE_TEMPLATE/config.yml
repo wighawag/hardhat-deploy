@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🐛 Report a Bug / Request a Feature
+    url: https://github.com/wighawag/rocketh/issues/new/choose
+    about: hardhat-deploy is powered by rocketh, and all active development happens in the rocketh monorepo. To keep development and issue tracking unified, please open your bug report or feature request on the rocketh repository.
+  - name: 💬 Ask a Question / Start a Discussion
+    url: https://github.com/wighawag/rocketh/discussions
+    about: Questions, ideas, and general discussion are handled in the rocketh repository.
+  - name: 📦 Source Code
+    url: https://github.com/wighawag/rocketh/tree/main/packages/hardhat-deploy
+    about: The hardhat-deploy source now lives in the rocketh monorepo. Browse the code or open a pull request there.

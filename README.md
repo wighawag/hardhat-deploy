@@ -29,6 +29,16 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
 >
 > Documentation for hardhat-deploy v1 can be found on the [v1 branch](https://github.com/wighawag/hardhat-deploy/tree/v1#readme)
 
+## Source Code & Issues
+
+hardhat-deploy is powered by [rocketh](https://github.com/wighawag/rocketh), and its source code and active development now live in the rocketh monorepo. This repository remains the home of the hardhat-deploy brand and its history, but code changes and issue tracking happen in rocketh so everything stays tested and released together.
+
+- **Source code:** [github.com/wighawag/rocketh/tree/main/packages/hardhat-deploy](https://github.com/wighawag/rocketh/tree/main/packages/hardhat-deploy)
+- **Issues & feature requests:** [github.com/wighawag/rocketh/issues](https://github.com/wighawag/rocketh/issues/new/choose) (please open all new issues here)
+- **Discussions:** [github.com/wighawag/rocketh/discussions](https://github.com/wighawag/rocketh/discussions)
+
+The npm package is unchanged: keep installing `hardhat-deploy` exactly as before.
+
 ## What is hardhat-deploy?
 
 **hardhat-deploy** makes it easy for you to deploy your EVM smart contracts across many chains while keeping track of them and replicating the same environment for testing.
