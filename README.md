@@ -1,5 +1,5 @@
 <div align="center">
-<img alt="Rocketh Logo" src="./public/logo.svg" width="100"/><br/>
+<img alt="hardhat-deploy logo" src="./public/logo.svg" width="100"/><br/>
   <a href="https://rocketh.dev/hardhat-deploy/">hardhat-deploy</a>
 <hr/>
 
