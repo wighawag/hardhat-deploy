@@ -1,7 +1,7 @@
 <div align="center">
-<img alt="hardhat-deploy logo" src="./public/logo.svg" width="100"/><br/>
-  <a href="https://rocketh.dev/hardhat-deploy/">hardhat-deploy</a>
+<a href="https://rocketh.dev/hardhat-deploy/"><img alt="rocketh logo" src="https://rocketh.dev/hardhat-deploy-preview.png"  /></a>
 <hr/>
+
 
 <!-- <a href="https://npmjs.com/package/hardhat-deploy"><img alt="Version" src="https://img.shields.io/npm/v/hardhat-deploy" /></a> -->
 
