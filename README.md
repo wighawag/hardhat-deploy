@@ -29,6 +29,11 @@ _A [Hardhat](https://hardhat.org) Plugin For Replicable Deployments And Easy Tes
 >
 > Documentation for hardhat-deploy v1 can be found on the [v1 branch](https://github.com/wighawag/hardhat-deploy/tree/v1#readme)
 
+## Documentation
+
+- **hardhat-deploy docs:** [rocketh.dev/hardhat-deploy](https://rocketh.dev/hardhat-deploy/)
+- **rocketh docs:** [rocketh.dev](https://rocketh.dev) (same website, hardhat-deploy lives under its own subpath)
+
 ## Source Code & Issues
 
 hardhat-deploy is powered by [rocketh](https://github.com/wighawag/rocketh), and its source code and active development now live in the rocketh monorepo. This repository remains the home of the hardhat-deploy brand and its history, but code changes and issue tracking happen in rocketh so everything stays tested and released together.
@@ -109,9 +114,9 @@ export default deployScript(
 );
 ```
 
-## Documentation
+## More Documentation
 
-Please find the [full documentation here](https://rocketh.dev/hardhat-deploy/)
+Please find the [full documentation here](https://rocketh.dev/hardhat-deploy/), and the rocketh documentation at [rocketh.dev](https://rocketh.dev)
 
 ### AI-Assisted Migration
 
